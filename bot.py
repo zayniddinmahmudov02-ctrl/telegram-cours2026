@@ -83,60 +83,82 @@ COURSE_INFO = {
     "🔥 A1-B1": {"lessons": 48,  "price": "300.000 so'm"},
     "🔥 A1-C1": {"lessons": 100, "price": "600.000 so'm"},
 }
+# =========================
+# DATABASE
+# =========================
 
-# =========================
-# DATABASE (connection pool)
-# =========================
-db_pool: psycopg2.pool.ThreadedConnectionPool = None
+import psycopg2
+from psycopg2 import pool
+
+db_pool = None
 
 def init_db_pool():
     global db_pool
-    db_pool = psycopg2.pool.ThreadedConnectionPool(
+
+    db_pool = pool.ThreadedConnectionPool(
         minconn=1,
         maxconn=10,
-        dsn=DATABASE_URL,
+        dsn=DATABASE_URL
     )
 
 @contextmanager
 def get_db():
+
     conn = db_pool.getconn()
+
     try:
         yield conn
         conn.commit()
+
     except Exception:
         conn.rollback()
         raise
+
     finally:
         db_pool.putconn(conn)
 
 def db_execute(query, params=(), fetchone=False, fetchall=False):
+
     with get_db() as conn:
+
         with conn.cursor() as cur:
+
             cur.execute(query, params)
+
             if fetchone:
                 return cur.fetchone()
+
             if fetchall:
                 return cur.fetchall()
+
     return None
 
 def init_tables():
+
     db_execute("""
         CREATE TABLE IF NOT EXISTS users (
-            user_id   BIGINT PRIMARY KEY,
+            user_id BIGINT PRIMARY KEY,
             full_name TEXT,
-            phone     TEXT,
-            course    TEXT,
-            approved  INTEGER DEFAULT 0,
-            score     INTEGER DEFAULT 0
+            phone TEXT,
+            course TEXT,
+            approved INTEGER DEFAULT 0,
+            score INTEGER DEFAULT 0
         )
     """)
-    # safe migration for existing tables
-    for col, definition in [("score", "INTEGER DEFAULT 0"), ("course", "TEXT")]:
-        try:
-            db_execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {definition}")
-        except Exception:
-            pass
 
+    try:
+        db_execute(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0"
+        )
+    except:
+        pass
+
+    try:
+        db_execute(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS course TEXT"
+        )
+    except:
+        pass
 # =========================
 # BOT
 # =========================
