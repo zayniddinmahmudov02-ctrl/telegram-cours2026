@@ -228,42 +228,34 @@ artikel_users: set[int] = set()
 
 def load_artikel():
     csv_path = "nouns.csv"
+
     if not os.path.exists(csv_path):
         logger.warning("nouns.csv not found — Artikel feature disabled.")
         return
 
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
+
         for row in reader:
             try:
-                word   = row["lemma"].lower().strip()
+                word = row["lemma"].lower().strip()
                 gender = str(row["genus"]).lower().strip()
-                plural     = row.get("nominativ plural", "").strip()
-                nominativ  = row.get("nominativ singular", "").strip()
-                akkusativ  = row.get("akkusativ singular", "").strip()
-                dativ      = row.get("dativ singular", "").strip()
-                genitiv    = row.get("genitiv singular", "").strip()
 
-                art_map = {"m": "der", "f": "die", "n": "das"}
+                art_map = {
+                    "m": "der",
+                    "f": "die",
+                    "n": "das"
+                }
+
                 art = art_map.get(gender)
-                if not art:
-                    continue
 
-                result = f"{art} {word.capitalize()}"
-                if plural:     result += f"\n\n📚 Ko'plik: {plural}"
-                if nominativ:  result += f"\n\n🟢 Nominativ: {nominativ}"
-                if akkusativ:  result += f"\n🔵 Akkusativ: {akkusativ}"
-                if dativ:      result += f"\n🟡 Dativ: {dativ}"
-                if genitiv:    result += f"\n🔴 Genitiv: {genitiv}"
+                if art:
+                    artikel[word] = f"{art} {word.capitalize()}"
 
-                artikel[word] = result
-                if plural:
-                    artikel[plural.lower()] = result
-            except Exception:
+            except:
                 pass
 
     logger.info(f"Artikel loaded: {len(artikel)} words")
-
 # =========================
 # QUIZ DATA
 # =========================
@@ -372,7 +364,7 @@ QUIZ_QUESTIONS = [
 
 # Per-user quiz lock: prevents running two quizzes simultaneously
 quiz_running: set[int] = set()
-
+quiz_stop_flags = {}
 # active quiz questions: question_id -> correct answer
 active_questions: dict[str, str] = {}
 # answered_users: question_id -> set of user_ids who already answered
@@ -618,44 +610,79 @@ async def word_game(message: Message):
 # =========================
 # QUIZ
 # =========================
+
+quiz_stop_flags = {}
+
 @dp.message(F.text == "📚 A-Blok Teste")
 async def start_quiz(message: Message):
+
     user_id = message.from_user.id
 
-    # Prevent parallel quiz sessions for same user
     if user_id in quiz_running:
-        await message.answer("⚠️ Test allaqachon boshlangan. Tugashini kuting.")
+        await message.answer("⚠️ Test allaqachon boshlangan.")
         return
 
     quiz_running.add(user_id)
 
     try:
-        await message.answer("🚀 Test boshlandi!\n\n⏳ Har savol uchun 5 soniya!")
+
+        await message.answer(
+            "🚀 Test boshlandi!\n\n"
+            "⏳ Har savol uchun 10 soniya!"
+        )
+
+        quiz_stop_flags[user_id] = False
 
         questions = random.sample(QUIZ_QUESTIONS, len(QUIZ_QUESTIONS))
-        session_score = 0
 
         for index, question in enumerate(questions):
+
+            if quiz_stop_flags.get(user_id):
+                break
+
             answers = [question["correct"], question["wrong"]]
             random.shuffle(answers)
 
             question_id = f"{user_id}_{index}"
+
             active_questions[question_id] = question["correct"]
             answered_users[question_id] = set()
 
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text=f"A) {answers[0]}", callback_data=f"quiz:{question_id}:{answers[0]}")],
-                [InlineKeyboardButton(text=f"B) {answers[1]}", callback_data=f"quiz:{question_id}:{answers[1]}")],
-            ])
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text=f"A) {answers[0]}",
+                            callback_data=f"quiz:{question_id}:{answers[0]}"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text=f"B) {answers[1]}",
+                            callback_data=f"quiz:{question_id}:{answers[1]}"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="⛔ Testni Yakunlash",
+                            callback_data=f"stopquiz:{user_id}"
+                        )
+                    ]
+                ]
+            )
 
             sent = await message.answer(
                 f"📚 Test {index + 1}/{len(QUIZ_QUESTIONS)}\n\n"
                 f"🇩🇪 {question['german']}\n\n"
-                f"⏳ 5 soniya qoldi!",
-                reply_markup=keyboard,
+                f"⏳ 10 soniya qoldi!",
+                reply_markup=keyboard
             )
 
-            for sec in range(5, 0, -1):
+            for sec in range(10, 0, -1):
+
+                if quiz_stop_flags.get(user_id):
+                    break
+
                 try:
                     await bot.edit_message_text(
                         chat_id=message.chat.id,
@@ -665,10 +692,11 @@ async def start_quiz(message: Message):
                             f"🇩🇪 {question['german']}\n\n"
                             f"⏳ {sec} soniya qoldi!"
                         ),
-                        reply_markup=keyboard,
+                        reply_markup=keyboard
                     )
-                except Exception:
+                except:
                     pass
+
                 await asyncio.sleep(1)
 
             active_questions.pop(question_id, None)
@@ -678,27 +706,49 @@ async def start_quiz(message: Message):
                 await bot.edit_message_reply_markup(
                     chat_id=message.chat.id,
                     message_id=sent.message_id,
-                    reply_markup=None,
+                    reply_markup=None
                 )
-            except Exception:
+            except:
                 pass
 
-            await message.answer(
-                f"⏰ Vaqt tugadi!\n\n✅ To'g'ri javob: {question['correct']}"
-            )
-            await asyncio.sleep(0.5)
+            if quiz_stop_flags.get(user_id):
+                break
 
-        # fetch total score from DB
-        row = db_execute("SELECT score FROM users WHERE user_id = %s", (user_id,), fetchone=True)
+            await message.answer(
+                f"⏰ Vaqt tugadi!\n\n"
+                f"✅ To'g'ri javob: {question['correct']}"
+            )
+
+        row = db_execute(
+            "SELECT score FROM users WHERE user_id = %s",
+            (user_id,),
+            fetchone=True
+        )
+
         total_score = row[0] if row else 0
 
-        await message.answer(
-            f"🏁 Test tugadi!\n\n🏆 Sizning umumiy balingiz: {total_score}"
-        )
+        if quiz_stop_flags.get(user_id):
+            await message.answer(
+                f"🏁 Test erta yakunlandi!\n\n"
+                f"🏆 Umumiy balingiz: {total_score}"
+            )
+        else:
+            await message.answer(
+                f"🏁 Test tugadi!\n\n"
+                f"🏆 Umumiy balingiz: {total_score}"
+            )
 
     finally:
         quiz_running.discard(user_id)
+        quiz_stop_flags.pop(user_id, None)
+@dp.callback_query(F.data.startswith("stopquiz:"))
+async def stop_quiz(callback: CallbackQuery):
 
+    user_id = int(callback.data.split(":")[1])
+
+    quiz_stop_flags[user_id] = True
+
+    await callback.answer("⛔ Test yakunlandi!")
 # =========================
 # QUIZ ANSWER CALLBACK
 # =========================
