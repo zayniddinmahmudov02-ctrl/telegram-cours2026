@@ -1606,13 +1606,16 @@ async def artikel_handler(message: Message):
 # =========================
 # RUN
 # =========================
+
 async def start_bot():
 
     while True:
 
         try:
 
-            logger.info("BOT ISHGA TUSHDI ✅")
+            logger.info(
+                "BOT ISHGA TUSHDI ✅"
+            )
 
             await dp.start_polling(bot)
 
@@ -1624,6 +1627,7 @@ async def start_bot():
 
             await asyncio.sleep(5)
 
+
 async def main():
 
     init_db_pool()
@@ -1634,11 +1638,18 @@ async def main():
 
     load_quiz_questions()
 
+    # eski webhooklarni o'chiradi
+    await bot.delete_webhook(
+        drop_pending_updates=True
+    )
+
+    # flask keep alive
     Thread(
         target=run_web,
         daemon=True
     ).start()
 
+    # bot polling
     await start_bot()
 
 
