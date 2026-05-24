@@ -742,40 +742,68 @@ async def get_phone(
 async def approve_user(callback: CallbackQuery):
 
     if callback.from_user.id != ADMIN_ID:
+
         await callback.answer(
             "❌ Ruxsat yo'q",
             show_alert=True
         )
+
         return
 
-    user_id = int(callback.data.split(":")[1])
+    user_id = int(
+        callback.data.split(":")[1]
+    )
 
     db_execute(
-        "UPDATE users SET approved = 1 WHERE user_id = %s",
+        "UPDATE users "
+        "SET approved = 1 "
+        "WHERE user_id = %s",
         (user_id,)
     )
 
     row = db_execute(
-        "SELECT course, full_name FROM users WHERE user_id = %s",
+        "SELECT course, full_name "
+        "FROM users "
+        "WHERE user_id = %s",
         (user_id,),
         fetchone=True
     )
 
     if not row:
-        await callback.answer("❌ User topilmadi")
+
+        await callback.answer(
+            "❌ User topilmadi"
+        )
+
         return
 
     course = row[0]
+
     full_name = row[1] or "Student"
 
     course_link = COURSE_LINKS.get(
-        course,
-        "https://t.me/vizu_deutsch"
+        course
     )
 
     group_link = GROUP_LINKS.get(
-        course,
-        "https://t.me/vizu_deutsch"
+        course
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🎥 Kurs Kanali",
+                    url=course_link
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💬 Savollar Guruhi",
+                    url=group_link
+                )
+            ]
+        ]
     )
 
     await bot.send_message(
@@ -783,14 +811,18 @@ async def approve_user(callback: CallbackQuery):
         f"🎉 Assalomu alaykum, {full_name}!\n\n"
         f"✅ To'lovingiz muvaffaqiyatli tasdiqlandi.\n\n"
         f"📚 Kurs: {course}\n\n"
-        f"🎥 Kurs kanali:\n{course_link}\n\n"
-        f"💬 Savollar guruhi:\n{group_link}\n\n"
-        f"🚀 Yaxshi o'qish tilaymiz!"
+        f"👇 Quyidagi tugmalar orqali kursga qo‘shiling.",
+        reply_markup=keyboard
     )
 
     try:
-        await callback.message.edit_reply_markup(reply_markup=None)
+
+        await callback.message.edit_reply_markup(
+            reply_markup=None
+        )
+
     except Exception as e:
+
         logger.error(e)
 
     await callback.message.answer(
@@ -799,28 +831,39 @@ async def approve_user(callback: CallbackQuery):
         f"📚 {course}"
     )
 
-    await callback.answer("✅ Tasdiqlandi")
+    await callback.answer(
+        "✅ Tasdiqlandi"
+    )
 
 
 @dp.callback_query(F.data.startswith("reject:"))
 async def reject_user(callback: CallbackQuery):
 
     if callback.from_user.id != ADMIN_ID:
+
         await callback.answer(
             "❌ Ruxsat yo'q",
             show_alert=True
         )
+
         return
 
-    user_id = int(callback.data.split(":")[1])
+    user_id = int(
+        callback.data.split(":")[1]
+    )
 
     row = db_execute(
-        "SELECT full_name FROM users WHERE user_id = %s",
+        "SELECT full_name "
+        "FROM users "
+        "WHERE user_id = %s",
         (user_id,),
         fetchone=True
     )
 
-    full_name = row[0] if row else "User"
+    full_name = (
+        row[0]
+        if row else "User"
+    )
 
     await bot.send_message(
         user_id,
@@ -831,8 +874,13 @@ async def reject_user(callback: CallbackQuery):
     )
 
     try:
-        await callback.message.edit_reply_markup(reply_markup=None)
+
+        await callback.message.edit_reply_markup(
+            reply_markup=None
+        )
+
     except Exception as e:
+
         logger.error(e)
 
     await callback.message.answer(
@@ -840,7 +888,9 @@ async def reject_user(callback: CallbackQuery):
         f"👤 {full_name}"
     )
 
-    await callback.answer("❌ Rad qilindi")
+    await callback.answer(
+        "❌ Rad qilindi"
+    )
 # =========================
 # WORD GAME MENU
 # =========================
@@ -1163,6 +1213,44 @@ async def stop_quiz(callback: CallbackQuery):
     )
 
     await callback.answer()
+
+# =========================
+# TOP 100
+# =========================
+
+@dp.message(F.text == "🏆 Top 100")
+async def top_players(message: Message):
+
+    result = db_execute(
+        "SELECT "
+        "COALESCE(full_name, 'Unknown'), "
+        "score "
+        "FROM users "
+        "WHERE score > 0 "
+        "ORDER BY score DESC, user_id ASC "
+        "LIMIT 100",
+        fetchall=True,
+    )
+
+    if not result:
+
+        await message.answer(
+            "❌ Reyting bo'sh."
+        )
+
+        return
+
+    lines = ["🏆 TOP 100 O'YINCHILAR\n"]
+
+    for i, (name, score) in enumerate(result, 1):
+
+        lines.append(
+            f"{i}. {name} — {score} ball"
+        )
+
+    await message.answer(
+        "\n".join(lines)
+    )
 # =========================
 # ADMIN PANEL
 # =========================
