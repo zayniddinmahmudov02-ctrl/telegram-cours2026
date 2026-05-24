@@ -894,10 +894,92 @@ async def reject_user(callback: CallbackQuery):
 # =========================
 # WORD GAME MENU
 # =========================
+
+class QuizNameState(StatesGroup):
+    waiting_for_name = State()
+
+word_game_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="📚 A-Blok Teste")],
+        [KeyboardButton(text="🏆 Top 100")],
+        [KeyboardButton(text="⬅️ Orqaga")],
+    ],
+    resize_keyboard=True,
+)
+
+# =========================
+# WORD GAME
+# =========================
+
 @dp.message(F.text == "🎮 So'z O'yini")
-async def word_game(message: Message):
- artikel_users.pop(message.from_user.id, None) 
- await message.answer("🎮 Wortspiel — So'z O'yini", reply_markup=word_game_menu)
+async def word_game(
+    message: Message,
+    state: FSMContext
+):
+
+    artikel_users.pop(
+        message.from_user.id,
+        None
+    )
+
+    row = db_execute(
+        "SELECT full_name "
+        "FROM users "
+        "WHERE user_id = %s",
+        (message.from_user.id,),
+        fetchone=True
+    )
+
+    # Agar ism yo'q bo'lsa
+    if not row or not row[0]:
+
+        await message.answer(
+            "👤 Ism va familiyangizni kiriting:"
+        )
+
+        await state.set_state(
+            QuizNameState.waiting_for_name
+        )
+
+        return
+
+    await message.answer(
+        "🎮 Wortspiel — So'z O'yini",
+        reply_markup=word_game_menu
+    )
+
+# =========================
+# SAVE QUIZ NAME
+# =========================
+
+@dp.message(QuizNameState.waiting_for_name)
+async def save_quiz_name(
+    message: Message,
+    state: FSMContext
+):
+
+    full_name = message.text.strip()
+
+    # User bazada yo'q bo'lsa yaratadi
+    db_execute(
+        "INSERT INTO users "
+        "(user_id, full_name) "
+        "VALUES (%s, %s) "
+        "ON CONFLICT (user_id) "
+        "DO UPDATE SET full_name = EXCLUDED.full_name",
+        (
+            message.from_user.id,
+            full_name
+        )
+    )
+
+    await message.answer(
+        "✅ Ismingiz saqlandi!\n\n"
+        "🎮 Wortspiel — So'z O'yini",
+        reply_markup=word_game_menu
+    )
+
+    await state.clear()
 # =========================
 # QUIZ DATA
 # =========================
