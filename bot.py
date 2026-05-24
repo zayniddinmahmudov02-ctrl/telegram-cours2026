@@ -418,11 +418,13 @@ def load_artikel():
 # =========================
 # START
 # =========================
+
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
 
     user_id = message.from_user.id
 
+    # Kanal obunasini tekshirish
     if not await check_subscription(user_id):
 
         keyboard = InlineKeyboardMarkup(
@@ -431,6 +433,12 @@ async def cmd_start(message: Message):
                     InlineKeyboardButton(
                         text="📢 Kanalga A'zo Bo'lish",
                         url="https://t.me/vizu_deutsch"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="✅ Tekshirish",
+                        callback_data="check_sub"
                     )
                 ]
             ]
@@ -443,6 +451,7 @@ async def cmd_start(message: Message):
 
         return
 
+    # userni bazaga qo'shish
     db_execute(
         "INSERT INTO users (user_id, approved) "
         "VALUES (%s, 0) "
@@ -450,6 +459,7 @@ async def cmd_start(message: Message):
         (user_id,)
     )
 
+    # admin notification
     if user_id != ADMIN_ID:
 
         try:
@@ -466,6 +476,7 @@ async def cmd_start(message: Message):
 
             logger.error(e)
 
+    # main menu
     await message.answer(
         "🇩🇪 Nemis Tili Video Darslari Botiga "
         "Xush Kelibsiz!\n\n"
@@ -473,6 +484,66 @@ async def cmd_start(message: Message):
         "50% CHEGIRMADA!",
         reply_markup=main_menu,
     )
+
+
+# =========================
+# CHECK SUBSCRIPTION BUTTON
+# =========================
+
+@dp.callback_query(F.data == "check_sub")
+async def check_sub_callback(callback: CallbackQuery):
+
+    user_id = callback.from_user.id
+
+    # qayta tekshiradi
+    if await check_subscription(user_id):
+
+        # bazaga qo'shadi
+        db_execute(
+            "INSERT INTO users (user_id, approved) "
+            "VALUES (%s, 0) "
+            "ON CONFLICT DO NOTHING",
+            (user_id,)
+        )
+
+        # eski xabarni o'chiradi
+        try:
+            await callback.message.delete()
+        except:
+            pass
+
+        # admin notification
+        if user_id != ADMIN_ID:
+
+            try:
+
+                await bot.send_message(
+                    ADMIN_ID,
+                    f"🔔 Yangi foydalanuvchi!\n\n"
+                    f"👤 Ism: {callback.from_user.full_name}\n"
+                    f"🆔 ID: {user_id}\n"
+                    f"Username: @{callback.from_user.username}",
+                )
+
+            except Exception as e:
+
+                logger.error(e)
+
+        # userga menu chiqaradi
+        await callback.message.answer(
+            "✅ Obuna tasdiqlandi!\n\n"
+            "🇩🇪 Botga xush kelibsiz.",
+            reply_markup=main_menu
+        )
+
+        await callback.answer()
+
+    else:
+
+        await callback.answer(
+            "❌ Hali kanalga a'zo bo'lmagansiz.",
+            show_alert=True
+        )
 # =========================
 # USTOZ HAQIDA
 # =========================
