@@ -45,7 +45,7 @@ if not DATABASE_URL:
 # CONFIG
 # =========================
 
-ADMIN_ID = 7790766887
+ADMIN_ID = int(os.getenv("ADMIN_ID"))
 CHANNEL_USERNAME = "@vizu_deutsch"
 
 COURSE_LINKS = {
@@ -1121,9 +1121,13 @@ async def quiz_answer(callback: CallbackQuery):
 @dp.message(F.text == "🏆 Top 100")
 async def top_players(message: Message):
     result = db_execute(
-        "SELECT COALESCE(full_name, 'Unknown'), score FROM users ORDER BY score DESC LIMIT 100",
-        fetchall=True,
-    )
+    "SELECT COALESCE(full_name, 'Unknown'), score "
+    "FROM users "
+    "WHERE approved = 1 "
+    "ORDER BY score DESC "
+    "LIMIT 100",
+    fetchall=True,
+)
 
     if not result:
         await message.answer("❌ Reyting bo'sh.")
