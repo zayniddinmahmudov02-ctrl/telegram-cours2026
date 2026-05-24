@@ -886,20 +886,20 @@ def load_quiz_questions():
 
     logger.info(f"Quiz loaded: {len(QUIZ_QUESTIONS)}")
 
-# Per-user quiz lock
-quiz_running: set[int] = set()
+# =========================
+# QUIZ SYSTEM
+# =========================
 
-# stop flags
-quiz_stop_flags = {}
+quiz_running = set()
 
-# active questions
-active_questions: dict[str, str] = {}
+quiz_sessions = {}
 
-# answered users
-answered_users: dict[str, set] = {}
+active_questions = {}
+
+answered_users = {}
 
 # =========================
-# QUIZ START
+# START QUIZ
 # =========================
 
 @dp.message(F.text == "📚 A-Blok Teste")
@@ -924,165 +924,118 @@ async def start_quiz(message: Message):
         return
 
     quiz_running.add(user_id)
+
     db_execute(
-    "UPDATE users SET score = 0 WHERE user_id = %s",
-    (user_id,)
-)
-    quiz_stop_flags[user_id] = False
+        "UPDATE users SET score = 0 WHERE user_id = %s",
+        (user_id,)
+    )
 
-    try:
+    questions = random.sample(
+        QUIZ_QUESTIONS,
+        len(QUIZ_QUESTIONS)
+    )
 
-        questions = random.sample(
-            QUIZ_QUESTIONS,
-            len(QUIZ_QUESTIONS)
-        )
+    quiz_sessions[user_id] = {
+        "questions": questions,
+        "index": 0
+    }
 
-        await message.answer(
-            f"🚀 Test boshlandi!\n\n"
-            f"📚 Savollar soni: {len(questions)}\n"
-            f"⏳ Har savol uchun 10 soniya!"
-        )
+    await message.answer(
+        f"🚀 Test boshlandi!\n\n"
+        f"📚 Savollar soni: {len(questions)}"
+    )
 
-        for index, question in enumerate(questions):
+    await send_next_question(
+        message.chat.id,
+        user_id
+    )
 
-            if quiz_stop_flags.get(user_id):
-                break
+# =========================
+# SEND QUESTION
+# =========================
 
-            answers = [
-                question["correct"],
-                question["wrong"]
-            ]
+async def send_next_question(chat_id, user_id):
 
-            random.shuffle(answers)
+    session = quiz_sessions.get(user_id)
 
-            question_id = (
-                f"{user_id}_{question['id']}"
-            )
+    if not session:
+        return
 
-            active_questions[question_id] = (
-                question["correct"]
-            )
+    questions = session["questions"]
 
-            answered_users[question_id] = set()
+    index = session["index"]
 
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text=f"A) {answers[0]}",
-                            callback_data=(
-                                f"quiz:{question_id}:{answers[0]}"
-                            )
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text=f"B) {answers[1]}",
-                            callback_data=(
-                                f"quiz:{question_id}:{answers[1]}"
-                            )
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="⛔ Testni Yakunlash",
-                            callback_data=(
-                                f"stopquiz:{user_id}"
-                            )
-                        )
-                    ]
-                ]
-            )
-
-            sent = await message.answer(
-                f"📚 Savol ID: {question['id']}\n"
-                f"📊 {index + 1}/{len(questions)}\n\n"
-                f"🇩🇪 {question['german']}\n\n"
-                f"⏳ 10 soniya ichida javob bering!",
-                reply_markup=keyboard
-            )
-
-            await asyncio.sleep(10)
-
-            active_questions.pop(question_id, None)
-
-            answered_users.pop(question_id, None)
-
-            try:
-
-                await bot.edit_message_reply_markup(
-                    chat_id=message.chat.id,
-                    message_id=sent.message_id,
-                    reply_markup=None
-                )
-
-            except Exception as e:
-                logger.error(e)
-
-            if quiz_stop_flags.get(user_id):
-                break
-
-            await message.answer(
-                f"⏰ Vaqt tugadi!\n\n"
-                f"✅ To'g'ri javob: "
-                f"{question['correct']}"
-            )
+    # TEST TUGADI
+    if index >= len(questions):
 
         row = db_execute(
-            "SELECT score FROM users "
-            "WHERE user_id = %s",
+            "SELECT score FROM users WHERE user_id = %s",
             (user_id,),
             fetchone=True
         )
 
-        total_score = row[0] if row else 0
+        score = row[0] if row else 0
 
-        if quiz_stop_flags.get(user_id):
-
-            await message.answer(
-                f"🏁 Test erta yakunlandi!\n\n"
-                f"🏆 Umumiy balingiz: "
-                f"{total_score}"
-            )
-
-        else:
-
-            await message.answer(
-                f"🏁 Test tugadi!\n\n"
-                f"🏆 Umumiy balingiz: "
-                f"{total_score}"
-            )
-
-    finally:
+        await bot.send_message(
+            chat_id,
+            f"🏁 Test tugadi!\n\n"
+            f"🏆 Natijangiz: {score}"
+        )
 
         quiz_running.discard(user_id)
 
-        quiz_stop_flags.pop(user_id, None)
-
-# =========================
-# STOP QUIZ
-# =========================
-
-@dp.callback_query(F.data.startswith("stopquiz:"))
-async def stop_quiz(callback: CallbackQuery):
-
-    user_id = int(
-        callback.data.split(":")[1]
-    )
-
-    if callback.from_user.id != user_id:
-
-        await callback.answer(
-            "❌ Ruxsat yo'q",
-            show_alert=True
-        )
+        quiz_sessions.pop(user_id, None)
 
         return
 
-    quiz_stop_flags[user_id] = True
+    question = questions[index]
 
-    await callback.answer(
-        "⛔ Test yakunlandi!"
+    answers = [
+        question["correct"],
+        question["wrong"]
+    ]
+
+    random.shuffle(answers)
+
+    question_id = f"{user_id}_{question['id']}"
+
+    active_questions[question_id] = question["correct"]
+
+    answered_users[question_id] = set()
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=f"A) {answers[0]}",
+                    callback_data=(
+                        f"quiz:{question_id}:{answers[0]}"
+                    )
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=f"B) {answers[1]}",
+                    callback_data=(
+                        f"quiz:{question_id}:{answers[1]}"
+                    )
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⛔ Testni Yakunlash",
+                    callback_data=f"stopquiz:{user_id}"
+                )
+            ]
+        ]
+    )
+
+    await bot.send_message(
+        chat_id,
+        f"📚 Savol ID: {question['id']}\n"
+        f"📊 {index + 1}/{len(questions)}\n\n"
+        f"🇩🇪 {question['german']}",
+        reply_markup=keyboard
     )
 
 # =========================
@@ -1140,30 +1093,72 @@ async def quiz_answer(callback: CallbackQuery):
             f"✅ To'g'ri javob: {correct}",
             show_alert=True
         )
-# =========================
-# TOP 100
-# =========================
-@dp.message(F.text == "🏆 Top 100")
-async def top_players(message: Message):
-    result = db_execute(
-    "SELECT COALESCE(full_name, 'Unknown'), score "
-    "FROM users "
-    "WHERE approved = 1 "
-    "ORDER BY score DESC "
-    "LIMIT 100",
-    fetchall=True,
-)
 
-    if not result:
-        await message.answer("❌ Reyting bo'sh.")
+    active_questions.pop(question_id, None)
+
+    answered_users.pop(question_id, None)
+
+    session = quiz_sessions.get(user_id)
+
+    if session:
+        session["index"] += 1
+
+    try:
+
+        await callback.message.edit_reply_markup(
+            reply_markup=None
+        )
+
+    except Exception as e:
+        logger.error(e)
+
+    await send_next_question(
+        callback.message.chat.id,
+        user_id
+    )
+
+# =========================
+# STOP QUIZ
+# =========================
+
+@dp.callback_query(F.data.startswith("stopquiz:"))
+async def stop_quiz(callback: CallbackQuery):
+
+    user_id = int(
+        callback.data.split(":")[1]
+    )
+
+    if callback.from_user.id != user_id:
+
+        await callback.answer(
+            "❌ Ruxsat yo'q",
+            show_alert=True
+        )
+
         return
 
-    lines = ["🏆 TOP 100 O'YINCHILAR\n"]
-    for i, (name, score) in enumerate(result, 1):
-        lines.append(f"{i}. {name} — {score} ball")
+    row = db_execute(
+        "SELECT score FROM users WHERE user_id = %s",
+        (user_id,),
+        fetchone=True
+    )
 
-    await message.answer("\n".join(lines))
+    score = row[0] if row else 0
 
+    quiz_running.discard(user_id)
+
+    quiz_sessions.pop(user_id, None)
+
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
+
+    await callback.message.answer(
+        f"⛔ Test yakunlandi!\n\n"
+        f"🏆 Natijangiz: {score}"
+    )
+
+    await callback.answer()
 # =========================
 # ADMIN PANEL
 # =========================
