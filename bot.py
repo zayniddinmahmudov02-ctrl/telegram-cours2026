@@ -245,7 +245,7 @@ def init_tables():
         logger.error(e)
 
     logger.info("Database tables ready ✅")
-    # =========================
+# =========================
 # FLASK
 # =========================
 
@@ -263,9 +263,11 @@ def run_web():
     )
 
     app.run(
-        host="0.0.0.0",
-        port=port
-    )
+    host="0.0.0.0",
+    port=port,
+    debug=False,
+    use_reloader=False
+)
 # =========================
 # BOT
 # =========================
@@ -1435,7 +1437,6 @@ async def artikel_handler(message: Message):
 # =========================
 # RUN
 # =========================
-
 async def main():
 
     init_db_pool()
@@ -1454,3 +1455,8 @@ async def main():
     logger.info("BOT ISHGA TUSHDI ✅")
 
     await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+
+    asyncio.run(main())
