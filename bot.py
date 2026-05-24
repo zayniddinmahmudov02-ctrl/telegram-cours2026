@@ -1120,7 +1120,6 @@ async def quiz_answer(callback: CallbackQuery):
 # =========================
 # STOP QUIZ
 # =========================
-
 @dp.callback_query(F.data.startswith("stopquiz:"))
 async def stop_quiz(callback: CallbackQuery):
 
@@ -1149,9 +1148,14 @@ async def stop_quiz(callback: CallbackQuery):
 
     quiz_sessions.pop(user_id, None)
 
-    await callback.message.edit_reply_markup(
-        reply_markup=None
-    )
+    try:
+
+        await callback.message.edit_reply_markup(
+            reply_markup=None
+        )
+
+    except Exception as e:
+        logger.error(e)
 
     await callback.message.answer(
         f"⛔ Test yakunlandi!\n\n"
@@ -1432,6 +1436,24 @@ async def artikel_handler(message: Message):
 # =========================
 # RUN
 # =========================
+async def start_bot():
+
+    while True:
+
+        try:
+
+            logger.info("BOT ISHGA TUSHDI ✅")
+
+            await dp.start_polling(bot)
+
+        except Exception as e:
+
+            logger.error(
+                f"BOT CRASH: {e}"
+            )
+
+            await asyncio.sleep(5)
+
 async def main():
 
     init_db_pool()
@@ -1447,9 +1469,7 @@ async def main():
         daemon=True
     ).start()
 
-    logger.info("BOT ISHGA TUSHDI ✅")
-
-    await dp.start_polling(bot)
+    await start_bot()
 
 
 if __name__ == "__main__":
