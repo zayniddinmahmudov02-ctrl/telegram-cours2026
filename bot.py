@@ -330,7 +330,10 @@ admin_menu = ReplyKeyboardMarkup(
 
 word_game_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="📚 A-Blok Teste")],
+[
+            KeyboardButton(text="📚 A-1-Blok"),
+            KeyboardButton(text="📚 A-2-Blok")
+        ],
         [KeyboardButton(text="🏆 Top 100")],
         [KeyboardButton(text="⬅️ Orqaga")],
     ],
@@ -962,6 +965,7 @@ async def reject_user(callback: CallbackQuery):
     await callback.answer(
         "❌ Rad qilindi"
     )
+
 # =========================
 # WORD GAME MENU
 # =========================
@@ -971,12 +975,31 @@ class QuizNameState(StatesGroup):
 
 word_game_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="📚 A-Blok Teste")],
+        [
+            KeyboardButton(text="📚 A-1-Blok"),
+            KeyboardButton(text="📚 A-2-Blok")
+        ],
         [KeyboardButton(text="🏆 Top 100")],
         [KeyboardButton(text="⬅️ Orqaga")],
     ],
     resize_keyboard=True,
 )
+
+# =========================
+# DATABASE FIX
+# =========================
+
+try:
+
+    db_execute("""
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS score_a2
+        INTEGER DEFAULT 0
+    """)
+
+except Exception as e:
+
+    logger.error(e)
 
 # =========================
 # WORD GAME
@@ -1001,7 +1024,6 @@ async def word_game(
         fetchone=True
     )
 
-    # Agar ism yo'q bo'lsa
     if not row or not row[0]:
 
         await message.answer(
@@ -1031,7 +1053,6 @@ async def save_quiz_name(
 
     full_name = message.text.strip()
 
-    # User bazada yo'q bo'lsa yaratadi
     db_execute(
         "INSERT INTO users "
         "(user_id, full_name) "
@@ -1051,15 +1072,20 @@ async def save_quiz_name(
     )
 
     await state.clear()
+
 # =========================
 # QUIZ DATA
 # =========================
 
-QUIZ_QUESTIONS = []
+QUIZ_A1 = []
+QUIZ_A2 = []
 
 def load_quiz_questions():
 
-    global QUIZ_QUESTIONS
+    global QUIZ_A1, QUIZ_A2
+
+    QUIZ_A1.clear()
+    QUIZ_A2.clear()
 
     csv_path = "quiz.csv"
 
@@ -1077,17 +1103,28 @@ def load_quiz_questions():
 
             try:
 
-                QUIZ_QUESTIONS.append({
+                question = {
                     "id": int(row["id"]),
                     "german": row["german"].strip(),
                     "correct": row["correct"].strip(),
-                    "wrong": row["wrong"].strip(),
-                })
+                    "wrong1": row["wrong1"].strip(),
+                    "wrong2": row["wrong2"].strip(),
+                }
+
+                if 1 <= question["id"] <= 100:
+
+                    QUIZ_A1.append(question)
+
+                elif 101 <= question["id"] <= 200:
+
+                    QUIZ_A2.append(question)
 
             except Exception as e:
+
                 logger.error(e)
 
-    logger.info(f"Quiz loaded: {len(QUIZ_QUESTIONS)}")
+    logger.info(f"A1 quiz: {len(QUIZ_A1)}")
+    logger.info(f"A2 quiz: {len(QUIZ_A2)}")
 
 # =========================
 # QUIZ SYSTEM
@@ -1102,11 +1139,11 @@ active_questions = {}
 answered_users = {}
 
 # =========================
-# START QUIZ
+# START A1 QUIZ
 # =========================
 
-@dp.message(F.text == "📚 A-Blok Teste")
-async def start_quiz(message: Message):
+@dp.message(F.text == "📚 A-1-Blok")
+async def start_quiz_a1(message: Message):
 
     user_id = message.from_user.id
 
@@ -1118,10 +1155,10 @@ async def start_quiz(message: Message):
 
         return
 
-    if not QUIZ_QUESTIONS:
+    if not QUIZ_A1:
 
         await message.answer(
-            "❌ Quiz savollari topilmadi."
+            "❌ A-1 savollar topilmadi."
         )
 
         return
@@ -1134,17 +1171,71 @@ async def start_quiz(message: Message):
     )
 
     questions = random.sample(
-        QUIZ_QUESTIONS,
-        len(QUIZ_QUESTIONS)
+        QUIZ_A1,
+        len(QUIZ_A1)
     )
 
     quiz_sessions[user_id] = {
         "questions": questions,
-        "index": 0
+        "index": 0,
+        "block": "a1"
     }
 
     await message.answer(
-        f"🚀 Test boshlandi!\n\n"
+        f"🚀 A-1-Blok boshlandi!\n\n"
+        f"📚 Savollar soni: {len(questions)}"
+    )
+
+    await send_next_question(
+        message.chat.id,
+        user_id
+    )
+
+# =========================
+# START A2 QUIZ
+# =========================
+
+@dp.message(F.text == "📚 A-2-Blok")
+async def start_quiz_a2(message: Message):
+
+    user_id = message.from_user.id
+
+    if user_id in quiz_running:
+
+        await message.answer(
+            "⚠️ Test allaqachon boshlangan."
+        )
+
+        return
+
+    if not QUIZ_A2:
+
+        await message.answer(
+            "❌ A-2 savollar topilmadi."
+        )
+
+        return
+
+    quiz_running.add(user_id)
+
+    db_execute(
+        "UPDATE users SET score_a2 = 0 WHERE user_id = %s",
+        (user_id,)
+    )
+
+    questions = random.sample(
+        QUIZ_A2,
+        len(QUIZ_A2)
+    )
+
+    quiz_sessions[user_id] = {
+        "questions": questions,
+        "index": 0,
+        "block": "a2"
+    }
+
+    await message.answer(
+        f"🚀 A-2-Blok boshlandi!\n\n"
         f"📚 Savollar soni: {len(questions)}"
     )
 
@@ -1168,14 +1259,25 @@ async def send_next_question(chat_id, user_id):
 
     index = session["index"]
 
-    # TEST TUGADI
+    block = session["block"]
+
     if index >= len(questions):
 
-        row = db_execute(
-            "SELECT score FROM users WHERE user_id = %s",
-            (user_id,),
-            fetchone=True
-        )
+        if block == "a2":
+
+            row = db_execute(
+                "SELECT score_a2 FROM users WHERE user_id = %s",
+                (user_id,),
+                fetchone=True
+            )
+
+        else:
+
+            row = db_execute(
+                "SELECT score FROM users WHERE user_id = %s",
+                (user_id,),
+                fetchone=True
+            )
 
         score = row[0] if row else 0
 
@@ -1195,7 +1297,8 @@ async def send_next_question(chat_id, user_id):
 
     answers = [
         question["correct"],
-        question["wrong"]
+        question["wrong1"],
+        question["wrong2"]
     ]
 
     random.shuffle(answers)
@@ -1211,17 +1314,19 @@ async def send_next_question(chat_id, user_id):
             [
                 InlineKeyboardButton(
                     text=f"A) {answers[0]}",
-                    callback_data=(
-                        f"quiz:{question_id}:{answers[0]}"
-                    )
+                    callback_data=f"quiz:{question_id}:{answers[0]}"
                 )
             ],
             [
                 InlineKeyboardButton(
                     text=f"B) {answers[1]}",
-                    callback_data=(
-                        f"quiz:{question_id}:{answers[1]}"
-                    )
+                    callback_data=f"quiz:{question_id}:{answers[1]}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=f"C) {answers[2]}",
+                    callback_data=f"quiz:{question_id}:{answers[2]}"
                 )
             ],
             [
@@ -1276,14 +1381,29 @@ async def quiz_answer(callback: CallbackQuery):
 
     correct = active_questions[question_id]
 
+    session = quiz_sessions.get(user_id)
+
+    block = session.get("block")
+
     if selected == correct:
 
-        db_execute(
-            "UPDATE users "
-            "SET score = score + 1 "
-            "WHERE user_id = %s",
-            (user_id,)
-        )
+        if block == "a2":
+
+            db_execute(
+                "UPDATE users "
+                "SET score_a2 = score_a2 + 1 "
+                "WHERE user_id = %s",
+                (user_id,)
+            )
+
+        else:
+
+            db_execute(
+                "UPDATE users "
+                "SET score = score + 1 "
+                "WHERE user_id = %s",
+                (user_id,)
+            )
 
         await callback.answer(
             "✅ To'g'ri!"
@@ -1301,8 +1421,6 @@ async def quiz_answer(callback: CallbackQuery):
 
     answered_users.pop(question_id, None)
 
-    session = quiz_sessions.get(user_id)
-
     if session:
         session["index"] += 1
 
@@ -1313,6 +1431,7 @@ async def quiz_answer(callback: CallbackQuery):
         )
 
     except Exception as e:
+
         logger.error(e)
 
     await send_next_question(
@@ -1323,6 +1442,7 @@ async def quiz_answer(callback: CallbackQuery):
 # =========================
 # STOP QUIZ
 # =========================
+
 @dp.callback_query(F.data.startswith("stopquiz:"))
 async def stop_quiz(callback: CallbackQuery):
 
@@ -1339,11 +1459,25 @@ async def stop_quiz(callback: CallbackQuery):
 
         return
 
-    row = db_execute(
-        "SELECT score FROM users WHERE user_id = %s",
-        (user_id,),
-        fetchone=True
-    )
+    session = quiz_sessions.get(user_id)
+
+    block = session.get("block")
+
+    if block == "a2":
+
+        row = db_execute(
+            "SELECT score_a2 FROM users WHERE user_id = %s",
+            (user_id,),
+            fetchone=True
+        )
+
+    else:
+
+        row = db_execute(
+            "SELECT score FROM users WHERE user_id = %s",
+            (user_id,),
+            fetchone=True
+        )
 
     score = row[0] if row else 0
 
@@ -1358,6 +1492,7 @@ async def stop_quiz(callback: CallbackQuery):
         )
 
     except Exception as e:
+
         logger.error(e)
 
     await callback.message.answer(
@@ -1377,10 +1512,10 @@ async def top_players(message: Message):
     result = db_execute(
         "SELECT "
         "COALESCE(full_name, 'Unknown'), "
-        "score "
+        "(score + COALESCE(score_a2, 0)) as total_score "
         "FROM users "
-        "WHERE score > 0 "
-        "ORDER BY score DESC, user_id ASC "
+        "WHERE (score + COALESCE(score_a2, 0)) > 0 "
+        "ORDER BY total_score DESC, user_id ASC "
         "LIMIT 100",
         fetchall=True,
     )
@@ -1623,13 +1758,28 @@ async def send_broadcast(
 # ARTIKEL TOPISH
 # =========================
 _MENU_BUTTONS = {
-    "🎮 So'z O'yini", "🎥 Video Kurslar", "👨‍🏫 Ustoz haqida",
-    "🏆 Natijalar", "📞 Admin bilan bog'lanish", "⬅️ Orqaga",
-    "🇩🇪 A1", "🇩🇪 A2", "🇩🇪 B1",
-    "🔥 A1-B1", "🔥 A1-C1", "🎬 Namuna Dars",
-    "/admin", "📊 Statistika", "👥 Foydalanuvchilar",
-    "💳 Xaridorlar", "📢 Reklama Yuborish", "📨 Shaxsiy Xabar",
-    "⬅️ Admin Chiqish", "📚 A-Blok Teste", "🏆 Top 100",
+    "🎮 So'z O'yini",
+    "🎥 Video Kurslar",
+    "👨‍🏫 Ustoz haqida",
+    "🏆 Natijalar",
+    "📞 Admin bilan bog'lanish",
+    "⬅️ Orqaga",
+    "🇩🇪 A1",
+    "🇩🇪 A2",
+    "🇩🇪 B1",
+    "🔥 A1-B1",
+    "🔥 A1-C1",
+    "🎬 Namuna Dars",
+    "/admin",
+    "📊 Statistika",
+    "👥 Foydalanuvchilar",
+    "💳 Xaridorlar",
+    "📢 Reklama Yuborish",
+    "📨 Shaxsiy Xabar",
+    "⬅️ Admin Chiqish",
+    "📚 A-1-Blok",
+    "📚 A-2-Blok",
+    "🏆 Top 100",
 }
 
 @dp.message(F.text == "📚 Artikel Topish")
