@@ -21,6 +21,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     CallbackQuery,
     FSInputFile,
+    ReplyKeyboardRemove,
 )
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -421,11 +422,18 @@ def load_artikel():
 # =========================
 # START
 # =========================
-
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
 
     user_id = message.from_user.id
+
+    # eski keyboardni tozalash
+    await message.answer(
+        "🔄 Menu yangilanmoqda...",
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+    await asyncio.sleep(1)
 
     # Kanal obunasini tekshirish
     if not await check_subscription(user_id):
@@ -487,7 +495,6 @@ async def cmd_start(message: Message):
         "50% CHEGIRMADA!",
         reply_markup=main_menu,
     )
-
 
 # =========================
 # CHECK SUBSCRIPTION BUTTON
