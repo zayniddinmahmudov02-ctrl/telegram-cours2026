@@ -1079,7 +1079,6 @@ async def save_quiz_name(
     )
 
     await state.clear()
-
 # =========================
 # QUIZ DATA
 # =========================
@@ -1095,6 +1094,8 @@ def load_quiz_questions():
     QUIZ_A2.clear()
 
     csv_path = "quiz.csv"
+
+    logger.info(f"CSV EXISTS: {os.path.exists(csv_path)}")
 
     if not os.path.exists(csv_path):
 
@@ -1128,10 +1129,10 @@ def load_quiz_questions():
 
             except Exception as e:
 
-                logger.error(e)
+                logger.error(f"Quiz parse error: {e}")
 
-    logger.info(f"A1 quiz: {len(QUIZ_A1)}")
-    logger.info(f"A2 quiz: {len(QUIZ_A2)}")
+    logger.info(f"A1 loaded: {len(QUIZ_A1)}")
+    logger.info(f"A2 loaded: {len(QUIZ_A2)}")
 
 # =========================
 # QUIZ SYSTEM
@@ -1352,7 +1353,6 @@ async def send_next_question(chat_id, user_id):
         f"🇩🇪 {question['german']}",
         reply_markup=keyboard
     )
-
 # =========================
 # QUIZ ANSWER
 # =========================
