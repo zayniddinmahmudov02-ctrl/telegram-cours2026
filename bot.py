@@ -1694,24 +1694,31 @@ def reset_daily_scores():
         """,
         (today, today)
     )
-
 # =========================================================
-# LEVEL MENU
+# QUIZ MENU
 # =========================================================
 
-async def build_level_menu(user_id):
+async def build_level_menu(
+    user_id
+):
 
     result = db_execute(
         """
         SELECT unlocked_level
+
         FROM users
+
         WHERE user_id = %s
         """,
         (user_id,),
         fetchone=True
     )
 
-    unlocked = result[0] if result else "A1"
+    unlocked = (
+        result[0]
+        if result
+        else "A1"
+    )
 
     unlocked_index = LEVEL_ORDER.index(
         unlocked
@@ -1721,45 +1728,84 @@ async def build_level_menu(user_id):
 
     current = []
 
-    for i, level in enumerate(LEVEL_ORDER):
+    # =====================================================
+    # LEVELS
+    # =====================================================
 
-        # unlocked
+    for i, level in enumerate(
+        LEVEL_ORDER
+    ):
+
+        # OPEN
         if i <= unlocked_index:
 
-            text = f"🎯 {level}"
+            text = (
+                f"🎯 {level}"
+            )
 
-        # locked
+        # LOCKED
         else:
 
-            text = f"🔒 {level}"
+            text = (
+                f"🔒 {level}"
+            )
 
         current.append(
-            KeyboardButton(text=text)
+
+            KeyboardButton(
+                text=text
+            )
         )
 
+        # 2 BUTTONS
         if len(current) == 2:
 
             rows.append(current)
 
             current = []
 
+    # LAST ROW
     if current:
+
         rows.append(current)
 
+    # =====================================================
+    # RANKING
+    # =====================================================
+
     rows.append([
+
         KeyboardButton(
             text="🏆 Reytinglar"
         )
     ])
 
+    # =====================================================
+    # CERTIFICATE
+    # =====================================================
+
     rows.append([
+
+        KeyboardButton(
+            text="🏅 Sertifikat"
+        )
+    ])
+
+    # =====================================================
+    # BACK
+    # =====================================================
+
+    rows.append([
+
         KeyboardButton(
             text="⬅️ Orqaga"
         )
     ])
 
     return ReplyKeyboardMarkup(
+
         keyboard=rows,
+
         resize_keyboard=True
     )
 
