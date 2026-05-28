@@ -1,0 +1,1000 @@
+1,der Apfel,olma,mashina,telefon
+2,das Haus,uy,telefon,stul
+3,die Schule,maktab,oyna,sumka
+4,der Lehrer,o'qituvchi,daryo,oy
+5,die Mutter,ona,stul,qalam
+6,der Vater,ota,sumka,muz
+7,das Buch,kitob,muz,telefon
+8,die Tasche,sumka,oy,gul
+9,der Tisch,stol,telefon,daryo
+10,das Wasser,suv,gul,stakan
+11,die Tür,eshik,non,oyna
+12,der Hund,it,oyna,sumka
+13,die Katze,mushuk,qalam,telefon
+14,das Auto,mashina,stakan,muz
+15,der Freund,do'st,muzlatgich,oy
+16,die Freundin,dugona,dengiz,stul
+17,das Handy,telefon,stul,sumka
+18,der Stuhl,stul,oy,gul
+19,die Blume,gul,maktab,telefon
+20,das Fenster,oyna,sumka,muz
+21,freundlich,mehribon,qo'pol,sovuq
+22,laufen,yugurmoq,uxlamoq,o'tirmoq
+23,langsam,sekin,tez,baland
+24,helfen,yordam bermoq,unutmoq,sotmoq
+25,interessant,qiziqarli,zerikarli,sovuq
+26,fragen,so'ramoq,uxlamoq,o'qimoq
+27,sauber,toza,iflos,qattiq
+28,bezahlen,to'lamoq,qochmoq,sakrash
+29,heute,bugun,ertaga,kecha
+30,stark,kuchli,kuchsiz,nam
+31,der Bruder,aka uka,telefon,stakan
+32,die Schwester,opa singil,daryo,oy
+33,das Brot,non,muz,qalam
+34,der Bleistift,qalam,stul,sumka
+35,die Lampe,chiroq,eshik,telefon
+36,das Bett,karavot,sumka,mashina
+37,der Arzt,shifokor,oy,gul
+38,die Stadt,shahar,telefon,stul
+39,das Land,davlat,gul,oyna
+40,der Student,talaba,mashina,sumka
+41,arbeiten,ishlamoq,uxlamoq,sakrash
+42,schnell,tez,sekin,baland
+43,glücklich,baxtli,xafa,issiq
+44,lernen,o'rganmoq,unutmoq,yashirmoq
+45,oft,tez-tez,kamdan-kam,erta
+46,klein,kichik,katta,sovuq
+47,wohnen,yashamoq,qochmoq,o'tirmoq
+48,morgen,ertaga,kecha,bugun
+49,müde,charchagan,dam olgan,faol
+50,kochen,pishirmoq,haydash,suzmoq
+51,die Arbeit,ish,telefon,qalam
+52,das Essen,ovqat,stol,muz
+53,der Kaffee,qahva,sumka,oy
+54,die Zeitung,gazeta,oyna,gul
+55,das Kind,bola,muz,telefon
+56,der Zug,poyezd,telefon,stakan
+57,die Frage,savol,stul,sumka
+58,das Bild,rasm,sumka,oy
+59,der Ball,to'p,oy,muz
+60,die Antwort,javob,gul,qalam
+61,trinken,ichmoq,sakrash,uxlamoq
+62,schön,chiroyli,xunuk,zerikarli
+63,verstehen,tushunmoq,unutmoq,qochmoq
+64,gern,jon deb,majburan,sekin
+65,lesen,o'qimoq,sotmoq,haydash
+66,laut,baland,past,zerikarli
+67,schreiben,yozmoq,uxlamoq,suzmoq
+68,kalt,sovuq,issiq,quruq
+69,spielen,o'ynamoq,yig'lamoq,qochmoq
+70,zusammen,birga,yolg'iz,erta
+71,das Zimmer,xona,telefon,oyna
+72,der Computer,kompyuter,daryo,sumka
+73,die Musik,musiqa,stol,telefon
+74,das Fahrrad,velosiped,muz,gul
+75,der Park,park,sumka,stakan
+76,die Familie,oila,telefon,oy
+77,das Spiel,o'yin,oyna,qalam
+78,der Abend,kechqurun,gul,muz
+79,die Uhr,soat,stul,telefon
+80,das Meer,dengiz,sumka,oyna
+81,schlafen,uxlamoq,yugurmoq,o'qimoq
+82,alt,qari,yosh,tez
+83,kaufen,sotib olmoq,sotmoq,unutmoq
+84,dort,u yerda,bu yerda,erta
+85,neu,yangi,eski,quruq
+86,bringen,olib kelmoq,tashlab ketmoq,qochmoq
+87,wichtig,muhim,keraksiz,oddiy
+88,immer,har doim,hech qachon,sekin
+89,öffnen,ochmoq,yopmoq,sakrash
+90,ruhig,tinch,shovqinli,baland
+91,der Morgen,ertalab,telefon,mashina
+92,die Nacht,tun,muz,stul
+93,das Wetter,ob-havo,stol,qalam
+94,der Sommer,yoz,daryo,gul
+95,die Sonne,quyosh,sumka,telefon
+96,das Jahr,yil,telefon,oy
+97,der Winter,qish,oyna,muz
+98,die Woche,hafta,stul,sumka
+99,das Wochenende,hafta oxiri,muz,telefon
+100,der Monat,oy,telefon,gul
+101,die Minute,daqiqa,sumka,stakan
+102,das Problem,muammo,stol,oyna
+103,der Name,ism,gul,muz
+104,die Sprache,til,oyna,telefon
+105,das Foto,rasm,telefon,sumka
+106,der Kuchen,tort,muz,oy
+107,die Suppe,sho'rva,stul,qalam
+108,das Ei,tuxum,sumka,telefon
+109,der Fisch,baliq,telefon,muz
+110,die Banane,banan,oyna,gul
+111,essen,yemoq,uxlamoq,qochmoq
+112,freundlich,mehribon,qo'pol,sovuq
+113,kommen,kelmoq,ketmoq,sakrash
+114,später,keyinroq,hozir,erta
+115,groß,katta,kichik,past
+116,nehmen,olmoq,bermoq,qochmoq
+117,früh,erta,kech,sekin
+118,teuer,qimmat,arzon,oddiy
+119,zeigen,ko'rsatmoq,yashirmoq,unutmoq
+120,draußen,tashqarida,ichkarida,kecha
+121,das Fleisch,go'sht,muz,stakan
+122,der Saft,sharbat,telefon,sumka
+123,die Orange,apelsin,stol,oy
+124,das Gemüse,sabzavot,sumka,mashina
+125,der Markt,bozor,gul,telefon
+126,die Reise,sayohat,oyna,muz
+127,das Ticket,chipta,telefon,stul
+128,der Flughafen,aeroport,muz,sumka
+129,die Straße,ko'cha,stul,qalam
+130,das Hotel,mehmonxona,sumka,telefon
+131,fahren,bormoq,minmoq,uxlamoq
+132,langweilig,zerikarli,qiziqarli,faol
+133,treffen,uchrashmoq,qochmoq,sakrash
+134,meistens,ko'pincha,hech qachon,erta
+135,leicht,oson,qiyin,og'ir
+136,suchen,qidirmoq,yashirmoq,unutmoq
+137,links,chapda,o'ngda,tepada
+138,schwer,qiyin,oson,engil
+139,finden,topmoq,yo'qotmoq,sotmoq
+140,unten,pastda,tepada,ichkarida
+141,der Chef,rahbar,telefon,gul
+142,die Küche,oshxona,oyna,muz
+143,das Messer,pichoq,muz,oy
+144,der Löffel,qoshiq,stul,telefon
+145,die Gabel,sanchqi,sumka,stakan
+146,das Glas,stakan,telefon,gul
+147,der Teller,tarelka,gul,mashina
+148,die Kleidung,kiyim,oyna,sumka
+149,das Hemd,ko'ylak,muz,qalam
+150,der Schuh,oyoq kiyim,telefon,oy
+151,tragen,kiymoq,tashlamoq,qochmoq
+152,sauber,toza,iflos,qattiq
+153,verkaufen,sotmoq,sotib olmoq,bermoq
+154,gestern,kecha,bugun,ertaga
+155,alt,qari,yosh,tez
+156,bezahlen,to'lamoq,olmoq,qochmoq
+157,oben,tepada,pastda,ichkarida
+158,jung,yosh,qari,sekin
+159,öffnen,ochmoq,yopmoq,unutmoq
+160,drinnen,ichkarida,tashqarida,erta
+161,die Jacke,kurtka,sumka,muz
+162,das Geld,pul,oyna,telefon
+163,der Preis,narx,telefon,stul
+164,die Bank,bank,stol,gul
+165,das Geschäft,do'kon,muz,sumka
+166,der Beruf,kasb,sumka,oyna
+167,die Universität,universitet,telefon,qalam
+168,das Krankenhaus,kasalxona,oyna,muz
+169,der Urlaub,ta'til,gul,telefon
+170,die Nachricht,xabar,stul,oyna
+171,arbeiten,ishlamoq,uxlamoq,sakrash
+172,warm,iliq,sovuq,quruq
+173,anrufen,qo'ng'iroq qilmoq,uxlamoq,qochmoq
+174,manchmal,ba'zida,har doim,erta
+175,krank,kasal,sog'lom,faol
+176,lernen,o'rganmoq,unutmoq,yashirmoq
+177,rechts,o'ngda,chapda,pastda
+178,gesund,sog'lom,kasal,zerikarli
+179,antworten,javob bermoq,savol bermoq,sotmoq
+180,überall,hamma yerda,hech qayerda,ichkarida
+181,der Baum,daraxt,telefon,stakan
+182,die Wolke,bulut,mashina,qalam
+183,das Dorf,qishloq,oy,sumka
+184,der Regen,yomg'ir,telefon,muz
+185,die Insel,orol,stol,gul
+186,das Radio,radio,daryo,oyna
+187,der Vogel,qush,sumka,non
+188,die Wüste,sahro,telefon,stakan
+189,das Feuer,olov,muz,qalam
+190,der Berg,tog',oyna,stul
+191,regnen,yomg'ir yog'moq,porlamoq,qochmoq
+192,sonnig,quyoshli,bulutli,qorong'i
+193,schwimmen,suzmoq,uxlamoq,sakrash
+194,selten,kamdan-kam,tez-tez,doimo
+195,dunkel,qorong'i,yorug',issiq
+196,warten,kutmoq,qochmoq,unutmoq
+197,hinten,orqada,oldinda,tepada
+198,hell,yorug',qorong'i,sovuq
+199,besuchen,ziyorat qilmoq,qochmoq,sotmoq
+200,nirgendwo,hech qayerda emas,hamma yerda,ichkarida
+201,die Karte,xarita,telefon,sumka
+202,das Licht,yorug'lik,gul,mashina
+203,der Fluss,daryo,oy,muz
+204,die Brücke,ko'prik,stakan,telefon
+205,das Papier,qog'oz,sumka,stol
+206,der Himmel,osmon,muzlatgich,oyna
+207,die Königin,qirolicha,telefon,non
+208,das Theater,teatr,mashina,stul
+209,der Sänger,qo'shiqchi,sumka,gul
+210,die Sängerin,ayol qo'shiqchi,oy,qalam
+211,singen,qo'shiq aytmoq,yig'lamoq,qochmoq
+212,berühmt,mashhur,noma'lum,zerikarli
+213,tanzen,raqs tushmoq,uxlamoq,suzmoq
+214,oft,tez-tez,kamdan-kam,erta
+215,traurig,xafa,xursand,faol
+216,erzählen,hikoya qilmoq,unutmoq,qochmoq
+217,vorne,oldinda,orqada,tepada
+218,fröhlich,xursand,g'amgin,sovuq
+219,reisen,sayohat qilmoq,uxlamoq,sotmoq
+220,dort,u yerda,bu yerda,ichkarida
+221,das Lied,qo'shiq,telefon,oyna
+222,der Film,film,muz,stakan
+223,die Kamera,kamera,stol,daryo
+224,das Museum,muzey,sumka,telefon
+225,der Pilot,uchuvchi,gul,mashina
+226,die Polizei,politsiya,oyna,non
+227,das Flugzeug,samolyot,stul,muz
+228,der Hafen,bandargoh,telefon,qalam
+229,die Farm,ferma,oy,sumka
+230,das Tier,hayvon,mashina,gul
+231,fliegen,uchmoq,suzmoq,qochmoq
+232,gefährlich,xavfli,xavfsiz,oddiy
+233,helfen,yordam bermoq,unutmoq,sakrash
+234,heute,bugun,ertaga,kecha
+235,ruhig,tinch,shovqinli,baland
+236,arbeiten,ishlamoq,uxlamoq,o'ynamoq
+237,drüben,narigi tomonda,bu yerda,tepada
+238,laut,baland,past,zerikarli
+239,beginnen,boshlamoq,tugatmoq,sotmoq
+240,bald,tez orada,keyinroq,erta
+241,der Löwe,sher,stakan,oyna
+242,die Maus,sichqon,telefon,muz
+243,das Schaf,qo'y,stol,qalam
+244,der Käse,pishloq,sumka,daryo
+245,die Butter,sariyog',telefon,oy
+246,das Salz,tuz,muz,stakan
+247,der Zucker,shakar,gul,oyna
+248,die Erdbeere,qulupnay,telefon,stul
+249,das Huhn,tovuq,sumka,mashina
+250,der Reis,guruch,qalam,muz
+251,essen,yemoq,uxlamoq,qochmoq
+252,süß,shirin,achchiq,nordon
+253,kochen,pishirmoq,suzmoq,sakrash
+254,zusammen,birga,yolg'iz,erta
+255,sauer,nordon,shirin,issiq
+256,bringen,olib kelmoq,tashlab ketmoq,qochmoq
+257,hungrig,och,to'q,charchagan
+258,gern,jon deb,majburan,sekin
+259,trinken,ichmoq,yemoq,uxlamoq
+260,draußen,tashqarida,ichkarida,erta
+261,die Kartoffel,kartoshka,oyna,telefon
+262,das Öl,yog',stol,gul
+263,der Bäcker,nonvoy,mashina,sumka
+264,die Verkäuferin,sotuvchi ayol,muz,oy
+265,das Regal,javon,telefon,stakan
+266,der Kunde,mijoz,gul,oyna
+267,die Rechnung,hisob-faktura,stul,sumka
+268,das Büro,ofis,telefon,muz
+269,der Kalender,taqvim,mashina,qalam
+270,die Email,elektron pochta,oyna,gul
+271,verkaufen,sotmoq,sotib olmoq,bermoq
+272,freundlich,mehribon,qo'pol,sovuq
+273,kaufen,sotib olmoq,sotmoq,qochmoq
+274,manchmal,ba'zida,har doim,erta
+275,billig,arzon,qimmat,katta
+276,zeigen,ko'rsatmoq,yashirmoq,unutmoq
+277,spät,kech,erta,tez
+278,teuer,qimmat,arzon,oddiy
+279,fragen,so'ramoq,javob bermoq,sakrash
+280,unten,pastda,tepada,ichkarida
+281,das Passwort,maxfiy kod,telefon,stul
+282,der Drucker,printer,sumka,muz
+283,die Datei,fayl,daryo,oy
+284,das Internet,internet,stakan,telefon
+285,der Bildschirm,monitor,mashina,gul
+286,die Tastatur,klaviatura,oyna,stul
+287,das Programm,dastur,telefon,sumka
+288,der Akku,batareya,muz,qalam
+289,die Batterie,element,oy,gul
+290,das Kabel,sim,telefon,stakan
+291,schreiben,yozmoq,uxlamoq,suzmoq
+292,modern,zamonaviy,eskicha,qadimiy
+293,lernen,o'rganmoq,unutmoq,qochmoq
+294,online,onlayn,oflayn,erta
+295,wichtig,muhim,keraksiz,oddiy
+296,öffnen,ochmoq,yopmoq,sotmoq
+297,schnell,tez,sekin,past
+298,schließen,yopmoq,ochmoq,sakrash
+299,einfach,oson,qiyin,murakkab
+300,drinnen,ichkarida,tashqarida,tepada
+301,der Knopf,tugma,sumka,oyna
+302,die Farbe,rang,mashina,muz
+303,das Holz,yog'och,stol,telefon
+304,der Stein,tosh,gul,qalam
+305,die Erde,yer,oyna,sumka
+306,das Metall,metall,muz,telefon
+307,der Wind,shamol,stakan,mashina
+308,die Temperatur,harorat,oy,gul
+309,das Geräusch,shovqin,telefon,stul
+310,der Traum,tush,sumka,muz
+311,träumen,orzu qilmoq,unutmoq,qochmoq
+312,laut,baland,past,sokin
+313,hören,eshitmoq,ko'rmoq,sakrash
+314,manchmal,ba'zida,har doim,erta
+315,hart,qattiq,yumshoq,engil
+316,fühlen,his qilmoq,unutmoq,sotmoq
+317,weich,yumshoq,qattiq,baland
+318,oben,tepada,pastda,ichkarida
+319,denken,o'ylamoq,sakrash,uxlamoq
+320,langsam,sekin,tez,baland
+321,die Hoffnung,umid,qalam,oyna
+322,das Glück,baxt,telefon,stakan
+323,der Fehler,xato,mashina,gul
+324,die Idee,g'oya,stul,sumka
+325,das Ziel,maqsad,oy,muz
+326,der Plan,reja,telefon,qalam
+327,die Chance,imkoniyat,oyna,gul
+328,das Ergebnis,natija,sumka,stakan
+329,der Anfang,boshlanish,muz,telefon
+330,die Mitte,o'rta,mashina,stol
+331,beginnen,boshlamoq,tugatmoq,qochmoq
+332,glücklich,baxtli,xafa,sovuq
+333,enden,tugatmoq,boshlamoq,sotmoq
+334,bald,tez orada,keyinroq,erta
+335,richtig,to'g'ri,noto'g'ri,oddiy
+336,planen,rejalashtirmoq,unutmoq,suzmoq
+337,bereit,tayyor,tayyor emas,charchagan
+338,dann,keyin,avval,kecha
+339,gewinnen,yutmoq,yutqazmoq,qochmoq
+340,fast,deyarli,sekin,erta
+341,das Ende,tugash,gul,oyna
+342,der Besucher,mehmon,telefon,sumka
+343,die Einladung,taklifnoma,stul,muz
+344,das Geschenk,sovg'a,oy,qalam
+345,der Geburtstag,tug'ilgan kun,telefon,gul
+346,die Hochzeit,to'y,mashina,oyna
+347,das Fest,bayram,sumka,stakan
+348,der Tanz,raqs,muz,telefon
+349,die Melodie,kuy,stul,gul
+350,das Abenteuer,sarguzasht,oyna,qalam
+351,feiern,nishonlamoq,uxlamoq,sakrash
+352,fröhlich,xursand,g'amgin,sovuq
+353,einladen,taklif qilmoq,qochmoq,unutmoq
+354,heute,bugun,kecha,ertaga
+355,spannend,qiziqarli,zerikarli,oddiy
+356,lachen,kulmoq,yig'lamoq,sotmoq
+357,gemeinsam,birgalikda,yolg'iz,erta
+358,traurig,xafa,xursand,faol
+359,tanzen,raqs tushmoq,uxlamoq,suzmoq
+360,draußen,tashqarida,ichkarida,tepada
+361,der Sport,sport,telefon,sumka
+362,die Mannschaft,jamoa,mashina,muz
+363,das Training,mashg'ulot,gul,oy
+364,der Sieger,g'olib,stakan,telefon
+365,die Medaille,medal,sumka,oyna
+366,das Turnier,turnir,muz,qalam
+367,der Zuschauer,tomoshabin,telefon,stul
+368,die Bühne,sahna,gul,mashina
+369,das Orchester,orkestr,oyna,sumka
+370,der Schauspieler,aktyor,muz,telefon
+371,rennen,yugurmoq,uxlamoq,suzmoq
+372,stark,kuchli,kuchsiz,nam
+373,verlieren,yutqazmoq,yutmoq,sakrash
+374,zusammen,birga,yolg'iz,kecha
+375,fit,sog'lom,kasal,charchagan
+376,trainieren,mashq qilmoq,unutmoq,sotmoq
+377,schwach,kuchsiz,kuchli,baland
+378,oft,tez-tez,kamdan-kam,erta
+379,werfen,uloqtirmoq,ushlamoq,qochmoq
+380,schnell,tez,sekin,past
+381,die Bibliothek,kutubxona,telefon,muz
+382,die Bushaltestelle,avtobus bekati,sumka,oyna
+383,das Einkaufszentrum,savdo markazi,stul,qalam
+384,der Spaziergang,sayr,gul,telefon
+385,die Unterkunft,turar joy,muz,stakan
+386,das Formular,anketa,mashina,sumka
+387,der Ausweis,guvohnoma,oyna,gul
+388,die Gardine,parda,telefon,muz
+389,das Wohnzimmer,mehmonxona,stul,qalam
+390,der Kühlschrank,muzlatgich,sumka,oy
+391,wohnen,yashamoq,qochmoq,sakrash
+392,bequem,qulay,noqulay,qattiq
+393,ausfüllen,to'ldirmoq,bo'shatmoq,unutmoq
+394,drinnen,ichkarida,tashqarida,tepada
+395,gemütlich,shinam,noqulay,sovuq
+396,öffnen,ochmoq,yopmoq,sotmoq
+397,leer,bo'sh,to'la,baland
+398,dort,u yerda,bu yerda,ichkarida
+399,schließen,yopmoq,ochmoq,qochmoq
+400,ruhig,tinch,shovqinli,tez
+401,die Waschmaschine,kir yuvish mashinasi,mashina,telefon
+402,das Kopfkissen,yostiq,stul,gul
+403,der Kleiderschrank,kiyim shkafi,oyna,sumka
+404,die Seife,sovun,muz,stakan
+405,das Handtuch,sochiq,qalam,telefon
+406,der Spiegel,oyna,gul,mashina
+407,die Zahnbürste,tish cho'tkasi,telefon,oy
+408,das Shampoo,shampun,sumka,muz
+409,der Föhn,soch quritgich,stul,qalam
+410,die Zahnpasta,tish pastasi,oyna,telefon
+411,waschen,yuvmoq,quritmoq,sakrash
+412,sauber,toza,iflos,qattiq
+413,kämmen,taramoq,unutmoq,sotmoq
+414,morgens,ertalab,kechqurun,kecha
+415,nass,ho'l,quruq,issiq
+416,trocknen,quritmoq,ho'llamoq,qochmoq
+417,frisch,yangi,sifatsiz,zerikarli
+418,später,keyinroq,hozir,erta
+419,duften,xushbo'y hid taratmoq,suzmoq,uxlamoq
+420,lang,weich,yumshoq,qattiq,baland
+421,das Wörterbuch,lug'at,telefon,sumka
+422,der Kugelschreiber,ruchka,muz,oyna
+423,die Kreide,bo'r,stul,qalam
+424,das Lineal,chizg'ich,gul,telefon
+425,der Radiergummi,o'chirg'ich,oy,muz
+426,die Pause,tanaffus,sumka,stakan
+427,das Gymnasium,gimnaziya,qalam,telefon
+428,der Direktor,direktor,mashina,gul
+429,die Sekretärin,kotiba,oyna,sumka
+430,das Praktikum,amaliyot,muz,telefon
+431,lernen,o'rganmoq,unutmoq,qochmoq
+432,interessant,qiziqarli,zerikarli,sovuq
+433,erklären,tushuntirmoq,yashirmoq,sakrash
+434,heute,bugun,kecha,ertaga
+435,schwierig,qiyin,oson,engil
+436,antworten,javob bermoq,savol bermoq,sotmoq
+437,klug,aqlli,ahmoq,oddiy
+438,dort,u yerda,bu yerda,ichkarida
+439,üben,mashq qilmoq,uxlamoq,suzmoq
+440,ruhig,tinch,shovqinli,baland
+441,der Ingenieur,muhandis,gul,mashina
+442,die Krankenschwester,hamshira,telefon,oyna
+443,das Labor,laboratoriya,sumka,muz
+444,der Mechaniker,mexanik,stul,qalam
+445,die Bäckerei,nonvoyxona,oy,telefon
+446,das Menü,menyu,muz,gul
+447,der Kellner,ofitsiant,sumka,stakan
+448,die Bestellung,buyurtma,qalam,telefon
+449,das Trinkgeld,choychaqa,mashina,oyna
+450,der Lastwagen,yuk mashinasi,gul,sumka
+451,reparieren,ta'mirlamoq,buzmoq,qochmoq
+452,fleißig,mehnatkash,dangasa,zerikarli
+453,bedienen,xizmat qilmoq,unutmoq,sotmoq
+454,manchmal,ba'zida,har doim,erta
+455,beschäftigt,band,bo'sh,sovuq
+456,tragen,tashimoq,tashlab yubormoq,sakrash
+457,pünktlich,o'z vaqtida,kechikkan,oddiy
+458,drinnen,ichkarida,tashqarida,tepada
+459,verdienen,pul ishlamoq,yo'qotmoq,uxlamoq
+460,schnell,tez,sekin,past
+461,die Kreuzung,chorraha,telefon,muz
+462,das Motorrad,mototsikl,sumka,oyna
+463,der Fußgänger,piyoda,stul,qalam
+464,die Ampel,svetofor,gul,telefon
+465,das Nummernschild,avtomobil raqami,oy,muz
+466,der Fahrradhelm,veloshlem,sumka,stakan
+467,die Landschaft,manzara,qalam,telefon
+468,das Gebirge,tog' tizmasi,mashina,gul
+469,der Wasserfall,sharshara,oyna,sumka
+470,die Sehenswürdigkeit,diqqatga sazovor joy,muz,telefon
+471,fahren,minmoq,uxlamoq,qochmoq
+472,vorsichtig,ehtiyotkor,shoshqaloq,baland
+473,abbiegen,burilmoq,to'xtamoq,sotmoq
+474,draußen,tashqarida,ichkarida,tepada
+475,gefährlich,xavfli,xavfsiz,oddiy
+476,anhalten,to'xtamoq,yurmoq,sakrash
+477,weit,uzoq,yaqin,sovuq
+478,gerade,to'g'ri,egri,zerikarli
+479,überqueren,kesib o'tmoq,qochmoq,unutmoq
+480,links,chapda,o'ngda,tepada
+481,das Schloss,saroy,telefon,oyna
+482,der Tempel,ibodatxona,sumka,muz
+483,die Hauptstadt,poytaxt,stul,qalam
+484,das Ausland,chet el,gul,telefon
+485,der Tourist,sayyoh,oy,mashina
+486,die Reisegruppe,sayohat guruhi,muz,sumka
+487,das Musikinstrument,musiqa asbobi,telefon,stakan
+488,der Gitarrist,gitarachi,qalam,gul
+489,die Trommel,baraban,oyna,telefon
+490,das Klavier,pianino,sumka,muz
+491,besuchen,ziyorat qilmoq,qochmoq,sotmoq
+492,berühmt,mashhur,noma'lum,oddiy
+493,fotografieren,rasmga olmoq,unutmoq,sakrash
+494,überall,hamma yerda,hech qayerda,ichkarida
+495,international,xalqaro,mahalliy,sovuq
+496,staunen,hayratlanmoq,uxlamoq,qochmoq
+497,alt,qadimiy,yangi,tez
+498,gemeinsam,birga,yolg'iz,erta
+499,entdecken,kashf qilmoq,yashirmoq,sotmoq
+500,freundlich,mehribon,qo'pol,sovuq 
+501,der Termin,uchrashuv vaqti,telefon,sumka
+502,die Wohnung,xonadon,muz,oyna
+503,das Hobby,xobbi,stul,qalam
+504,der Nachbar,qo'shni,gul,telefon
+505,die Freizeit,bo'sh vaqt,oy,mashina
+506,das Konzert,konsert,muz,sumka
+507,der Fernseher,televizor,telefon,stakan
+508,die Dusche,dush,qalam,gul
+509,das Regal,javon,oyna,telefon
+510,der Schirm,soyabon,sumka,muz
+511,brauchen,kerak bo'lmoq,qochmoq,sakrash
+512,frei,bo'sh,band,zerikarli
+513,vergessen,unutmoq,eslamoq,sotmoq
+514,leider,afsuski,xursandchilik bilan,erta
+515,kaputt,buzilgan,yangi,sovuq
+516,erklären,tushuntirmoq,yashirmoq,unutmoq
+517,leer,bo'sh,to'la,baland
+518,vielleicht,balki,aniq,kecha
+519,wünschen,tilamoq,qochmoq,suzmoq
+520,nett,yoqimli,qo'pol,past
+521,die Telefonnummer,telefon raqami,telefon,muz
+522,das Radio,radio,sumka,oyna
+523,der Supermarkt,supermarket,stul,qalam
+524,die Brille,ko'zoynak,gul,telefon
+525,das Fahrrad,velosiped,oy,mashina
+526,der Fahrplan,qatnov jadvali,muz,sumka
+527,die Ferien,ta'til,telefon,stakan
+528,das Sofa,divan,qalam,gul
+529,der Koffer,chamadon,oyna,telefon
+530,die Post,pochta,sumka,muz
+531,reservieren,band qilmoq,qochmoq,sakrash
+532,bequem,qulay,noqulay,oddiy
+533,mitkommen,birga kelmoq,ketib qolmoq,sotmoq
+534,zuerst,avval,keyin,erta
+535,voll,to'la,bo'sh,sovuq
+536,wechseln,almashtirmoq,saqlamoq,unutmoq
+537,traurig,xafa,xursand,baland
+538,deshalb,shuning uchun,bekordan-bekorga,kecha
+539,lächeln,jilmaymoq,yig'lamoq,suzmoq
+540,fertig,tayyor,tayyor emas,past
+541,der Flughafen,aeroport,telefon,sumka
+542,die Straßenbahn,tramvay,muz,oyna
+543,das Ticket,chipta,stul,qalam
+544,der Bahnhof,vokzal,gul,telefon
+545,die U-Bahn,metro,oy,mashina
+546,das Café,kafe,muz,sumka
+547,der Urlaub,ta'til,telefon,stakan
+548,die Einladung,taklifnoma,qalam,gul
+549,das Hotelzimmer,mehmonxona xonasi,oyna,telefon
+550,der Reisepass,pasport,sumka,muz
+551,packen,joylamoq,qochmoq,sakrash
+552,pünktlich,o'z vaqtida,kechikkan,oddiy
+553,ankommen,yetib kelmoq,ketib qolmoq,sotmoq
+554,danach,keyin,avval,erta
+555,durstig,chanqagan,to'q,sovuq
+556,aussteigen,tushmoq,minmoq,unutmoq
+557,freundlich,mehribon,qo'pol,baland
+558,endlich,nihoyat,hech qachon,kecha
+559,einsteigen,minmoq,tushmoq,suzmoq
+560,satt,to'q,och,past
+561,der Kühlschrank,muzlatgich,telefon,sumka
+562,die Batterie,batareya,muz,oyna
+563,das Handy,telefon,stul,qalam
+564,der Computer,kompyuter,gul,telefon
+565,die Zeitung,gazeta,oy,mashina
+566,das Foto,rasm,muz,sumka
+567,der Schlüssel,kalit,telefon,stakan
+568,die Tasche,sumka,qalam,gul
+569,das Fenster,oyna,oyna,telefon
+570,der Kalender,kalendar,sumka,muz
+571,abschließen,qulflamoq,qochmoq,sakrash
+572,praktisch,qulay,noqulay,oddiy
+573,mitnehmen,o'zi bilan olmoq,tashlab ketmoq,sotmoq
+574,natürlich,albatta,hech qachon,erta
+575,trocken,quruq,ho'l,sovuq
+576,zumachen,yopmoq,ochmoq,unutmoq
+577,böse,jahldor,mehribon,baland
+578,trotzdem,shunga qaramay,bekordan-bekorga,kecha
+579,gehören,tegishli bo'lmoq,yo'qotmoq,suzmoq
+580,richtig,to'g'ri,noto'g'ri,past
+581,der Fernsehabend,televizor oqshomi,telefon,sumka
+582,die Geburtstagsparty,tug'ilgan kun bazmi,muz,oyna
+583,das Lieblingslied,sevimli qo'shiq,stul,qalam
+584,der Sportplatz,sport maydoni,gul,telefon
+585,die Musikgruppe,musiqa guruhi,oy,mashina
+586,das Schwimmbad,basseyn,muz,sumka
+587,der Stadtpark,shahar bog'i,telefon,stakan
+588,die Bäckerei,nonvoyxona,qalam,gul
+589,das Mittagessen,tushlik,oyna,telefon
+590,der Wochenmarkt,haftalik bozor,sumka,muz
+591,gratulieren,tabriklamoq,qochmoq,sakrash
+592,beliebt,mashhur,noma'lum,oddiy
+593,telefonieren,telefonlashmoq,unutmoq,sotmoq
+594,plötzlich,to'satdan,sekin,erta
+595,hungrig,och,to'q,sovuq
+596,rauchen,chekmoq,suzmoq,unutmoq
+597,hilfsbereit,yordamchi,qo'pol,baland
+598,besonders,ayniqsa,oddiy,kecha
+599,stoppen,to'xtatmoq,yurgizmoq,qochmoq
+600,wirklich,haqiqatan,balki,past
+601,der Terminplan,reja jadvali,telefon,sumka
+602,die Frühstückspause,nonushta tanaffusi,muz,oyna
+603,das Lieblingsessen,sevimli ovqat,stul,qalam
+604,der Sprachkurs,til kursi,gul,telefon
+605,die Hausaufgabe,uy vazifasi,oy,mashina
+606,das Wörterbuch,lug'at,muz,sumka
+607,der Fahrstuhl,lift,telefon,stakan
+608,die Haltestelle,bekat,qalam,gul
+609,das Kaufhaus,savdo markazi,oyna,telefon
+610,der Fußballverein,futbol klubi,sumka,muz
+611,abholen,olib ketmoq,qochmoq,sakrash
+612,nervös,asabiy,xotirjam,oddiy
+613,ausfüllen,to'ldirmoq,bo'shatmoq,sotmoq
+614,zuerst,avval,keyin,erta
+615,gemütlich,shinam,noqulay,sovuq
+616,duschen,dush qabul qilmoq,uxlamoq,suzmoq
+617,peinlich,noqulay,qulay,baland
+618,danach,keyin,avval,kecha
+619,grillen,grilda pishirmoq,unutmoq,qochmoq
+620,toll,zo'r,yomon,past
+621,der Nebenjob,qo'shimcha ish,telefon,sumka
+622,die Speisekarte,menyu,muz,oyna
+623,das Kaufzentrum,savdo markazi,stul,qalam
+624,der Reiseführer,sayyoh qo'llanmasi,gul,telefon
+625,die Zimmernummer,xona raqami,oy,mashina
+626,das Schwimmbad,basseyn,muz,sumka
+627,der Laptop,noutbuk,telefon,stakan
+628,die Lieblingsfarbe,sevimli rang,qalam,gul
+629,das Grillfest,gril bayrami,oyna,telefon
+630,der Fernseher,televizor,sumka,muz
+631,empfehlen,tavsiya qilmoq,qochmoq,sakrash
+632,prima,ajoyib,yomon,oddiy
+633,mitbringen,o'zi bilan olib kelmoq,unutmoq,sotmoq
+634,besonders,ayniqsa,oddiy,erta
+635,dumm,ahmoq,aqlli,sovuq
+636,frühstücken,nonushta qilmoq,uxlamoq,suzmoq
+637,kaputt,buzilgan,yangi,baland
+638,endlich,nihoyat,hech qachon,kecha
+639,lächeln,jilmaymoq,yig'lamoq,qochmoq
+640,nett,yoqimli,qo'pol,past
+641,der Supermarkt,supermarket,telefon,sumka
+642,die Geburtstagseinladung,tug'ilgan kun taklifi,muz,oyna
+643,das Handyfoto,telefon rasmi,stul,qalam
+644,der Kühlschrank,muzlatgich,gul,telefon
+645,die Fernbedienung,pult,oy,mashina
+646,das Sofa,yumshoq mebel,muz,sumka
+647,der Schreibtisch,yozuv stoli,telefon,stakan
+648,die Freizeitgruppe,bo'sh vaqt guruhi,qalam,gul
+649,das Lieblingsbuch,sevimli kitob,oyna,telefon
+650,der Regenschirm,soyabon,sumka,muz
+651,putzen,tozalamoq,qochmoq,sakrash
+652,sauber,toza,iflos,oddiy
+653,wechseln,almashtirmoq,saqlamoq,sotmoq
+654,vielleicht,balki,aniq,erta
+655,eng,tor,keng,sovuq
+656,sparen,tejamoq,isrof qilmoq,suzmoq
+657,traurig,xafa,xursand,baland
+658,trotzdem,shunga qaramay,bekordan-bekorga,kecha
+659,wiederholen,takrorlamoq,unutmoq,qochmoq
+660,fertig,tayyor,tayyor emas,past
+661,der Ausflug,sayohat,telefon,sumka
+662,die Musiksendung,musiqa dasturi,muz,oyna
+663,das Theaterstück,sahna asari,stul,qalam
+664,der Sprachpartner,til sherigi,gul,telefon
+665,die Klassenfahrt,sinf sayohati,oy,mashina
+666,das Fahrradschloss,velosiped qulfi,muz,sumka
+667,der Reisekoffer,sayohat chamadoni,telefon,stakan
+668,die Wetterkarte,ob-havo xaritasi,qalam,gul
+669,das Fotoalbum,foto albom,oyna,telefon
+670,der Stadtplan,shahar xaritasi,sumka,muz
+671,unterschreiben,imzo qo'ymoq,qochmoq,sakrash
+672,falsch,noto'g'ri,to'g'ri,oddiy
+673,gehören,tegishli bo'lmoq,yo'qotmoq,sotmoq
+674,natürlich,albatta,hech qachon,erta
+675,trocken,quruq,ho'l,sovuq
+676,reparieren,ta'mirlamoq,buzmoq,suzmoq
+677,hilfsbereit,yordamchi,qo'pol,baland
+678,plötzlich,to'satdan,sekin,kecha
+679,meinen,fikr bildirmoq,unutmoq,qochmoq
+680,richtig,to'g'ri,noto'g'ri,past
+681,der Freizeitpark,attraksion bog'i,telefon,sumka
+682,die Lieblingsmusik,sevimli musiqa,muz,oyna
+683,das Stadtzentrum,shahar markazi,stul,qalam
+684,der Campingplatz,kemping joyi,gul,telefon
+685,die Einkaufsliste,xarid ro'yxati,oy,mashina
+686,das Wochenendticket,hafta oxiri chiptasi,muz,sumka
+687,der Getränkemarkt,ichimlik bozori,telefon,stakan
+688,die Badehose,cho'milish shortigi,qalam,gul
+689,das Vogelhaus,qush uyi,oyna,telefon
+690,der Sonnenaufgang,quyosh chiqishi,sumka,muz
+691,passen,mos kelmoq,qochmoq,sakrash
+692,beliebt,mashhur,noma'lum,oddiy
+693,telefonieren,telefonlashmoq,unutmoq,sotmoq
+694,wirklich,haqiqatan,balki,erta
+695,hungrig,och,to'q,sovuq
+696,lachen,kulmoq,yig'lamoq,suzmoq
+697,ruhig,tinch,shovqinli,baland
+698,deshalb,shuning uchun,bekordan-bekorga,kecha
+699,wünschen,tilamoq,yashirmoq,qochmoq
+700,voll,to'la,bo'sh,past
+701,der Busfahrer,avtobus haydovchisi,telefon,sumka
+702,die Einkaufstasche,xarid sumkasi,muz,oyna
+703,das Lieblingsfach,sevimli fan,stul,qalam
+704,der Reisepartner,sayohat sherigi,gul,telefon
+705,die Sporttasche,sport sumkasi,oy,mashina
+706,das Badezimmer,hammom,muz,sumka
+707,der Wecker,budilnik,telefon,stakan
+708,die Zeitungskiosk,gazeta kioski,qalam,gul
+709,das Frühstück,nonushta,oyna,telefon
+710,der Stadtbus,shahar avtobusi,sumka,muz
+711,aufstehen,o'rnidan turmoq,qochmoq,sakrash
+712,müde,charchagan,faol,oddiy
+713,einkaufen,xarid qilmoq,unutmoq,sotmoq
+714,danach,keyin,avval,erta
+715,freundlich,mehribon,qo'pol,sovuq
+716,mithelfen,yordam bermoq,uxlamoq,suzmoq
+717,langweilig,zerikarli,qiziqarli,baland
+718,manchmal,ba'zida,har doim,kecha
+719,anprobieren,kiyib ko'rmoq,yashirmoq,qochmoq
+720,bequem,qulay,noqulay,past
+721,der Fahrkartenautomat,chipta apparati,telefon,sumka
+722,die Lieblingsserie,sevimli serial,muz,oyna
+723,das Sportfest,sport bayrami,stul,qalam
+724,der Kuchenverkauf,tort savdosi,gul,telefon
+725,die Schulbibliothek,maktab kutubxonasi,oy,mashina
+726,das Gartenfest,bog' bayrami,muz,sumka
+727,der Mitschüler,sinfdoshi,telefon,stakan
+728,die Computermaus,kompyuter sichqonchasi,qalam,gul
+729,das Picknick,piknik,oyna,telefon
+730,der Spielplatz,o'yin maydonchasi,sumka,muz
+731,mitspielen,birga o'ynamoq,qochmoq,sakrash
+732,lustig,kulgili,jiddiy,oddiy
+733,backen,pishirmoq,unutmoq,sotmoq
+734,zusammen,birga,yolg'iz,erta
+735,durstig,chanqagan,to'q,sovuq
+736,aufpassen,diqqat qilmoq,uxlamoq,suzmoq
+737,kompliziert,murakkab,oson,baland
+738,trotzdem,shunga qaramay,bekordan-bekorga,kecha
+739,abwaschen,idish yuvmoq,yashirmoq,qochmoq
+740,fleißig,mehnatkash,dangasa,past
+741,der Schuhkarton,oyoq kiyim qutisi,telefon,sumka
+742,die Lieblingssendung,sevimli ko'rsatuv,muz,oyna
+743,das Fahrradlicht,velosiped chirog'i,stul,qalam
+744,der Ferienplan,ta'til rejasi,gul,telefon
+745,die Musikschule,musiqa maktabi,oy,mashina
+746,das Wohnzimmer,mehmonxona,muz,sumka
+747,der Obstsalat,mevali salat,telefon,stakan
+748,die Einkaufsliste,xarid ro'yxati,qalam,gul
+749,das Handyspiel,telefon o'yini,oyna,telefon
+750,der Stadtpark,shahar bog'i,sumka,muz
+751,mitfahren,birga bormoq,qochmoq,sakrash
+752,praktisch,qulay,noqulay,oddiy
+753,fernsehen,televizor ko'rmoq,unutmoq,sotmoq
+754,plötzlich,to'satdan,sekin,erta
+755,nervös,asabiy,xotirjam,sovuq
+756,aufräumen,yig'ishtirmoq,uxlamoq,suzmoq
+757,prima,ajoyib,yomon,baland
+758,wirklich,haqiqatan,balki,kecha
+759,vergessen,unutmoq,yodlamoq,qochmoq
+760,leer,bo'sh,to'la,past
+761,der Sportlehrer,sport o'qituvchisi,telefon,sumka
+762,die Klassenarbeit,sinf ishi,muz,oyna
+763,das Lieblingsobst,sevimli meva,stul,qalam
+764,der Fernsehabend,televizor oqshomi,gul,telefon
+765,die Bushaltestelle,avtobus bekati,oy,mashina
+766,das Kinderzimmer,bolalar xonasi,muz,sumka
+767,der Geburtstagskuchen,tug'ilgan kun torti,telefon,stakan
+768,die Reisetasche,sayohat sumkasi,qalam,gul
+769,das Wochenende,hafta oxiri,oyna,telefon
+770,der Supermarkt,supermarket,sumka,muz
+771,mitnehmen,o'zi bilan olmoq,qochmoq,sakrash
+772,traurig,xafa,xursand,oddiy
+773,frühstücken,nonushta qilmoq,unutmoq,sotmoq
+774,endlich,nihoyat,hech qachon,erta
+775,kaputt,buzilgan,yangi,sovuq
+776,gratulieren,tabriklamoq,uxlamoq,suzmoq
+777,interessant,qiziqarli,zerikarli,baland
+778,vielleicht,balki,aniq,kecha
+779,sammeln,to'plamoq,yashirmoq,qochmoq
+780,nett,yoqimli,qo'pol,past
+781,der Reisefilm,sayohat filmi,telefon,sumka
+782,die Wettervorhersage,ob-havo prognozi,muz,oyna
+783,das Lieblingshobby,sevimli mashg'ulot,stul,qalam
+784,der Fahrradfahrer,velosipedchi,gul,telefon
+785,die Einkaufsparty,xarid bazmi,oy,mashina
+786,das Jugendhotel,yoshlar mehmonxonasi,muz,sumka
+787,der Sprachtest,til testi,telefon,stakan
+788,die Badezeit,cho'milish vaqti,qalam,gul
+789,das Sommerfest,yozgi bayram,oyna,telefon
+790,der Spielabend,o'yin oqshomi,sumka,muz
+791,mitkommen,birga kelmoq,qochmoq,sakrash
+792,hilfsbereit,yordamchi,qo'pol,oddiy
+793,telefonieren,telefonlashmoq,unutmoq,sotmoq
+794,natürlich,albatta,hech qachon,erta
+795,eng,tor,keng,sovuq
+796,lächeln,jilmaymoq,uxlamoq,suzmoq
+797,pünktlich,o'z vaqtida,kechikkan,baland
+798,besonders,ayniqsa,oddiy,kecha
+799,erreichen,erishmoq,yashirmoq,qochmoq
+800,fertig,tayyor,tayyor emas,past
+801,der Fahrgast,yo'lovchi,telefon,sumka
+802,die Fahrkarte,yo'l chiptasi,muz,oyna
+803,das Reisebüro,sayohat agentligi,stul,qalam
+804,der Bahnsteig,platforma,gul,telefon
+805,die Ankunft,kelish,oy,mashina
+806,das Abteil,vagon bo'limi,muz,sumka
+807,der Kiosk,kiosk,telefon,stakan
+808,die Tageszeitung,kunlik gazeta,qalam,gul
+809,das Frühstücksei,nonushta tuxumi,oyna,telefon
+810,der Stadtteil,shahar tumani,sumka,muz
+811,abfahren,jo'nab ketmoq,qochmoq,sakrash
+812,pünktlich,o'z vaqtida,kechikkan,oddiy
+813,anmelden,ro'yxatdan o'tmoq,unutmoq,sotmoq
+814,zufällig,tasodifan,ataylab,erta
+815,nass,ho'l,quruq,sovuq
+816,ausruhen,dam olmoq,ishlamoq,suzmoq
+817,lustig,kulgili,jiddiy,baland
+818,daneben,yonida,uzoqda,kecha
+819,zuhören,tinglamoq,yashirmoq,qochmoq
+820,müde,charchagan,faol,past
+821,der Sitzplatz,o'tirish joyi,telefon,sumka
+822,die Abfahrt,jo'nash,muz,oyna
+823,das Wartezimmer,kutish xonasi,stul,qalam
+824,der Reiseführer,sayyoh qo'llanmasi,gul,telefon
+825,die Jugendherberge,yoshlar yotoqxonasi,oy,mashina
+826,das Mineralwasser,mineral suv,muz,sumka
+827,der Orangensaft,apelsin sharbati,telefon,stakan
+828,die Speisekarte,menyu,qalam,gul
+829,das Mittagessen,tushlik,oyna,telefon
+830,der Nachtisch,desert,sumka,muz
+831,bestellen,buyurtma bermoq,qochmoq,sakrash
+832,satt,to'q,och,oddiy
+833,servieren,xizmat qilmoq,unutmoq,sotmoq
+834,zusätzlich,qo'shimcha,asosiy,erta
+835,sauer,nordon,shirin,sovuq
+836,schmecken,ta'm bermoq,uxlamoq,suzmoq
+837,höflich,xushmuomala,qo'pol,baland
+838,drinnen,ichkarida,tashqarida,kecha
+839,bezahlen,to'lamoq,yashirmoq,qochmoq
+840,leer,bo'sh,to'la,past
+841,der Kühlschrank,muzlatgich,telefon,sumka
+842,die Waschmaschine,kir yuvish mashinasi,muz,oyna
+843,das Bügeleisen,dazmol,stul,qalam
+844,der Staubsauger,changyutgich,gul,telefon
+845,die Zahnpasta,tish pastasi,oy,mashina
+846,das Handtuch,sochiq,muz,sumka
+847,der Badeanzug,cho'milish kiyimi,telefon,stakan
+848,die Sonnenbrille,quyosh ko'zoynagi,qalam,gul
+849,das Kopfkissen,yostiq,oyna,telefon
+850,der Wecker,budilnik,sumka,muz
+851,einschalten,yoqmoq,qochmoq,sakrash
+852,praktisch,qulay,noqulay,oddiy
+853,ausschalten,o'chirmoq,unutmoq,sotmoq
+854,plötzlich,to'satdan,sekin,erta
+855,trocken,quruq,ho'l,sovuq
+856,wecken,uyg'otmoq,uxlatmoq,suzmoq
+857,bequem,qulay,noqulay,baland
+858,oben,tepada,pastda,kecha
+859,putzen,tozalamoq,yashirmoq,qochmoq
+860,fertig,tayyor,tayyor emas,past
+861,der Fußballplatz,futbol maydoni,telefon,sumka
+862,die Mannschaftskarte,jamoa kartasi,muz,oyna
+863,das Hallenbad,yopiq basseyn,stul,qalam
+864,der Tennisspieler,tennischi,gul,telefon
+865,die Medaille,medal,oy,mashina
+866,das Sportprogramm,sport dasturi,muz,sumka
+867,der Wanderweg,sayr yo'li,telefon,stakan
+868,die Fahrradtour,velosayohat,qalam,gul
+869,das Picknickbrot,piknik noni,oyna,telefon
+870,der Regenmantel,yomg'ir plashi,sumka,muz
+871,trainieren,mashq qilmoq,qochmoq,sakrash
+872,fit,sog'lom,kasal,oddiy
+873,mitmachen,qatnashmoq,unutmoq,sotmoq
+874,unterwegs,yo'lda,uyda,erta
+875,windig,shamolli,sokin,sovuq
+876,gratulieren,tabriklamoq,uxlamoq,suzmoq
+877,fröhlich,xursand,xafa,baland
+878,draußen,tashqarida,ichkarida,kecha
+879,wandern,sayr qilmoq,yashirmoq,qochmoq
+880,gesund,sog'lom,kasal,past
+881,der Geburtstagsgast,tug'ilgan kun mehmoni,telefon,sumka
+882,die Einladungskarte,taklifnoma kartasi,muz,oyna
+883,das Familienfoto,oilaviy rasm,stul,qalam
+884,der Hochzeitstag,to'y kuni,gul,telefon
+885,die Musikgruppe,musiqa guruhi,oy,mashina
+886,das Festessen,bayram ovqati,muz,sumka
+887,der Blumenladen,gul do'koni,telefon,stakan
+888,die Postkarte,pochta kartasi,qalam,gul
+889,das Geschenkpapier,sovg'a qog'ozi,oyna,telefon
+890,der Ferienort,dam olish joyi,sumka,muz
+891,feiern,nishonlamoq,qochmoq,sakrash
+892,beliebt,mashhur,noma'lum,oddiy
+893,einladen,taklif qilmoq,unutmoq,sotmoq
+894,wirklich,haqiqatan,balki,erta
+895,traurig,xafa,xursand,sovuq
+896,lachen,kulmoq,uxlamoq,suzmoq
+897,hilfsbereit,yordamchi,qo'pol,baland
+898,zusammen,birga,yolg'iz,kecha
+899,passieren,sodir bo'lmoq,yashirmoq,qochmoq
+900,glücklich,baxtli,xafa,past
+901,der Mietvertrag,ijara shartnomasi,telefon,sumka
+902,die Wohnungstür,xonadon eshigi,muz,oyna
+903,das Treppenhaus,zina yo'lagi,stul,qalam
+904,der Hausmeister,uy nazoratchisi,gul,telefon
+905,die Nachbarschaft,qo'shnichilik,oy,mashina
+906,das Wohnzimmerfenster,mehmonxona oynasi,muz,sumka
+907,der Esstisch,ovqat stoli,telefon,stakan
+908,die Kaffeemaschine,qahva mashinasi,qalam,gul
+909,das Schlafzimmer,yotoqxona,oyna,telefon
+910,der Gartenstuhl,bog' stuli,sumka,muz
+911,mieten,ijaraga olmoq,qochmoq,sakrash
+912,ruhig,tinch,shovqinli,oddiy
+913,umziehen,ko'chmoq,unutmoq,sotmoq
+914,nebenan,qo'shni joyda,uzoqda,erta
+915,laut,baland,sokin,sovuq
+916,wohnen,yashamoq,uxlamoq,suzmoq
+917,sauber,toza,iflos,baland
+918,dort,u yerda,bu yerda,kecha
+919,reinigen,tozalamoq,yashirmoq,qochmoq
+920,gemütlich,shinam,noqulay,past
+921,der Sprachschüler,til o'quvchisi,telefon,sumka
+922,die Prüfungsvorbereitung,imtihon tayyorligi,muz,oyna
+923,das Kursbuch,darslik,stul,qalam
+924,der Stundenplan,dars jadvali,gul,telefon
+925,die Gruppenarbeit,guruh ishi,oy,mashina
+926,das Whiteboard,oq doska,muz,sumka
+927,der Kugelschreiber,ruchka,telefon,stakan
+928,die Notizseite,eslatma sahifasi,qalam,gul
+929,das Wörterspiel,so'z o'yini,oyna,telefon
+930,der Lernpartner,o'qish sherigi,sumka,muz
+931,erklären,tushuntirmoq,qochmoq,sakrash
+932,intelligent,aqlli,ahmoq,oddiy
+933,korrigieren,to'g'rilamoq,unutmoq,sotmoq
+934,manchmal,ba'zida,har doim,erta
+935,fleißig,mehnatkash,dangasa,sovuq
+936,wiederholen,takrorlamoq,uxlamoq,suzmoq
+937,interessiert,qiziqqan,beparvo,baland
+938,gemeinsam,birga,yolg'iz,kecha
+939,übersetzen,tarjima qilmoq,yashirmoq,qochmoq
+940,einfach,oson,qiyin,past
+941,der Fahrradreifen,velosiped shinasi,telefon,sumka
+942,die Tankstelle,yoqilg'i quyish shoxobchasi,muz,oyna
+943,das Verkehrsschild,yo'l belgisi,stul,qalam
+944,der Sicherheitsgurt,xavfsizlik kamari,gul,telefon
+945,die Autotür,avtomobil eshigi,oy,mashina
+946,das Navigationsgerät,navigator,muz,sumka
+947,der Parkplatz,avtoturargoh,telefon,stakan
+948,die Kreuzung,chorraha,qalam,gul
+949,das Motorrad,mototsikl,oyna,telefon
+950,der Fußweg,piyodalar yo'li,sumka,muz
+951,bremsen,tormoz bermoq,qochmoq,sakrash
+952,gefährlich,xavfli,xavfsiz,oddiy
+953,tanken,yoqilg'i quymoq,unutmoq,sotmoq
+954,unterwegs,yo'lda,uyda,erta
+955,vorsichtig,ehtiyotkor,shoshqaloq,sovuq
+956,abbiegen,burilmoq,uxlamoq,suzmoq
+957,frei,bo'sh,band,baland
+958,gerade,to'g'ri,egri,kecha
+959,überholen,o'zib ketmoq,yashirmoq,qochmoq
+960,langsam,sekin,tez,past
+961,der Wetterbericht,ob-havo hisoboti,telefon,sumka
+962,die Schneeballschlacht,qor jangi,muz,oyna
+963,das Herbstblatt,kuz bargi,stul,qalam
+964,der Sommerurlaub,yozgi ta'til,gul,telefon
+965,die Frühlingsblume,bahor guli,oy,mashina
+966,das Winterwetter,qish ob-havosi,muz,sumka
+967,der Regenschauer,qisqa yomg'ir,telefon,stakan
+968,die Sonnencreme,quyosh kremi,qalam,gul
+969,das Picknicktuch,piknik yopinchig'i,oyna,telefon
+970,der Badesee,cho'milish ko'li,sumka,muz
+971,regnen,yomg'ir yog'moq,qochmoq,sakrash
+972,heiß,issiq,sovuq,oddiy
+973,schneien,qor yog'moq,unutmoq,sotmoq
+974,draußen,tashqarida,ichkarida,erta
+975,bewölkt,bulutli,ochiq,sovuq
+976,sonnenbaden,toblanmoq,uxlamoq,suzmoq
+977,kühl,salqin,issiq,baland
+978,plötzlich,to'satdan,sekin,kecha
+979,wachsen,o'smoq,yashirmoq,qochmoq
+980,natürlich,tabiiy,sun'iy,past
+981,der Lieblingslehrer,sevimli o'qituvchi,telefon,sumka
+982,die Freundschaft,do'stlik,muz,oyna
+983,das Kinderlied,bolalar qo'shig'i,stul,qalam
+984,der Familienname,familya,gul,telefon
+985,die Geburtstagstorte,tug'ilgan kun torti,oy,mashina
+986,das Haustier,uy hayvoni,muz,sumka
+987,der Wochenendausflug,hafta oxiri sayohati,telefon,stakan
+988,die Lieblingsband,sevimli musiqa guruhi,qalam,gul
+989,das Kinoticket,kino chiptasi,oyna,telefon
+990,der Spielzeugladen,o'yinchoq do'koni,sumka,muz
+991,feiern,nishonlamoq,qochmoq,sakrash
+992,fröhlich,xursand,xafa,oddiy
+993,besuchen,ziyorat qilmoq,unutmoq,sotmoq
+994,wirklich,haqiqatan,balki,erta
+995,glücklich,baxtli,xafa,sovuq
+996,telefonieren,telefonlashmoq,uxlamoq,suzmoq
+997,hilfsbereit,yordamchi,qo'pol,baland
+998,zusammen,birga,yolg'iz,kecha
+999,passen,mos kelmoq,yashirmoq,qochmoq
+1000,bereit,tayyor,tayyor emas,past

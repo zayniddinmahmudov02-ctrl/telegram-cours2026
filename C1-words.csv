@@ -1,0 +1,1055 @@
+1,differenzieren,farqlarni nozik ajratmoq,chuqur tahlil qilmoq,baholash mezonlarini belgilamoq
+2,die Wahrnehmung,idrok qilish usuli,subyektiv qarash,ongli tasavvur
+3,plausibel,ishonarli va mantiqan asoslangan,ehtimolga yaqin,formal jihatdan to‘g‘ri
+4,folglich,mantiqiy natija sifatida,oqibat tarzida,asosli ravishda
+5,reflektieren,chuqur tahlil qilmoq,o‘z ustida mushohada yuritmoq,nazariy baholamoq
+6,die Auseinandersetzung,tanqidiy muhokama,fikrlar to‘qnashuvi,analitik bahs
+7,ambivalent,ikki xil ma’noli,ziddiyatli his uyg‘otuvchi,aniq bo‘lmagan
+8,nichtsdestotrotz,shunga qaramay,barcha e’tirozlarga qaramasdan,qarama-qarshi holatda ham
+9,präzisieren,aniqroq ifodalamoq,noaniqlikni bartaraf qilmoq,tushunchani toraytirmoq
+10,die Schlussfolgerung,mantiqiy xulosa,analitik natija,dalillardan kelib chiqqan qaror
+11,vielschichtig,ko‘p qatlamli,murakkab tarkibli,turli ma’nolarni qamrab oluvchi
+12,inwiefern,qaysi darajada,qanday jihatdan,nechog‘lik asosda
+13,hinterfragen,tanqidiy qayta ko‘rib chiqmoq,shubha ostiga qo‘ymoq,mantiqiy tekshirmoq
+14,die Voraussetzung,asosiy zarur shart,nazariy poydevor,oldindan talab qilinadigan omil
+15,nachvollziehbar,mantiqan tushunarli,asoslangan holda izohlanadigan,izchil
+16,dementsprechend,mos ravishda,mantiqiy tarzda kelib chiqib,shunga muvofiq
+17,veranschaulichen,misol orqali ochib bermoq,mavhum fikrni ko‘rgazmali qilmoq,tasvirlab tushuntirmoq
+18,die Einflussnahme,ongli ta’sir o‘tkazish,yo‘naltirilgan boshqaruv,fikr shakllantirishga urinish
+19,ausschlaggebend,hal qiluvchi darajada muhim,natijani belgilovchi,asosiy ta’sir ko‘rsatuvchi
+20,hingegen,bunga qarama-qarshi ravishda,aksincha,boshqa nuqtayi nazardan
+21,analysieren,tarkibiy qismlarga ajratib o‘rganmoq,chuqur tahlil qilmoq,ilmiy tekshirmoq
+22,die Differenzierung,nozik farqlash,aniq ajratish,tafovutni ko‘rsatish
+23,widersprüchlich,o‘zaro zid,mantiqan mos kelmaydigan,qarama-qarshi
+24,infolgedessen,bevosita oqibat sifatida,natijada,mantiqiy davom sifatida
+25,interpretieren,ma’nosini sharhlamoq,tahliliy izohlab bermoq,mazmun chiqarib tushuntirmoq
+26,die Erkenntnis,chuqur anglash,ilmiy xulosa,analitik tushuncha
+27,substanziell,mohiyatli,jiddiy ahamiyatga ega,asosiy tarkibni tashkil qiluvchi
+28,unter der Voraussetzung, dass,sharti bilan,faqat ma’lum holatda,oldindan belgilangan asosda
+29,erläutern,batafsil tushuntirmoq,mantiqiy izohlab bermoq,misollar bilan ochmoq
+30,die Veranschaulichung,ko‘rgazmali tushuntirish,mavhum fikrni aniq ifodalash,tasviriy sharh
+31,differenziert,nozik farqlangan,chuqur tahliliy,ko‘p tomonlama yondashilgan
+32,folgendermaßen,quyidagi tarzda,mantiqiy ketma-ketlikda,belgilangan shaklda
+33,einordnen,mantiqiy tizimga joylashtirmoq,tasniflamoq,tegishli kontekstga qo‘ymoq
+34,die Wechselwirkung,o‘zaro ta’sir,bir-biriga bog‘liq ta’sir jarayoni,qarama-qarshi kuchlarning aloqasi
+35,gravierend,jiddiy oqibatli,kuchli ta’sir qiluvchi,muhim darajada salbiy
+36,demzufolge,mantiqiy natija sifatida,shu sababli,oqibat tarzida
+37,verdeutlichen,aniqroq qilib ko‘rsatmoq,mohiyatni ochib bermoq,noaniqlikni kamaytirmoq
+38,die Deutung,sharhlash usuli,talqin,ma’no chiqarish
+39,relevant,mavzuga bevosita daxldor,ahamiyatli,asosiy mazmunga tegishli
+40,wohingegen,aksincha bo‘lgan holda,boshqa tomondan,qarama-qarshi vaziyatda
+41,beurteilen,mezon asosida baholamoq,tahliliy xulosa chiqarmoq,pozitsiyani aniqlamoq
+42,die Wahrnehmungsfähigkeit,idrok qilish qobiliyati,analitik tushunish salohiyati,ongli kuzatish mahorati
+43,kontrovers,bahsli,turli qarashlarga sabab bo‘luvchi,keskin muhokamali
+44,gleichermaßen,birdek tarzda,teng ravishda,shu bilan bir qatorda
+45,prägen,uzoq muddatli ta’sir ko‘rsatmoq,shakllantirmoq,yo‘nalishni belgilamoq
+46,die Argumentation,mantiqiy dalillash tizimi,asoslangan fikr yuritish,bahs yuritish usuli
+47,wesentlich,asosiy ahamiyatga ega,mohiyatni belgilovchi,juda muhim
+48,namentlich,ayniqsa,xususan,aniq nom bilan aytganda
+49,hervorheben,alohida ta’kidlamoq,markazga chiqarmoq,ajratib ko‘rsatmoq
+50,die Zielsetzung,strategik maqsad,natijaga yo‘naltirilgan reja,asosiy intilish
+51,mehrdeutig,bir nechta ma’noga ega,noaniq talqin qilinadigan,ikki ma’noli
+52,nicht unerheblich,sezilarli darajada,muhim hisoblanadigan,jiddiy ravishda
+53,rekonstruieren,qayta tiklab tushuntirmoq,mantiqiy ketma-ketlikni qayta qurmoq,tahliliy qayta yaratmoq
+54,die Perspektive,qarash nuqtasi,subyektiv yondashuv,talqin pozitsiyasi
+55,prägnant,qisqa va mazmunli,aniq ifodalangan,ta’sirchan
+56,demnach,mantiqiy tarzda kelib chiqib,shu asosda,natija sifatida
+57,nachweisen,dalillar bilan isbotlamoq,ilmiy asoslab bermoq,tasdiqlamoq
+58,die Vorgehensweise,muayyan usul bilan ish yuritish,strategik yondashuv,amalga oshirish tartibi
+59,konventionell,an’anaviy yondashuvga asoslangan,odatdagi,klassik
+60,unter anderem,jumladan,xususan,shu qatorda
+61,verallgemeinern,umumlashtirmoq,xususiy holatdan umumiy xulosa chiqarmoq,chegarani kengaytirmoq
+62,die Hypothese,ilmiy taxmin,nazariy faraz,tajriba bilan tekshiriladigan fikr
+63,maßgeblich,hal qiluvchi ahamiyatga ega,asosiy rol o‘ynovchi,ta’siri kuchli
+64,in Anbetracht dessen,shu holatni hisobga olib,mavjud vaziyatdan kelib chiqib,mazkur omil asosida
+65,verdecken,mohiyatni yashirmoq,ochiq ko‘rinishni to‘smoq,asl mazmunni berkitmoq
+66,die Verhaltensweise,xulq-atvor shakli,harakat usuli,munosabat ko‘rinishi
+67,nachhaltig,uzoq muddatli ta’sirga ega,barqaror,kelajakni hisobga oluvchi
+68,folgender Gedanke,quyidagi fikr,mantiqiy davom sifatidagi g‘oya,asosiy mulohaza
+69,überzeugen,mantiqan ishontirmoq,dalillar bilan ta’sir qilmoq,fikrni qabul qildirmoq
+70,die Problematik,murakkab muammo tizimi,bahsli masala,yechimi qiyin holat
+71,nuanciert,nozik farqlarga ega,ma’nodagi mayda tafovutlarni ko‘rsatadigan,chuqur yondashilgan
+72,unter Umständen,ma’lum sharoitlarda,ehtimoliy holatda,ba’zi vaziyatlarda
+73,rekapitulieren,qisqacha qayta ko‘rib chiqmoq,asosiy nuqtalarni takrorlamoq,xulosaviy eslatmoq
+74,die Interpretation,mazmuniy sharh,talqin qilish usuli,ma’no chiqarish
+75,übergreifend,keng qamrovli,bir nechta sohaga oid,umumiy xarakterdagi
+76,in diesem Zusammenhang,shu bog‘liqlik doirasida,mazkur aloqada,mantiqiy kontekstda
+77,präzise formulieren,aniq ifodalamoq,noaniqlik qoldirmasdan yozmoq,mantiqan ravshan aytmoq
+78,die Wechselbeziehung,o‘zaro bog‘liqlik,bir-biriga ta’sir qiluvchi aloqa,murakkab munosabat
+79,essenziell,mohiyatan zarur,ajralmas darajada muhim,asosiy
+80,gleichwohl,shunga qaramay,biroq,qarama-qarshi holatda ham
+81,differenziert beurteilen,nozik tafovutlarni hisobga olib baholamoq,chuqur tahlil qilmoq,har tomonlama ko‘rib chiqmoq
+82,die Schlussfolgerungskompetenz,mantiqiy xulosa chiqarish qobiliyati,tahliliy fikrlash salohiyati,dalildan natija chiqarish mahorati
+83,kontinuierlich,uzluksiz,davomiy ravishda,to‘xtovsiz
+84,in erster Linie,avvalo,birinchi navbatda,eng asosiy jihatdan
+85,relativieren,mutlaq emasligini ko‘rsatmoq,nisbiylashtirmoq,ta’sir kuchini kamaytirmoq
+86,die Einflussgröße,asosiy ta’sir omili,natijani belgilovchi faktor,muhim ko‘rsatkich
+87,ambitioniert,yuqori maqsadli,intiluvchan,murakkab rejali
+88,unter Berücksichtigung,hisobga olgan holda,e’tiborga olib,mantiqiy asosda
+89,hinterfragen können,tanqidiy qayta ko‘ra olmoq,shubha bilan tekshirmoq,mantiqan tahlil qila olmoq
+90,die Kommunikationsstruktur,muloqot tizimi,aloqa shakllari majmui,axborot almashuv usuli
+91,plausibel darstellen,ishonarli tarzda ifodalamoq,mantiqan asoslab ko‘rsatmoq,dalillar bilan yoritmoq
+92,die Argumentationskette,mantiqiy dalillar ketma-ketligi,asoslash tizimi,fikrlar zanjiri
+93,voraussetzen,oldindan talab qilmoq,asos bo‘lib xizmat qilmoq,zarur shart sifatida belgilamoq
+94,die Deutungsmöglichkeit,talqin qilish imkoniyati,ma’no chiqarish varianti,sharhlash usuli
+95,komplex,murakkab tarkibli,ko‘p qatlamli,bir nechta omilga bog‘liq
+96,demgegenüber,bunga qarama-qarshi ravishda,aksincha,boshqa nuqtadan qaraganda
+97,erörtern,batafsil muhokama qilmoq,har tomonlama tahlil qilmoq,bahs yuritmoq
+98,die Kernaussage,asosiy mazmun,muhim fikr,markaziy xulosa
+99,signifikant,sezilarli darajada muhim,statistik jihatdan ahamiyatli,jiddiy farq qiluvchi
+100,infolgedessen,natijada,bevosita oqibat sifatida,mantiqiy davom sifatida
+101,konkretisieren,aniqlashtirib bermoq,mavhumlikni kamaytirmoq,mazmunni ravshanlashtirmoq
+102,die Einflussmöglichkeit,ta’sir ko‘rsatish imkoniyati,boshqaruv salohiyati,yo‘naltirish quvvati
+103,wesentlicher Bestandteil,asosiy tarkibiy qism,mohiyatni belgilovchi unsur,ajralmas element
+104,nicht zuletzt,eng kamida emas,ayniqsa,muhim ravishda
+105,argumentativ begründen,dalillar bilan asoslamoq,mantiqan himoya qilmoq,izchil tushuntirmoq
+106,die Selbstreflexion,o‘zini tahlil qilish,ichki baholash,ongli mushohada
+107,facettenreich,ko‘p qirrali,turli jihatlarga ega,mazmunan boy
+108,in vielerlei Hinsicht,ko‘p jihatdan,turli nuqtayi nazardan,bir necha tomonlama
+109,verdeutlichen können,aniq ko‘rsatib bera olmoq,mohiyatni ochib bera olmoq,tushuntirish qobiliyatiga ega bo‘lmoq
+110,die Relevanz,ahamiyat,daxldorlik,muhimlik darajasi
+111,plausible Erklärung,ishonarli tushuntirish,mantiqiy izoh,asoslangan sharh
+112,im Hinblick auf,ga nisbatan,borasida,shu nuqtai nazardan
+113,rekonstruierbar,qayta tiklab tushuntirish mumkin bo‘lgan,mantiqan qayta quriladigan,izchil qayta yaratiladigan
+114,die Denkweise,fikrlash usuli,dunyoqarash,mantiqiy yondashuv
+115,kontrovers diskutieren,bahsli tarzda muhokama qilmoq,qarama-qarshi fikrlar bilan tahlil qilmoq,tortishuv olib bormoq
+116,die Voraussetzungslosigkeit,oldindan cheklovsiz holat,erkin asos,mustaqil yondashuv
+117,subjektiv geprägt,subyektiv qarash bilan shakllangan,shaxsiy ta’sir ostidagi,bir tomonlama
+118,gleichzeitig,shu bilan bir vaqtda,bir paytning o‘zida,parallel ravishda
+119,vermitteln,tushunchani yetkazmoq,mantiqiy ifodalamoq,vositachilik orqali tushuntirmoq
+120,die Differenziertheit,nozik tafovutlarga boylik,chuqur tahliliy daraja,murakkablik
+121,weitreichend,keng ta’sirli,katta oqibatlarga ega,uzoq muddatli natijali
+122,folglich argumentieren,mantiqiy tarzda dalillamoq,izchil fikr yuritmoq,natijaga asoslangan holda gapirmoq
+123,herausarbeiten,asosiy jihatni ajratib ko‘rsatmoq,chuqur tahlil orqali ochmoq,mohiyatni aniqlamoq
+124,die Bedeutungsnuance,ma’nodagi nozik farq,semantik tafovut,ifodaviy nuance
+125,widersprüchliche Haltung,zid munosabat,qarama-qarshi pozitsiya,mantiqan mos kelmaydigan qarash
+126,insofern,shu jihatdan qaraganda,ma’lum ma’noda,mantiqan shu asosda
+127,einordnen können,tizimga joylashtira olmoq,mantiqan tasniflay olmoq,kontekstga qo‘ya bilmoq
+128,die Interpretationsmöglichkeit,talqin qilish imkoniyati,ma’no chiqarish varianti,izohlash yo‘li
+129,differenziertes Denken,nozik tafovutlarni hisobga oluvchi fikrlash,chuqur analitik tafakkur,murakkab tahliliy yondashuv
+130,unterstreichen,alohida ta’kidlamoq,muhimligini ko‘rsatmoq,urg‘u bermoq
+131,reflektierte Meinung,o‘ylangan va tahlil qilingan fikr,ongli qarash,mantiqan asoslangan munosabat
+132,die Argumentationsweise,dalillash usuli,mantiqiy asoslash shakli,bahs yuritish metodi
+133,plausibel wirken,ishonarli ko‘rinmoq,mantiqan asosli tuyulmoq,dalilli taassurot qoldirmoq
+134,in gewisser Hinsicht,ma’lum jihatdan,qisman,bir tomondan qaraganda
+135,analytisch vorgehen,tahliliy yondashmoq,mantiqiy ketma-ketlik asosida ishlamoq,chuqur tekshirmoq
+136,die Schlussfolgerungsfähigkeit,xulosa chiqarish qobiliyati,mantiqiy natija hosil qilish salohiyati,analitik fikrlash
+137,kontrovers diskutiert,bahsli tarzda muhokama qilingan,turli fikrlar uyg‘otgan,keskin tahlil qilingan
+138,dementsprechend handeln,mos ravishda harakat qilmoq,mantiqiy xulosaga ko‘ra ish tutmoq,shunga muvofiq yo‘l tutmoq
+139,die Gedankengang,fikr yuritish jarayoni,mantiqiy tafakkur oqimi,analitik ketma-ketlik
+140,essenzielle Voraussetzung,eng muhim shart,mohiyat uchun zarur asos,ajralmas omil
+141,differenziert argumentieren,nozik tafovutlarni hisobga olib dalillamoq,chuqur asoslab gapirmoq,mantiqan murakkab fikr yuritmoq
+142,die Ausdrucksweise,ifoda usuli,nutq shakli,so‘zlash tarzi
+143,nachhaltige Entwicklung,barqaror rivojlanish,uzoq muddatli taraqqiyot,kelajakni hisobga olgan o‘sish
+144,folglich betrachtet,mantiqan qaralganda,natija sifatida ko‘rilganda,izchil tahlilda
+145,herkömmlich,an’anaviy,odatdagi,klassik yondashuvga asoslangan
+146,die Kommunikationsfähigkeit,muloqot qobiliyati,fikr almashish salohiyati,ifoda mahorati
+147,substanziell verändern,mohiyat darajasida o‘zgartirmoq,jiddiy ta’sir ko‘rsatmoq,asosiy tarkibni yangilamoq
+148,unter bestimmten Umständen,ma’lum sharoitlarda,ayrim vaziyatlarda,ehtimoliy holatda
+149,kritisch hinterfragen,tanqidiy qayta ko‘rib chiqmoq,shubha bilan tahlil qilmoq,mantiqan tekshirmoq
+150,die Kommunikationskompetenz,muloqot kompetensiyasi,ijtimoiy ifoda mahorati,samarali aloqa qobiliyati
+151,präzise Analyse,aniq tahlil,nozik tafovutlarni ko‘rsatadigan tekshiruv,mantiqiy baholash
+152,in Anlehnung an,asosida,shu modelga tayangan holda,o‘xshash tarzda
+153,komplexe Zusammenhänge,murakkab bog‘liqliklar,ko‘p omilli aloqalar,chuqur munosabatlar
+154,die Argumentationsstruktur,dalillash tizimi,mantiqiy asoslash tuzilmasi,fikr yuritish modeli
+155,gravierende Folgen,jiddiy oqibatlar,kuchli salbiy natijalar,keskin ta’sirlar
+156,demnach ableiten,shu asosda xulosa chiqarmoq,mantiqan natija hosil qilmoq,dalildan kelib chiqmoq
+157,nachvollziehbare Erklärung,mantiqan tushunarli izoh,asoslangan tushuntirish,izchil sharh
+158,die Einflussfaktoren,ta’sir omillari,natijani belgilovchi sabablar,asosiy faktorlar
+159,mehrdimensional,ko‘p o‘lchovli,bir nechta jihatga ega,murakkab tuzilgan
+160,nicht zwangsläufig,majburiy ravishda emas,har doim ham emas,muqarrar bo‘lmagan
+161,analytische Fähigkeit,tahliliy qobiliyat,mantiqiy tekshirish salohiyati,chuqur fikrlash mahorati
+162,die Problemstellung,qo‘yilgan muammo,tahlil qilinadigan masala,murakkab vaziyat
+163,übergreifende Bedeutung,keng qamrovli ahamiyat,bir nechta sohaga taalluqli mazmun,umumiy muhimlik
+164,folglich interpretieren,mantiqiy tarzda sharhlamoq,natijaga asoslanib talqin qilmoq,izchil ma’no chiqarmoq
+165,plausible Argumentation,ishonarli dalillash,mantiqan asoslangan fikr yuritish,izchil bahs
+166,die Gedankentiefe,fikr chuqurligi,analitik tafakkur darajasi,murakkab mushohada
+167,wesentliche Erkenntnis,asosiy xulosa,muhim anglash,natijaviy tushuncha
+168,in dieser Hinsicht,shu jihatdan qaraganda,mazkur nuqtayi nazardan,bunday holatda
+169,strukturieren,tartibga solmoq,mantiqiy tizimlashtirmoq,rejalashtirmoq
+170,die Kommunikationsbarriere,muloqot to‘sig‘i,aloqa muammosi,tushunmovchilik sababi
+171,differenzierte Betrachtung,nozik tafovutlarni hisobga olgan tahlil,chuqur yondashuv,ko‘p tomonlama baholash
+172,in diesem Fall,bu holatda,mazkur vaziyatda,shu sharoitda
+173,erheblich beeinflussen,sezilarli darajada ta’sir qilmoq,natijani jiddiy o‘zgartirmoq,kuchli yo‘naltirmoq
+174,die Problemlösungsfähigkeit,muammo yechish qobiliyati,analitik yechim topish mahorati,mantiqiy boshqaruv salohiyati
+175,mehrperspektivisch,turli nuqtayi nazardan ko‘rib chiqilgan,ko‘p qarashli,har tomonlama
+176,nicht eindeutig,aniq emas,bir ma’noli bo‘lmagan,turlicha talqin qilinadigan
+177,argumentativ überzeugend,dalillar bilan ishontiruvchi,mantiqan kuchli asoslangan,ta’sirli fikr yurituvchi
+178,die Selbstwahrnehmung,o‘zini idrok qilish,ichki anglash,shaxsiy tushuncha
+179,nachhaltige Wirkung,uzoq muddatli ta’sir,barqaror natija,kelajakda ham seziladigan oqibat
+180,im Vergleich dazu,bunga nisbatan,taqqoslaganda,qarama-qarshi holatda
+181,präzise darstellen,aniq ifodalab bermoq,mantiqan ravshan ko‘rsatmoq,mazmunni ochiq yetkazmoq
+182,die Reflexionsfähigkeit,o‘zini tahlil qilish qobiliyati,analitik mushohada salohiyati,ichki baholash mahorati
+183,kontroverse Diskussion,bahsli muhokama,qarama-qarshi fikrlar almashinuvi,keskin tahlil
+184,infolgedessen entstehen,natijada yuzaga kelmoq,mantiqiy oqibat sifatida paydo bo‘lmoq,bevosita hosil bo‘lmoq
+185,differenzierte Ausdrucksweise,nozik ma’nolarni ifodalovchi nutq usuli,chuqur ifoda shakli,semantik boy til
+186,die Schlussfolgerung ziehen,xulosa chiqarmoq,mantiqiy natijaga kelmoq,dalildan qaror hosil qilmoq
+187,subjektive Einschätzung,shaxsiy baholash,subyektiv fikr,mustaqil qarash
+188,in theoretischer Hinsicht,nazariy jihatdan,ilmiy nuqtayi nazardan,mantiqiy asosda
+189,präzise argumentieren,aniq va mantiqli dalillamoq,izchil asoslab gapirmoq,nozik tafovutlarni ko‘rsatib fikr yuritmoq
+190,die Analysefähigkeit,tahlil qilish qobiliyati,mantiqiy tekshirish mahorati,analitik fikrlash
+191,vielseitige Perspektive,ko‘p qirrali qarash,turli nuqtayi nazar,har tomonlama yondashuv
+192,dementsprechend reagieren,mos ravishda javob qaytarmoq,mantiqiy natijaga ko‘ra harakat qilmoq,shunga muvofiq munosabat bildirmoq
+193,komplexe Argumentation,murakkab dalillash tizimi,ko‘p qatlamli fikr yuritish,analitik bahs
+194,die Interpretationsebene,talqin darajasi,ma’no chiqarish bosqichi,sharhlash qatlami
+195,gravierender Unterschied,jiddiy farq,sezilarli tafovut,muhim o‘zgarish
+196,in Bezug auf,ga nisbatan,shu masalaga oid,bilan bog‘liq holda
+197,analytisch denken,tahliliy fikrlamoq,mantiqan mushohada yuritmoq,chuqur tahlil qilmoq
+198,die Argumentationskompetenz,dalillash kompetensiyasi,mantiqiy fikr yuritish mahorati,bahs olib borish salohiyati
+199,nachhaltig beeinflussen,uzoq muddatli ta’sir ko‘rsatmoq,barqaror o‘zgarish yaratmoq,kelajakni shakllantirmoq
+200,plausibel begründen,mantiqan asoslab tushuntirmoq,ishonarli tarzda dalillamoq,izchil izoh bermoq
+201,die Polarisierung,jamiyatning keskin ikki qarashga bo‘linishi,fikrlar qarama-qarshiligi,ijtimoiy ajralish
+202,manipulativ,ongli ravishda ta’sir o‘tkazuvchi,fikrni yashirin boshqaruvchi,psixologik yo‘naltiruvchi
+203,die Berichterstattung,axborot yoritilishi,media orqali voqeani bayon qilish,jurnalistik tasvirlash
+204,folgenschwer,jiddiy oqibatlarga olib keluvchi,kuchli ta’sirli,muhim natijali
+205,die Meinungsfreiheit,fikr bildirish erkinligi,so‘z erkinligi,qarashni ochiq ifodalash ҳуқуқi
+206,ideologisch,mafkura asosida shakllangan,siyosiy qarashga bog‘liq,bir tomonlama yo‘naltirilgan
+207,die Einflussnahme,ongli ta’sir ko‘rsatish,jamoatchilik fikrini boshqarish,yo‘naltirilgan aralashuv
+208,kontrovers diskutieren,keskin bahs yuritmoq,qarama-qarshi fikrlarni muhokama qilmoq,bahsli tahlil olib bormoq
+209,die Öffentlichkeit,jamoatchilik,ommaviy maydon,ijtimoiy e’tibor doirasi
+210,irreführend,chalg‘ituvchi,noto‘g‘ri tasavvur uyg‘otuvchi,haqiqatni buzib ko‘rsatuvchi
+211,die Wahrnehmungsverzerrung,idrok buzilishi,haqiqatni noto‘g‘ri qabul qilish,subyektiv noto‘g‘ri tasavvur
+212,folglich ableiten,mantiqan xulosa chiqarmoq,natijani asoslab hosil qilmoq,dalildan kelib chiqmoq
+213,die Meinungsbildung,fikr shakllanishi,qarash hosil qilish jarayoni,ijtimoiy pozitsiya rivojlanishi
+214,subjektiv geprägt,shaxsiy qarash ta’sirida shakllangan,bir tomonlama yo‘naltirilgan,subyektiv rang berilgan
+215,die Informationsquelle,axborot manbai,ma’lumot kelib chiqadigan joy,ishonchli resurs
+216,in diesem Kontext,shu kontekstda,mazkur bog‘liqlik doirasida,mantiqiy aloqada
+217,die Berücksichtigung,e’tiborga olish,hisobga olish jarayoni,omillarni nazarda tutish
+218,medial beeinflussen,media orqali ta’sir qilmoq,axborot bilan yo‘naltirmoq,jamoatchilik fikrini shakllantirmoq
+219,die Darstellung,ifodalash shakli,tasvirlash usuli,mazmunni bayon qilish
+220,fragwürdig,shubhali,mantiqan ishonchsiz,bahs uyg‘otuvchi
+221,die Glaubwürdigkeit,ishonchlilik,haqiqatga moslik,obro‘ darajasi
+222,gezielt steuern,aniq maqsad bilan boshqarmoq,ongli ravishda yo‘naltirmoq,strategik nazorat qilmoq
+223,die Manipulation,ongli aldov,fikrni yashirin boshqarish,psixologik ta’sir usuli
+224,gesellschaftlich relevant,jamiyat uchun muhim,ijtimoiy ahamiyatga ega,ommaviy ta’sirli
+225,die Informationsflut,haddan tashqari ko‘p axborot oqimi,ma’lumot bosimi,ortiqcha informatsiya
+226,nicht eindeutig interpretierbar,bir ma’noli sharhlab bo‘lmaydigan,turlicha talqin qilinadigan,aniq bo‘lmagan
+227,die Medienlandschaft,media muhiti,axborot tizimlari majmui,jurnalistik maydon
+228,emotional aufgeladen,kuchli hissiy ta’sirga ega,emotsional jihatdan keskin,ruhiy bosim uyg‘otuvchi
+229,die Einflusskraft,ta’sir kuchi,jamoatchilikka bosim o‘tkazish salohiyati,yo‘naltirish quvvati
+230,im gesellschaftlichen Diskurs,jamoatchilik muhokamasida,ijtimoiy bahs doirasida,ommaviy fikr maydonida
+231,die Verzerrung,buzib ko‘rsatish,haqiqatni noto‘g‘ri aks ettirish,subyektiv og‘ish
+232,argumentativ untermauern,dalillar bilan mustahkamlamoq,mantiqan kuchaytirmoq,asoslab qo‘llab-quvvatlamoq
+233,die Medienkompetenz,media savodxonligi,axborotni tanqidiy tushunish qobiliyati,analitik media idroki
+234,gesellschaftspolitisch,jamiyat va siyosatga oid,ijtimoiy-siyosiy,ommaviy boshqaruv bilan bog‘liq
+235,die Berichterstattung beeinflussen,axborot yoritilishini yo‘naltirmoq,media tasvirini boshqarmoq,jurnalistik talqinga ta’sir qilmoq
+236,unter medialem Druck,media bosimi ostida,jamoatchilik e’tibori ta’sirida,axborot nazorati ostida
+237,die Deutungsweise,talqin qilish usuli,mazmun chiqarish shakli,sharhlash modeli
+238,gezielte Einflussnahme,maqsadli ta’sir o‘tkazish,ongli boshqaruv,strategik yo‘naltirish
+239,die Meinungsverschiedenheit,fikrlar kelishmovchiligi,qarashlar to‘qnashuvi,bahsli tafovut
+240,kritisch beleuchten,tanqidiy yoritmoq,har tomonlama tekshirmoq,zaif tomonlarini ochmoq
+241,die Informationspolitik,axborot siyosati,media boshqaruvi strategiyasi,ma’lumot tarqatish usuli
+242,gesellschaftliche Verantwortung,ijtimoiy mas’uliyat,jamiyat oldidagi javobgarlik,ommaviy burch
+243,die Wahrnehmung beeinflussen,idrokni shakllantirmoq,qarashga ta’sir qilmoq,subyektiv fikr hosil qilmoq
+244,medial präsent bo‘lmoq,media maydonida faol ko‘rinmoq,ommaviy axborotda aks etmoq,jamoatchilik oldida chiqmoq
+245,die Informationsverarbeitung,axborotni qayta ishlash jarayoni,ma’lumotni tahlil qilish,analitik qabul qilish
+246,widersprüchliche Darstellung,zid tasvirlash,qarama-qarshi ma’lumot berish,bir-biriga mos kelmaydigan ifoda
+247,die öffentliche Meinung,jamoatchilik fikri,ommaviy qarash,ijtimoiy munosabat
+248,gesellschaftliche Entwicklung,ijtimoiy rivojlanish,jamiyat taraqqiyoti,ommaviy o‘zgarish
+249,die Einflussmöglichkeit,ta’sir ko‘rsatish imkoniyati,jamoatchilikni boshqarish salohiyati,yo‘naltirish imkoniyati
+250,selektiv berichten,tanlab yoritmoq,faqat ayrim jihatlarni ko‘rsatmoq,axborotni saralab berish
+251,die Informationsweitergabe,axborotni uzatish jarayoni,ma’lumot tarqatish,informatsion almashinuv
+252,manipulativ wirken,yashirin ravishda ta’sir qilmoq,fikrni boshqarmoq,psixologik yo‘naltirmoq
+253,die gesellschaftliche Debatte,ijtimoiy bahs,jamoatchilik muhokamasi,ommaviy tortishuv
+254,einseitig darstellen,bir tomonlama ko‘rsatmoq,muqobil qarashlarni yashirmoq,subyektiv yoritmoq
+255,die Informationsbeschaffung,axborot to‘plash jarayoni,ma’lumot izlash,manbalarni yig‘ish
+256,gesellschaftlich akzeptiert,jamiyat tomonidan qabul qilingan,ommaviy ma’qullangan,ijtimoiy mos
+257,die Manipulationsgefahr,manipulyatsiya xavfi,ongli aldov ehtimoli,psixologik ta’sir tahdidi
+258,die Berichterstattung prägen,media yoritilishini shakllantirmoq,jurnalistik uslubni belgilamoq,axborot oqimiga ta’sir qilmoq
+259,die Informationsgesellschaft,axborot jamiyati,media markazli ijtimoiy tizim,raqamli jamiyat
+260,gesellschaftlich umstritten,jamiyatda bahsli,turli qarashlarga sabab bo‘luvchi,keskin muhokamali
+261,die Einflussstrategie,ta’sir strategiyasi,jamoatchilikni boshqarish usuli,yo‘naltirish modeli
+262,kritisch analysieren,tanqidiy tahlil qilmoq,mantiqan tekshirmoq,zaif tomonlarini ko‘rsatmoq
+263,die Informationsbewertung,axborotni baholash,ma’lumot ishonchliligini tekshirish,analitik saralash
+264,mediale Präsenz,media maydonidagi ko‘rinish,jamoatchilikdagi aks etish,ommaviy e’tibor
+265,die Wahrnehmung steuern,idrokni boshqarmoq,qarashni yo‘naltirmoq,subyektiv ta’sir ko‘rsatmoq
+266,politisch motiviert,siyosiy maqsad bilan yo‘naltirilgan,mafkuraviy asoslangan,strategik boshqarilgan
+267,die Informationsmanipulation,axborot manipulyatsiyasi,ma’lumotni ongli buzish,psixologik media ta’siri
+268,gesellschaftliche Spannungen,ijtimoiy keskinliklar,jamiyatdagi qarama-qarshiliklar,ommaviy bosim
+269,die mediale Darstellung,media orqali ifodalash,jurnalistik tasvirlash,ommaviy bayon
+270,kontrovers wahrgenommen,bahsli tarzda qabul qilingan,turlicha talqin qilingan,jamiyatda zid munosabat uyg‘otgan
+271,die Informationskompetenz,axborot savodxonligi,ma’lumotni tahlil qilish qobiliyati,media idroki
+272,emotionale Wirkung,hissiy ta’sir,ruhiy aks ta’sir,emotsional reaksiyani uyg‘otish
+273,die öffentliche Wahrnehmung,jamoatchilik idroki,ommaviy qarash,ijtimoiy tasavvur
+274,kritisch hinterfragen,tanqidiy qayta ko‘rib chiqmoq,shubha bilan tahlil qilmoq,mantiqan tekshirmoq
+275,die gesellschaftliche Relevanz,ijtimoiy ahamiyat,jamiyatga daxldorlik,ommaviy muhimlik
+276,medial verbreiten,media orqali tarqatmoq,ommaviy e’lon qilmoq,axborotni keng yoymoq
+277,die Meinungsmanipulation,fikr manipulyatsiyasi,jamoatchilik qarashini boshqarish,psixologik yo‘naltirish
+278,gesellschaftlich wahrgenommen,jamiyat tomonidan qabul qilingan,ommaviy idrok etilgan,ijtimoiy ko‘rinishda aks etgan
+279,die Informationsdichte,axborot zichligi,ma’lumotning ko‘pligi,informatsion yuklama
+280,politische Einflussnahme,siyosiy ta’sir o‘tkazish,mafkuraviy boshqaruv,strategik aralashuv
+281,die Berichterstattung verzerren,axborotni buzib ko‘rsatmoq,media tasvirini noto‘g‘ri shakllantirmoq,bir tomonlama yoritmoq
+282,gesellschaftliche Norm,jamiyat qabul qilgan qoida,ijtimoiy me’yor,ommaviy standart
+283,die Informationsweiterleitung,axborotni uzatish,ma’lumotni yetkazish,informatsion almashinuv
+284,kritisch bewerten,tanqidiy baholamoq,mantiqan tekshirmoq,zaif tomonlarini aniqlamoq
+285,die gesellschaftliche Wahrnehmung,jamiyatdagi idrok,ommaviy qarash,ijtimoiy tasavvur
+286,medial inszenieren,media uchun sun’iy tarzda sahnalashtirmoq,jamoatchilikka ta’sir qilish uchun ko‘rsatmoq,ommaviy effekt yaratmoq
+287,die Informationskontrolle,axborotni nazorat qilish,media boshqaruvi,ma’lumot oqimini cheklash
+288,politische Debatte,siyosiy bahs,mafkuraviy muhokama,jamoatchilik tortishuvi
+289,die Manipulationsabsicht,manipulyatsiya niyati,ongli ta’sir maqsadi,psixologik boshqaruv rejasi
+290,gesellschaftliche Auswirkungen,ijtimoiy oqibatlar,jamiyatga ta’sir,natijaviy o‘zgarishlar
+291,die Informationsstruktur,axborot tuzilmasi,media tizimi,ma’lumot tashkiloti
+292,medial vermittelt,media orqali yetkazilgan,jurnalistik tarzda ifodalangan,ommaviy shaklda taqdim etilgan
+293,die gesellschaftliche Veränderung,ijtimoiy o‘zgarish,jamiyatdagi yangilanish,ommaviy transformatsiya
+294,kritisch reflektieren,tanqidiy mushohada qilmoq,chuqur qayta o‘ylamoq,mantiqan tahlil qilmoq
+295,die Informationsstrategie,axborot strategiyasi,media rejalashtiruvi,ma’lumot boshqaruvi modeli
+296,gesellschaftlich geprägt,jamiyat ta’sirida shakllangan,ijtimoiy omillar bilan belgilangan,ommaviy qarashlardan ta’sirlangan
+297,die öffentliche Debatte,jamoatchilik muhokamasi,ommaviy bahs,ijtimoiy tortishuv
+298,medial beeinflusst,media ta’siri ostida shakllangan,jurnalistik boshqarilgan,ommaviy axborot bilan yo‘naltirilgan
+299,die gesellschaftliche Verantwortungslosigkeit,ijtimoiy mas’uliyatsizlik,jamiyat oldidagi befarqlik,ommaviy javobgarlikning yetishmasligi
+300,differenziert darstellen,nozik tafovutlarni hisobga olib ifodalamoq,har tomonlama ko‘rsatmoq,murakkab mazmunni ochib bermoq
+301,die Informationsvermittlung,axborotni yetkazish jarayoni,media orqali uzatish,ma’lumot almashuvi
+302,gesellschaftlich bedingt,ijtimoiy omillar bilan belgilanadigan,jamiyat ta’siriga bog‘liq,ommaviy sharoitdan kelib chiqadigan
+303,die Manipulationsmöglichkeit,manipulyatsiya imkoniyati,fikrni yashirin boshqarish salohiyati,psixologik ta’sir vositasi
+304,kritisch einordnen,tanqidiy tasniflamoq,mantiqiy kontekstga joylashtirmoq,analitik baholamoq
+305,die gesellschaftliche Orientierung,jamiyatdagi yo‘nalish,ommaviy qarash tizimi,ijtimoiy yo‘l tanlash
+306,medial gesteuert,media tomonidan boshqarilgan,axborot orqali yo‘naltirilgan,jurnalistik ta’sir ostida
+307,die Informationspolitik hinterfragen,axborot siyosatini tanqidiy ko‘rib chiqmoq,media strategiyasini shubha ostiga qo‘ymoq,ma’lumot boshqaruvini tekshirmoq
+308,gesellschaftlich anerkannt,jamiyat tomonidan tan olingan,ommaviy ravishda qabul qilingan,ijtimoiy jihatdan maqbul
+309,die Manipulationswirkung,manipulyativ ta’sir,ongli psixologik bosim,fikrni yashirin o‘zgartirish kuchi
+310,kritisch Stellung nehmen,tanqidiy munosabat bildirmoq,asoslangan qarash aytmoq,mantiqiy pozitsiya egallamoq
+311,die gesellschaftliche Dynamik,jamiyatdagi harakat jarayoni,ijtimoiy o‘zgarish mexanizmi,ommaviy rivojlanish
+312,medial verzerrt,media orqali buzib ko‘rsatilgan,noto‘g‘ri yoritilgan,bir tomonlama ifodalangan
+313,die Informationsaufnahme,axborotni qabul qilish jarayoni,ma’lumotni idrok etish,informatsion tushunish
+314,gesellschaftlich diskutiert,jamiyatda keng muhokama qilingan,ommaviy bahsga sabab bo‘lgan,ijtimoiy tortishuv uyg‘otgan
+315,die öffentliche Aufmerksamkeit,jamoatchilik e’tibori,ommaviy diqqat,ijtimoiy kuzatuv
+316,kritisch hinterleuchten,tanqidiy ravishda ichki mohiyatini ochmoq,chuqur tekshirmoq,zaif tomonlarini ko‘rsatmoq
+317,die Informationsverzerrung,axborotning buzilishi,noto‘g‘ri media tasviri,subyektiv o‘zgartirish
+318,gesellschaftliche Akzeptanz,jamiyat tomonidan qabul qilinish,ommaviy ma’qullanish,ijtimoiy moslik
+319,medial übertreiben,media orqali oshirib ko‘rsatmoq,voqelikni kattalashtirib tasvirlamoq,hissiy effekt yaratmoq
+320,die Meinungslenkung,fikrni yo‘naltirish,jamoatchilik qarashini boshqarish,psixologik media nazorati
+321,gesellschaftlich umstrittenes Thema,jamiyatda bahsli mavzu,keskin muhokama qilinadigan masala,qarama-qarshi fikr uyg‘otuvchi mavzu
+322,kritisch differenzieren,nozik farqlarni tanqidiy ajratmoq,murakkab tafovutlarni ko‘rsatmoq,chuqur tahlil qilmoq
+323,die Informationsüberlastung,axborot ortiqchaligi,ma’lumot bosimi,informatsion yuklama
+324,medial ausschlachten,media maqsadida haddan tashqari foydalanmoq,ommaviy effekt uchun kuchaytirib ko‘rsatmoq,sensatsiya yaratmoq
+325,die gesellschaftliche Spaltung,jamiyatning bo‘linishi,ijtimoiy qarama-qarshilik,ommaviy ajralish
+326,kritisch kommentieren,tanqidiy izoh bermoq,mantiqan sharhlamoq,asoslangan fikr bildirmoq
+327,die Informationsgesellschaft analysieren,axborot jamiyatini tahlil qilmoq,raqamli muhitni baholamoq,media tizimini o‘rganmoq
+328,gesellschaftliche Fehlentwicklung,jamiyatdagi salbiy rivojlanish,ijtimoiy noto‘g‘ri yo‘nalish,ommaviy muammo
+329,medial dominieren,media maydonida ustunlik qilmoq,axborot oqimini boshqarmoq,jamoatchilik e’tiborini egallamoq
+330,die öffentliche Diskussion beeinflussen,jamoatchilik muhokamasiga ta’sir qilmoq,ommaviy fikrni yo‘naltirmoq,bahs yo‘nalishini belgilamoq
+331,gesellschaftlich konstruiert,jamiyat tomonidan shakllantirilgan,ijtimoiy omillar asosida yaratilgan,ommaviy qarash bilan hosil qilingan
+332,kritisch interpretieren,tanqidiy sharhlamoq,mantiqan tahlil qilib ma’no chiqarmoq,subyektiv jihatlarni ochmoq
+333,die Informationsmanipulation erkennen,axborot manipulyatsiyasini aniqlamoq,yashirin ta’sirni sezmoq,media boshqaruvini tushunmoq
+334,gesellschaftlich verbreitet,jamiyatda keng tarqalgan,ommaviy tus olgan,ijtimoiy jihatdan keng qabul qilingan
+335,medial wirksam,media orqali kuchli ta’sir ko‘rsatadigan,jamoatchilikka tez yetib boradigan,ommaviy effektga ega
+336,die Meinungsfreiheit einschränken,fikr erkinligini cheklamoq,so‘zlash huquqini kamaytirmoq,jamoatchilik qarashiga bosim o‘tkazmoq
+337,gesellschaftliche Herausforderungen,ijtimoiy muammolar,jamiyat oldidagi murakkab vazifalar,ommaviy qiyinchiliklar
+338,kritisch beleuchtet,tanqidiy yoritilgan,zaif tomonlari ochilgan,har tomonlama tekshirilgan
+339,die Informationsethik,axborot etikasi,media mas’uliyati,ma’lumot tarqatish axloqi
+340,medial inszeniert,media uchun sun’iy tarzda tayyorlangan,jamoatchilik effektiga moslashtirilgan,ommaviy ko‘rinish uchun shakllantirilgan
+341,gesellschaftliche Konsequenzen,ijtimoiy oqibatlar,jamiyatga ta’sir etuvchi natijalar,ommaviy o‘zgarishlar
+342,kritisch argumentieren,tanqidiy asoslab gapirmoq,mantiqan himoya qilmoq,dalillar bilan fikr yuritmoq
+343,die Informationsverbreitung,axborot tarqalishi,media orqali yoyilish,ma’lumot oqimi
+344,gesellschaftlich sensibel,jamiyat uchun nozik mavzu,ijtimoiy jihatdan sezgir,ommaviy reaksiyaga sabab bo‘luvchi
+345,medial gesteuerte Wahrnehmung,media boshqaradigan idrok,jamoatchilik fikrining yo‘naltirilishi,axborot orqali shakllangan qarash
+346,die Manipulationsstrategie,manipulyatsiya strategiyasi,yashirin ta’sir rejasi,psixologik boshqaruv modeli
+347,gesellschaftliche Realität,ijtimoiy voqelik,jamiyatdagi haqiqiy holat,ommaviy mavjudlik
+348,kritisch einordnen können,tanqidiy kontekstga joylashtira olmoq,mantiqiy baholay bilmoq,analitik tasniflay olmoq
+349,die Informationsgesellschaft hinterfragen,axborot jamiyatini tanqidiy ko‘rib chiqmoq,raqamli muhitni tahlil qilmoq,media tizimini shubha ostiga qo‘ymoq
+350,gesellschaftlich relevant bleiben,jamiyat uchun dolzarb bo‘lib qolmoq,ommaviy ahamiyatni saqlab qolmoq,ijtimoiy muhim bo‘lib turmoq
+351,die Informationsfreiheit,axborot erkinligi,ma’lumot olish huquqi,ommaviy ochiqlik
+352,medial vermittelt werden,media orqali yetkazilmoq,jurnalistik shaklda taqdim etilmoq,ommaviy ifodalanmoq
+353,gesellschaftliche Orientierungslosigkeit,jamiyatdagi yo‘nalish yo‘qligi,ommaviy ikkilanish,ijtimoiy noaniqlik
+354,kritisch analysiert,tanqidiy tahlil qilingan,zaif tomonlari ko‘rsatilgan,mantiqan chuqur o‘rganilgan
+355,die Informationskultur,axborot madaniyati,media bilan munosabat usuli,ma’lumot iste’moli muhiti
+356,medial beeinflusste Meinung,media ta’sirida shakllangan fikr,jurnalistik yo‘naltirilgan qarash,ommaviy boshqarilgan munosabat
+357,gesellschaftlich geprägt sein,jamiyat ta’sirida shakllangan bo‘lmoq,ijtimoiy omillar bilan belgilangan bo‘lmoq,ommaviy qarashlardan ta’sirlangan bo‘lmoq
+358,kritisch Stellung beziehen,tanqidiy pozitsiya bildirmoq,mantiqan asoslangan qarashni himoya qilmoq,analitik munosabat ko‘rsatmoq
+359,die Informationskompetenz fördern,axborot savodxonligini rivojlantirmoq,media tahlil qobiliyatini oshirmoq,analitik idrokni kuchaytirmoq
+360,gesellschaftliche Verantwortung übernehmen,jamiyat oldidagi mas’uliyatni o‘z zimmasiga olmoq,ommaviy javobgarlikni his qilmoq,ijtimoiy burchni bajarishga intilmoq
+361,die öffentliche Wahrnehmung beeinflussen,jamoatchilik idrokiga ta’sir qilmoq,ommaviy qarashni shakllantirmoq,ijtimoiy tasavvurni boshqarmoq
+362,medial präsent sein,media maydonida faol ko‘rinmoq,jamoatchilik e’tiborida bo‘lmoq,ommaviy ravishda aks etmoq
+363,gesellschaftliche Missstände,jamiyatdagi salbiy holatlar,ijtimoiy muammolar,ommaviy kamchiliklar
+364,kritisch hinterfragt,tanqidiy qayta ko‘rib chiqilgan,shubha bilan tahlil qilingan,mantiqan tekshirilgan
+365,die Informationsmanipulation verhindern,axborot manipulyatsiyasining oldini olmoq,media orqali aldovni cheklamoq,psixologik ta’sirni kamaytirmoq
+366,gesellschaftlich akzeptabel,jamiyat tomonidan maqbul deb topilgan,ommaviy jihatdan qabul qilinadigan,ijtimoiy me’yorlarga mos
+367,medial verzerrte Darstellung,buzib ko‘rsatilgan media tasviri,noto‘g‘ri jurnalistik ifoda,bir tomonlama yoritish
+368,die gesellschaftliche Diskussion fördern,jamiyatdagi muhokamani rivojlantirmoq,ommaviy bahsni kuchaytirmoq,ijtimoiy fikr almashinuvini qo‘llab-quvvatlamoq
+369,kritisch reflektiert,o‘ylab tahlil qilingan,analitik qayta ko‘rib chiqilgan,mantiqan mushohada qilingan
+370,die Informationsgesellschaft prägen,axborot jamiyatini shakllantirmoq,media muhitiga ta’sir qilmoq,raqamli tizimni belgilamoq
+371,gesellschaftlich umstritten bleiben,jamiyatda bahsli bo‘lib qolmoq,qarama-qarshi fikr uyg‘otishda davom etmoq,ommaviy tortishuv manbai bo‘lib turmoq
+372,medial hervorgehoben,media orqali alohida ta’kidlangan,jurnalistik markazga chiqarilgan,ommaviy ravishda urg‘u berilgan
+373,die öffentliche Debatte lenken,jamoatchilik bahsini yo‘naltirmoq,ommaviy fikr almashinuviga ta’sir qilmoq,muhokama yo‘nalishini belgilamoq
+374,kritisch betrachten,tanqidiy ko‘z bilan qaramoq,mantiqan baholamoq,zaif tomonlarini ko‘rmoq
+375,die Informationsweitergabe kontrollieren,axborot uzatilishini nazorat qilmoq,media oqimini boshqarmoq,ma’lumot tarqalishini cheklamoq
+376,gesellschaftlich relevant erscheinen,jamiyat uchun muhim ko‘rinmoq,ommaviy ahamiyatga ega bo‘lib tuyulmoq,ijtimoiy jihatdan dolzarb hisoblanmoq
+377,medial verbreitete Meinung,media orqali keng yoyilgan fikr,jurnalistik tarzda ommalashgan qarash,ommaviy shakllangan munosabat
+378,die gesellschaftliche Akzeptanz erhöhen,jamiyatdagi qabul qilinishni oshirmoq,ommaviy ma’qullanishni kuchaytirmoq,ijtimoiy moslikni yaxshilamoq
+379,kritisch diskutiert,bahsli tarzda tahlil qilingan,qarama-qarshi fikrlar bilan muhokama qilingan,mantiqan tekshirilgan
+380,die Informationsethik beachten,axborot etikasi qoidalariga amal qilmoq,media mas’uliyatini hisobga olmoq,ma’lumot tarqatishda axloqiy me’yorlarga rioya qilmoq
+381,gesellschaftlich bedenklich,jamiyat uchun xavotirli,ijtimoiy jihatdan muammoli,ommaviy salbiy oqibat tug‘diruvchi
+382,medial beeinflusste Wahrnehmung,media ta’sirida shakllangan idrok,jurnalistik boshqarilgan qarash,ommaviy yo‘naltirilgan tasavvur
+383,die öffentliche Meinung manipulieren,jamoatchilik fikrini boshqarmoq,ommaviy qarashni yashirin o‘zgartirmoq,psixologik ta’sir o‘tkazmoq
+384,kritisch differenziert,tanqidiy va nozik tafovutlar bilan tahlil qilingan,murakkab jihatlari ochilgan,chuqur analitik baholangan
+385,die Informationsgesellschaft verstehen,axborot jamiyatini tushunmoq,raqamli media tizimini anglamoq,informatsion muhitni tahlil qilmoq
+386,gesellschaftlich geprägt werden,jamiyat ta’sirida shakllanmoq,ijtimoiy omillar bilan belgilanish,ommaviy qarashlar asosida rivojlanmoq
+387,medial kontrolliert,media orqali boshqarilgan,axborot nazorati ostida,jurnalistik ta’sir bilan yo‘naltirilgan
+388,die öffentliche Aufmerksamkeit erzeugen,jamoatchilik e’tiborini uyg‘otmoq,ommaviy diqqatni jalb qilmoq,media markaziga chiqarmoq
+389,kritisch hinterleuchtet,tanqidiy chuqur tahlil qilingan,ichki mohiyati ochilgan,zaif tomonlari ko‘rsatilgan
+390,die Informationsgesellschaft beeinflussen,axborot jamiyatiga ta’sir qilmoq,media tizimini yo‘naltirmoq,raqamli muhitni shakllantirmoq
+391,gesellschaftlich diskutierte Frage,jamiyatda muhokama qilinadigan savol,ommaviy bahsli masala,ijtimoiy tortishuv mavzusi
+392,medial gesteuerte Diskussion,media tomonidan boshqarilgan muhokama,jurnalistik yo‘naltirilgan bahs,ommaviy ta’sir ostidagi tortishuv
+393,die öffentliche Wahrnehmung verzerren,jamoatchilik idrokini buzmoq,ommaviy qarashni noto‘g‘ri shakllantirmoq,subyektiv tasavvur yaratmoq
+394,kritisch reflektieren können,tanqidiy mushohada qila olmoq,mantiqan qayta o‘ylay bilmoq,analitik tahlil qila olmoq
+395,die Informationspolitik beeinflussen,axborot siyosatiga ta’sir qilmoq,media boshqaruvini yo‘naltirmoq,ma’lumot tarqatish strategiyasini belgilamoq
+396,gesellschaftlich von Bedeutung sein,jamiyat uchun muhim bo‘lmoq,ijtimoiy ahamiyat kasb etmoq,ommaviy dolzarblikni ifodalamoq
+397,medial stark präsent sein,media maydonida juda faol ko‘rinmoq,ommaviy ravishda keng yoritilmoq,jamoatchilik diqqat markazida bo‘lmoq
+398,die öffentliche Diskussion prägen,jamoatchilik muhokamasini shakllantirmoq,ommaviy bahs yo‘nalishini belgilamoq,ijtimoiy fikr almashinuviga ta’sir qilmoq
+399,kritisch analysieren können,tanqidiy tahlil qila olmoq,mantiqan chuqur tekshira bilmoq,zaif tomonlarni ajrata olmoq
+400,die Informationskompetenz stärken,axborot savodxonligini kuchaytirmoq,media tahlil qobiliyatini rivojlantirmoq,analitik idrokni mustahkamlamoq
+401,die Hypothese,ilmiy taxmin,nazariy faraz,tajriba bilan tekshiriladigan fikr
+402,empirisch,tajriba va kuzatuvga asoslangan,amaliy dalillar bilan isbotlangan,ilmiy kuzatuv orqali aniqlangan
+403,die Methodik,ilmiy usullar tizimi,tadqiqot metodlari majmui,analitik yondashuv modeli
+404,schlussfolgernd denken,mantiqiy xulosa chiqarib fikrlamoq,dalillardan natija hosil qilmoq,analitik tarzda o‘ylamoq
+405,die Erkenntnistheorie,bilish nazariyasi,idrok va bilimning ilmiy asoslari,tushunish falsafasi
+406,reproduzierbar,qayta takrorlab isbotlash mumkin bo‘lgan,ilmiy jihatdan qayta tekshiriladigan,natijasi qayta olinadigan
+407,die Datenauswertung,ma’lumotlarni tahlil qilish,statistik qayta ishlash,analitik baholash jarayoni
+408,wissenschaftlich fundiert,ilmiy asoslangan,dalillar bilan mustahkamlangan,nazariy jihatdan ishonchli
+409,die Fragestellung,tadqiqot savoli,ilmiy muammo qo‘yilishi,analiz qilinadigan masala
+410,hypothetisch,nazariy taxminga asoslangan,ehtimoliy,faraziy
+411,die Analysemethode,tahlil usuli,ilmiy tekshirish modeli,analitik metod
+412,systematisch untersuchen,tizimli ravishda tekshirmoq,ilmiy asosda tahlil qilmoq,ketma-ket analiz qilmoq
+413,die Erkenntnisgewinnung,bilim hosil qilish jarayoni,ilmiy xulosa chiqarish,tahliliy anglash
+414,theoretisch begründen,nazariy jihatdan asoslamoq,ilmiy dalillar bilan tushuntirmoq,mantiqan himoya qilmoq
+415,die Datenbasis,ma’lumotlar bazasi,tahlil uchun asos bo‘luvchi ma’lumotlar,empirik manba
+416,methodisch vorgehen,metodik asosda ishlamoq,tizimli yondashmoq,ilmiy tartibda tekshirmoq
+417,die Untersuchungsmethode,tadqiqot usuli,ilmiy tekshiruv modeli,analitik metodika
+418,plausible Hypothese,ishonarli ilmiy taxmin,mantiqan asoslangan faraz,dalillar bilan mos keluvchi nazariya
+419,die Forschungsergebnisse,tadqiqot natijalari,ilmiy xulosalar,analitik topilmalar
+420,analytisch auswerten,analitik tarzda baholamoq,ma’lumotlarni chuqur tahlil qilmoq,mantiqiy tekshirmoq
+421,die Datenerhebung,ma’lumot yig‘ish jarayoni,empirik kuzatuv to‘plash,ilmiy axborot yig‘ilishi
+422,kausal erklären,sabab-oqibat asosida tushuntirmoq,mantiqiy bog‘liqlikni ko‘rsatmoq,ilmiy asoslab izohlash
+423,die Forschungsfrage,ilmiy tadqiqot savoli,analitik izlanish markazi,asosiy muammo
+424,wissenschaftlich nachweisen,ilmiy dalillar bilan isbotlamoq,tajriba orqali tasdiqlamoq,empirik asos bermoq
+425,die Untersuchungsergebnisse,tadqiqot natijalari,analitik xulosalar,ilmiy topilmalar
+426,methodisch analysieren,metodik jihatdan tahlil qilmoq,tizimli tekshirmoq,ilmiy asosda baholamoq
+427,die Schlussfolgerung ziehen,mantiqiy xulosa chiqarmoq,dalillardan natija hosil qilmoq,ilmiy qarorga kelmoq
+428,theoretischer Ansatz,nazariy yondashuv,ilmiy qarash modeli,analitik konsepsiya
+429,die Validität,ilmiy ishonchlilik,natijaning haqqoniyligi,metodning to‘g‘riligi
+430,empirisch belegen,empirik dalillar bilan tasdiqlamoq,kuzatuv orqali isbotlamoq,amaliy ma’lumot bilan ko‘rsatmoq
+431,die Forschungsarbeit,ilmiy tadqiqot ishi,analitik izlanish,akademik tekshiruv
+432,systematisch erfassen,tizimli ravishda qayd etmoq,ilmiy kuzatib yig‘moq,ketma-ket ro‘yxatga olmoq
+433,die Datenanalyse,ma’lumotlar tahlili,statistik tekshiruv,analitik qayta ishlash
+434,wissenschaftlich relevant,ilmiy jihatdan muhim,akademik ahamiyatga ega,tadqiqot uchun dolzarb
+435,die Vergleichsanalyse,taqqoslovchi tahlil,bir nechta holatni solishtirish,analitik qiyoslash
+436,theoretisch nachvollziehbar,nazariy jihatdan tushunarli,mantiqan asoslangan,ilmiy izchil
+437,die Forschungsgrundlage,tadqiqot asosi,ilmiy poydevor,analitik tayanch
+438,empirische Untersuchung,empirik tadqiqot,kuzatuv asosidagi tekshiruv,amaliy analiz
+439,die Datenauswertung durchführen,ma’lumotlarni tahlil qilmoq,statistik tekshiruv o‘tkazmoq,analitik qayta ishlashni amalga oshirmoq
+440,methodische Genauigkeit,metodik aniqlik,ilmiy tekshiruvdagi ehtiyotkorlik,analitik puxtalik
+441,die Erkenntnisse gewinnen,xulosalar hosil qilmoq,ilmiy natijalarni aniqlamoq,analitik anglashga erishmoq
+442,kausaler Zusammenhang,sabab-oqibat bog‘liqligi,mantiqiy aloqadorlik,ilmiy sababiy munosabat
+443,die Forschungsrichtung,tadqiqot yo‘nalishi,ilmiy izlanish sohasi,analitik fokus
+444,systematisch dokumentieren,tizimli ravishda hujjatlashtirmoq,ilmiy tarzda qayd etmoq,ketma-ket yozib bormoq
+445,die Methodenauswahl,metod tanlash jarayoni,ilmiy usulni aniqlash,analitik yondashuvni belgilash
+446,wissenschaftlich interpretieren,ilmiy nuqtayi nazardan sharhlamoq,analitik tarzda izohlash,nazariy ma’no chiqarish
+447,die Forschungsdaten,tadqiqot ma’lumotlari,analitik kuzatuv natijalari,ilmiy axborotlar
+448,empirisch untersuchen,empirik ravishda tekshirmoq,kuzatuv va tajriba asosida analiz qilmoq,amaliy tadqiqot olib bormoq
+449,die Theorieentwicklung,nazariy rivojlanish,ilmiy konsepsiya shakllanishi,analitik model taraqqiyoti
+450,analytische Methode,tahliliy usul,ilmiy analiz modeli,mantiqiy tekshiruv shakli
+451,die Forschungsanalyse,tadqiqot tahlili,ilmiy tekshiruv bahosi,analitik ko‘rib chiqish
+452,kausal bedingt,sabab bilan belgilanadigan,mantiqiy bog‘liq,sabab-oqibat asosidagi
+453,die Dateninterpretation,ma’lumotlarni sharhlash,analitik ma’no chiqarish,statistik izohlash
+454,methodisch nachvollziehbar,metodik jihatdan tushunarli,ilmiy izchil,mantiqan asoslangan
+455,die Forschungsfrage formulieren,tadqiqot savolini shakllantirmoq,ilmiy muammoni aniqlamoq,analitik savol qo‘ymoq
+456,empirische Daten,empirik ma’lumotlar,kuzatuv va tajriba natijalari,amaliy dalillar
+457,die wissenschaftliche Analyse,ilmiy tahlil,akademik tekshiruv,analitik baholash
+458,systematisch vergleichen,tizimli ravishda taqqoslamoq,ilmiy asosda qiyoslamoq,analitik solishtirmoq
+459,die Forschungsresultate,tadqiqot natijalari,ilmiy xulosalar,analitik topilmalar
+460,theoretisch reflektieren,nazariy jihatdan mushohada qilmoq,ilmiy qayta o‘ylab ko‘rmoq,analitik tahlil yuritmoq
+461,die Datenstruktur,ma’lumotlar tuzilmasi,axborot tizimi,analitik tashkilot
+462,empirisch fundiert,empirik asoslangan,amaliy dalillar bilan mustahkamlangan,ilmiy tekshiruvga tayangan
+463,die wissenschaftliche Erkenntnis,ilmiy anglash,tadqiqot orqali olingan xulosa,analitik bilim
+464,systematisch auswerten,tizimli ravishda baholamoq,analitik qayta ishlamoq,ilmiy tekshirib chiqmoq
+465,die Methodenkritik,metod tanqidi,ilmiy usullarni baholash,analitik yondashuvni tekshirish
+466,analytisch nachvollziehbar,mantiqan tushunarli,analitik izchil,ilmiy asoslangan
+467,die Forschungsperspektive,tadqiqot nuqtayi nazari,ilmiy qarash yo‘nalishi,analitik fokus
+468,empirisch nachvollziehbar,empirik jihatdan ishonarli,amaliy ma’lumot bilan tasdiqlanadigan,ilmiy asosli
+469,die Datenmenge,ma’lumotlar hajmi,analitik axborot miqdori,statistik baza
+470,wissenschaftlich argumentieren,ilmiy dalillar bilan fikr yuritmoq,analitik asoslab gapirmoq,nazariy himoya qilmoq
+471,die Forschungsdiskussion,ilmiy muhokama,akademik bahs,analitik tortishuv
+472,systematisch strukturieren,tizimli ravishda tartiblamoq,ilmiy tashkil qilmoq,analitik joylashtirmoq
+473,die Datengrundlage,ma’lumot asosi,analitik baza,ilmiy tayanch
+474,theoretisch fundieren,nazariy jihatdan asoslamoq,ilmiy poydevor yaratmoq,analitik tayanch bilan mustahkamlamoq
+475,die Untersuchung durchführen,tadqiqot o‘tkazmoq,ilmiy tekshiruv amalga oshirmoq,analitik izlanish olib bormoq
+476,empirisch gestützt,empirik dalillar bilan qo‘llab-quvvatlangan,amaliy asosli,ilmiy tekshiruv bilan mustahkamlangan
+477,die Forschungsstrategie,tadqiqot strategiyasi,ilmiy rejalashtirish,analitik yondashuv modeli
+478,analytische Betrachtung,tahliliy yondashuv,mantiqiy ko‘rib chiqish,ilmiy baholash
+479,die Vergleichsdaten,taqqoslash ma’lumotlari,analitik qiyos uchun baza,statistik solishtirish materiallari
+480,methodisch begründen,metodik jihatdan asoslamoq,ilmiy usul bilan tushuntirmoq,analitik izohlab bermoq
+481,die Untersuchungsergebnisse interpretieren,tadqiqot natijalarini sharhlamoq,analitik ma’no chiqarmoq,ilmiy xulosa bermoq
+482,empirisch beobachten,empirik ravishda kuzatmoq,amaliy ma’lumot yig‘moq,ilmiy nazorat olib bormoq
+483,die Forschungsarbeit strukturieren,tadqiqotni tizimlashtirmoq,ilmiy ishni tartiblamoq,analitik tashkil qilmoq
+484,wissenschaftlich differenzieren,ilmiy jihatdan nozik farqlamoq,analitik tafovutlarni ko‘rsatmoq,nazariy ajratib baholamoq
+485,die Analyse durchführen,tahlil o‘tkazmoq,ilmiy tekshiruv amalga oshirmoq,analitik baholash qilmoq
+486,theoretische Grundlage,nazariy asos,ilmiy poydevor,analitik tayanch
+487,die Forschungsfrage kritisch hinterfragen,tadqiqot savolini tanqidiy tekshirmoq,ilmiy muammoni qayta baholamoq,analitik shubha bilan ko‘rib chiqmoq
+488,empirische Erkenntnisse,empirik xulosalar,amaliy natijalar,ilmiy anglashlar
+489,die wissenschaftliche Methodik,ilmiy metodika,tadqiqot usullari tizimi,analitik metodlar majmui
+490,analytisch begründen,tahliliy asoslamoq,mantiqiy dalillar bilan tushuntirmoq,ilmiy himoya qilmoq
+491,die Daten kritisch auswerten,ma’lumotlarni tanqidiy tahlil qilmoq,analitik baholamoq,ilmiy tekshirib chiqmoq
+492,kausale Analyse,sabab-oqibat tahlili,mantiqiy bog‘liqlikni tekshirish,ilmiy sababiy analiz
+493,die Forschungsfrage analysieren,tadqiqot savolini tahlil qilmoq,ilmiy muammoni tekshirmoq,analitik o‘rganmoq
+494,theoretisch plausibel,nazariy jihatdan ishonarli,mantiqan asoslangan,ilmiy izchil
+495,die Datenauswertung interpretieren,ma’lumot tahlilini sharhlamoq,analitik natijalarni tushuntirmoq,ilmiy ma’no chiqarmoq
+496,empirische Forschung,empirik tadqiqot,amaliy ilmiy tekshiruv,kuzatuv asosidagi izlanish
+497,die wissenschaftliche Diskussion,ilmiy muhokama,akademik bahs,analitik tortishuv
+498,systematisch analysieren,tizimli ravishda tahlil qilmoq,ilmiy asosda tekshirmoq,analitik baholamoq
+499,die Forschungsergebnisse kritisch bewerten,tadqiqot natijalarini tanqidiy baholamoq,ilmiy xulosalarni tekshirmoq,analitik tahlil qilmoq
+500,wissenschaftlich nachvollziehbar,ilmiy jihatdan tushunarli,mantiqan asoslangan,analitik izchil
+501,die Argumentationsanalyse,dalillash tahlili,mantiqiy asoslashni tekshirish,bahs strukturasini o‘rganish
+502,methodisch reflektieren,metodik jihatdan mushohada qilmoq,ilmiy usullarni qayta baholamoq,analitik o‘ylab ko‘rmoq
+503,die Theorie kritisch hinterfragen,nazariyani tanqidiy tekshirmoq,ilmiy konsepsiyani shubha bilan ko‘rib chiqmoq,mantiqiy baholamoq
+504,empirisch nachweisbar,empirik dalillar bilan isbotlanadigan,amaliy jihatdan tasdiqlanadigan,ilmiy tekshiruv bilan ko‘rsatiladigan
+505,die wissenschaftliche Perspektive,ilmiy nuqtayi nazar,akademik qarash,analitik yondashuv
+506,analytisch strukturieren,tahliliy tizimlashtirmoq,mantiqiy tartibga solmoq,ilmiy tashkil qilmoq
+507,die Forschungsfrage präzisieren,tadqiqot savolini aniqlashtirmoq,ilmiy muammoni toraytirmoq,analitik fokusni kuchaytirmoq
+508,theoretisch differenzieren,nazariy jihatdan nozik farqlamoq,ilmiy tafovutlarni ajratmoq,analitik baholamoq
+509,die Datenlage,ma’lumotlar holati,analitik baza sifati,ilmiy axborot darajasi
+510,wissenschaftlich fundierte Argumentation,ilmiy asoslangan dalillash,analitik himoya,mantiqan mustahkam fikr yuritish
+511,die empirische Grundlage,empirik asos,amaliy dalillar bazasi,ilmiy tayanch
+512,methodisch kontrollieren,metodik jihatdan nazorat qilmoq,ilmiy tekshirib boshqarmoq,analitik tekshiruv o‘tkazmoq
+513,die Analysefähigkeit entwickeln,tahlil qilish qobiliyatini rivojlantirmoq,analitik fikrlashni kuchaytirmoq,ilmiy baholash mahoratini oshirmoq
+514,kausale Zusammenhänge erkennen,sabab-oqibat bog‘liqliklarini aniqlamoq,mantiqiy aloqalarni tushunmoq,ilmiy munosabatlarni ko‘rmoq
+515,die Forschung kritisch reflektieren,tadqiqotni tanqidiy mushohada qilmoq,ilmiy izlanishni qayta baholamoq,analitik tekshirib chiqmoq
+516,empirisch begründbar,empirik jihatdan asoslanadigan,amaliy dalillar bilan tushuntiriladigan,ilmiy isbotga ega
+517,die Methodenanalyse,metod tahlili,ilmiy usullarni tekshirish,analitik metod bahosi
+518,wissenschaftlich argumentativ,ilmiy dalillashga asoslangan,analitik himoyali,mantiqiy asosli
+519,die Forschungsrichtung bestimmen,tadqiqot yo‘nalishini belgilamoq,ilmiy fokusni aniqlamoq,analitik maqsadni tanlamoq
+520,systematisch dokumentiert,tizimli ravishda hujjatlashtirilgan,ilmiy tarzda qayd etilgan,analitik yozib borilgan
+521,die Erkenntnisse interpretieren,xulosalarni sharhlamoq,ilmiy natijalarni tushuntirmoq,analitik ma’no chiqarmoq
+522,theoretisch analysieren,nazariy jihatdan tahlil qilmoq,ilmiy asosda tekshirmoq,mantiqiy baholamoq
+523,die empirische Analyse,empirik tahlil,amaliy ma’lumotlarni tekshirish,ilmiy kuzatuv bahosi
+524,wissenschaftlich präzise,ilmiy jihatdan aniq,analitik ravshan,mantiqan puxta
+525,die Forschungsfrage systematisch untersuchen,tadqiqot savolini tizimli tekshirmoq,ilmiy muammoni ketma-ket tahlil qilmoq,analitik yondashuv qo‘llamoq
+526,methodisch korrekt,metodik jihatdan to‘g‘ri,ilmiy standartlarga mos,analitik puxta
+527,die wissenschaftliche Untersuchung,ilmiy tadqiqot,analitik tekshiruv,akademik izlanish
+528,empirisch erhoben,empirik ravishda yig‘ilgan,amaliy kuzatuv asosida to‘plangan,ilmiy ma’lumot sifatida qayd etilgan
+529,die Forschungsergebnisse darstellen,tadqiqot natijalarini bayon qilmoq,ilmiy xulosalarni ifodalamoq,analitik topilmalarni ko‘rsatmoq
+530,theoretisch nachvollziehen,nazariy jihatdan tushunmoq,mantiqiy asosni anglamoq,ilmiy bog‘liqlikni ko‘rmoq
+531,die analytische Kompetenz,analitik kompetensiya,tahliliy qobiliyat,ilmiy fikrlash mahorati
+532,methodisch differenzieren,metodik jihatdan nozik farqlamoq,ilmiy tafovutlarni ko‘rsatmoq,analitik ajratib baholamoq
+533,die Forschungsfrage kritisch analysieren,tadqiqot savolini tanqidiy tahlil qilmoq,ilmiy muammoni chuqur tekshirmoq,analitik baholamoq
+534,empirisch gestützte Theorie,empirik dalillar bilan qo‘llab-quvvatlangan nazariya,amaliy asosli konsepsiya,ilmiy tasdiqlangan model
+535,die Datenauswertung kritisch hinterfragen,ma’lumot tahlilini tanqidiy tekshirmoq,analitik natijalarni qayta baholamoq,ilmiy shubha bilan ko‘rib chiqmoq
+536,wissenschaftlich präzisieren,ilmiy jihatdan aniqlashtirmoq,analitik ravishda ravshanlashtirmoq,mantiqan toraytirib tushuntirmoq
+537,die Forschungsarbeit reflektieren,tadqiqot ishini qayta o‘ylab baholamoq,ilmiy jarayonni mushohada qilmoq,analitik tekshirib chiqmoq
+538,systematisch interpretieren,tizimli ravishda sharhlamoq,ilmiy asosda ma’no chiqarmoq,analitik tushuntirmoq
+539,die Theorieentwicklung nachvollziehen,nazariya rivojlanishini tushunmoq,ilmiy konsepsiya taraqqiyotini kuzatmoq,analitik bog‘liqlikni anglamoq
+540,empirisch relevante Daten,empirik jihatdan muhim ma’lumotlar,amaliy asosli axborotlar,ilmiy tahlil uchun dolzarb baza
+541,die Untersuchung methodisch durchführen,tadqiqotni metodik asosda o‘tkazmoq,ilmiy standartlarga muvofiq analiz qilmoq,analitik jarayonni boshqarmoq
+542,wissenschaftlich reflektiert,ilmiy mushohada qilingan,analitik qayta ko‘rib chiqilgan,mantiqan baholangan
+543,die analytische Vorgehensweise,tahliliy yondashuv usuli,ilmiy analiz modeli,mantiqiy ish yuritish tartibi
+544,methodisch nachvollziehbare Ergebnisse,metodik jihatdan tushunarli natijalar,ilmiy izchil xulosalar,analitik asoslangan topilmalar
+545,die Forschungsanalyse vertiefen,tadqiqot tahlilini chuqurlashtirmoq,ilmiy tekshiruvni kengaytirmoq,analitik izlanishni rivojlantirmoq
+546,empirisch überprüfbar,empirik jihatdan tekshiriladigan,amaliy sinovdan o‘tkaziladigan,ilmiy nazorat qilinadigan
+547,die wissenschaftliche Relevanz,ilmiy ahamiyat,akademik dolzarblik,analitik muhimlik
+548,analytisch reflektieren,tahliliy mushohada qilmoq,mantiqan qayta ko‘rib chiqmoq,ilmiy baholamoq
+549,die Daten systematisch erfassen,ma’lumotlarni tizimli yig‘moq,ilmiy asosda qayd etmoq,analitik tarzda ro‘yxatga olmoq
+550,theoretisch orientiert,nazariy yo‘nalishga ega,ilmiy qarashga asoslangan,analitik fokusli
+551,die empirische Untersuchung auswerten,empirik tadqiqotni tahlil qilmoq,amaliy ma’lumotlarni baholamoq,ilmiy xulosalar chiqarmoq
+552,wissenschaftlich differenziert,ilmiy jihatdan nozik farqlangan,analitik murakkab,mantiqan chuqur
+553,die Forschungsstrategie entwickeln,tadqiqot strategiyasini ishlab chiqmoq,ilmiy rejalashtirishni shakllantirmoq,analitik yondashuv yaratmoq
+554,methodisch analysierbar,metodik jihatdan tahlil qilinadigan,ilmiy tekshiruvga mos,analitik o‘rganish mumkin bo‘lgan
+555,die theoretische Perspektive,nazariy nuqtayi nazar,ilmiy qarash yo‘nalishi,analitik fokus
+556,empirisch gestützte Ergebnisse,empirik dalillar bilan mustahkamlangan natijalar,amaliy asosli xulosalar,ilmiy tasdiqlangan topilmalar
+557,die Analyse methodisch strukturieren,tahlilni metodik jihatdan tizimlashtirmoq,ilmiy asosda tartiblamoq,analitik jarayonni rejalashtirmoq
+558,wissenschaftlich plausibel,ilmiy jihatdan ishonarli,analitik asoslangan,mantiqan puxta
+559,die Forschungsarbeit wissenschaftlich begründen,tadqiqotni ilmiy asoslamoq,analitik dalillar bilan himoya qilmoq,nazariy tayanch bilan tushuntirmoq
+560,methodisch nachvollziehbare Analyse,metodik jihatdan tushunarli tahlil,ilmiy izchil tekshiruv,analitik asoslangan baholash
+561,die empirische Grundlage erweitern,empirik asosni kengaytirmoq,amaliy dalillar bazasini oshirmoq,ilmiy tayanchni kuchaytirmoq
+562,wissenschaftlich auswerten,ilmiy jihatdan baholamoq,analitik tekshirmoq,mantiqiy xulosa chiqarmoq
+563,die Datenauswertung systematisch durchführen,ma’lumot tahlilini tizimli amalga oshirmoq,ilmiy asosda qayta ishlamoq,analitik tekshiruv o‘tkazmoq
+564,theoretisch konsistent,nazariy jihatdan izchil,ilmiy mantiqqa mos,analitik bog‘liq
+565,die Analyse kritisch hinterfragen,tahlilni tanqidiy tekshirmoq,ilmiy xulosalarni qayta baholamoq,analitik shubha bilan ko‘rib chiqmoq
+566,empirisch orientiert,empirik yo‘nalishga ega,amaliy kuzatuvlarga asoslangan,ilmiy tajribaga tayangan
+567,die wissenschaftliche Argumentation,ilmiy dalillash,analitik asoslash,mantiqiy himoya
+568,methodisch reflektierte Ergebnisse,metodik mushohada qilingan natijalar,ilmiy qayta baholangan xulosalar,analitik tahlil asosidagi topilmalar
+569,die Forschungsfrage eingrenzen,tadqiqot savolini toraytirmoq,ilmiy fokusni aniqlashtirmoq,analitik chegarani belgilamoq
+570,wissenschaftlich orientiert,ilmiy yo‘nalishga ega,akademik asoslangan,analitik fokusli
+571,die empirische Analyse vertiefen,empirik tahlilni chuqurlashtirmoq,amaliy ma’lumotlarni kengroq tekshirmoq,ilmiy izlanishni rivojlantirmoq
+572,methodisch abgesichert,metodik jihatdan himoyalangan,ilmiy asos bilan mustahkamlangan,analitik tekshiruvdan o‘tgan
+573,die theoretische Analyse,nazariy tahlil,ilmiy konsepsiyani tekshirish,analitik baholash
+574,wissenschaftlich konsistent,ilmiy jihatdan izchil,mantiqan mos,analitik bog‘liq
+575,die Forschungsdaten interpretieren,tadqiqot ma’lumotlarini sharhlamoq,ilmiy natijalarni tushuntirmoq,analitik ma’no chiqarmoq
+576,methodisch präzise,metodik jihatdan aniq,ilmiy puxta,analitik ravshan
+577,die empirische Forschung reflektieren,empirik tadqiqotni qayta mushohada qilmoq,amaliy natijalarni tanqidiy baholamoq,ilmiy tahlil yuritmoq
+578,wissenschaftlich belegbar,ilmiy dalillar bilan isbotlanadigan,analitik jihatdan tasdiqlanadigan,empirik asosli
+579,die Analyse theoretisch fundieren,tahlilni nazariy jihatdan asoslamoq,ilmiy tayanch yaratmoq,analitik bog‘liqlikni mustahkamlamoq
+580,methodisch nachvollziehbar argumentieren,metodik jihatdan tushunarli dalillamoq,ilmiy asosda fikr yuritmoq,analitik izchil gapirmoq
+581,die Forschungsarbeit systematisch aufbauen,tadqiqotni tizimli tashkil qilmoq,ilmiy ishni ketma-ket qurmoq,analitik struktura yaratmoq
+582,wissenschaftlich abgesichert,ilmiy jihatdan tasdiqlangan,analitik himoyalangan,empirik asoslangan
+583,die theoretische Grundlage analysieren,nazariy asosni tahlil qilmoq,ilmiy poydevorni tekshirmoq,analitik baholamoq
+584,methodisch argumentieren,metodik asosda fikr yuritmoq,ilmiy usullar bilan dalillamoq,analitik himoya qilmoq
+585,die empirischen Ergebnisse vergleichen,empirik natijalarni taqqoslamoq,amaliy ma’lumotlarni qiyoslamoq,ilmiy farqlarni aniqlamoq
+586,wissenschaftlich strukturiert,ilmiy jihatdan tizimlashtirilgan,analitik tartibli,mantiqan tashkil qilingan
+587,die Datenauswertung kritisch analysieren,ma’lumot tahlilini tanqidiy tekshirmoq,analitik natijalarni chuqur baholamoq,ilmiy shubha bilan ko‘rib chiqmoq
+588,theoretisch fundierte Analyse,nazariy asoslangan tahlil,ilmiy tayanchli baholash,analitik poydevorga ega tekshiruv
+589,die Forschungsstrategie kritisch reflektieren,tadqiqot strategiyasini qayta mushohada qilmoq,ilmiy rejalashtirishni tanqidiy tekshirmoq,analitik yondashuvni baholamoq
+590,methodisch konsequent,metodik jihatdan izchil,ilmiy tartibga qat’iy rioya qiluvchi,analitik jihatdan puxta
+591,die Analyse empirisch belegen,tahlilni empirik dalillar bilan tasdiqlamoq,amaliy ma’lumotlar bilan asoslamoq,ilmiy isbot keltirmoq
+592,wissenschaftlich vertretbar,ilmiy jihatdan asosli himoya qilinadigan,analitik maqbul,mantiqan oqlanadigan
+593,die theoretische Perspektive erweitern,nazariy nuqtayi nazarni kengaytirmoq,ilmiy qarashni rivojlantirmoq,analitik fokusni boyitmoq
+594,methodisch kontrollierte Untersuchung,metodik nazorat ostidagi tadqiqot,ilmiy standartlarga mos tekshiruv,analitik boshqarilgan izlanish
+595,die empirische Untersuchung kritisch bewerten,empirik tadqiqotni tanqidiy baholamoq,amaliy natijalarni qayta tekshirmoq,ilmiy xulosalarni tahlil qilmoq
+596,wissenschaftlich nachvollziehbare Argumentation,ilmiy jihatdan tushunarli dalillash,analitik asoslangan fikr yuritish,mantiqan izchil himoya
+597,die Forschungsanalyse systematisch erweitern,tadqiqot tahlilini tizimli kengaytirmoq,ilmiy tekshiruvni rivojlantirmoq,analitik izlanishni chuqurlashtirmoq
+598,methodisch abgesicherte Ergebnisse,metodik jihatdan mustahkamlangan natijalar,ilmiy tekshiruvdan o‘tgan xulosalar,analitik himoyalangan topilmalar
+599,die theoretische Argumentation,nazariy dalillash,ilmiy asoslash,analitik himoya tizimi
+600,empirisch fundierte Schlussfolgerung,empirik asoslangan xulosa,amaliy dalillarga tayangan natija,ilmiy ishonchli qaror
+601,die Legitimation,qonuniy asoslantirish,rasmiy oqlash,siyosiy yoki ijtimoiy haqqoniylik
+602,dementsprechend,shunga muvofiq ravishda,mantiqiy natija sifatida,mos tarzda
+603,die Machtstruktur,hokimiyat tuzilmasi,boshqaruv tizimidagi kuch taqsimoti,siyosiy ierarxiya
+604,ideologisch geprägt,mafkuraviy qarashlar bilan shakllangan,siyosiy ta’sir ostida rivojlangan,bir tomonlama yo‘naltirilgan
+605,die Einflusssphäre,ta’sir doirasi,siyosiy yoki ijtimoiy nazorat hududi,hokimiyat qamrovi
+606,nichtsdestoweniger,shunga qaramasdan,biroq,qarama-qarshi holatda ham
+607,die Entscheidungsfindung,qaror qabul qilish jarayoni,boshqaruv tanlovi hosil bo‘lishi,strategik xulosa chiqarish
+608,gesellschaftspolitisch relevant,jamiyat va siyosat uchun muhim,ijtimoiy-siyosiy ahamiyatga ega,ommaviy boshqaruvga daxldor
+609,die Reformmaßnahme,islohot chorasi,siyosiy o‘zgarish usuli,boshqaruvni yangilash strategiyasi
+610,infolgedessen,natijada,bevosita oqibat sifatida,mantiqiy davom tarzida
+611,die Interessensvertretung,manfaatlarni himoya qilish,jamoa nomidan vakillik qilish,siyosiy yoki iqtisodiy himoya
+612,strukturell bedingt,tuzilmaviy omillar bilan belgilanadigan,tizim asosida shakllangan,ichki mexanizmga bog‘liq
+613,die Einflussnahme kritisch bewerten,ta’sir o‘tkazishni tanqidiy baholamoq,boshqaruv strategiyasini tekshirmoq,mantiqan tahlil qilmoq
+614,hingegen,bunga qarama-qarshi ravishda,aksincha,boshqa tomondan
+615,die Machtverhältnisse,hokimiyat munosabatlari,kuch balanslari,siyosiy ta’sir aloqalari
+616,gesellschaftlich verankert,jamiyatda chuqur o‘rnashgan,ijtimoiy tizimga singib ketgan,ommaviy qabul qilingan
+617,die politische Maßnahme,siyosiy chora,boshqaruv qarori,davlat strategiyasi
+618,in diesem Zusammenhang,shu bog‘liqlik doirasida,mazkur aloqada,mantiqiy kontekstda
+619,die gesellschaftliche Ungleichheit,ijtimoiy tengsizlik,resurslarning notekis taqsimlanishi,ommaviy tafovut
+620,ökonomisch vertretbar,iqtisodiy jihatdan maqbul,moliyaviy asosda himoya qilinadigan,amaliy foydaga ega
+621,die Ressourcenverteilung,resurslar taqsimoti,iqtisodiy imkoniyatlarni bo‘lish,boshqaruvdagi taqsimlash tizimi
+622,folglich,mantiqiy natija sifatida,shu sababli,natijada
+623,die soziale Verantwortung,ijtimoiy mas’uliyat,jamiyat oldidagi burch,ommaviy javobgarlik
+624,politisch motivierte Entscheidung,siyosiy maqsad bilan qabul qilingan qaror,mafkuraviy tanlov,strategik boshqaruv xulosasi
+625,die wirtschaftliche Entwicklung,iqtisodiy rivojlanish,moliyaviy o‘sish,tizimli taraqqiyot
+626,unter anderem,jumladan,shu qatorda,xususan
+627,die gesellschaftliche Teilhabe,jamiyat hayotida faol qatnashish,ijtimoiy integratsiya,ommaviy ishtirok
+628,ökonomische Stabilität,iqtisodiy barqarorlik,moliyaviy tizimning mustahkamligi,uzoq muddatli iqtisodiy muvozanat
+629,die politische Debatte prägen,siyosiy muhokamani shakllantirmoq,jamoatchilik fikriga ta’sir qilmoq,bahs yo‘nalishini belgilamoq
+630,demgegenüber,bunga nisbatan qaraganda,aksincha,boshqa nuqtayi nazardan
+631,die gesellschaftliche Integration,ijtimoiy integratsiya,jamiyatga moslashish,ommaviy tizimga qo‘shilish
+632,wirtschaftspolitisch,siyosiy-iqtisodiy,iqtisodiy boshqaruvga oid,davlat moliyaviy strategiyasiga daxldor
+633,die politische Legitimation,siyosiy qonuniylik,boshqaruvning rasmiy asoslanishi,hukumatning haqqoniyligi
+634,in gewisser Hinsicht,ma’lum jihatdan,qisman,bir tomondan qaraganda
+635,die soziale Gerechtigkeit,ijtimoiy adolat,resurslarning adolatli taqsimoti,jamiyatdagi teng imkoniyat
+636,ökonomische Auswirkungen,iqtisodiy oqibatlar,moliyaviy natijalar,bozor ta’sirlari
+637,die gesellschaftliche Entwicklung kritisch betrachten,ijtimoiy rivojlanishni tanqidiy baholamoq,ommaviy o‘zgarishlarni tahlil qilmoq,mantiqan tekshirmoq
+638,gleichwohl,shunga qaramay,biroq,qarama-qarshi holatda ham
+639,die Machtkonzentration,hokimiyatning bir markazga to‘planishi,siyosiy nazorat kuchayishi,boshqaruv monopoliyasi
+640,politische Einflussnahme,siyosiy ta’sir o‘tkazish,mafkuraviy boshqaruv,strategik aralashuv
+641,die gesellschaftliche Akzeptanz erhöhen,jamiyatdagi qabul qilinishni oshirmoq,ommaviy ma’qullanishni kuchaytirmoq,ijtimoiy moslikni yaxshilamoq
+642,insofern,shu jihatdan qaraganda,ma’lum ma’noda,mantiqiy asosda
+643,die soziale Ungleichheit verstärken,ijtimoiy tengsizlikni kuchaytirmoq,resurslar tafovutini oshirmoq,ommaviy nomutanosiblikni chuqurlashtirmoq
+644,wirtschaftlich effizient,iqtisodiy jihatdan samarali,moliyaviy natijador,resurslarni unumli ishlatuvchi
+645,die politische Verantwortung,siyosiy mas’uliyat,davlat boshqaruvidagi javobgarlik,jamoatchilik oldidagi burch
+646,demnach,shu asosda,mantiqiy tarzda kelib chiqib,natija sifatida
+647,die gesellschaftliche Polarisierung,jamiyatning keskin ikki qarashga bo‘linishi,ijtimoiy qarama-qarshilik,ommaviy ajralish
+648,ökonomische Rahmenbedingungen,iqtisodiy sharoitlar,bozorni belgilovchi omillar,moliyaviy tizim asoslari
+649,die politische Stabilität,siyosiy barqarorlik,davlat boshqaruvining mustahkamligi,hokimiyat muvozanati
+650,in Anbetracht dessen,shu holatni hisobga olib,mavjud vaziyatdan kelib chiqib,mazkur omil asosida
+651,die gesellschaftliche Verantwortung stärken,ijtimoiy mas’uliyatni kuchaytirmoq,jamoatchilik javobgarligini oshirmoq,ommaviy burch hissini rivojlantirmoq
+652,ökonomisch tragfähig,iqtisodiy jihatdan barqaror,moliyaviy asosda davom eta oladigan,uzoq muddatli samaraga ega
+653,die politische Einflusskraft,siyosiy ta’sir kuchi,boshqaruv salohiyati,mafkuraviy nazorat quvvati
+654,nicht zuletzt,ayniqsa,eng kamida emas,muhim ravishda
+655,die gesellschaftliche Verantwortungslosigkeit,ijtimoiy mas’uliyatsizlik,jamiyat oldidagi befarqlik,ommaviy javobgarlik yetishmasligi
+656,wirtschaftlich nachvollziehbar,iqtisodiy jihatdan tushunarli,moliyaviy asoslangan,bozor mantig‘iga mos
+657,die politische Entscheidungsfreiheit,siyosiy qaror erkinligi,boshqaruvdagi mustaqillik,mafkuraviy bosimsiz tanlov
+658,in vielerlei Hinsicht,ko‘p jihatdan,turli nuqtayi nazardan,bir necha tomonlama
+659,die gesellschaftliche Orientierung,jamiyatdagi yo‘nalish,ommaviy qarash tizimi,ijtimoiy yo‘l tanlash
+660,ökonomische Prioritäten,iqtisodiy ustuvorliklar,moliyaviy strategik maqsadlar,bozor uchun muhim yo‘nalishlar
+661,die politische Einflussstrategie,siyosiy ta’sir strategiyasi,mafkuraviy boshqaruv modeli,jamoatchilikni yo‘naltirish usuli
+662,wohingegen,aksincha bo‘lgan holda,boshqa tomondan,qarama-qarshi vaziyatda
+663,die gesellschaftliche Realität,jamiyatdagi haqiqiy holat,ijtimoiy voqelik,ommaviy mavjudlik
+664,wirtschaftliche Ressourcen,iqtisodiy resurslar,moliyaviy imkoniyatlar,bozor vositalari
+665,die politische Handlungskompetenz,siyosiy harakat qobiliyati,boshqaruv salohiyati,qaror qabul qilish mahorati
+666,in Bezug auf,ga nisbatan,shu masalaga oid,bilan bog‘liq holda
+667,die gesellschaftliche Dynamik,jamiyatdagi harakat jarayoni,ijtimoiy rivojlanish mexanizmi,ommaviy o‘zgarishlar
+668,ökonomische Interessen,iqtisodiy manfaatlar,moliyaviy maqsadlar,bozor foydalari
+669,die politische Orientierung,siyosiy yo‘nalish,mafkuraviy qarash,davlat boshqaruv pozitsiyasi
+670,unter bestimmten Umständen,ma’lum sharoitlarda,ayrim vaziyatlarda,ehtimoliy holatda
+671,die gesellschaftliche Verantwortung übernehmen,jamiyat oldidagi mas’uliyatni o‘z zimmasiga olmoq,ijtimoiy javobgarlikni his qilmoq,ommaviy burchni bajarishga intilmoq
+672,ökonomisch sinnvoll,iqtisodiy jihatdan maqsadga muvofiq,moliyaviy foydali,bozor uchun oqilona
+673,die politische Auseinandersetzung,siyosiy tortishuv,mafkuraviy bahs,boshqaruvdagi qarama-qarshilik
+674,folgenschwer,jiddiy oqibatlarga olib keluvchi,kuchli ta’sirli,muhim natijali
+675,die gesellschaftliche Veränderung,jamiyatdagi o‘zgarish,ijtimoiy transformatsiya,ommaviy yangilanish
+676,wirtschaftlich abhängig,iqtisodiy jihatdan bog‘liq,moliyaviy mustaqilligi cheklangan,bozorga qaram
+677,die politische Einflussmöglichkeit,siyosiy ta’sir imkoniyati,boshqaruvga aralashish salohiyati,mafkuraviy yo‘naltirish quvvati
+678,in theoretischer Hinsicht,nazariy jihatdan,ilmiy nuqtayi nazardan,mantiqiy asosda
+679,die gesellschaftliche Stabilität,jamiyatdagi barqarorlik,ijtimoiy muvozanat,ommaviy tinchlik
+680,ökonomisch bedingt,iqtisodiy omillar bilan belgilanadigan,moliyaviy sharoitlarga bog‘liq,bozor ta’siri ostidagi
+681,die politische Kommunikation,siyosiy muloqot,davlat va jamoatchilik o‘rtasidagi aloqa,mafkuraviy axborot almashuvi
+682,nicht zwangsläufig,har doim ham emas,muqarrar bo‘lmagan,majburiy ravishda emas
+683,die gesellschaftliche Herausforderung,ijtimoiy muammo,jamiyat oldidagi murakkab vazifa,ommaviy qiyinchilik
+684,ökonomische Konsequenzen,iqtisodiy oqibatlar,moliyaviy natijalar,bozor ta’sirlari
+685,die politische Diskussion kritisch analysieren,siyosiy muhokamani tanqidiy tahlil qilmoq,mafkuraviy bahsni tekshirmoq,mantiqan baholamoq
+686,im Vergleich dazu,bunga nisbatan,taqqoslaganda,qarama-qarshi holatda
+687,die gesellschaftliche Teilhabe fördern,jamiyatdagi faol ishtirokni rivojlantirmoq,ijtimoiy integratsiyani kuchaytirmoq,ommaviy qatnashuvni qo‘llab-quvvatlamoq
+688,wirtschaftlich relevant,iqtisodiy jihatdan muhim,moliyaviy ahamiyatga ega,bozor uchun dolzarb
+689,die politische Legitimation hinterfragen,siyosiy qonuniylikni tanqidiy tekshirmoq,boshqaruv haqqoniyligini shubha ostiga qo‘ymoq,mafkuraviy asosni baholamoq
+690,unter Berücksichtigung,hisobga olgan holda,e’tiborga olib,mantiqiy asosda
+691,die gesellschaftliche Spaltung,jamiyatning bo‘linishi,ijtimoiy qarama-qarshilik,ommaviy ajralish
+692,ökonomische Entwicklung fördern,iqtisodiy rivojlanishni qo‘llab-quvvatlamoq,moliyaviy o‘sishni kuchaytirmoq,bozor taraqqiyotini rag‘batlantirmoq
+693,die politische Einflussnahme kritisch hinterfragen,siyosiy ta’sir o‘tkazishni tanqidiy tekshirmoq,mafkuraviy boshqaruvni shubha bilan ko‘rib chiqmoq,mantiqan baholamoq
+694,demzufolge,mantiqiy natija sifatida,shu sababli,oqibat tarzida
+695,die gesellschaftliche Verantwortung kritisch reflektieren,ijtimoiy mas’uliyatni qayta mushohada qilmoq,jamiyat oldidagi burchni tahlil qilmoq,ommaviy javobgarlikni baholamoq
+696,wirtschaftlich nachhaltig,iqtisodiy jihatdan barqaror,moliyaviy uzoq muddatli samaraga ega,kelajakni hisobga oluvchi
+697,die politische Machtstruktur,siyosiy hokimiyat tuzilmasi,boshqaruvdagi kuch taqsimoti,mafkuraviy ierarxiya
+698,in erster Linie,avvalo,birinchi navbatda,eng asosiy jihatdan
+699,die gesellschaftliche Entwicklung beeinflussen,jamiyat rivojlanishiga ta’sir qilmoq,ijtimoiy o‘zgarishlarni shakllantirmoq,ommaviy yo‘nalishni belgilamoq
+700,ökonomisch gerechtfertigt,iqtisodiy jihatdan oqlangan,moliyaviy asosda himoya qilinadigan,bozor mantig‘iga mos
+701,die politische Polarisierung,siyosiy keskin bo‘linish,mafkuraviy qarama-qarshilik,hokimiyat atrofidagi ajralish
+702,gleichzeitig,shu bilan bir vaqtda,bir paytning o‘zida,parallel ravishda
+703,die gesellschaftliche Verantwortung hinterfragen,ijtimoiy mas’uliyatni tanqidiy ko‘rib chiqmoq,jamoatchilik burchini shubha bilan baholamoq,ommaviy javobgarlikni tekshirmoq
+704,ökonomische Ungleichheit,iqtisodiy tengsizlik,moliyaviy tafovut,resurslar nomutanosibligi
+705,die politische Entscheidungsstruktur,siyosiy qaror tizimi,boshqaruv mexanizmi,mafkuraviy tanlov modeli
+706,in dieser Hinsicht,shu jihatdan qaraganda,mazkur nuqtayi nazardan,bunday holatda
+707,die gesellschaftliche Orientierungslosigkeit,jamiyatdagi yo‘nalish yo‘qligi,ijtimoiy ikkilanish,ommaviy noaniqlik
+708,wirtschaftliche Rahmenbedingungen analysieren,iqtisodiy sharoitlarni tahlil qilmoq,moliyaviy omillarni tekshirmoq,bozor asoslarini baholamoq
+709,die politische Verantwortung übernehmen,siyosiy mas’uliyatni o‘z zimmasiga olmoq,davlat boshqaruvidagi javobgarlikni qabul qilmoq,jamoatchilik oldidagi burchni bajarishga intilmoq
+710,nichtsdestotrotz,shunga qaramay,biroq,qarama-qarshi vaziyatda ham
+711,die gesellschaftliche Wahrnehmung,jamiyatdagi idrok,ommaviy qarash,ijtimoiy tasavvur
+712,ökonomisch begründbar,iqtisodiy jihatdan asoslanadigan,moliyaviy dalillar bilan tushuntiriladigan,bozor mantig‘iga mos
+713,die politische Stabilität sichern,siyosiy barqarorlikni ta’minlamoq,davlat muvozanatini saqlamoq,boshqaruv mustahkamligini himoya qilmoq
+714,in diesem Fall,bu holatda,mazkur vaziyatda,shu sharoitda
+715,die gesellschaftliche Realität kritisch analysieren,jamiyatdagi haqiqiy holatni tanqidiy tekshirmoq,ijtimoiy voqelikni baholamoq,ommaviy vaziyatni tahlil qilmoq
+716,ökonomische Handlungsspielräume,iqtisodiy harakat imkoniyatlari,moliyaviy erkinlik doiralari,bozor ichidagi tanlov imkonlari
+717,die politische Einflusskraft stärken,siyosiy ta’sir kuchini oshirmoq,mafkuraviy nazoratni kuchaytirmoq,boshqaruv salohiyatini rivojlantirmoq
+718,infolgedessen entstehen,natijada yuzaga kelmoq,mantiqiy oqibat sifatida paydo bo‘lmoq,bevosita hosil bo‘lmoq
+719,die gesellschaftliche Verantwortung wahrnehmen,ijtimoiy mas’uliyatni his qilmoq,jamoatchilik oldidagi burchni bajarishga intilmoq,ommaviy javobgarlikni anglamoq
+720,ökonomisch vertretbare Lösung,iqtisodiy jihatdan maqbul yechim,moliyaviy asosda himoya qilinadigan qaror,bozor uchun oqilona variant
+721,die politische Diskussion präzisieren,siyosiy muhokamani aniqlashtirmoq,mafkuraviy bahsni ravshanlashtirmoq,boshqaruv masalasini nozikroq ifodalamoq
+722,im Gegensatz dazu,bunga qarama-qarshi ravishda,aksincha,boshqa nuqtayi nazardan
+723,die gesellschaftliche Dynamik beeinflussen,jamiyatdagi rivojlanish mexanizmini o‘zgartirmoq,ijtimoiy harakatlarga ta’sir qilmoq,ommaviy yo‘nalishni shakllantirmoq
+724,ökonomisch tragfähige Strategie,iqtisodiy jihatdan barqaror strategiya,moliyaviy uzoq muddatli reja,bozor uchun mustahkam yondashuv
+725,die politische Kommunikation analysieren,siyosiy muloqotni tahlil qilmoq,mafkuraviy axborot almashuvini tekshirmoq,boshqaruvdagi nutq usullarini baholamoq
+726,unter Umständen,ba’zi holatlarda,ehtimol,sharoitga qarab
+727,die gesellschaftliche Entwicklung kritisch reflektieren,ijtimoiy rivojlanishni qayta mushohada qilmoq,jamiyatdagi o‘zgarishlarni tahlil qilmoq,ommaviy taraqqiyotni baholamoq
+728,ökonomische Stabilität gewährleisten,iqtisodiy barqarorlikni ta’minlamoq,moliyaviy muvozanatni saqlamoq,bozor tizimini mustahkamlamoq
+729,die politische Einflussnahme begrenzen,siyosiy ta’sirni cheklamoq,mafkuraviy aralashuvni kamaytirmoq,boshqaruv bosimini nazorat qilmoq
+730,folglich betrachtet,mantiqan qaralganda,natija sifatida ko‘rilganda,izchil tahlilda
+731,die gesellschaftliche Integration stärken,jamiyatga moslashuvni kuchaytirmoq,ijtimoiy birlashuvni rivojlantirmoq,ommaviy integratsiyani qo‘llab-quvvatlamoq
+732,ökonomisch nachvollziehbare Entscheidung,iqtisodiy jihatdan tushunarli qaror,moliyaviy asoslangan tanlov,bozor mantig‘iga mos xulosa
+733,die politische Macht kritisch hinterfragen,siyosiy hokimiyatni tanqidiy tekshirmoq,boshqaruv kuchini shubha ostiga qo‘ymoq,mafkuraviy nazoratni baholamoq
+734,in gewisser Weise,ma’lum ma’noda,qisman,bir tomondan qaraganda
+735,die gesellschaftliche Akzeptanz kritisch bewerten,jamiyatdagi qabul qilinishni tanqidiy baholamoq,ommaviy ma’qullashni tekshirmoq,ijtimoiy moslikni tahlil qilmoq
+736,ökonomische Prioritäten setzen,iqtisodiy ustuvorliklarni belgilamoq,moliyaviy maqsadlarni aniqlamoq,bozor strategiyasini tanlamoq
+737,die politische Diskussion beeinflussen,siyosiy muhokamaga ta’sir qilmoq,mafkuraviy bahsni yo‘naltirmoq,jamoatchilik fikrini shakllantirmoq
+738,demnach betrachtet,shu asosda qaralganda,mantiqiy natija sifatida ko‘rilganda,izchil tahlilda
+739,die gesellschaftliche Verantwortung stärken,ijtimoiy mas’uliyatni kuchaytirmoq,jamoatchilik javobgarligini oshirmoq,ommaviy burch hissini rivojlantirmoq
+740,ökonomisch effiziente Maßnahme,iqtisodiy jihatdan samarali chora,moliyaviy foydali strategiya,bozor uchun natijador qaror
+741,die politische Entscheidungsfreiheit sichern,siyosiy qaror erkinligini ta’minlamoq,boshqaruvdagi mustaqillikni himoya qilmoq,mafkuraviy bosimni kamaytirmoq
+742,in theoretischer Hinsicht,nazariy jihatdan,ilmiy nuqtayi nazardan,mantiqiy asosda
+743,die gesellschaftliche Realität differenziert darstellen,jamiyatdagi haqiqiy holatni nozik tafovutlar bilan ifodalamoq,ijtimoiy voqelikni chuqur ko‘rsatmoq,ommaviy vaziyatni har tomonlama yoritmoq
+744,ökonomisch relevante Faktoren,iqtisodiy jihatdan muhim omillar,moliyaviy ta’sir ko‘rsatuvchi sabablar,bozorni belgilovchi faktorlar
+745,die politische Verantwortung kritisch reflektieren,siyosiy mas’uliyatni qayta mushohada qilmoq,davlat boshqaruvidagi javobgarlikni tahlil qilmoq,mafkuraviy burchni baholamoq
+746,insofern betrachtet,shu jihatdan qaralganda,mantiqiy asosda ko‘rilganda,ma’lum ma’noda tahlil qilinsa
+747,die gesellschaftliche Wahrnehmung beeinflussen,jamiyatdagi idrokka ta’sir qilmoq,ommaviy qarashni shakllantirmoq,ijtimoiy tasavvurni boshqarmoq
+748,ökonomisch nachhaltige Entwicklung,iqtisodiy jihatdan barqaror rivojlanish,moliyaviy uzoq muddatli o‘sish,kelajakni hisobga oluvchi taraqqiyot
+749,die politische Kommunikation kritisch analysieren,siyosiy muloqotni tanqidiy tahlil qilmoq,mafkuraviy axborot almashuvini baholamoq,boshqaruvdagi nutq strategiyalarini tekshirmoq
+750,gleichwohl betrachtet,shunga qaramay qaralganda,biroq tahlil qilinsa,qarama-qarshi holatda ham ko‘rib chiqilganda
+751,die gesellschaftliche Entwicklung nachhaltig beeinflussen,jamiyat rivojlanishiga uzoq muddatli ta’sir qilmoq,ijtimoiy taraqqiyotni shakllantirmoq,ommaviy o‘zgarishlarni boshqarmoq
+752,ökonomisch gerechtfertigte Entscheidung,iqtisodiy jihatdan oqlangan qaror,moliyaviy asosda himoya qilinadigan tanlov,bozor mantig‘iga mos xulosa
+753,die politische Einflussstrategie kritisch hinterfragen,siyosiy ta’sir strategiyasini tanqidiy tekshirmoq,mafkuraviy boshqaruv usullarini baholamoq,jamoatchilikni yo‘naltirish mexanizmlarini tahlil qilmoq
+754,unter Berücksichtigung der Umstände,holatlarni hisobga olgan holda,sharoitlarni e’tiborga olib,mantiqiy asosda
+755,die gesellschaftliche Verantwortung differenziert betrachten,ijtimoiy mas’uliyatni nozik tafovutlar bilan baholamoq,jamoatchilik burchini chuqur tahlil qilmoq,ommaviy javobgarlikni har tomonlama ko‘rib chiqmoq
+756,ökonomische Stabilität langfristig sichern,iqtisodiy barqarorlikni uzoq muddatli ta’minlamoq,moliyaviy muvozanatni mustahkamlab saqlamoq,bozor tizimini kelajak uchun himoya qilmoq
+757,die politische Polarisierung verstärken,siyosiy bo‘linishni kuchaytirmoq,mafkuraviy qarama-qarshilikni chuqurlashtirmoq,hokimiyat atrofidagi ajralishni oshirmoq
+758,nichtsdestoweniger betrachtet,shunga qaramay qaralganda,biroq tahlil qilinsa,qarama-qarshi vaziyatda ham ko‘rib chiqilganda
+759,die gesellschaftliche Orientierung kritisch hinterfragen,jamiyatdagi yo‘nalishni tanqidiy tekshirmoq,ijtimoiy qarash tizimini baholamoq,ommaviy pozitsiyani shubha bilan ko‘rib chiqmoq
+760,ökonomisch tragfähige Reform,iqtisodiy jihatdan barqaror islohot,moliyaviy asosli o‘zgarish,bozor uchun uzoq muddatli strategik yangilanish
+761,die politische Entscheidungsstruktur analysieren,siyosiy qaror tizimini tahlil qilmoq,boshqaruv mexanizmini tekshirmoq,mafkuraviy tanlov modelini baholamoq
+762,in diesem Kontext betrachtet,shu kontekstda qaralganda,mazkur bog‘liqlik asosida,mantiqiy aloqada tahlil qilinsa
+763,die gesellschaftliche Dynamik nachhaltig prägen,jamiyatdagi rivojlanish mexanizmini uzoq muddatli shakllantirmoq,ijtimoiy harakatlarga barqaror ta’sir qilmoq,ommaviy o‘zgarishlarni belgilamoq
+764,ökonomisch nachvollziehbare Strategie,iqtisodiy jihatdan tushunarli strategiya,moliyaviy asoslangan reja,bozor mantig‘iga mos yondashuv
+765,die politische Stabilität langfristig gewährleisten,siyosiy barqarorlikni uzoq muddatli ta’minlamoq,davlat boshqaruvining mustahkamligini saqlamoq,hokimiyat muvozanatini himoya qilmoq
+766,demgegenüber betrachtet,bunga qarama-qarshi ravishda qaralganda,aksincha tahlil qilinsa,boshqa nuqtayi nazardan ko‘rilganda
+767,die gesellschaftliche Realität kritisch reflektieren,jamiyatdagi haqiqiy holatni qayta mushohada qilmoq,ijtimoiy voqelikni chuqur tahlil qilmoq,ommaviy vaziyatni analitik baholamoq
+768,ökonomisch relevante Entwicklungen,iqtisodiy jihatdan muhim rivojlanishlar,moliyaviy o‘zgarishlar,bozor taraqqiyotlari
+769,die politische Verantwortung differenziert analysieren,siyosiy mas’uliyatni nozik tafovutlar bilan tahlil qilmoq,davlat boshqaruvidagi javobgarlikni chuqur baholamoq,mafkuraviy burchni analitik tekshirmoq
+770,in vielerlei Hinsicht betrachtet,ko‘p jihatdan qaralganda,turli nuqtayi nazardan tahlil qilinsa,bir necha tomonlama ko‘rib chiqilganda
+771,die gesellschaftliche Entwicklung kritisch bewerten,jamiyat rivojlanishini tanqidiy baholamoq,ijtimoiy taraqqiyotni tekshirmoq,ommaviy o‘zgarishlarni mantiqan tahlil qilmoq
+772,ökonomisch effiziente Reformmaßnahme,iqtisodiy jihatdan samarali islohot chorasi,moliyaviy foydali yangilanish strategiyasi,bozor uchun natijador o‘zgarish
+773,die politische Einflusskraft nachhaltig stärken,siyosiy ta’sir kuchini uzoq muddatli oshirmoq,mafkuraviy nazoratni mustahkamlab rivojlantirmoq,boshqaruv salohiyatini kuchaytirmoq
+774,folglich interpretiert,mantiqan sharhlanganda,natija sifatida talqin qilinsa,izchil tahlilda ma’no chiqarilganda
+775,die gesellschaftliche Verantwortung gesellschaftspolitisch einordnen,ijtimoiy mas’uliyatni ijtimoiy-siyosiy kontekstga joylashtirmoq,jamoatchilik burchini boshqaruv nuqtayi nazaridan baholamoq,ommaviy javobgarlikni tizimli tahlil qilmoq
+776,ökonomisch begründete Maßnahme,iqtisodiy jihatdan asoslangan chora,moliyaviy dalillar bilan himoya qilinadigan qaror,bozor mantig‘iga mos strategiya
+777,die politische Kommunikation gesellschaftlich prägen,siyosiy muloqot orqali jamiyatni shakllantirmoq,mafkuraviy axborot bilan ommaviy qarashni yo‘naltirmoq,boshqaruv nutqi orqali jamoatchilik fikriga ta’sir qilmoq
+778,gleichzeitig betrachtet,shu bilan bir vaqtda qaralganda,parallel ravishda tahlil qilinsa,bir paytning o‘zida ko‘rib chiqilganda
+779,die gesellschaftliche Wahrnehmung differenziert analysieren,jamiyatdagi idrokni nozik tafovutlar bilan tahlil qilmoq,ommaviy qarashni chuqur baholamoq,ijtimoiy tasavvurni analitik tekshirmoq
+780,ökonomisch nachhaltige Strategie,iqtisodiy jihatdan barqaror strategiya,moliyaviy uzoq muddatli reja,kelajakni hisobga oluvchi bozor yondashuvi
+781,die politische Polarisierung kritisch reflektieren,siyosiy bo‘linishni qayta mushohada qilmoq,mafkuraviy qarama-qarshilikni tahlil qilmoq,hokimiyat atrofidagi ajralishni analitik baholamoq
+782,in dieser Hinsicht betrachtet,shu jihatdan qaralganda,mazkur nuqtayi nazardan tahlil qilinsa,bunday holatda ko‘rib chiqilganda
+783,die gesellschaftliche Orientierung nachhaltig beeinflussen,jamiyatdagi yo‘nalishga uzoq muddatli ta’sir qilmoq,ijtimoiy qarash tizimini shakllantirmoq,ommaviy pozitsiyani boshqarmoq
+784,ökonomisch relevante Entscheidung,iqtisodiy jihatdan muhim qaror,moliyaviy oqibatlarga ega tanlov,bozor uchun dolzarb xulosa
+785,die politische Stabilität kritisch hinterfragen,siyosiy barqarorlikni tanqidiy tekshirmoq,davlat muvozanatini shubha bilan ko‘rib chiqmoq,hokimiyat tizimini baholamoq
+786,unter theoretischen Gesichtspunkten,nazariy nuqtayi nazardan,ilmiy asosda,mantiqiy tahlil doirasida
+787,die gesellschaftliche Dynamik kritisch einordnen,jamiyatdagi rivojlanish mexanizmini tanqidiy kontekstga joylashtirmoq,ijtimoiy o‘zgarishlarni analitik tasniflamoq,ommaviy jarayonlarni chuqur baholamoq
+788,ökonomisch vertretbare Reform,iqtisodiy jihatdan maqbul islohot,moliyaviy asosda himoya qilinadigan o‘zgarish,bozor uchun oqilona yangilanish
+789,die politische Einflussnahme gesellschaftlich bewerten,siyosiy ta’sir o‘tkazishni jamiyat nuqtayi nazaridan baholamoq,mafkuraviy boshqaruvni ommaviy tahlil qilmoq,jamoatchilikka ta’sirni tekshirmoq
+790,in Bezug auf die gesellschaftliche Entwicklung,jamiyat rivojlanishiga nisbatan,ijtimoiy taraqqiyot nuqtayi nazaridan,ommaviy o‘zgarishlar bilan bog‘liq holda
+791,die gesellschaftliche Verantwortung nachhaltig stärken,ijtimoiy mas’uliyatni uzoq muddatli kuchaytirmoq,jamoatchilik javobgarligini rivojlantirmoq,ommaviy burch hissini mustahkamlab oshirmoq
+792,ökonomisch differenziert analysieren,iqtisodiy jihatdan nozik tafovutlar bilan tahlil qilmoq,moliyaviy omillarni chuqur baholamoq,bozor mexanizmlarini analitik tekshirmoq
+793,die politische Kommunikation kritisch reflektieren,siyosiy muloqotni qayta mushohada qilmoq,mafkuraviy axborot almashuvini tahlil qilmoq,boshqaruv nutqini analitik baholamoq
+794,nicht zuletzt betrachtet,ayniqsa qaralganda,muhim ravishda tahlil qilinsa,eng kamida emas tarzida ko‘rilganda
+795,die gesellschaftliche Realität nachhaltig prägen,jamiyatdagi haqiqiy holatni uzoq muddatli shakllantirmoq,ijtimoiy voqelikka ta’sir qilmoq,ommaviy vaziyatni belgilamoq
+796,ökonomisch fundierte Entscheidung,iqtisodiy asoslangan qaror,moliyaviy dalillar bilan mustahkamlangan tanlov,bozor mantig‘iga tayangan xulosa
+797,die politische Entscheidungsfreiheit kritisch bewerten,siyosiy qaror erkinligini tanqidiy baholamoq,boshqaruvdagi mustaqillikni tekshirmoq,mafkuraviy bosimni tahlil qilmoq
+798,im gesellschaftspolitischen Kontext,ijtimoiy-siyosiy kontekstda,jamiyat va boshqaruv bog‘liqligida,ommaviy tizim doirasida
+799,die gesellschaftliche Entwicklung differenziert darstellen,jamiyat rivojlanishini nozik tafovutlar bilan ifodalamoq,ijtimoiy taraqqiyotni chuqur ko‘rsatmoq,ommaviy o‘zgarishlarni har tomonlama yoritmoq
+800,ökonomisch nachhaltige Reformstrategie,iqtisodiy jihatdan barqaror islohot strategiyasi,moliyaviy uzoq muddatli yangilanish rejasi,bozor uchun kelajakni hisobga oluvchi yondashuv
+801,die Ambiguität,ikki ma’nolilik,noaniq talqin imkoniyati,semantik mavhumlik
+802,folglich argumentieren,mantiqiy tarzda dalillamoq,izchil fikr yuritmoq,natijaga asoslangan holda gapirmoq
+803,die Diskrepanz,sezilarli tafovut,bir-biriga mos kelmaslik,ziddiyatli farq
+804,normativ belgilangan,qoidalar va me’yorlar asosida shakllangan,standartlarga tayangan,majburiy me’yoriy
+805,die Argumentationslinie,dalillash yo‘nalishi,mantiqiy fikr zanjiri,bahsning asosiy oqimi
+806,gleichsam,shu bilan birga,go‘yoki,bir vaqtning o‘zida
+807,die Relativierung,mutlaq emasligini ko‘rsatish,nisbiylashtirish,ta’sir kuchini kamaytirish
+808,diskursiv,bahs va muhokamaga asoslangan,muloqot orqali shakllangan,analitik tortishuv xarakteridagi
+809,die Begriffsbestimmung,tushunchani aniq belgilash,terminni izohlash,semantik chegaralash
+810,insofern betrachtet,shu jihatdan qaralganda,mantiqiy asosda ko‘rilganda,ma’lum ma’noda tahlil qilinsa
+811,die Argumentationslogik,dalillash mantig‘i,fikr yuritish tizimi,analitik asoslash strukturasi
+812,implizit,yashirin tarzda ifodalangan,bevosita aytilmagan,ichki ma’noga ega
+813,die Sinnzusammenhänge,ma’no bog‘liqliklari,semantik aloqalar,mantiqiy mazmun tizimi
+814,nichtsdestotrotz interpretiert,shunga qaramay sharhlanganda,biroq talqin qilinsa,qarama-qarshi holatda ham ma’no chiqarilganda
+815,die Perspektivverschiebung,qarash nuqtasining o‘zgarishi,talqin yo‘nalishining siljishi,analitik fokus almashuvi
+816,semantisch differenziert,semantik jihatdan nozik farqlangan,ma’nodagi tafovutlarni ko‘rsatuvchi,chuqur til tahliliga asoslangan
+817,die Deutungsebene,talqin darajasi,ma’no chiqarish bosqichi,sharhlash qatlami
+818,folglich interpretiert,mantiqan sharhlanganda,natija sifatida talqin qilinsa,izchil tahlilda ma’no chiqarilganda
+819,die Argumentationsstruktur kritisch analysieren,dalillash tuzilmasini tanqidiy tahlil qilmoq,mantiqiy asoslash tizimini tekshirmoq,bahs modelini chuqur baholamoq
+820,paradox,ziddiyatli tuyuladigan,mantiqan qarama-qarshi ko‘rinadigan,kutilmagan mazmunli
+821,die Begriffsunschärfe,tushunchaning noaniqligi,semantik mavhumlik,termin chegaralarining aniqlanmaganligi
+822,unter diskursiven Gesichtspunkten,diskurs nuqtayi nazaridan,muhokama doirasida,bahs kontekstida
+823,die Bedeutungsverschiebung,ma’noning o‘zgarishi,semantik siljish,talqin almashuvi
+824,explizit,ochiq va aniq ifodalangan,bevosita aytilgan,yashirin bo‘lmagan
+825,die Argumentationsdichte,dalillarning zichligi,mantiqiy asoslashning boyligi,bahsning analitik chuqurligi
+826,in rhetorischer Hinsicht,ritorik jihatdan,nutq uslubi nuqtayi nazaridan,ifoda kontekstida
+827,die Interpretationsspielräume,talqin imkoniyatlari,turli ma’no chiqarish variantlari,semantik erkinlik
+828,kontextabhängig,kontekstga bog‘liq,vaziyatga qarab ma’no oladigan,sharoit bilan belgilanadigan
+829,die Schlussfolgerungslogik,xulosa chiqarish mantig‘i,natija hosil qilish tizimi,analitik fikr oqimi
+830,demnach interpretiert,shu asosda sharhlanganda,mantiqiy tarzda talqin qilinsa,natijaga asoslangan ma’no chiqarilganda
+831,die Begriffsebene,tushuncha darajasi,semantik qatlam,mazmuniy bosqich
+832,argumentativ konsistent,mantiqan izchil dalillangan,fikrlar bir-biriga mos keladigan,analitik bog‘liq
+833,die Bedeutungsnuancierung,ma’nodagi nozik tafovutlarni ko‘rsatish,semantik boyitish,talqin chuqurligi
+834,unter analytischen Gesichtspunkten,analitik nuqtayi nazardan,mantiqiy tahlil doirasida,ilmiy asosda
+835,die Deutungsmuster,talqin modeli,ma’no chiqarish usuli,sharhlash sxemasi
+836,mehrdeutig interpretierbar,bir nechta ma’noda talqin qilinadigan,semantik jihatdan ochiq,noaniq sharhlanadigan
+837,die Argumentationskonsistenz,dalillash izchilligi,mantiqiy bog‘liqlik,bahs strukturasining yaxlitligi
+838,gleichwohl interpretiert,shunga qaramay sharhlanganda,biroq ma’no chiqarilganda,qarama-qarshi holatda ham talqin qilinsa
+839,die Kontextualisierung,kontekstga joylashtirish,ma’noni vaziyat bilan bog‘lash,analitik moslashtirish
+840,subtil,nozik va yashirin tarzda ifodalangan,bilinar-bilinmas ta’sir qiluvchi,semantik jihatdan murakkab
+841,die Argumentationsperspektive,dalillash nuqtayi nazari,mantiqiy yondashuv yo‘nalishi,bahs pozitsiyasi
+842,in semantischer Hinsicht,semantik jihatdan,ma’no nuqtayi nazaridan,til tahlili asosida
+843,die Interpretationsvielfalt,talqinlarning xilma-xilligi,turli ma’no chiqarish imkoniyatlari,semantik boylik
+844,kohärent,mantiqan yaxlit va bog‘liq,izchil,ichki uyg‘unlikka ega
+845,die Deutungslogik,talqin mantig‘i,ma’no chiqarish tizimi,analitik sharhlash strukturasi
+846,unter normativen Aspekten,me’yoriy jihatdan,qoidalar nuqtayi nazaridan,standartlarga asoslangan holda
+847,die Bedeutungsstruktur,ma’no tuzilmasi,semantik tizim,mazmuniy qatlam
+848,argumentativ nachvollziehbar,mantiqan tushunarli dalillangan,izchil asoslangan,bahs jihatdan ravshan
+849,die Perspektivierung,qarash nuqtasini shakllantirish,talqin yo‘nalishini belgilash,analitik fokus yaratish
+850,in diskursiver Hinsicht,diskurs nuqtayi nazaridan,muhokama kontekstida,bahs asosida
+851,die Interpretationskompetenz,talqin qilish qobiliyati,ma’no chiqarish mahorati,analitik sharhlash salohiyati
+852,konzeptionell,konseptual jihatdan,nazariy modelga asoslangan,g‘oyaviy tizim bilan bog‘liq
+853,die Bedeutungsdimension,ma’no o‘lchami,semantik qatlam,mazmuniy daraja
+854,demgegenüber interpretiert,bunga qarama-qarshi ravishda sharhlanganda,aksincha talqin qilinsa,boshqa nuqtayi nazardan ma’no chiqarilganda
+855,die Argumentationsweise differenziert analysieren,dalillash usulini nozik tafovutlar bilan tahlil qilmoq,mantiqiy asoslash modelini chuqur baholamoq,bahs metodini analitik tekshirmoq
+856,semantisch aufgeladen,kuchli semantik ma’noga ega,ma’no jihatdan boy,hissiy va mazmuniy ta’sirga ega
+857,die Diskursanalyse,diskurs tahlili,muhokama tizimini tekshirish,nutq va bahsni analitik o‘rganish
+858,in argumentativer Hinsicht,dalillash nuqtayi nazaridan,mantiqiy asoslash doirasida,bahs kontekstida
+859,die Interpretationsansätze,talqin yondashuvlari,ma’no chiqarish usullari,analitik sharhlash modellari
+860,implizite Bedeutung,yashirin ma’no,bevosita aytilmagan mazmun,ichki semantik qatlam
+861,die Argumentationsführung,dalillashni olib borish usuli,mantiqiy fikr yuritish modeli,bahsni boshqarish shakli
+862,unter rhetorischen Aspekten,ritorik jihatdan,nutq san’ati nuqtayi nazaridan,ifoda usuli asosida
+863,die Perspektivenvielfalt,qarashlar xilma-xilligi,turli nuqtayi nazarlar mavjudligi,analitik boylik
+864,semantisch präzise,semantik jihatdan aniq,ma’nosi ravshan,til nuqtayi nazaridan puxta
+865,die Argumentationsanalyse vertiefen,dalillash tahlilini chuqurlashtirmoq,mantiqiy asoslashni kengroq tekshirmoq,bahs strukturasini rivojlantirmoq
+866,gleichzeitig interpretiert,shu bilan bir vaqtda sharhlanganda,parallel tarzda talqin qilinsa,bir necha ma’noda ko‘rib chiqilganda
+867,die Bedeutungsvielfalt,ma’nolar xilma-xilligi,semantik boylik,talqinlar ko‘pligi
+868,kontextuell,kontekst bilan bog‘liq,vaziyat asosida ma’no oladigan,sharoitga mos
+869,die Schlussfolgerungsebene,xulosa chiqarish darajasi,natija hosil qilish bosqichi,analitik yakun qatlami
+870,in theoretischer Hinsicht interpretiert,nazariy jihatdan sharhlanganda,ilmiy asosda talqin qilinsa,mantiqiy nuqtayi nazardan ma’no chiqarilganda
+871,die Argumentationsstrategie differenziert darstellen,dalillash strategiyasini nozik tafovutlar bilan ifodalamoq,mantiqiy yondashuvni chuqur ko‘rsatmoq,bahs modelini har tomonlama yoritmoq
+872,mehrschichtig,ko‘p qatlamli,murakkab tuzilgan,bir nechta ma’no darajasiga ega
+873,die Deutungsperspektive,talqin nuqtayi nazari,ma’no chiqarish yo‘nalishi,analitik qarash
+874,unter sprachlichen Gesichtspunkten,til nuqtayi nazaridan,lingvistik jihatdan,ifoda usuli asosida
+875,die Interpretationslogik,talqin mantig‘i,ma’no chiqarish tizimi,analitik sharhlash oqimi
+876,argumentativ differenziert,mantiqan nozik tafovutlar bilan asoslangan,bahs jihatdan chuqur,analitik izchil
+877,die Diskursstruktur,diskurs tuzilmasi,muhokama tizimi,nutq va bahs modeli
+878,in methodischer Hinsicht,metodik jihatdan,ilmiy usul nuqtayi nazaridan,analitik asosda
+879,die Bedeutungsanalyse,ma’no tahlili,semantik tekshiruv,mazmuniy analiz
+880,explizit formuliert,ochiq va aniq ifodalangan,bevosita bayon qilingan,yashirin ma’nosiz aytilgan
+881,die Argumentationskette nachvollziehen,dalillar zanjirini tushunmoq,mantiqiy bog‘liqlikni kuzatmoq,bahs oqimini anglamoq
+882,unter gesellschaftlichen Aspekten,ijtimoiy jihatdan,jamiyat nuqtayi nazaridan,ommaviy kontekstda
+883,die Deutung kritisch hinterfragen,talqinni tanqidiy tekshirmoq,ma’no chiqarishni shubha bilan ko‘rib chiqmoq,analitik baholamoq
+884,semantisch komplex,semantik jihatdan murakkab,ko‘p ma’noli,mazmuniy qatlamlarga ega
+885,die Perspektivenanalyse,qarashlar tahlili,turli nuqtayi nazarlarni tekshirish,analitik baholash
+886,demzufolge interpretiert,mantiqiy natija sifatida sharhlanganda,shu asosda talqin qilinsa,oqibat tarzida ma’no chiqarilganda
+887,die Argumentationsmuster,dalillash modellari,mantiqiy asoslash usullari,bahs strategiyalari
+888,konnotativ,qo‘shimcha ma’no yukiga ega,semantik assotsiatsiyalarni uyg‘otuvchi,bevosita bo‘lmagan mazmunli
+889,die Deutungsspielräume,talqin erkinligi,ma’no chiqarish imkoniyatlari,semantik variantlar
+890,in philosophischer Hinsicht,falsafiy jihatdan,nazariy qarash nuqtayi nazaridan,abstrakt tahlil asosida
+891,die Argumentationsdynamik,dalillash dinamikasi,mantiqiy fikr oqimining rivojlanishi,bahs harakati
+892,implizit vermittelt,yashirin tarzda yetkazilgan,bevosita aytilmagan holda ifodalangan,ichki ma’no orqali uzatilgan
+893,die Diskurskompetenz,diskurs kompetensiyasi,bahs yuritish qobiliyati,analitik muloqot mahorati
+894,unter kommunikativen Aspekten,muloqot jihatidan,aloqa nuqtayi nazaridan,kommunikativ asosda
+895,die Bedeutungsinterpretation,ma’noni sharhlash,semantik talqin qilish,mazmun chiqarish
+896,argumentativ präzise,mantiqan aniq asoslangan,bahs jihatdan ravshan,analitik puxta
+897,die Perspektivenverschiebung kritisch analysieren,qarash nuqtasi o‘zgarishini tanqidiy tahlil qilmoq,talqin yo‘nalishining siljishini tekshirmoq,analitik fokus almashuvini baholamoq
+898,nicht eindeutig interpretierbar,bir ma’noli sharhlab bo‘lmaydigan,turlicha talqin qilinadigan,aniq bo‘lmagan
+899,die Argumentationsbasis,dalillash asosi,mantiqiy tayanch,bahsning poydevori
+900,in analytischer Hinsicht,analitik jihatdan,mantiqiy tahlil nuqtayi nazaridan,ilmiy asosda
+901,die Deutungsvielfalt,talqinlar xilma-xilligi,turli ma’no chiqarish usullari,semantik boylik
+902,semantisch konsistent,semantik jihatdan izchil,ma’nolari o‘zaro mos,mazmuniy yaxlit
+903,die Argumentationskompetenz stärken,dalillash qobiliyatini kuchaytirmoq,mantiqiy fikr yuritish mahoratini rivojlantirmoq,bahs olib borish salohiyatini oshirmoq
+904,folglich differenziert betrachtet,mantiqan nozik tafovutlar bilan qaralganda,natija asosida chuqur tahlil qilinsa,izchil analitik bahoda
+905,die Diskursebene,diskurs darajasi,muhokama bosqichi,bahs qatlami
+906,konzeptionell begründet,konseptual jihatdan asoslangan,nazariy model bilan mustahkamlangan,g‘oyaviy poydevorga ega
+907,die Bedeutungsrelationen,ma’no munosabatlari,semantik aloqalar,mazmuniy bog‘liqliklar
+908,unter kulturellen Gesichtspunkten,madaniy nuqtayi nazardan,ijtimoiy-madaniy jihatdan,an’anaviy asosda
+909,die Argumentationsanalyse systematisch durchführen,dalillash tahlilini tizimli amalga oshirmoq,mantiqiy asoslashni ketma-ket tekshirmoq,bahs strukturasini ilmiy baholamoq
+910,mehrperspektivisch interpretiert,turli nuqtayi nazardan sharhlanganda,ko‘p qarash asosida talqin qilinsa,har tomonlama ma’no chiqarilganda
+911,die Deutungsstruktur,talqin tuzilmasi,ma’no chiqarish tizimi,analitik sharhlash modeli
+912,argumentativ widersprüchlich,mantiqan zid dalillangan,fikrlar bir-biriga mos kelmaydigan,bahs jihatdan qarama-qarshi
+913,die Kontextanalyse,kontekst tahlili,vaziyat bilan bog‘liq tekshiruv,semantik muhitni baholash
+914,in sprachlicher Hinsicht,til jihatidan,lingvistik nuqtayi nazardan,ifoda usuli asosida
+915,die Interpretationsfähigkeit stärken,talqin qilish qobiliyatini rivojlantirmoq,ma’no chiqarish mahoratini oshirmoq,analitik sharhlash salohiyatini kuchaytirmoq
+916,substanziell argumentieren,mohiyatli dalillamoq,asosiy mazmunni chuqur asoslab gapirmoq,analitik jihatdan kuchli fikr yuritmoq
+917,die Bedeutungslogik,ma’no mantig‘i,semantik bog‘liqlik tizimi,mazmuniy asoslash oqimi
+918,unter diskursanalytischen Gesichtspunkten,diskurs tahlili nuqtayi nazaridan,muhokama tizimi asosida,analitik bahs doirasida
+919,die Argumentationsweise kritisch hinterfragen,dalillash usulini tanqidiy tekshirmoq,mantiqiy asoslash modelini qayta baholamoq,bahs metodini shubha bilan ko‘rib chiqmoq
+920,implizite Argumentation,yashirin dalillash,bevosita aytilmagan asoslash,ichki mantiq orqali fikr yuritish
+921,die Deutungsebene erweitern,talqin darajasini kengaytirmoq,ma’no chiqarish qatlamini boyitmoq,analitik sharhlashni rivojlantirmoq
+922,in normativer Hinsicht,me’yoriy jihatdan,qoidalar asosida,standart nuqtayi nazaridan
+923,die Perspektivenanalyse vertiefen,qarashlar tahlilini chuqurlashtirmoq,turli nuqtayi nazarlarni kengroq tekshirmoq,analitik baholashni rivojlantirmoq
+924,argumentativ tragfähig,mantiqan mustahkam asoslangan,bahs jihatdan barqaror,analitik himoya qilinadigan
+925,die Bedeutungsdimension differenziert darstellen,ma’no o‘lchamini nozik tafovutlar bilan ifodalamoq,semantik qatlamlarni chuqur ko‘rsatmoq,mazmuniy darajalarni har tomonlama yoritmoq
+926,unter erkenntnistheoretischen Aspekten,bilish nazariyasi nuqtayi nazaridan,idrok va bilim asosida,epistemologik jihatdan
+927,die Argumentationslogik nachvollziehen,dalillash mantig‘ini tushunmoq,mantiqiy asoslash tizimini kuzatmoq,bahs oqimini anglamoq
+928,semantisch vielschichtig,semantik jihatdan ko‘p qatlamli,ma’nolari murakkab,bir nechta mazmuniy darajaga ega
+929,die Deutungsansätze vergleichen,talqin yondashuvlarini taqqoslamoq,ma’no chiqarish usullarini qiyoslamoq,analitik sharhlash modellarini baholamoq
+930,in methodologischer Hinsicht,metodologik jihatdan,ilmiy usullar tizimi nuqtayi nazaridan,analitik metod asosida
+931,die Argumentationsanalyse kritisch reflektieren,dalillash tahlilini qayta mushohada qilmoq,mantiqiy asoslashni tanqidiy baholamoq,bahs strukturasini chuqur o‘ylab ko‘rmoq
+932,konnotativ aufgeladen,kuchli qo‘shimcha ma’noga ega,assotsiativ semantik yuklangan,hissiy va mazmuniy ta’sir uyg‘otuvchi
+933,die Diskurslogik,diskurs mantig‘i,muhokama oqimining tizimi,bahsning analitik tuzilishi
+934,unter pragmatischen Gesichtspunkten,pragmatik jihatdan,amaliy nuqtayi nazardan,vazifaviy asosda
+935,die Interpretationsstrategie,talqin strategiyasi,ma’no chiqarish rejasi,analitik sharhlash modeli
+936,argumentativ konsistent darstellen,mantiqan izchil ifodalamoq,fikrlarni bir-biriga mos ravishda asoslamoq,analitik bog‘liq tarzda ko‘rsatmoq
+937,die Bedeutungsanalyse vertiefen,ma’no tahlilini chuqurlashtirmoq,semantik tekshiruvni kengaytirmoq,mazmuniy analizni rivojlantirmoq
+938,in gesellschaftlicher Hinsicht,jamiyat nuqtayi nazaridan,ijtimoiy jihatdan,ommaviy kontekstda
+939,die Argumentationsmuster kritisch analysieren,dalillash modellarini tanqidiy tahlil qilmoq,mantiqiy asoslash usullarini tekshirmoq,bahs strategiyalarini baholamoq
+940,implizit argumentieren,yashirin tarzda dalillamoq,bevosita aytmasdan asoslamoq,ichki mantiq orqali fikr yuritmoq
+941,die Deutungsstruktur nachvollziehen,talqin tuzilmasini tushunmoq,ma’no chiqarish tizimini kuzatmoq,analitik sharhlash modelini anglamoq
+942,unter semantischen Aspekten,semantik jihatdan,ma’no nuqtayi nazaridan,til tahlili asosida
+943,die Perspektivenvielfalt kritisch reflektieren,qarashlar xilma-xilligini qayta mushohada qilmoq,turli nuqtayi nazarlarni tanqidiy baholamoq,analitik boylikni tekshirmoq
+944,argumentativ fundiert,mantiqan mustahkam asoslangan,bahs jihatdan dalilli,analitik tayanchga ega
+945,die Bedeutungsrelationen analysieren,ma’no munosabatlarini tahlil qilmoq,semantik aloqalarni tekshirmoq,mazmuniy bog‘liqliklarni baholamoq
+946,in interpretativer Hinsicht,talqin nuqtayi nazaridan,ma’no chiqarish asosida,analitik sharhlash doirasida
+947,die Argumentationskompetenz differenziert entwickeln,dalillash qobiliyatini nozik tafovutlar bilan rivojlantirmoq,mantiqiy fikrlashni chuqurlashtirmoq,bahs olib borish mahoratini oshirmoq
+948,mehrdimensional interpretiert,ko‘p o‘lchovli tarzda sharhlanganda,bir nechta nuqtayi nazardan talqin qilinsa,murakkab ma’no chiqarilganda
+949,die Deutungsperspektive erweitern,talqin nuqtayi nazarini kengaytirmoq,ma’no chiqarish yo‘nalishini boyitmoq,analitik qarashni rivojlantirmoq
+950,unter analytisch-rhetorischen Aspekten,analitik va ritorik jihatdan,mantiqiy hamda nutq uslubi asosida,bahs va ifoda nuqtayi nazaridan
+951,die Argumentationsstruktur nachvollziehbar darstellen,dalillash tuzilmasini tushunarli ifodalamoq,mantiqiy asoslash tizimini ravshan ko‘rsatmoq,bahs modelini izchil bayon qilmoq
+952,semantisch differenzierte Analyse,semantik jihatdan nozik tafovutlarga ega tahlil,ma’no qatlamlarini chuqur tekshiruv,mazmuniy analitik baholash
+953,die Diskursanalyse vertiefen,diskurs tahlilini chuqurlashtirmoq,muhokama tizimini kengroq tekshirmoq,nutq va bahsni rivojlantirilgan tarzda o‘rganmoq
+954,in argumentativer Hinsicht betrachtet,dalillash nuqtayi nazaridan qaralganda,mantiqiy asoslash doirasida ko‘rilganda,bahs kontekstida tahlil qilinsa
+955,die Bedeutungsstruktur kritisch hinterfragen,ma’no tuzilmasini tanqidiy tekshirmoq,semantik tizimni shubha bilan ko‘rib chiqmoq,mazmuniy qatlamlarni baholamoq
+956,argumentativ präzise formulieren,mantiqan aniq ifodalamoq,bahs jihatdan ravshan bayon qilmoq,analitik puxta gapirmoq
+957,die Perspektivierung analysieren,qarash nuqtasini shakllantirishni tahlil qilmoq,talqin yo‘nalishini tekshirmoq,analitik fokus yaratishni baholamoq
+958,unter diskursiven Rahmenbedingungen,diskurs sharoitlari doirasida,muhokama tizimi asosida,bahs kontekstida
+959,die Argumentationslogik kritisch reflektieren,dalillash mantig‘ini qayta mushohada qilmoq,mantiqiy asoslash tizimini tanqidiy baholamoq,bahs oqimini chuqur o‘ylab ko‘rmoq
+960,semantisch präzise argumentieren,semantik jihatdan aniq dalillamoq,ma’nosi ravshan asoslab gapirmoq,til nuqtayi nazaridan puxta fikr yuritmoq
+961,die Deutungsspielräume erweitern,talqin imkoniyatlarini kengaytirmoq,ma’no chiqarish erkinligini boyitmoq,semantik variantlarni ko‘paytirmoq
+962,in philosophisch-analytischer Hinsicht,falsafiy-analitik jihatdan,nazariy va mantiqiy asosda,abstrakt tahlil nuqtayi nazaridan
+963,die Argumentationsperspektive kritisch analysieren,dalillash nuqtayi nazarini tanqidiy tahlil qilmoq,mantiqiy yondashuvni tekshirmoq,bahs pozitsiyasini chuqur baholamoq
+964,implizite Bedeutungsstruktur,yashirin ma’no tuzilmasi,bevosita aytilmagan semantik tizim,ichki mazmuniy qatlam
+965,die Diskurskompetenz stärken,diskurs kompetensiyasini kuchaytirmoq,bahs yuritish mahoratini rivojlantirmoq,analitik muloqot salohiyatini oshirmoq
+966,unter kommunikativen Rahmenbedingungen,muloqot sharoitlari doirasida,aloqa tizimi asosida,kommunikativ kontekstda
+967,die Bedeutungsanalyse kritisch reflektieren,ma’no tahlilini qayta mushohada qilmoq,semantik tekshiruvni tanqidiy baholamoq,mazmuniy analizni chuqur o‘ylab ko‘rmoq
+968,argumentativ konsistent analysieren,mantiqan izchil tahlil qilmoq,fikrlarni bir-biriga mos ravishda tekshirmoq,analitik bog‘liqlikni baholamoq
+969,die Deutungsebene differenziert erweitern,talqin darajasini nozik tafovutlar bilan kengaytirmoq,ma’no chiqarish qatlamlarini boyitmoq,analitik sharhlashni chuqurlashtirmoq
+970,in semantisch-analytischer Hinsicht,semantik-analitik jihatdan,ma’no va mantiq asosida,til tahlili nuqtayi nazaridan
+971,die Argumentationsstrategie kritisch hinterfragen,dalillash strategiyasini tanqidiy tekshirmoq,mantiqiy yondashuv rejasini baholamoq,bahs modelini shubha bilan ko‘rib chiqmoq
+972,mehrperspektivische Analyse,ko‘p nuqtayi nazarli tahlil,har tomonlama analitik baholash,turli qarashlar asosidagi tekshiruv
+973,die Bedeutungslogik nachvollziehen,ma’no mantig‘ini tushunmoq,semantik bog‘liqlik tizimini kuzatmoq,mazmuniy asoslashni anglamoq
+974,unter erkenntnistheoretischen Rahmenbedingungen,bilish nazariyasi doirasida,idrok va bilim asosida,epistemologik sharoitlarda
+975,die Diskursstruktur kritisch analysieren,diskurs tuzilmasini tanqidiy tahlil qilmoq,muhokama tizimini tekshirmoq,bahs modelini chuqur baholamoq
+976,argumentativ fundierte Analyse,mantiqan mustahkam asoslangan tahlil,bahs jihatdan dalilli baholash,analitik tayanchga ega tekshiruv
+977,die Perspektivenanalyse systematisch erweitern,qarashlar tahlilini tizimli kengaytirmoq,turli nuqtayi nazarlarni rivojlantirmoq,analitik baholashni chuqurlashtirmoq
+978,in rhetorisch-analytischer Hinsicht,ritorik-analitik jihatdan,nutq va mantiq nuqtayi nazaridan,bahs va ifoda asosida
+979,die Bedeutungsstruktur differenziert darstellen,ma’no tuzilmasini nozik tafovutlar bilan ifodalamoq,semantik tizimni chuqur ko‘rsatmoq,mazmuniy qatlamlarni har tomonlama yoritmoq
+980,implizite Argumentationsmuster,yashirin dalillash modellari,bevosita aytilmagan mantiqiy asoslash usullari,ichki bahs strategiyalari
+981,die Deutungsansätze kritisch vergleichen,talqin yondashuvlarini tanqidiy taqqoslamoq,ma’no chiqarish usullarini baholamoq,analitik sharhlash modellarini qiyoslamoq
+982,unter kulturell-semantischen Aspekten,madaniy-semantik jihatdan,an’ana va ma’no asosida,ijtimoiy-til nuqtayi nazaridan
+983,die Argumentationsdynamik kritisch reflektieren,dalillash dinamikasini qayta mushohada qilmoq,mantiqiy fikr oqimini tanqidiy baholamoq,bahs harakatini chuqur o‘ylab ko‘rmoq
+984,semantisch widersprüchlich,semantik jihatdan zid,ma’nolari bir-biriga mos kelmaydigan,mazmuniy qarama-qarshi
+985,die Diskurslogik nachvollziehen,diskurs mantig‘ini tushunmoq,muhokama oqimining tizimini kuzatmoq,bahsning analitik tuzilishini anglamoq
+986,in argumentativ-semantischer Hinsicht,dalillash va semantik nuqtayi nazardan,mantiq va ma’no asosida,bahs hamda til tahlili doirasida
+987,die Perspektivierung kritisch hinterfragen,qarash nuqtasini shakllantirishni tanqidiy tekshirmoq,talqin yo‘nalishini baholamoq,analitik fokus yaratishni shubha bilan ko‘rib chiqmoq
+988,argumentativ differenzierte Darstellung,mantiqan nozik tafovutlar bilan ifodalash,bahs jihatdan chuqur bayon,analitik murakkab ko‘rsatish
+989,die Bedeutungsanalyse systematisch durchführen,ma’no tahlilini tizimli amalga oshirmoq,semantik tekshiruvni ketma-ket olib bormoq,mazmuniy analizni ilmiy asosda bajarish
+990,unter interpretativen Gesichtspunkten,talqin nuqtayi nazaridan,ma’no chiqarish asosida,analitik sharhlash doirasida
+991,die Argumentationskompetenz kritisch entwickeln,dalillash qobiliyatini tanqidiy rivojlantirmoq,mantiqiy fikrlashni chuqur shakllantirmoq,bahs olib borish mahoratini oshirmoq
+992,semantisch fundierte Interpretation,semantik jihatdan asoslangan talqin,ma’no nuqtayi nazaridan mustahkam sharh,mazmuniy analitik izoh
+993,die Deutungsperspektive systematisch erweitern,talqin nuqtayi nazarini tizimli kengaytirmoq,ma’no chiqarish yo‘nalishini rivojlantirmoq,analitik qarashni boyitmoq
+994,in analytisch-philosophischer Hinsicht,analitik-falsafiy jihatdan,mantiqiy va nazariy asosda,abstrakt tahlil nuqtayi nazaridan
+995,die Argumentationslogik differenziert darstellen,dalillash mantig‘ini nozik tafovutlar bilan ifodalamoq,mantiqiy asoslash tizimini chuqur ko‘rsatmoq,bahs oqimini har tomonlama yoritmoq
+996,implizite Bedeutungsrelationen,yashirin ma’no munosabatlari,bevosita aytilmagan semantik aloqalar,ichki mazmuniy bog‘liqliklar
+997,die Diskursanalyse kritisch vertiefen,diskurs tahlilini tanqidiy chuqurlashtirmoq,muhokama tizimini kengroq tekshirmoq,nutq va bahsni analitik rivojlantirmoq
+998,unter normativ-gesellschaftlichen Aspekten,me’yoriy-ijtimoiy jihatdan,qoidalar va jamiyat asosida,standart hamda ommaviy nuqtayi nazardan
+999,die Perspektivenvielfalt systematisch analysieren,qarashlar xilma-xilligini tizimli tahlil qilmoq,turli nuqtayi nazarlarni ketma-ket tekshirmoq,analitik boylikni chuqur baholamoq
+1000,argumentativ und semantisch konsistent,mantiqan va semantik jihatdan izchil,fikr va ma’nolari o‘zaro mos,bahs hamda mazmun nuqtayi nazaridan yaxlit
+1001,die Argumentationskohärenz,dalillashning ichki uyg‘unligi,mantiqiy izchillik,bahs tizimining yaxlitligi
+1002,in epistemologischer Hinsicht,epistemologik jihatdan,bilish nazariyasi nuqtayi nazaridan,idrok va bilim asosida
+1003,die semantische Mehrdeutigkeit,semantik ikki ma’nolilik,ma’nolar noaniqligi,turli talqin imkoniyati
+1004,argumentativ abstrahieren,mavhum darajada dalillamoq,umumiy nazariy xulosa chiqarib fikr yuritmoq,analitik abstraksiya asosida gapirmoq
+1005,die Diskursverschiebung,diskurs yo‘nalishining o‘zgarishi,muhokama markazining siljishi,bahs fokusining almashuvi
+1006,unter hermeneutischen Aspekten,germenevtik jihatdan,talqin nazariyasi asosida,matnni sharhlash nuqtayi nazaridan
+1007,die Bedeutungsrekonstruktion,ma’noni qayta tiklash,semantik mazmunni qayta qurish,talqin asosida ma’no hosil qilish
+1008,implizite Schlussfolgerung,yashirin xulosa,bevosita aytilmagan natija,ichki mantiq orqali hosil bo‘lgan qaror
+1009,die argumentative Verdichtung,dalillarning zichlashuvi,mantiqiy asoslashning kuchayishi,bahsning analitik chuqurlashuvi
+1010,demzufolge betrachtet,shu asosda qaralganda,mantiqiy natija sifatida ko‘rilganda,oqibat nuqtayi nazaridan tahlil qilinsa
+1011,die Interpretationskohärenz,talqinning ichki uyg‘unligi,ma’no chiqarish izchilligi,analitik sharhlash yaxlitligi
+1012,semantisch rekonstruieren,semantik jihatdan qayta tiklamoq,ma’noni qayta qurmoq,talqin asosida mazmunni shakllantirmoq
+1013,die Diskursivierung,diskurs shakliga o‘tkazish,muhokama doirasiga olib kirish,bahs orqali mazmun yaratish
+1014,in argumentationslogischer Hinsicht,dalillash mantig‘i nuqtayi nazaridan,mantiqiy asoslash tizimi asosida,bahs oqimi jihatidan
+1015,die perspektivische Verzerrung,qarash nuqtasidagi buzilish,subyektiv fokus siljishi,talqinning bir tomonlama shakllanishi
+1016,argumentativ zuspitzen,fikrni keskinlashtirib dalillamoq,bahsni kuchliroq ifodalamoq,mantiqiy qarama-qarshilikni kuchaytirmoq
+1017,die semantische Rekonstruktion,semantik qayta qurish,ma’no tizimini tiklash,talqin asosida mazmun yaratish
+1018,unter diskurstheoretischen Gesichtspunkten,diskurs nazariyasi nuqtayi nazaridan,muhokama modeli asosida,bahs tizimi jihatidan
+1019,die argumentative Gewichtung,dalillarning muhimlik darajasi,mantiqiy urg‘u taqsimoti,bahs ichidagi prioritet
+1020,implizite Bedeutungsdimension,yashirin ma’no o‘lchami,bevosita aytilmagan semantik qatlam,ichki mazmun darajasi
+1021,die Interpretationspluralität,talqinlar ko‘pligi,turli sharhlash imkoniyatlari,semantik xilma-xillik
+1022,argumentativ prägnant,mantiqan qisqa va mazmunli,bahs jihatdan aniq va kuchli,analitik ravshan
+1023,die diskursive Rahmung,diskursiv ramkalash,muhokama chegaralarini belgilash,bahs kontekstini yaratish
+1024,in semantisch-pragmatischer Hinsicht,semantik-pragmatik jihatdan,ma’no va amaliy qo‘llanish nuqtayi nazaridan,til hamda vazifa asosida
+1025,die Bedeutungsprojektion,ma’noni boshqa qatlamga ko‘chirish,semantik proyeksiya,talqin orqali yangi mazmun yuklash
+1026,argumentativ relativieren,dalillash orqali nisbiylashtirmoq,mantiqiy ta’sirni kamaytirmoq,bahsdagi qat’iylikni yumshatmoq
+1027,die Interpretationsasymmetrie,talqin nomutanosibligi,ma’no chiqarishdagi notekislik,semantik muvozanatsizlik
+1028,unter sprachphilosophischen Aspekten,til falsafasi nuqtayi nazaridan,lingvistik-nazariy jihatdan,ifoda mohiyati asosida
+1029,die argumentative Zuspitzung,dalillashning keskinlashuvi,bahsning kuchayishi,mantiqiy qarama-qarshilikning ortishi
+1030,semantisch kontextualisieren,ma’noni kontekst bilan bog‘lamoq,semantik jihatdan vaziyatga joylashtirmoq,talqinni sharoit bilan uyg‘unlashtirmoq
+1031,die Diskursfragmentierung,diskurs parchalanishi,muhokama tizimining bo‘linishi,bahs oqimining uzilishi
+1032,in interpretativer Perspektive,talqin nuqtayi nazaridan,sharhlash asosida,analitik ma’no chiqarish doirasida
+1033,die argumentative Schlüssigkeit,dalillashning mantiqiy mustahkamligi,bahsning izchil asoslanganligi,analitik yaxlitlik
+1034,implizite Wertung,yashirin baholash,bevosita aytilmagan munosabat,ichki qiymat yuklash
+1035,die semantische Tiefenstruktur,semantik chuqur tuzilma,ichki ma’no qatlami,mazmunning yashirin strukturasi
+1036,argumentativ kontrastieren,qarama-qarshi qo‘yib dalillamoq,zid nuqtalarni taqqoslab asoslamoq,bahsni kontrast orqali kuchaytirmoq
+1037,die diskursive Konstruktion,diskursiv qurilish,muhokama orqali shakllangan tizim,bahs asosida yaratilgan model
+1038,unter erkenntnistheoretischer Perspektive,bilish nazariyasi nuqtayi nazaridan,idrok asosida,epistemologik qarashda
+1039,die Interpretationsdynamik,talqin dinamikasi,ma’no chiqarish jarayonining o‘zgaruvchanligi,semantik rivojlanish oqimi
+1040,semantisch abstrahieren,semantik jihatdan umumlashtirmoq,ma’noni mavhum darajaga olib chiqmoq,talqinni nazariy shakllantirmoq
+1041,die argumentative Vermittlung,dalillash orqali yetkazish,mantiqiy vositachilik,bahs yordamida tushuntirish
+1042,in rhetorisch-semantischer Hinsicht,ritorik-semantik jihatdan,ifoda va ma’no asosida,nutq hamda mazmun nuqtayi nazaridan
+1043,die diskursive Legitimation,diskursiv qonuniylashtirish,muhokama orqali asoslash,bahs yordamida haqqoniy ko‘rsatish
+1044,argumentativ rekonstruieren,dalillash orqali qayta qurmoq,mantiqiy asos bilan tiklamoq,bahs orqali mazmun yaratmoq
+1045,die semantische Kohärenz,semantik uyg‘unlik,ma’nolar izchilligi,mazmuniy yaxlitlik
+1046,unter analytisch-diskursiven Aspekten,analitik-diskursiv jihatdan,mantiq va muhokama asosida,bahs tizimi nuqtayi nazaridan
+1047,die Interpretationsrahmung,talqin ramkalashi,ma’no chiqarish chegaralarini belgilash,analitik kontekst yaratish
+1048,argumentativ strukturieren,mantiqan tizimlashtirmoq,dalillarni tartibli joylashtirmoq,bahs oqimini tashkil qilmoq
+1049,die diskursive Verdichtung,diskursiv zichlashuv,muhokama mazmunining kuchayishi,bahsning chuqurlashuvi
+1050,implizite Sinnstruktur,yashirin ma’no tizimi,bevosita ko‘rinmaydigan mazmuniy struktura,ichki semantik bog‘liqlik
+1051,die semantische Perspektivierung,semantik qarash shakllantirish,ma’noni muayyan nuqtayi nazardan ko‘rsatish,talqin fokusini yaratish
+1052,in argumentativ-diskursiver Hinsicht,dalillash va diskurs nuqtayi nazaridan,mantiqiy hamda muhokamaviy asosda,bahs tizimi doirasida
+1053,die argumentative Tiefenstruktur,dalillashning chuqur tuzilmasi,ichki mantiqiy qatlam,bahsning yashirin strukturasi
+1054,semantisch hochkomplex,semantik jihatdan juda murakkab,ko‘p qatlamli ma’noga ega,chuqur mazmuniy tizimga ega
+1055,die interpretative Kohärenz,talqinning izchil uyg‘unligi,ma’no chiqarishdagi yaxlitlik,analitik sharhlashning mantiqiy mosligi

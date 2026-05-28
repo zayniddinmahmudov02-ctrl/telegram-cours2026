@@ -81,6 +81,7 @@ COURSE_INFO = {
 
 db_pool = None
 
+
 def init_db_pool():
 
     global db_pool
@@ -93,7 +94,9 @@ def init_db_pool():
             dsn=DATABASE_URL
         )
 
-        logger.info("Database pool connected ✅")
+        logger.info(
+            "Database pool connected ✅"
+        )
 
     except Exception as e:
 
@@ -147,9 +150,11 @@ def get_db():
         if conn:
 
             try:
+
                 db_pool.putconn(conn)
 
             except Exception as e:
+
                 logger.error(e)
 
 
@@ -187,6 +192,10 @@ def db_execute(
 
 def init_tables():
 
+    # =====================================================
+    # USERS TABLE
+    # =====================================================
+
     db_execute("""
         CREATE TABLE IF NOT EXISTS users (
 
@@ -200,26 +209,44 @@ def init_tables():
 
             approved INTEGER DEFAULT 0,
 
-            score INTEGER DEFAULT 0
+            score INTEGER DEFAULT 0,
 
+            total_score INTEGER DEFAULT 0,
+
+            daily_score INTEGER DEFAULT 0,
+
+            unlocked_level TEXT DEFAULT 'A1',
+
+            last_daily_reset DATE
         )
     """)
 
-    # indexes
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_score
-        ON users(score)
-    """)
+    # =====================================================
+    # QUIZ PROGRESS
+    # =====================================================
 
     db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_approved
-        ON users(approved)
+        CREATE TABLE IF NOT EXISTS quiz_progress (
+
+            user_id BIGINT,
+
+            level TEXT,
+
+            block_number INTEGER,
+
+            best_score INTEGER DEFAULT 0,
+
+            PRIMARY KEY(
+                user_id,
+                level,
+                block_number
+            )
+        )
     """)
 
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_course
-        ON users(course)
-    """)
+    # =====================================================
+    # SAFE MIGRATIONS
+    # =====================================================
 
     try:
 
@@ -245,7 +272,97 @@ def init_tables():
 
         logger.error(e)
 
-    logger.info("Database tables ready ✅")
+    try:
+
+        db_execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS total_score
+            INTEGER DEFAULT 0
+        """)
+
+    except Exception as e:
+
+        logger.error(e)
+
+    try:
+
+        db_execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS daily_score
+            INTEGER DEFAULT 0
+        """)
+
+    except Exception as e:
+
+        logger.error(e)
+
+    try:
+
+        db_execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS unlocked_level
+            TEXT DEFAULT 'A1'
+        """)
+
+    except Exception as e:
+
+        logger.error(e)
+
+    try:
+
+        db_execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS last_daily_reset
+            DATE
+        """)
+
+    except Exception as e:
+
+        logger.error(e)
+
+    # =====================================================
+    # INDEXES
+    # =====================================================
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_score
+        ON users(score)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_approved
+        ON users(approved)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_course
+        ON users(course)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_total_score
+        ON users(total_score)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_daily_score
+        ON users(daily_score)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_quiz_progress_user
+        ON quiz_progress(user_id)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_quiz_progress_level
+        ON quiz_progress(level)
+    """)
+
+    logger.info(
+        "Database tables ready ✅"
+    )
+
 # =========================
 # FLASK
 # =========================
@@ -325,18 +442,6 @@ admin_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="📢 Reklama Yuborish")],
         [KeyboardButton(text="📨 Shaxsiy Xabar")],
         [KeyboardButton(text="⬅️ Admin Chiqish")],
-    ],
-    resize_keyboard=True,
-)
-
-word_game_menu = ReplyKeyboardMarkup(
-    keyboard=[
-[
-            KeyboardButton(text="📚 A-1-Blok"),
-            KeyboardButton(text="📚 A-2-Blok")
-        ],
-        [KeyboardButton(text="🏆 Top 100")],
-        [KeyboardButton(text="⬅️ Orqaga")],
     ],
     resize_keyboard=True,
 )
@@ -972,226 +1077,655 @@ async def reject_user(callback: CallbackQuery):
     await callback.answer(
         "❌ Rad qilindi"
     )
+# =========================================================
+# ADVANCED CEFR QUIZ ENGINE
+# =========================================================
 
-# =========================
-# WORD GAME MENU
-# =========================
+import os
+import csv
+import random
 
-class QuizNameState(StatesGroup):
-    waiting_for_name = State()
+from datetime import date
 
-word_game_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="📚 A-1-Blok"),
-            KeyboardButton(text="📚 A-2-Blok")
-        ],
-        [KeyboardButton(text="🏆 Top 100")],
-        [KeyboardButton(text="⬅️ Orqaga")],
-    ],
-    resize_keyboard=True,
+from aiogram.types import (
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
 )
 
-# =========================
-# DATABASE FIX
-# =========================
+# =========================================================
+# GLOBALS
+# =========================================================
 
-try:
+# QUIZ DATA
+QUIZ_DATA = {}
 
-    db_execute("""
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS score_a2
-        INTEGER DEFAULT 0
-    """)
+# ACTIVE QUIZ USERS
+quiz_running = set()
 
-except Exception as e:
+# USER QUIZ SESSIONS
+quiz_sessions = {}
 
-    logger.error(e)
+# ACTIVE QUESTIONS
+active_questions = {}
 
-# =========================
-# WORD GAME
-# =========================
+# ANSWER TRACKING
+answered_users = {}
 
-@dp.message(F.text == "🎮 So'z O'yini")
-async def word_game(
-    message: Message,
-    state: FSMContext
+# APPROVED USERS CACHE
+approved_users = set()
+
+# ARTIKEL DATA
+artikel_data = {}
+
+# ADMIN CACHE
+admin_sessions = {}
+
+# DAILY RESET TRACKER
+last_daily_reset = None
+# =========================================================
+# LEVEL CONFIG
+# =========================================================
+
+LEVEL_CONFIG = {
+
+    "A1": {
+        "file": "data/A1-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600
+    },
+
+    "A2": {
+        "file": "data/A2-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600
+    },
+
+    "B1": {
+        "file": "data/B1-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600
+    },
+
+    "B2": {
+        "file": "data/B2-words.csv",
+        "blocks": 15,
+        "size": 100,
+        "required": 900
+    },
+
+    "C1": {
+        "file": "data/C1-words.csv",
+        "blocks": 11,
+        "size": 100,
+        "required": 0
+    }
+}
+
+LEVEL_ORDER = [
+    "A1",
+    "A2",
+    "B1",
+    "B2",
+    "C1"
+]
+
+# =========================================================
+# LOAD CSV
+# =========================================================
+
+def load_level_csv(
+    level,
+    filename
 ):
 
-    artikel_users.pop(
-        message.from_user.id,
-        None
+    data = []
+
+    # =====================================================
+    # FILE CHECK
+    # =====================================================
+
+    if not os.path.exists(filename):
+
+        logger.warning(
+            f"{filename} topilmadi"
+        )
+
+        # ADMIN WARNING
+        try:
+
+            asyncio.create_task(
+                bot.send_message(
+                    ADMIN_ID,
+                    f"⚠️ CSV topilmadi:\n{filename}"
+                )
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"CSV warning error: {e}"
+            )
+
+        return
+
+    # =====================================================
+    # LOAD FILE
+    # =====================================================
+
+    try:
+
+        with open(
+            filename,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            reader = csv.reader(f)
+
+            # HEADER SKIP
+            next(reader, None)
+
+            for row in reader:
+
+                try:
+
+                    # INVALID ROW
+                    if len(row) < 5:
+                        continue
+
+                    item = {
+
+                        "id": int(row[0]),
+
+                        "german": row[1].strip(),
+
+                        "correct": row[2].strip(),
+
+                        "wrong1": row[3].strip(),
+
+                        "wrong2": row[4].strip(),
+                    }
+
+                    data.append(item)
+
+                except Exception as e:
+
+                    logger.error(
+                        f"CSV row error: {e}"
+                    )
+
+    except Exception as e:
+
+        logger.error(
+            f"CSV load error: {e}"
+        )
+
+        return
+
+    # =====================================================
+    # SAVE DATA
+    # =====================================================
+
+    QUIZ_DATA[level] = data
+
+    logger.info(
+        f"{level}: "
+        f"{len(data)} loaded ✅"
     )
 
-    row = db_execute(
-        "SELECT full_name "
-        "FROM users "
-        "WHERE user_id = %s",
-        (message.from_user.id,),
+# =========================================================
+# LOAD ALL QUIZZES
+# =========================================================
+
+def load_all_quizzes():
+
+    QUIZ_DATA.clear()
+
+    for level, config in LEVEL_CONFIG.items():
+
+        try:
+
+            load_level_csv(
+                level,
+                config["file"]
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"{level} load failed: {e}"
+            )
+
+    logger.info(
+        "All quizzes loaded ✅"
+    )
+# =========================================================
+# DAILY RESET
+# =========================================================
+
+def reset_daily_scores():
+
+    today = date.today()
+
+    db_execute(
+        """
+        UPDATE users
+        SET
+            daily_score = 0,
+            last_daily_reset = %s
+        WHERE
+            last_daily_reset IS NULL
+            OR last_daily_reset < %s
+        """,
+        (today, today)
+    )
+
+# =========================================================
+# LEVEL MENU
+# =========================================================
+
+async def build_level_menu(user_id):
+
+    result = db_execute(
+        """
+        SELECT unlocked_level
+        FROM users
+        WHERE user_id = %s
+        """,
+        (user_id,),
         fetchone=True
     )
 
-    if not row or not row[0]:
+    unlocked = result[0] if result else "A1"
 
-        await message.answer(
-            "👤 Ism va familiyangizni kiriting:"
-        )
-
-        await state.set_state(
-            QuizNameState.waiting_for_name
-        )
-
-        return
-
-    await message.answer(
-        "🎮 Wortspiel — So'z O'yini",
-        reply_markup=word_game_menu
+    unlocked_index = LEVEL_ORDER.index(
+        unlocked
     )
 
-# =========================
-# SAVE QUIZ NAME
-# =========================
+    rows = []
 
-@dp.message(QuizNameState.waiting_for_name)
-async def save_quiz_name(
-    message: Message,
-    state: FSMContext
+    current = []
+
+    for i, level in enumerate(LEVEL_ORDER):
+
+        # unlocked
+        if i <= unlocked_index:
+
+            text = f"🎯 {level}"
+
+        # locked
+        else:
+
+            text = f"🔒 {level}"
+
+        current.append(
+            KeyboardButton(text=text)
+        )
+
+        if len(current) == 2:
+
+            rows.append(current)
+
+            current = []
+
+    if current:
+        rows.append(current)
+
+    rows.append([
+        KeyboardButton(
+            text="🏆 Reytinglar"
+        )
+    ])
+
+    rows.append([
+        KeyboardButton(
+            text="⬅️ Orqaga"
+        )
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=rows,
+        resize_keyboard=True
+    )
+
+# =========================================================
+# BLOCK MENU
+# =========================================================
+
+def build_block_keyboard(level):
+
+    config = LEVEL_CONFIG[level]
+
+    rows = []
+
+    current = []
+
+    for i in range(1, config["blocks"] + 1):
+
+        current.append(
+            KeyboardButton(
+                text=f"📚 {level}-{i}-Blok"
+            )
+        )
+
+        if len(current) == 2:
+
+            rows.append(current)
+
+            current = []
+
+    if current:
+        rows.append(current)
+
+    rows.append([
+        KeyboardButton(
+            text="⬅️ Orqaga"
+        )
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=rows,
+        resize_keyboard=True
+    )
+
+# =========================================================
+# OPEN WORD GAME
+# =========================================================
+
+@dp.message(F.text == "🎮 So'z O'yini")
+async def word_game_handler(message: Message):
+
+    menu = await build_level_menu(
+        message.from_user.id
+    )
+
+    await message.answer(
+        "🎮 WortSpiel\n\n"
+        "Darajani tanlang:",
+        reply_markup=menu
+    )
+
+# =========================================================
+# LOCKED LEVEL
+# =========================================================
+
+@dp.message(
+    F.text.regexp(
+        r"🔒 (A1|A2|B1|B2|C1)"
+    )
+)
+async def locked_level_handler(
+    message: Message
 ):
 
-    full_name = message.text.strip()
+    await message.answer(
+        "🔒 Bu daraja hali ochilmagan.\n\n"
+        "Keyingi darajani ochish uchun:\n"
+        "• barcha bloklardan kamida 60% ishlang."
+    )
 
-    db_execute(
-        "INSERT INTO users "
-        "(user_id, full_name) "
-        "VALUES (%s, %s) "
-        "ON CONFLICT (user_id) "
-        "DO UPDATE SET full_name = EXCLUDED.full_name",
+# =========================================================
+# OPEN LEVEL
+# =========================================================
+
+@dp.message(
+    F.text.regexp(
+        r"🎯 (A1|A2|B1|B2|C1)"
+    )
+)
+async def open_level_handler(
+    message: Message
+):
+
+    level = message.text.replace(
+        "🎯 ",
+        ""
+    )
+
+    await message.answer(
+        f"📚 {level} bloklari",
+        reply_markup=build_block_keyboard(level)
+    )
+
+# =========================================================
+# CHECK LEVEL UNLOCK
+# =========================================================
+
+def check_level_unlock(
+    user_id,
+    current_level
+):
+
+    # C1 LAST LEVEL
+    if current_level == "C1":
+
+        return None
+
+    required = LEVEL_CONFIG[
+        current_level
+    ]["required"]
+
+    result = db_execute(
+        """
+        SELECT
+            COALESCE(
+                SUM(best_score),
+                0
+            )
+
+        FROM quiz_progress
+
+        WHERE user_id = %s
+        AND level = %s
+        """,
         (
-            message.from_user.id,
-            full_name
+            user_id,
+            current_level
+        ),
+        fetchone=True
+    )
+
+    total = result[0] if result else 0
+
+    if total >= required:
+
+        next_level = LEVEL_ORDER[
+            LEVEL_ORDER.index(
+                current_level
+            ) + 1
+        ]
+
+        db_execute(
+            """
+            UPDATE users
+            SET unlocked_level = %s
+            WHERE user_id = %s
+            """,
+            (
+                next_level,
+                user_id
+            )
         )
+
+        return next_level
+
+    return None
+
+# =========================================================
+# START BLOCK
+# =========================================================
+
+@dp.message(
+    F.text.regexp(
+        r"📚 (A1|A2|B1|B2|C1)-(\d+)-Blok"
     )
-
-    await message.answer(
-        "✅ Ismingiz saqlandi!\n\n"
-        "🎮 Wortspiel — So'z O'yini",
-        reply_markup=word_game_menu
-    )
-
-    await state.clear()
-# =========================
-# QUIZ DATA
-# =========================
-
-QUIZ_A1 = []
-QUIZ_A2 = []
-
-def load_quiz_questions():
-
-    global QUIZ_A1, QUIZ_A2
-
-    QUIZ_A1.clear()
-    QUIZ_A2.clear()
-
-    csv_path = "quiz.csv"
-
-    logger.info(f"CSV EXISTS: {os.path.exists(csv_path)}")
-
-    if not os.path.exists(csv_path):
-
-        logger.warning("quiz.csv topilmadi")
-
-        return
-
-    with open(csv_path, "r", encoding="utf-8") as f:
-
-        reader = csv.DictReader(f)
-
-        for row in reader:
-
-            try:
-
-                question = {
-                    "id": int(row["id"]),
-                    "german": row["german"].strip(),
-                    "correct": row["correct"].strip(),
-                    "wrong1": row["wrong1"].strip(),
-                    "wrong2": row["wrong2"].strip(),
-                }
-
-                if 1 <= question["id"] <= 100:
-
-                    QUIZ_A1.append(question)
-
-                elif 101 <= question["id"] <= 200:
-
-                    QUIZ_A2.append(question)
-
-            except Exception as e:
-
-                logger.error(f"Quiz parse error: {e}")
-
-    logger.info(f"A1 loaded: {len(QUIZ_A1)}")
-    logger.info(f"A2 loaded: {len(QUIZ_A2)}")
-
-# =========================
-# QUIZ SYSTEM
-# =========================
-
-quiz_running = set()
-
-quiz_sessions = {}
-
-active_questions = {}
-
-answered_users = {}
-
-# =========================
-# START A1 QUIZ
-# =========================
-
-@dp.message(F.text == "📚 A-1-Blok")
-async def start_quiz_a1(message: Message):
+)
+async def start_block(message: Message):
 
     user_id = message.from_user.id
 
+    # ACTIVE QUIZ CHECK
     if user_id in quiz_running:
 
         await message.answer(
-            "⚠️ Test allaqachon boshlangan."
+            "⚠️ Sizda aktiv test mavjud."
         )
 
         return
 
-    if not QUIZ_A1:
+    text = message.text.replace(
+        "📚 ",
+        ""
+    )
+
+    level = text.split("-")[0]
+
+    block = int(text.split("-")[1])
+
+    # =====================================================
+    # USER LEVEL SECURITY
+    # =====================================================
+
+    user_data = db_execute(
+        """
+        SELECT unlocked_level
+        FROM users
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    current_unlocked = (
+        user_data[0]
+        if user_data
+        else "A1"
+    )
+
+    if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
 
         await message.answer(
-            "❌ A-1 savollar topilmadi."
+            "🔒 Bu daraja hali ochilmagan."
         )
 
         return
+
+    # =====================================================
+    # BLOCK SECURITY
+    # =====================================================
+
+    config = LEVEL_CONFIG[level]
+
+    if block > config["blocks"]:
+
+        await message.answer(
+            "❌ Noto'g'ri blok."
+        )
+
+        return
+
+    # =====================================================
+    # PREVIOUS BLOCK CHECK
+    # =====================================================
+
+    if block > 1:
+
+        prev_block = block - 1
+
+        result = db_execute(
+            """
+            SELECT best_score
+            FROM quiz_progress
+            WHERE user_id = %s
+            AND level = %s
+            AND block_number = %s
+            """,
+            (
+                user_id,
+                level,
+                prev_block
+            ),
+            fetchone=True
+        )
+
+        prev_score = result[0] if result else 0
+
+        if prev_score < 60:
+
+            await message.answer(
+                f"🔒 Avval "
+                f"{prev_block}-Blokdan "
+                f"kamida 60/100 ishlang."
+            )
+
+            return
+
+    # =====================================================
+    # LOAD QUESTIONS
+    # =====================================================
+
+    questions = QUIZ_DATA[level]
+
+    start_index = (block - 1) * 100
+
+    end_index = start_index + 100
+
+    # C1 LAST BLOCK
+    if level == "C1" and block == 11:
+
+        end_index = 1055
+
+    # CSV SECURITY
+    if start_index >= len(questions):
+
+        await message.answer(
+            "❌ CSV yetarli emas."
+        )
+
+        return
+
+    block_questions = questions[
+        start_index:end_index
+    ]
+
+    if not block_questions:
+
+        await message.answer(
+            "❌ Blok bo'sh."
+        )
+
+        return
+
+    # =====================================================
+    # START QUIZ
+    # =====================================================
+
+    random.shuffle(block_questions)
 
     quiz_running.add(user_id)
 
-    db_execute(
-        "UPDATE users SET score = 0 WHERE user_id = %s",
-        (user_id,)
-    )
-
-    questions = random.sample(
-        QUIZ_A1,
-        len(QUIZ_A1)
-    )
-
     quiz_sessions[user_id] = {
-        "questions": questions,
+
+        "level": level,
+
+        "block": block,
+
+        "questions": block_questions,
+
         "index": 0,
-        "block": "a1"
+
+        "score": 0
     }
 
     await message.answer(
-        f"🚀 A-1-Blok boshlandi!\n\n"
-        f"📚 Savollar soni: {len(questions)}"
+        f"🚀 {level}-{block}-Blok boshlandi!\n\n"
+        f"📚 Savollar: "
+        f"{len(block_questions)}"
     )
 
     await send_next_question(
@@ -1199,174 +1733,186 @@ async def start_quiz_a1(message: Message):
         user_id
     )
 
-# =========================
-# START A2 QUIZ
-# =========================
-
-@dp.message(F.text == "📚 A-2-Blok")
-async def start_quiz_a2(message: Message):
-
-    user_id = message.from_user.id
-
-    if user_id in quiz_running:
-
-        await message.answer(
-            "⚠️ Test allaqachon boshlangan."
-        )
-
-        return
-
-    if not QUIZ_A2:
-
-        await message.answer(
-            "❌ A-2 savollar topilmadi."
-        )
-
-        return
-
-    quiz_running.add(user_id)
-
-    db_execute(
-        "UPDATE users SET score_a2 = 0 WHERE user_id = %s",
-        (user_id,)
-    )
-
-    questions = random.sample(
-        QUIZ_A2,
-        len(QUIZ_A2)
-    )
-
-    quiz_sessions[user_id] = {
-        "questions": questions,
-        "index": 0,
-        "block": "a2"
-    }
-
-    await message.answer(
-        f"🚀 A-2-Blok boshlandi!\n\n"
-        f"📚 Savollar soni: {len(questions)}"
-    )
-
-    await send_next_question(
-        message.chat.id,
-        user_id
-    )
-
-# =========================
+# =========================================================
 # SEND QUESTION
-# =========================
+# =========================================================
 
-async def send_next_question(chat_id, user_id):
+async def send_next_question(
+    chat_id,
+    user_id
+):
 
-    session = quiz_sessions.get(user_id)
+    # MEMORY SAFETY
+    if user_id not in quiz_sessions:
+
+        quiz_running.discard(
+            user_id
+        )
+
+        return
+
+    session = quiz_sessions.get(
+        user_id
+    )
 
     if not session:
+
+        quiz_running.discard(
+            user_id
+        )
+
         return
 
     questions = session["questions"]
 
     index = session["index"]
 
-    block = session["block"]
-
+    # QUIZ FINISH
     if index >= len(questions):
 
-        if block == "a2":
-
-            row = db_execute(
-                "SELECT score_a2 FROM users WHERE user_id = %s",
-                (user_id,),
-                fetchone=True
-            )
-
-        else:
-
-            row = db_execute(
-                "SELECT score FROM users WHERE user_id = %s",
-                (user_id,),
-                fetchone=True
-            )
-
-        score = row[0] if row else 0
-
-        await bot.send_message(
+        await finish_quiz(
             chat_id,
-            f"🏁 Test tugadi!\n\n"
-            f"🏆 Natijangiz: {score}"
+            user_id
         )
-
-        quiz_running.discard(user_id)
-
-        quiz_sessions.pop(user_id, None)
 
         return
 
     question = questions[index]
 
     answers = [
+
         question["correct"],
+
         question["wrong1"],
+
         question["wrong2"]
     ]
 
     random.shuffle(answers)
 
-    question_id = f"{user_id}_{question['id']}"
+    qid = (
+        f"{user_id}_"
+        f"{question['id']}"
+    )
 
-    active_questions[question_id] = question["correct"]
+    answered_users[qid] = set()
 
-    answered_users[question_id] = set()
+    callback_map = {}
+
+    callback_buttons = []
+
+    for i, answer in enumerate(
+        answers
+    ):
+
+        answer_key = f"a{i}"
+
+        callback_map[
+            answer_key
+        ] = answer
+
+        callback_buttons.append([
+
+            InlineKeyboardButton(
+
+                text=answer,
+
+                callback_data=(
+                    f"quiz:"
+                    f"{qid}:"
+                    f"{answer_key}"
+                )
+            )
+        ])
+
+    callback_buttons.append([
+
+        InlineKeyboardButton(
+
+            text="⛔ Yakunlash",
+
+            callback_data=(
+                f"stopquiz:{user_id}"
+            )
+        )
+    ])
 
     keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=f"A) {answers[0]}",
-                    callback_data=f"quiz:{question_id}:{answers[0]}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text=f"B) {answers[1]}",
-                    callback_data=f"quiz:{question_id}:{answers[1]}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text=f"C) {answers[2]}",
-                    callback_data=f"quiz:{question_id}:{answers[2]}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="⛔ Testni Yakunlash",
-                    callback_data=f"stopquiz:{user_id}"
-                )
-            ]
-        ]
+        inline_keyboard=callback_buttons
     )
+
+    active_questions[qid] = {
+
+        "correct": question["correct"],
+
+        "answers": callback_map
+    }
 
     await bot.send_message(
+
         chat_id,
-        f"📚 Savol ID: {question['id']}\n"
-        f"📊 {index + 1}/{len(questions)}\n\n"
-        f"🇩🇪 {question['german']}",
+
+        f"📚 "
+        f"{session['level']}"
+        f"-{session['block']}\n"
+
+        f"📊 "
+        f"{index+1}/"
+        f"{len(questions)}\n\n"
+
+        f"🇩🇪 "
+        f"{question['german']}",
+
         reply_markup=keyboard
     )
-# =========================
-# QUIZ ANSWER
-# =========================
 
-@dp.callback_query(F.data.startswith("quiz:"))
-async def quiz_answer(callback: CallbackQuery):
+# =========================================================
+# ANSWER
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("quiz:")
+)
+async def quiz_answer(
+    callback: CallbackQuery
+):
 
     user_id = callback.from_user.id
 
-    _, question_id, selected = (
-        callback.data.split(":", 2)
+    try:
+
+        _, qid, answer_key = (
+            callback.data.split(
+                ":",
+                2
+            )
+        )
+
+    except:
+
+        await callback.answer(
+            "❌ Callback xatosi.",
+            show_alert=True
+        )
+
+        return
+
+    # OWNER SECURITY
+    owner_id = int(
+        qid.split("_")[0]
     )
 
-    if question_id not in active_questions:
+    if owner_id != user_id:
+
+        await callback.answer(
+            "❌ Bu sizning testingiz emas.",
+            show_alert=True
+        )
+
+        return
+
+    # QUESTION EXISTS
+    if qid not in active_questions:
 
         await callback.answer(
             "❌ Savol tugagan.",
@@ -1375,61 +1921,87 @@ async def quiz_answer(callback: CallbackQuery):
 
         return
 
-    if user_id in answered_users[question_id]:
+    # DOUBLE ANSWER BLOCK
+    if user_id in answered_users[qid]:
 
         await callback.answer(
-            "❌ Siz javob berib bo'ldingiz!",
+            "❌ Javob berilgansiz.",
             show_alert=True
         )
 
         return
 
-    answered_users[question_id].add(user_id)
+    answered_users[qid].add(
+        user_id
+    )
 
-    correct = active_questions[question_id]
+    question_data = active_questions[qid]
 
-    session = quiz_sessions.get(user_id)
+    answers_map = question_data["answers"]
 
-    block = session.get("block")
+    selected = answers_map.get(
+        answer_key
+    )
 
+    correct = question_data["correct"]
+
+    session = quiz_sessions.get(
+        user_id
+    )
+
+    if not session:
+
+        quiz_running.discard(
+            user_id
+        )
+
+        return
+
+    # CORRECT
     if selected == correct:
 
-        if block == "a2":
+        session["score"] += 1
 
-            db_execute(
-                "UPDATE users "
-                "SET score_a2 = score_a2 + 1 "
-                "WHERE user_id = %s",
-                (user_id,)
-            )
+        db_execute(
+            """
+            UPDATE users
+            SET
 
-        else:
+                total_score =
+                total_score + 1,
 
-            db_execute(
-                "UPDATE users "
-                "SET score = score + 1 "
-                "WHERE user_id = %s",
-                (user_id,)
-            )
+                daily_score =
+                daily_score + 1
+
+            WHERE user_id = %s
+            """,
+            (user_id,)
+        )
 
         await callback.answer(
             "✅ To'g'ri!"
         )
 
+    # WRONG
     else:
 
         await callback.answer(
             f"❌ Noto'g'ri!\n\n"
-            f"✅ To'g'ri javob: {correct}",
+            f"✅ {correct}",
             show_alert=True
         )
 
-    active_questions.pop(question_id, None)
+    session["index"] += 1
 
-    answered_users.pop(question_id, None)
+    active_questions.pop(
+        qid,
+        None
+    )
 
-    if session:
-        session["index"] += 1
+    answered_users.pop(
+        qid,
+        None
+    )
 
     try:
 
@@ -1437,94 +2009,241 @@ async def quiz_answer(callback: CallbackQuery):
             reply_markup=None
         )
 
-    except Exception as e:
-
-        logger.error(e)
+    except:
+        pass
 
     await send_next_question(
         callback.message.chat.id,
         user_id
     )
 
-# =========================
-# STOP QUIZ
-# =========================
+# =========================================================
+# FINISH QUIZ
+# =========================================================
 
-@dp.callback_query(F.data.startswith("stopquiz:"))
-async def stop_quiz(callback: CallbackQuery):
+async def finish_quiz(
+    chat_id,
+    user_id
+):
+
+    session = quiz_sessions.get(
+        user_id
+    )
+
+    if not session:
+
+        quiz_running.discard(
+            user_id
+        )
+
+        return
+
+    score = session["score"]
+
+    level = session["level"]
+
+    block = session["block"]
+
+    total = len(
+        session["questions"]
+    )
+
+    # SAVE BEST SCORE
+    db_execute(
+        """
+        INSERT INTO quiz_progress
+        (
+            user_id,
+            level,
+            block_number,
+            best_score
+        )
+
+        VALUES (%s,%s,%s,%s)
+
+        ON CONFLICT
+        (user_id, level, block_number)
+
+        DO UPDATE SET
+
+        best_score = GREATEST(
+            quiz_progress.best_score,
+            EXCLUDED.best_score
+        )
+        """,
+        (
+            user_id,
+            level,
+            block,
+            score
+        )
+    )
+
+    # CHECK LEVEL UNLOCK
+    new_level = check_level_unlock(
+        user_id,
+        level
+    )
+
+    unlock_text = ""
+
+    if new_level:
+
+        unlock_text = (
+            f"\n\n🔓 Yangi daraja ochildi: "
+            f"{new_level}"
+        )
+
+    await bot.send_message(
+
+        chat_id,
+
+        f"🏁 Test tugadi!\n\n"
+        f"🏆 Natija: "
+        f"{score}/{total}"
+        + unlock_text
+    )
+
+    # CLEAN SESSION
+    quiz_running.discard(
+        user_id
+    )
+
+    quiz_sessions.pop(
+        user_id,
+        None
+    )
+
+    # MEMORY CLEAN
+    remove_keys = [
+
+        key
+
+        for key in active_questions
+
+        if key.startswith(
+            f"{user_id}_"
+        )
+    ]
+
+    for key in remove_keys:
+
+        active_questions.pop(
+            key,
+            None
+        )
+
+        answered_users.pop(
+            key,
+            None
+        )
+
+# =========================================================
+# STOP QUIZ
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "stopquiz:"
+    )
+)
+async def stop_quiz(
+    callback: CallbackQuery
+):
 
     user_id = int(
         callback.data.split(":")[1]
     )
 
+    # OWNER SECURITY
     if callback.from_user.id != user_id:
 
         await callback.answer(
-            "❌ Ruxsat yo'q",
+            "❌ Bu sizning testingiz emas.",
             show_alert=True
         )
 
         return
 
-    session = quiz_sessions.get(user_id)
-
-    block = session.get("block")
-
-    if block == "a2":
-
-        row = db_execute(
-            "SELECT score_a2 FROM users WHERE user_id = %s",
-            (user_id,),
-            fetchone=True
-        )
-
-    else:
-
-        row = db_execute(
-            "SELECT score FROM users WHERE user_id = %s",
-            (user_id,),
-            fetchone=True
-        )
-
-    score = row[0] if row else 0
-
-    quiz_running.discard(user_id)
-
-    quiz_sessions.pop(user_id, None)
-
+    # BUTTON CLEAN
     try:
 
         await callback.message.edit_reply_markup(
             reply_markup=None
         )
 
-    except Exception as e:
+    except:
+        pass
 
-        logger.error(e)
-
-    await callback.message.answer(
-        f"⛔ Test yakunlandi!\n\n"
-        f"🏆 Natijangiz: {score}"
+    await finish_quiz(
+        callback.message.chat.id,
+        user_id
     )
 
-    await callback.answer()
+# =========================================================
+# RATING MENU
+# =========================================================
 
-# =========================
-# TOP 100
-# =========================
+rating_menu = ReplyKeyboardMarkup(
+    keyboard=[
 
-@dp.message(F.text == "🏆 Top 100")
-async def top_players(message: Message):
+        [
+            KeyboardButton(
+                text="🏆 Umumiy Reyting"
+            ),
+
+            KeyboardButton(
+                text="⚡ Kunlik Reyting"
+            )
+        ],
+
+        [
+            KeyboardButton(
+                text="⬅️ Orqaga"
+            )
+        ]
+    ],
+    resize_keyboard=True
+)
+
+# =========================================================
+# OPEN RATING MENU
+# =========================================================
+
+@dp.message(F.text == "🏆 Reytinglar")
+async def open_rating_menu(
+    message: Message
+):
+
+    await message.answer(
+        "🏆 Reyting bo'limi",
+        reply_markup=rating_menu
+    )
+
+# =========================================================
+# TOTAL RANKING
+# =========================================================
+
+@dp.message(
+    F.text == "🏆 Umumiy Reyting"
+)
+async def total_ranking(
+    message: Message
+):
 
     result = db_execute(
-        "SELECT "
-        "COALESCE(full_name, 'Unknown'), "
-        "(score + COALESCE(score_a2, 0)) as total_score "
-        "FROM users "
-        "WHERE (score + COALESCE(score_a2, 0)) > 0 "
-        "ORDER BY total_score DESC, user_id ASC "
-        "LIMIT 100",
-        fetchall=True,
+        """
+        SELECT
+            COALESCE(full_name,'Unknown'),
+            total_score
+
+        FROM users
+
+        ORDER BY total_score DESC
+
+        LIMIT 100
+        """,
+        fetchall=True
     )
 
     if not result:
@@ -1535,17 +2254,171 @@ async def top_players(message: Message):
 
         return
 
-    lines = ["🏆 TOP 100 O'YINCHILAR\n"]
+    text = (
+        "🏆 UMUMIY REYTING\n\n"
+    )
 
-    for i, (name, score) in enumerate(result, 1):
+    medals = {
+        1: "🥇",
+        2: "🥈",
+        3: "🥉"
+    }
 
-        lines.append(
-            f"{i}. {name} — {score} ball"
+    for i, (name, score) in enumerate(
+        result,
+        1
+    ):
+
+        medal = medals.get(
+            i,
+            f"{i}."
         )
 
-    await message.answer(
-        "\n".join(lines)
+        text += (
+            f"{medal} "
+            f"{name} — "
+            f"{score} XP\n"
+        )
+
+    my = db_execute(
+        """
+        SELECT total_score
+        FROM users
+        WHERE user_id = %s
+        """,
+        (message.from_user.id,),
+        fetchone=True
     )
+
+    my_score = my[0] if my else 0
+
+    found = False
+
+    for _, score in result:
+
+        if my_score >= score:
+
+            found = True
+
+            break
+
+    if not found and result:
+
+        needed = (
+            result[-1][1]
+            - my_score
+            + 1
+        )
+
+        text += (
+            f"\n━━━━━━━━━━\n"
+            f"📊 Sizning XP: "
+            f"{my_score}\n"
+            f"📈 TOP100 uchun "
+            f"yana {needed} XP kerak."
+        )
+
+    await message.answer(text)
+
+# =========================================================
+# DAILY RANKING
+# =========================================================
+
+@dp.message(
+    F.text == "⚡ Kunlik Reyting"
+)
+async def daily_ranking(
+    message: Message
+):
+
+    result = db_execute(
+        """
+        SELECT
+            COALESCE(full_name,'Unknown'),
+            daily_score
+
+        FROM users
+
+        ORDER BY daily_score DESC
+
+        LIMIT 100
+        """,
+        fetchall=True
+    )
+
+    if not result:
+
+        await message.answer(
+            "❌ Bugungi reyting bo'sh."
+        )
+
+        return
+
+    text = (
+        "⚡ KUNLIK REYTING\n\n"
+    )
+
+    medals = {
+        1: "🥇",
+        2: "🥈",
+        3: "🥉"
+    }
+
+    for i, (name, score) in enumerate(
+        result,
+        1
+    ):
+
+        medal = medals.get(
+            i,
+            f"{i}."
+        )
+
+        text += (
+            f"{medal} "
+            f"{name} — "
+            f"{score} XP\n"
+        )
+
+    my = db_execute(
+        """
+        SELECT daily_score
+        FROM users
+        WHERE user_id = %s
+        """,
+        (message.from_user.id,),
+        fetchone=True
+    )
+
+    my_score = my[0] if my else 0
+
+    found = False
+
+    for _, score in result:
+
+        if my_score >= score:
+
+            found = True
+
+            break
+
+    if not found and result:
+
+        needed = (
+            result[-1][1]
+            - my_score
+            + 1
+        )
+
+        text += (
+            f"\n━━━━━━━━━━\n"
+            f"📊 Sizning XP: "
+            f"{my_score}\n"
+            f"📈 TOP100 uchun "
+            f"yana {needed} XP kerak."
+        )
+
+    await message.answer(text)
 # =========================
 # ADMIN PANEL
 # =========================
@@ -1592,29 +2465,122 @@ async def stats(message: Message):
         f"📚 Kurs bo'yicha:{course_text}"
     )
 
-# =========================
+
+# =========================================================
 # USERS LIST
-# =========================
+# =========================================================
+
 @dp.message(F.text == "👥 Foydalanuvchilar")
-async def users_list(message: Message):
+async def users_list(
+    message: Message
+):
+
     if not is_admin(message):
         return
 
-    result = db_execute("SELECT user_id, full_name, course FROM users", fetchall=True)
-    if not result:
-        await message.answer("Userlar yo'q")
+    users = db_execute(
+        """
+        SELECT
+            user_id,
+            COALESCE(full_name,'Unknown'),
+            COALESCE(course,'—'),
+            approved
+
+        FROM users
+
+        ORDER BY user_id DESC
+        """,
+        fetchall=True
+    )
+
+    if not users:
+
+        await message.answer(
+            "❌ Foydalanuvchilar topilmadi."
+        )
+
         return
 
-    lines = []
-    for uid, name, course in result:
-        lines.append(f"🆔 {uid}\n👤 {name or '—'}\n📚 {course or '—'}\n")
+    # =====================================================
+    # BUILD TEXT
+    # =====================================================
 
-    text = "\n".join(lines)
-    if len(text) > 4000:
-        text = text[:4000] + "\n..."
+    text = (
+        "📋 FOYDALANUVCHILAR\n\n"
+    )
 
-    await message.answer(text)
+    approved_count = 0
 
+    for i, (
+        user_id,
+        full_name,
+        course,
+        approved
+    ) in enumerate(users, 1):
+
+        status = (
+            "✅"
+            if approved
+            else "❌"
+        )
+
+        if approved:
+            approved_count += 1
+
+        text += (
+
+            f"{i}. "
+
+            f"👤 {full_name}\n"
+
+            f"🆔 {user_id}\n"
+
+            f"📚 {course}\n"
+
+            f"{status}\n\n"
+        )
+
+    text += (
+        f"━━━━━━━━━━\n"
+        f"👥 Jami: {len(users)}\n"
+        f"✅ Xaridorlar: {approved_count}"
+    )
+
+    # =====================================================
+    # LARGE FILE SAFETY
+    # =====================================================
+
+    if len(text) > 3500:
+
+        filename = "users_list.txt"
+
+        try:
+
+            with open(
+                filename,
+                "w",
+                encoding="utf-8"
+            ) as f:
+
+                f.write(text)
+
+            await message.answer_document(
+                FSInputFile(filename)
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"Users export error: {e}"
+            )
+
+            await message.answer(
+                "❌ TXT export xatosi."
+            )
+
+    else:
+
+        await message.answer(text)
 # =========================
 # BUYERS LIST
 # =========================
@@ -1674,9 +2640,18 @@ async def personal_message_send(message: Message, state: FSMContext):
     except Exception as e:
         await message.answer(f"❌ Xabar yuborilmadi: {e}")
     await state.clear()
-# =========================
+
+# =========================================================
+# ADMIN STATES
+# =========================================================
+
+class AdminStates(StatesGroup):
+
+    broadcast = State()
+
+# =========================================================
 # BROADCAST
-# =========================
+# =========================================================
 
 @dp.message(F.text == "📢 Reklama Yuborish")
 async def broadcast_start(
@@ -1684,33 +2659,38 @@ async def broadcast_start(
     state: FSMContext
 ):
 
-    if not is_admin(message):
+    if message.from_user.id != ADMIN_ID:
         return
 
     await message.answer(
-        "📢 Yuboriladigan xabarni kiriting:"
+        "📨 Reklama matnini yuboring:"
     )
 
     await state.set_state(
-        BroadcastState.waiting_for_message
+        AdminStates.broadcast
     )
 
 
-@dp.message(BroadcastState.waiting_for_message)
+@dp.message(
+    AdminStates.broadcast
+)
 async def send_broadcast(
     message: Message,
     state: FSMContext
 ):
 
-    if not is_admin(message):
+    if message.from_user.id != ADMIN_ID:
         return
-    result = db_execute(
-        "SELECT user_id "
-        "FROM users "
-        "WHERE approved = 1",
+
+    users = db_execute(
+        """
+        SELECT user_id
+        FROM users
+        """,
         fetchall=True
     )
-    if not result:
+
+    if not users:
 
         await message.answer(
             "❌ Foydalanuvchilar topilmadi."
@@ -1721,116 +2701,86 @@ async def send_broadcast(
         return
 
     success = 0
+
     failed = 0
 
-    await message.answer(
-        f"🚀 Broadcast boshlandi.\n\n"
-        f"👥 Userlar soni: {len(result)}"
+    progress = await message.answer(
+        "📢 Reklama yuborilmoqda..."
     )
 
-    for index, (uid,) in enumerate(result, 1):
+    for i, (user_id,) in enumerate(
+        users,
+        1
+    ):
 
         try:
 
-            await bot.send_message(
-                uid,
-                message.text
+            await bot.copy_message(
+
+                chat_id=user_id,
+
+                from_chat_id=message.chat.id,
+
+                message_id=message.message_id
             )
 
             success += 1
-
-            # Telegram flood protection
-            await asyncio.sleep(0.08)
-
-            # Har 30 userdan keyin pause
-            if index % 30 == 0:
-                await asyncio.sleep(2)
 
         except Exception as e:
 
             failed += 1
 
             logger.error(
-                f"Broadcast error {uid}: {e}"
+                f"Broadcast error "
+                f"{user_id}: {e}"
             )
 
-    await message.answer(
-        f"✅ Broadcast tugadi!\n\n"
-        f"👥 Yuborildi: {success}\n"
-        f"❌ Yuborilmadi: {failed}"
+        # =================================================
+        # FLOOD CONTROL
+        # =================================================
+
+        await asyncio.sleep(0.12)
+
+        # =================================================
+        # LIVE PROGRESS
+        # =================================================
+
+        if i % 25 == 0:
+
+            try:
+
+                await progress.edit_text(
+
+                    f"📢 Reklama yuborilmoqda...\n\n"
+
+                    f"✅ Yuborildi: {success}\n"
+
+                    f"❌ Xato: {failed}\n"
+
+                    f"📊 Jarayon: "
+                    f"{i}/{len(users)}"
+                )
+
+            except:
+                pass
+
+    # =====================================================
+    # FINAL RESULT
+    # =====================================================
+
+    await progress.edit_text(
+
+        f"✅ Reklama yakunlandi.\n\n"
+
+        f"📨 Yuborildi: {success}\n"
+
+        f"❌ Xato: {failed}\n"
+
+        f"👥 Jami: {len(users)}"
     )
 
     await state.clear()
-# =========================
-# ARTIKEL TOPISH
-# =========================
-_MENU_BUTTONS = {
-    "🎮 So'z O'yini",
-    "🎥 Video Kurslar",
-    "👨‍🏫 Ustoz haqida",
-    "🏆 Natijalar",
-    "📞 Admin bilan bog'lanish",
-    "⬅️ Orqaga",
-    "🇩🇪 A1",
-    "🇩🇪 A2",
-    "🇩🇪 B1",
-    "🔥 A1-B1",
-    "🔥 A1-C1",
-    "🎬 Namuna Dars",
-    "/admin",
-    "📊 Statistika",
-    "👥 Foydalanuvchilar",
-    "💳 Xaridorlar",
-    "📢 Reklama Yuborish",
-    "📨 Shaxsiy Xabar",
-    "⬅️ Admin Chiqish",
-    "📚 A-1-Blok",
-    "📚 A-2-Blok",
-    "🏆 Top 100",
-}
 
-@dp.message(F.text == "📚 Artikel Topish")
-async def artikel_start(message: Message):
-   artikel_users[
-    message.from_user.id
-] = asyncio.get_event_loop().time()
-   await message.answer("📚 Artikelini topmoqchi bo'lgan so'zni yozing.")
-
-@dp.message(F.text)
-async def artikel_handler(message: Message):
-
-    user_id = message.from_user.id
-
-    # eski userlarni tozalash
-    now = asyncio.get_event_loop().time()
-
-    expired = [
-        uid
-        for uid, ts in artikel_users.items()
-        if now - ts > 600
-    ]
-
-    for uid in expired:
-        artikel_users.pop(uid, None)
-
-    # artikel mode emas
-    if user_id not in artikel_users:
-        return
-
-    # menu button bosilgan
-    if message.text in _MENU_BUTTONS:
-
-        artikel_users.pop(user_id, None)
-
-        return
-
-    word = message.text.lower().strip()
-
-    result = artikel.get(word)
-
-    await message.answer(
-        result if result else "❌ So'z topilmadi"
-    )
 # =========================
 # RUN
 # =========================
@@ -1845,7 +2795,9 @@ async def start_bot():
                 "BOT ISHGA TUSHDI ✅"
             )
 
-            await dp.start_polling(bot)
+            await dp.start_polling(
+                bot
+            )
 
         except Exception as e:
 
@@ -1853,34 +2805,100 @@ async def start_bot():
                 f"BOT CRASH: {e}"
             )
 
-            await asyncio.sleep(5)
+            # reconnect delay
+            await asyncio.sleep(10)
 
 
 async def main():
+
+    # =====================================================
+    # DATABASE
+    # =====================================================
 
     init_db_pool()
 
     init_tables()
 
-    load_artikel()
-
-    load_quiz_questions()
-
-    # eski webhooklarni o'chiradi
-    await bot.delete_webhook(
-        drop_pending_updates=True
+    logger.info(
+        "DATABASE READY ✅"
     )
 
-    # flask keep alive
-    Thread(
-        target=run_web,
-        daemon=True
-    ).start()
+    # =====================================================
+    # LOAD SYSTEMS
+    # =====================================================
 
-    # bot polling
+    load_artikel()
+    load_all_quizzes()
+
+
+    reset_daily_scores()
+
+    logger.info(
+        "SYSTEMS LOADED ✅"
+    )
+
+    # =====================================================
+    # DELETE OLD WEBHOOK
+    # =====================================================
+
+    try:
+
+        await bot.delete_webhook(
+            drop_pending_updates=True
+        )
+
+        logger.info(
+            "WEBHOOK TOZALANDI ✅"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Webhook error: {e}"
+        )
+
+    # =====================================================
+    # KEEP ALIVE
+    # =====================================================
+
+    try:
+
+        Thread(
+            target=run_web,
+            daemon=True
+        ).start()
+
+        logger.info(
+            "KEEP ALIVE STARTED ✅"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Flask error: {e}"
+        )
+
+    # =====================================================
+    # START BOT
+    # =====================================================
+
     await start_bot()
 
 
 if __name__ == "__main__":
 
-    asyncio.run(main())
+    try:
+
+        asyncio.run(main())
+
+    except KeyboardInterrupt:
+
+        logger.info(
+            "BOT STOPPED ⛔"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"MAIN ERROR: {e}"
+        )
