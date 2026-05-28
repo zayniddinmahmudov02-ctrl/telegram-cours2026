@@ -14,11 +14,7 @@ from PIL import (
 )
 
 import qrcode
-
-from datetime import datetime
-
-from datetime import datetime
-
+from datetime import datetime, timedelta, date
 
 from contextlib import contextmanager
 
@@ -2122,17 +2118,16 @@ def check_level_unlock(
         return next_level
 
     return None
-
 # =========================================================
-# START BLOCK
+# START QUIZ BLOCK
 # =========================================================
 
-@dp.message(
-    F.text.regexp(
-        r"📚 (A1|A2|B1|B2|C1)-(\d+)-Blok"
-    )
-)
-async def start_block(message: Message):
+async def start_quiz_block(
+    message: Message,
+    level: str,
+    block: int,
+    force_restart=False
+):
 
     user_id = message.from_user.id
 
@@ -2145,14 +2140,64 @@ async def start_block(message: Message):
 
         return
 
-    text = message.text.replace(
-        "📚 ",
-        ""
-    )
+    # =====================================================
+    # RESTART WARNING
+    # =====================================================
 
-    level = text.split("-")[0]
+    if not force_restart:
 
-    block = int(text.split("-")[1])
+        old_result = db_execute(
+            """
+            SELECT best_score
+
+            FROM quiz_progress
+
+            WHERE
+                user_id = %s
+                AND level = %s
+                AND block_number = %s
+            """,
+            (
+                user_id,
+                level,
+                block
+            ),
+            fetchone=True
+        )
+
+        if old_result:
+
+            best_score = old_result[0]
+
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="🔄 Qayta ishlash",
+                            callback_data=(
+                                f"restartquiz:{level}:{block}"
+                            )
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="❌ Bekor qilish",
+                            callback_data="cancelquiz"
+                        )
+                    ]
+                ]
+            )
+
+            await message.answer(
+                f"⚠️ Siz bu blokni avval ishlagansiz.\n\n"
+                f"🏆 Eng yaxshi natija: {best_score}/100\n\n"
+                f"🔄 Test 0 dan boshlanadi.\n"
+                f"⭐ XP faqat yangi rekord uchun beriladi.\n\n"
+                f"Davom etasizmi?",
+                reply_markup=keyboard
+            )
+
+            return
 
     # =====================================================
     # USER LEVEL SECURITY
@@ -2220,13 +2265,16 @@ async def start_block(message: Message):
             fetchone=True
         )
 
-        prev_score = result[0] if result else 0
+        prev_score = (
+            result[0]
+            if result
+            else 0
+        )
 
         if prev_score < 60:
 
             await message.answer(
-                f"🔒 Avval "
-                f"{prev_block}-Blokdan "
+                f"🔒 Avval {prev_block}-Blokdan "
                 f"kamida 60/100 ishlang."
             )
 
@@ -2242,12 +2290,10 @@ async def start_block(message: Message):
 
     end_index = start_index + 100
 
-    # C1 LAST BLOCK
     if level == "C1" and block == 11:
 
         end_index = 1055
 
-    # CSV SECURITY
     if start_index >= len(questions):
 
         await message.answer(
@@ -2272,32 +2318,60 @@ async def start_block(message: Message):
     # START QUIZ
     # =====================================================
 
-    random.shuffle(block_questions)
+    random.shuffle(
+        block_questions
+    )
 
-    quiz_running.add(user_id)
+    quiz_running.add(
+        user_id
+    )
 
     quiz_sessions[user_id] = {
 
         "level": level,
-
         "block": block,
-
         "questions": block_questions,
-
         "index": 0,
-
         "score": 0
     }
 
     await message.answer(
         f"🚀 {level}-{block}-Blok boshlandi!\n\n"
-        f"📚 Savollar: "
-        f"{len(block_questions)}"
+        f"📚 Savollar: {len(block_questions)}"
     )
 
     await send_next_question(
         message.chat.id,
         user_id
+    )
+# =========================================================
+# START BLOCK
+# =========================================================
+
+@dp.message(
+    F.text.regexp(
+        r"📚 (A1|A2|B1|B2|C1)-(\d+)-Blok"
+    )
+)
+async def start_block(
+    message: Message
+):
+
+    text = message.text.replace(
+        "📚 ",
+        ""
+    )
+
+    level = text.split("-")[0]
+
+    block = int(
+        text.split("-")[1]
+    )
+
+    await start_quiz_block(
+        message,
+        level,
+        block
     )
 
 # =========================================================
@@ -2529,22 +2603,6 @@ async def quiz_answer(
 
         session["score"] += 1
 
-        db_execute(
-            """
-            UPDATE users
-            SET
-
-                total_score =
-                total_score + 1,
-
-                daily_score =
-                daily_score + 1
-
-            WHERE user_id = %s
-            """,
-            (user_id,)
-        )
-
         await callback.answer(
             "✅ To'g'ri!"
         )
@@ -2615,7 +2673,48 @@ async def finish_quiz(
         session["questions"]
     )
 
+    # =====================================================
+    # OLD SCORE
+    # =====================================================
+
+    old_result = db_execute(
+        """
+        SELECT best_score
+
+        FROM quiz_progress
+
+        WHERE
+            user_id = %s
+            AND level = %s
+            AND block_number = %s
+        """,
+        (
+            user_id,
+            level,
+            block
+        ),
+        fetchone=True
+    )
+
+    old_score = (
+        old_result[0]
+        if old_result
+        else 0
+    )
+
+    # =====================================================
+    # XP GAIN
+    # =====================================================
+
+    xp_gain = max(
+        0,
+        score - old_score
+    )
+
+    # =====================================================
     # SAVE BEST SCORE
+    # =====================================================
+
     db_execute(
         """
         INSERT INTO quiz_progress
@@ -2629,14 +2728,18 @@ async def finish_quiz(
         VALUES (%s,%s,%s,%s)
 
         ON CONFLICT
-        (user_id, level, block_number)
+        (
+            user_id,
+            level,
+            block_number
+        )
 
         DO UPDATE SET
 
-        best_score = GREATEST(
-            quiz_progress.best_score,
-            EXCLUDED.best_score
-        )
+            best_score = GREATEST(
+                quiz_progress.best_score,
+                EXCLUDED.best_score
+            )
         """,
         (
             user_id,
@@ -2646,7 +2749,39 @@ async def finish_quiz(
         )
     )
 
-    # CHECK LEVEL UNLOCK
+    # =====================================================
+    # UPDATE XP
+    # =====================================================
+
+    if xp_gain > 0:
+
+        db_execute(
+            """
+            UPDATE users
+
+            SET
+
+                total_score =
+                COALESCE(total_score,0)
+                + %s,
+
+                daily_score =
+                COALESCE(daily_score,0)
+                + %s
+
+            WHERE user_id = %s
+            """,
+            (
+                xp_gain,
+                xp_gain,
+                user_id
+            )
+        )
+
+    # =====================================================
+    # LEVEL UNLOCK
+    # =====================================================
+
     new_level = check_level_unlock(
         user_id,
         level
@@ -2661,17 +2796,43 @@ async def finish_quiz(
             f"{new_level}"
         )
 
-    await bot.send_message(
+    # =====================================================
+    # RESULT MESSAGE
+    # =====================================================
 
-        chat_id,
+    result_text = (
 
         f"🏁 Test tugadi!\n\n"
+
         f"🏆 Natija: "
         f"{score}/{total}"
-        + unlock_text
     )
 
+    if xp_gain > 0:
+
+        result_text += (
+            f"\n⭐ XP qo'shildi: "
+            f"+{xp_gain}"
+        )
+
+    else:
+
+        result_text += (
+            "\n♻️ Bu blokdan avvalroq "
+            "yuqoriroq natija olgansiz."
+        )
+
+    result_text += unlock_text
+
+    await bot.send_message(
+        chat_id,
+        result_text
+    )
+
+    # =====================================================
     # CLEAN SESSION
+    # =====================================================
+
     quiz_running.discard(
         user_id
     )
@@ -2681,7 +2842,10 @@ async def finish_quiz(
         None
     )
 
+    # =====================================================
     # MEMORY CLEAN
+    # =====================================================
+
     remove_keys = [
 
         key
@@ -2704,6 +2868,93 @@ async def finish_quiz(
             key,
             None
         )
+
+
+# =========================================================
+# RESTART QUIZ
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "restartquiz:"
+    )
+)
+async def restart_quiz_handler(
+    callback: CallbackQuery
+):
+
+    try:
+
+        parts = callback.data.split(
+            ":"
+        )
+
+        if len(parts) != 3:
+
+            await callback.answer(
+                "❌ Noto'g'ri callback.",
+                show_alert=True
+            )
+
+            return
+
+        level = parts[1]
+
+        block = int(
+            parts[2]
+        )
+
+        try:
+
+            await callback.message.delete()
+
+        except Exception:
+
+            pass
+
+        await start_quiz_block(
+            callback.message,
+            level,
+            block,
+            force_restart=True
+        )
+
+        await callback.answer()
+
+    except Exception as e:
+
+        logger.error(
+            f"Restart quiz error: {e}"
+        )
+
+        await callback.answer(
+            "❌ Xatolik yuz berdi.",
+            show_alert=True
+        )
+
+
+# =========================================================
+# CANCEL RESTART
+# =========================================================
+
+@dp.callback_query(
+    F.data == "cancelquiz"
+)
+async def cancel_quiz_handler(
+    callback: CallbackQuery
+):
+
+    try:
+
+        await callback.message.edit_text(
+            "❌ Qayta ishlash bekor qilindi."
+        )
+
+    except Exception:
+
+        pass
+
+    await callback.answer()
 
 # =========================================================
 # STOP QUIZ
@@ -3004,34 +3255,6 @@ def init_storage():
             )
 
 # =========================================================
-# CERTIFICATE TABLE
-# =========================================================
-
-def init_certificate_table():
-
-    db_execute(
-        """
-        CREATE TABLE IF NOT EXISTS certificates (
-
-            id SERIAL PRIMARY KEY,
-
-            user_id BIGINT,
-
-            certificate_id TEXT UNIQUE,
-
-            rank TEXT,
-
-            percent REAL,
-
-            score INTEGER,
-
-            created_at TIMESTAMP
-            DEFAULT NOW()
-        )
-        """
-    )
-
-# =========================================================
 # CHECK EXISTING CERTIFICATE
 # =========================================================
 
@@ -3177,31 +3400,40 @@ async def cleanup_quiz_memory():
 
         # EVERY 1 HOUR
         await asyncio.sleep(3600)
-
 # =========================================================
 # DAILY RESET SCHEDULER
 # =========================================================
 
 async def daily_reset_scheduler():
 
-    global last_daily_reset
-
     while True:
 
         try:
 
-            today = date.today()
+            now = datetime.now()
 
-            # NEW DAY
-            if last_daily_reset != today:
+            tomorrow = (
+                now + timedelta(days=1)
+            ).replace(
+                hour=0,
+                minute=0,
+                second=5,
+                microsecond=0
+            )
 
-                reset_daily_scores()
+            wait_seconds = (
+                tomorrow - now
+            ).total_seconds()
 
-                last_daily_reset = today
+            await asyncio.sleep(
+                wait_seconds
+            )
 
-                logger.info(
-                    "Daily scores reset ✅"
-                )
+            reset_daily_scores()
+
+            logger.info(
+                "Daily scores reset ✅"
+            )
 
         except Exception as e:
 
@@ -3209,8 +3441,7 @@ async def daily_reset_scheduler():
                 f"Daily reset error: {e}"
             )
 
-        # CHECK EVERY 5 MIN
-        await asyncio.sleep(300)
+            await asyncio.sleep(60)
 
 # =========================================================
 # CERTIFICATE SYSTEM
