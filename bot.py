@@ -546,11 +546,11 @@ def run_web():
     )
 
     app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False,
-        use_reloader=False
-    )
+    host="0.0.0.0",
+    port=port,
+    debug=False,
+    use_reloader=False
+)
 # =========================
 # BOT
 # =========================
@@ -854,35 +854,6 @@ def load_artikel():
     logger.info(
         f"Artikel loaded: {len(artikel)} words"
     )
-# =========================
-# ARTIKEL TOPISH
-# =========================
-
-@dp.message(F.text == "📚 Artikel Topish")
-async def artikel_topish(message: Message):
-    artikel_users[message.from_user.id] = True
-    await message.answer(
-        "🔍 Nemischa so'z yuboring, artikelini topib beraman.\n\n"
-        "Misol: Haus yoki Auto\n\n"
-        "⬅️ Orqaga tugmasi bilan chiqishingiz mumkin."
-    )
-
-@dp.message(F.text & ~F.text.startswith("/"))
-async def artikel_search(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    if user_id not in artikel_users:
-        return
-    word = message.text.strip().lower()
-    if not word:
-        return
-    result = artikel.get(word) or artikel.get(word.capitalize().lower())
-    if result:
-        await message.answer(f"✅ {result}")
-    else:
-        await message.answer(
-            f"❌ '{word.capitalize()}' topilmadi.\n\nBoshqa so'z kiriting."
-        )
-
 # =========================
 # START
 # =========================
@@ -2558,6 +2529,22 @@ async def quiz_answer(
 
         session["score"] += 1
 
+        db_execute(
+            """
+            UPDATE users
+            SET
+
+                total_score =
+                total_score + 1,
+
+                daily_score =
+                daily_score + 1
+
+            WHERE user_id = %s
+            """,
+            (user_id,)
+        )
+
         await callback.answer(
             "✅ To'g'ri!"
         )
@@ -2628,28 +2615,7 @@ async def finish_quiz(
         session["questions"]
     )
 
-    # SAVE BEST SCORE - OLDINGI BALLNI OLISH
-    prev_result = db_execute(
-        """
-        SELECT best_score
-        FROM quiz_progress
-        WHERE user_id = %s
-        AND level = %s
-        AND block_number = %s
-        """,
-        (
-            user_id,
-            level,
-            block
-        ),
-        fetchone=True
-    )
-
-    prev_best = prev_result[0] if prev_result else 0
-
-    # FAQAT YANGI BALL KATTA BO'LSA FARQNI QO'SH
-    score_diff = max(0, score - prev_best)
-
+    # SAVE BEST SCORE
     db_execute(
         """
         INSERT INTO quiz_progress
@@ -2679,24 +2645,6 @@ async def finish_quiz(
             score
         )
     )
-
-    # TOTAL VA DAILY SCOREGA FAQAT FARQNI QO'SH
-    if score_diff > 0:
-
-        db_execute(
-            """
-            UPDATE users
-            SET
-                total_score = total_score + %s,
-                daily_score = daily_score + %s
-            WHERE user_id = %s
-            """,
-            (
-                score_diff,
-                score_diff,
-                user_id
-            )
-        )
 
     # CHECK LEVEL UNLOCK
     new_level = check_level_unlock(
@@ -3056,6 +3004,97 @@ def init_storage():
             )
 
 # =========================================================
+# CERTIFICATE TABLE
+# =========================================================
+
+def init_certificate_table():
+
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS certificates (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT,
+
+            certificate_id TEXT UNIQUE,
+
+            rank TEXT,
+
+            percent REAL,
+
+            score INTEGER,
+
+            created_at TIMESTAMP
+            DEFAULT NOW()
+        )
+        """
+    )
+
+# =========================================================
+# CHECK EXISTING CERTIFICATE
+# =========================================================
+
+def get_existing_certificate(
+    user_id
+):
+
+    return db_execute(
+        """
+        SELECT
+            certificate_id,
+            rank,
+            percent,
+            score
+
+        FROM certificates
+
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+# =========================================================
+# SAVE CERTIFICATE
+# =========================================================
+
+def save_certificate(
+    user_id,
+    cert_id,
+    rank,
+    percent,
+    score
+):
+
+    db_execute(
+        """
+        INSERT INTO certificates
+        (
+            user_id,
+            certificate_id,
+            rank,
+            percent,
+            score
+        )
+
+        VALUES (%s,%s,%s,%s,%s)
+
+        ON CONFLICT
+        (certificate_id)
+
+        DO NOTHING
+        """,
+        (
+            user_id,
+            cert_id,
+            rank,
+            percent,
+            score
+        )
+    )
+
+# =========================================================
 # AUTO MEMORY CLEANUP
 # =========================================================
 
@@ -3147,39 +3186,13 @@ async def daily_reset_scheduler():
 
     global last_daily_reset
 
-    # BOT ISHGA TUSHGANDA DB DAN HAQIQIY SANANI O'QI
-    try:
-
-        row = db_execute(
-            """
-            SELECT MAX(last_daily_reset)
-            FROM users
-            WHERE last_daily_reset IS NOT NULL
-            """,
-            fetchone=True
-        )
-
-        if row and row[0]:
-
-            last_daily_reset = row[0]
-
-            logger.info(
-                f"Daily reset restored: {last_daily_reset}"
-            )
-
-    except Exception as e:
-
-        logger.error(
-            f"Daily reset restore error: {e}"
-        )
-
     while True:
 
         try:
 
             today = date.today()
 
-            # YANGI KUN
+            # NEW DAY
             if last_daily_reset != today:
 
                 reset_daily_scores()
@@ -3196,7 +3209,7 @@ async def daily_reset_scheduler():
                 f"Daily reset error: {e}"
             )
 
-        # HAR 5 DAQIQADA TEKSHIR
+        # CHECK EVERY 5 MIN
         await asyncio.sleep(300)
 
 # =========================================================
@@ -4189,10 +4202,6 @@ async def main():
 
     init_tables()
 
-    init_certificate_table()
-
-    init_storage()
-
     logger.info(
         "DATABASE READY ✅"
     )
@@ -4251,13 +4260,6 @@ async def main():
         logger.error(
             f"Flask error: {e}"
         )
-
-    # =====================================================
-    # BACKGROUND TASKS
-    # =====================================================
-
-    asyncio.create_task(cleanup_quiz_memory())
-    asyncio.create_task(daily_reset_scheduler())
 
     # =====================================================
     # START BOT
