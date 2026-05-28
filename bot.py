@@ -524,6 +524,156 @@ def load_artikel():
     logger.info(
         f"Artikel loaded: {len(artikel)} words"
     )
+# =========================================================
+# ARTIKEL HANDLER
+# =========================================================
+
+MENU_TEXTS = {
+
+    # MAIN MENU
+    "📚 Artikel Topish",
+    "🎮 So'z O'yini",
+    "🎥 Video Kurslar",
+    "👨‍🏫 Ustoz haqida",
+    "🏆 Natijalar",
+    "📞 Admin bilan bog'lanish",
+
+    # NAVIGATION
+    "⬅️ Orqaga",
+    "⬅️ Admin Chiqish",
+
+    # VIDEO COURSES
+    "🇩🇪 A1",
+    "🇩🇪 A2",
+    "🇩🇪 B1",
+    "🔥 A1-B1",
+    "🔥 A1-C1",
+    "🎬 Namuna Dars",
+
+    # QUIZ
+    "🎯 A1",
+    "🎯 A2",
+    "🎯 B1",
+    "🎯 B2",
+    "🎯 C1",
+
+    "🔒 A1",
+    "🔒 A2",
+    "🔒 B1",
+    "🔒 B2",
+    "🔒 C1",
+
+    # RANKINGS
+    "🏆 Reytinglar",
+    "🏆 Umumiy Reyting",
+    "⚡ Kunlik Reyting",
+
+    # ADMIN
+    "📊 Statistika",
+    "👥 Foydalanuvchilar",
+    "💳 Xaridorlar",
+    "📢 Reklama Yuborish",
+    "📨 Shaxsiy Xabar",
+}
+
+@dp.message(F.text == "📚 Artikel Topish")
+async def artikel_mode_start(
+    message: Message
+):
+
+    artikel_users[
+        message.from_user.id
+    ] = asyncio.get_event_loop().time()
+
+    await message.answer(
+        "📚 Nemischa ot yuboring.\n\n"
+        "Masalan:\n"
+        "Haus\n"
+        "Auto\n"
+        "Tisch"
+    )
+
+# =========================================================
+# FIND ARTIKEL
+# =========================================================
+
+@dp.message()
+async def artikel_handler(
+    message: Message
+):
+
+    user_id = message.from_user.id
+
+    # =====================================================
+    # QUIZ BLOCK
+    # =====================================================
+
+    if user_id in quiz_running:
+        return
+
+    # =====================================================
+    # ONLY ARTIKEL MODE
+    # =====================================================
+
+    if user_id not in artikel_users:
+        return
+
+    text = (
+        message.text
+        .strip()
+        .lower()
+    )
+
+    # EMPTY
+    if not text:
+        return
+
+    # MENU BLOCK
+    if text in {
+
+        x.lower()
+
+        for x in MENU_TEXTS
+    }:
+        return
+
+    # LONG TEXT BLOCK
+    if len(text) > 40:
+
+        await message.answer(
+            "❌ Juda uzun so'z."
+        )
+
+        return
+
+    # ONLY LETTERS
+    if not text.replace(
+        "-", ""
+    ).isalpha():
+
+        await message.answer(
+            "❌ Faqat so'z yuboring."
+        )
+
+        return
+
+    # =====================================================
+    # FIND
+    # =====================================================
+
+    result = artikel.get(text)
+
+    if result:
+
+        await message.answer(
+            f"✅ {result}"
+        )
+
+    else:
+
+        await message.answer(
+            "❌ Topilmadi."
+        )
 # =========================
 # START
 # =========================
@@ -692,7 +842,6 @@ async def admin_contact(message: Message):
 # =========================
 @dp.message(F.text == "🎥 Video Kurslar")
 async def video_courses(message: Message):
-    artikel_users.pop(message.from_user.id, None)
     await message.answer("🎥 Kerakli kursni tanlang:", reply_markup=video_menu)
 
 # =========================
@@ -707,7 +856,6 @@ async def sample_lesson(message: Message):
 # =========================
 @dp.message(F.text == "⬅️ Orqaga")
 async def go_back(message: Message):
-   artikel_users.pop(message.from_user.id, None) 
    await message.answer("🏠 Asosiy Menu", reply_markup=main_menu)
 
 # =========================
@@ -1173,10 +1321,18 @@ LEVEL_ORDER = [
     "B2",
     "C1"
 ]
-
 # =========================================================
 # LOAD CSV
 # =========================================================
+
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
+
+DATA_DIR = os.path.join(
+    BASE_DIR,
+    "data"
+)
 
 def load_level_csv(
     level,
@@ -1186,41 +1342,38 @@ def load_level_csv(
     data = []
 
     # =====================================================
+    # FULL PATH
+    # =====================================================
+
+    filepath = os.path.join(
+        DATA_DIR,
+        filename
+    )
+
+    # =====================================================
     # FILE CHECK
     # =====================================================
 
-    if not os.path.exists(filename):
+    if not os.path.exists(filepath):
 
-        logger.warning(
-            f"{filename} topilmadi"
+        logger.error(
+            f"{filepath} topilmadi ❌"
         )
-
-        # ADMIN WARNING
-        try:
-
-            asyncio.create_task(
-                bot.send_message(
-                    ADMIN_ID,
-                    f"⚠️ CSV topilmadi:\n{filename}"
-                )
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"CSV warning error: {e}"
-            )
 
         return
 
+    logger.info(
+        f"Loading CSV: {filepath}"
+    )
+
     # =====================================================
-    # LOAD FILE
+    # LOAD CSV
     # =====================================================
 
     try:
 
         with open(
-            filename,
+            filepath,
             "r",
             encoding="utf-8"
         ) as f:
@@ -1234,13 +1387,14 @@ def load_level_csv(
 
                 try:
 
-                    # INVALID ROW
                     if len(row) < 5:
                         continue
 
                     item = {
 
-                        "id": int(row[0]),
+                        "id": int(
+                            row[0]
+                        ),
 
                         "german": row[1].strip(),
 
@@ -1256,26 +1410,26 @@ def load_level_csv(
                 except Exception as e:
 
                     logger.error(
-                        f"CSV row error: {e}"
+                        f"{level} row error: {e}"
                     )
 
     except Exception as e:
 
         logger.error(
-            f"CSV load error: {e}"
+            f"{level} load error: {e}"
         )
 
         return
 
     # =====================================================
-    # SAVE DATA
+    # SAVE
     # =====================================================
 
     QUIZ_DATA[level] = data
 
     logger.info(
         f"{level}: "
-        f"{len(data)} loaded ✅"
+        f"{len(data)} words loaded ✅"
     )
 
 # =========================================================
@@ -1286,23 +1440,36 @@ def load_all_quizzes():
 
     QUIZ_DATA.clear()
 
-    for level, config in LEVEL_CONFIG.items():
+    files = {
+
+        "A1": "A1-words.csv",
+
+        "A2": "A2-words.csv",
+
+        "B1": "B1-words.csv",
+
+        "B2": "B2-words.csv",
+
+        "C1": "C1-words.csv",
+    }
+
+    for level, filename in files.items():
 
         try:
 
             load_level_csv(
                 level,
-                config["file"]
+                filename
             )
 
         except Exception as e:
 
             logger.error(
-                f"{level} load failed: {e}"
+                f"{level} CSV crash: {e}"
             )
 
     logger.info(
-        "All quizzes loaded ✅"
+        "ALL CSV LOADED ✅"
     )
 # =========================================================
 # DAILY RESET
@@ -2219,25 +2386,24 @@ async def open_rating_menu(
         "🏆 Reyting bo'limi",
         reply_markup=rating_menu
     )
-
 # =========================================================
 # TOTAL RANKING
 # =========================================================
 
-@dp.message(
-    F.text == "🏆 Umumiy Reyting"
-)
+@dp.message(F.text == "🏆 Umumiy Reyting")
 async def total_ranking(
     message: Message
 ):
 
-    result = db_execute(
+    rankings = db_execute(
         """
         SELECT
             COALESCE(full_name,'Unknown'),
             total_score
 
         FROM users
+
+        WHERE total_score > 0
 
         ORDER BY total_score DESC
 
@@ -2246,28 +2412,38 @@ async def total_ranking(
         fetchall=True
     )
 
-    if not result:
+    # =====================================================
+    # EMPTY RANKING
+    # =====================================================
+
+    if not rankings:
 
         await message.answer(
-            "❌ Reyting bo'sh."
+            "📭 Reyting hali bo'sh.\n\n"
+            "🎮 Test ishlab birinchi bo'ling!"
         )
 
         return
+
+    # =====================================================
+    # BUILD TEXT
+    # =====================================================
 
     text = (
         "🏆 UMUMIY REYTING\n\n"
     )
 
     medals = {
+
         1: "🥇",
         2: "🥈",
         3: "🥉"
     }
 
-    for i, (name, score) in enumerate(
-        result,
-        1
-    ):
+    for i, (
+        full_name,
+        score
+    ) in enumerate(rankings, 1):
 
         medal = medals.get(
             i,
@@ -2276,46 +2452,8 @@ async def total_ranking(
 
         text += (
             f"{medal} "
-            f"{name} — "
+            f"{full_name} — "
             f"{score} XP\n"
-        )
-
-    my = db_execute(
-        """
-        SELECT total_score
-        FROM users
-        WHERE user_id = %s
-        """,
-        (message.from_user.id,),
-        fetchone=True
-    )
-
-    my_score = my[0] if my else 0
-
-    found = False
-
-    for _, score in result:
-
-        if my_score >= score:
-
-            found = True
-
-            break
-
-    if not found and result:
-
-        needed = (
-            result[-1][1]
-            - my_score
-            + 1
-        )
-
-        text += (
-            f"\n━━━━━━━━━━\n"
-            f"📊 Sizning XP: "
-            f"{my_score}\n"
-            f"📈 TOP100 uchun "
-            f"yana {needed} XP kerak."
         )
 
     await message.answer(text)
@@ -2324,20 +2462,20 @@ async def total_ranking(
 # DAILY RANKING
 # =========================================================
 
-@dp.message(
-    F.text == "⚡ Kunlik Reyting"
-)
+@dp.message(F.text == "⚡ Kunlik Reyting")
 async def daily_ranking(
     message: Message
 ):
 
-    result = db_execute(
+    rankings = db_execute(
         """
         SELECT
             COALESCE(full_name,'Unknown'),
             daily_score
 
         FROM users
+
+        WHERE daily_score > 0
 
         ORDER BY daily_score DESC
 
@@ -2346,28 +2484,38 @@ async def daily_ranking(
         fetchall=True
     )
 
-    if not result:
+    # =====================================================
+    # EMPTY RANKING
+    # =====================================================
+
+    if not rankings:
 
         await message.answer(
-            "❌ Bugungi reyting bo'sh."
+            "📭 Bugungi reyting hali bo'sh.\n\n"
+            "🎮 Test ishlab birinchi bo'ling!"
         )
 
         return
+
+    # =====================================================
+    # BUILD TEXT
+    # =====================================================
 
     text = (
         "⚡ KUNLIK REYTING\n\n"
     )
 
     medals = {
+
         1: "🥇",
         2: "🥈",
         3: "🥉"
     }
 
-    for i, (name, score) in enumerate(
-        result,
-        1
-    ):
+    for i, (
+        full_name,
+        score
+    ) in enumerate(rankings, 1):
 
         medal = medals.get(
             i,
@@ -2376,49 +2524,12 @@ async def daily_ranking(
 
         text += (
             f"{medal} "
-            f"{name} — "
+            f"{full_name} — "
             f"{score} XP\n"
         )
 
-    my = db_execute(
-        """
-        SELECT daily_score
-        FROM users
-        WHERE user_id = %s
-        """,
-        (message.from_user.id,),
-        fetchone=True
-    )
-
-    my_score = my[0] if my else 0
-
-    found = False
-
-    for _, score in result:
-
-        if my_score >= score:
-
-            found = True
-
-            break
-
-    if not found and result:
-
-        needed = (
-            result[-1][1]
-            - my_score
-            + 1
-        )
-
-        text += (
-            f"\n━━━━━━━━━━\n"
-            f"📊 Sizning XP: "
-            f"{my_score}\n"
-            f"📈 TOP100 uchun "
-            f"yana {needed} XP kerak."
-        )
-
     await message.answer(text)
+
 # =========================
 # ADMIN PANEL
 # =========================
