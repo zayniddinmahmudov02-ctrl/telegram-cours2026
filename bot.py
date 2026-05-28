@@ -41,61 +41,171 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# =========================
+# =========================================================
 # ENV
-# =========================
+# =========================================================
+
+import os
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
-TOKEN = os.getenv("TOKEN")
-DATABASE_URL = os.getenv("DATABASE_URL")
+# =========================================================
+# TOKENS
+# =========================================================
+
+TOKEN = os.getenv(
+    "TOKEN"
+)
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL"
+)
+
+# =========================================================
+# ADMINS
+# =========================================================
+
+ADMIN_ID = int(
+    os.getenv(
+        "ADMIN_ID",
+        "0"
+    )
+)
+
+ADMIN_PASSWORD = os.getenv(
+    "ADMIN_PASSWORD",
+    ""
+)
+
+ADMIN_CHANEL = int(
+    os.getenv(
+        "ADMIN_CHANEL",
+        "0"
+    )
+)
+
+# =========================================================
+# SECURITY CHECK
+# =========================================================
+
 if not TOKEN:
-    raise ValueError("TOKEN topilmadi")
+
+    raise ValueError(
+        "TOKEN topilmadi"
+    )
 
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL topilmadi")
-# =========================
-# CONFIG
-# =========================
 
-ADMIN_ID = int(os.getenv("ADMIN_ID"))
+    raise ValueError(
+        "DATABASE_URL topilmadi"
+    )
+
+# =========================================================
+# CONFIG
+# =========================================================
+
 CHANNEL_USERNAME = "@vizu_deutsch"
 
+# =========================================================
+# COURSE LINKS
+# =========================================================
+
 COURSE_LINKS = {
-    "🇩🇪 A1":   "https://t.me/+Y0ilZiDqgTJjZjMy",
-    "🇩🇪 A2":   "https://t.me/+Co8biP05FtViZGEy",
-    "🇩🇪 B1":   "https://t.me/+XcBAw2lLmdlmNDky",
-    "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
-    "🔥 A1-C1": "https://t.me/+J7IoPtpXu0s3ZGIy",
+
+    "🇩🇪 A1":
+    "https://t.me/+Y0ilZiDqgTJjZjMy",
+
+    "🇩🇪 A2":
+    "https://t.me/+Co8biP05FtViZGEy",
+
+    "🇩🇪 B1":
+    "https://t.me/+XcBAw2lLmdlmNDky",
+
+    "🔥 A1-B1":
+    "https://t.me/+ILaI0GhJkS1jYmQy",
+
+    "🔥 A1-C1":
+    "https://t.me/+J7IoPtpXu0s3ZGIy",
 }
+
+# =========================================================
+# GROUP LINKS
+# =========================================================
 
 GROUP_LINKS = {
-    "🇩🇪 A1":   "https://t.me/+_76BNOk0NTgxODRi",
-    "🇩🇪 A2":   "https://t.me/+syhRWPBkeoxlZjQy",
-    "🇩🇪 B1":   "https://t.me/+6vSnu6iFLBI1ZGIy",
-    "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
-    "🔥 A1-C1": "https://t.me/+J7IoPtpXu0s3ZGIy",
+
+    "🇩🇪 A1":
+    "https://t.me/+_76BNOk0NTgxODRi",
+
+    "🇩🇪 A2":
+    "https://t.me/+syhRWPBkeoxlZjQy",
+
+    "🇩🇪 B1":
+    "https://t.me/+6vSnu6iFLBI1ZGIy",
+
+    "🔥 A1-B1":
+    "https://t.me/+ILaI0GhJkS1jYmQy",
+
+    "🔥 A1-C1":
+    "https://t.me/+J7IoPtpXu0s3ZGIy",
 }
+
+# =========================================================
+# COURSE INFO
+# =========================================================
 
 COURSE_INFO = {
-    "🇩🇪 A1":   {"lessons": 14,  "price": "100.000 so'm"},
-    "🇩🇪 A2":   {"lessons": 14,  "price": "150.000 so'm"},
-    "🇩🇪 B1":   {"lessons": 20,  "price": "200.000 so'm"},
-    "🔥 A1-B1": {"lessons": 48,  "price": "300.000 so'm"},
-    "🔥 A1-C1": {"lessons": 100, "price": "600.000 so'm"},
+
+    "🇩🇪 A1": {
+
+        "lessons": 14,
+
+        "price": "100.000 so'm"
+    },
+
+    "🇩🇪 A2": {
+
+        "lessons": 14,
+
+        "price": "150.000 so'm"
+    },
+
+    "🇩🇪 B1": {
+
+        "lessons": 20,
+
+        "price": "200.000 so'm"
+    },
+
+    "🔥 A1-B1": {
+
+        "lessons": 48,
+
+        "price": "300.000 so'm"
+    },
+
+    "🔥 A1-C1": {
+
+        "lessons": 100,
+
+        "price": "600.000 so'm"
+    },
 }
 
-# =========================
+# =========================================================
 # DATABASE
-# =========================
+# =========================================================
 
 db_pool = None
 
+# =========================================================
+# INIT DATABASE POOL
+# =========================================================
 
 def init_db_pool():
 
@@ -103,24 +213,40 @@ def init_db_pool():
 
     try:
 
+        # OLD POOL CLOSE
+        if db_pool:
+
+            try:
+
+                db_pool.closeall()
+
+            except:
+                pass
+
         db_pool = pool.ThreadedConnectionPool(
+
             minconn=1,
-            maxconn=10,
+
+            maxconn=20,
+
             dsn=DATABASE_URL
         )
 
         logger.info(
-            "Database pool connected ✅"
+            "Database connected ✅"
         )
 
     except Exception as e:
 
         logger.error(
-            f"Database connection error: {e}"
+            f"Database pool error: {e}"
         )
 
         raise
 
+# =========================================================
+# DATABASE CONNECTION
+# =========================================================
 
 @contextmanager
 def get_db():
@@ -131,6 +257,11 @@ def get_db():
 
     try:
 
+        # RECONNECT
+        if not db_pool:
+
+            init_db_pool()
+
         try:
 
             conn = db_pool.getconn()
@@ -138,7 +269,7 @@ def get_db():
         except Exception as e:
 
             logger.error(
-                f"DB reconnect: {e}"
+                f"Reconnect DB: {e}"
             )
 
             init_db_pool()
@@ -152,17 +283,22 @@ def get_db():
     except Exception as e:
 
         if conn:
-            conn.rollback()
+
+            try:
+                conn.rollback()
+
+            except:
+                pass
 
         logger.error(
-            f"Database query error: {e}"
+            f"DB transaction error: {e}"
         )
 
         raise
 
     finally:
 
-        if conn:
+        if conn and db_pool:
 
             try:
 
@@ -170,8 +306,13 @@ def get_db():
 
             except Exception as e:
 
-                logger.error(e)
+                logger.error(
+                    f"Return connection error: {e}"
+                )
 
+# =========================================================
+# DATABASE EXECUTE
+# =========================================================
 
 def db_execute(
     query,
@@ -186,12 +327,19 @@ def db_execute(
 
             with conn.cursor() as cur:
 
-                cur.execute(query, params)
+                cur.execute(
+                    query,
+                    params
+                )
 
+                # FETCH ONE
                 if fetchone:
+
                     return cur.fetchone()
 
+                # FETCH ALL
                 if fetchall:
+
                     return cur.fetchall()
 
         return None
@@ -204,9 +352,11 @@ def db_execute(
 
         return None
 
+# =========================================================
+# INIT TABLES
+# =========================================================
 
 def init_tables():
-
     # =====================================================
     # USERS TABLE
     # =====================================================
@@ -464,25 +614,191 @@ admin_menu = ReplyKeyboardMarkup(
 # =========================
 # HELPERS
 # =========================
-def is_admin(message: Message) -> bool:
-    return message.from_user.id == ADMIN_ID
 
-async def check_subscription(user_id: int) -> bool:
+def is_admin(
+    message: Message
+) -> bool:
+
+    return (
+        message.from_user.id
+        == ADMIN_ID
+    )
+
+# =========================================================
+# CHECK SUBSCRIPTION
+# =========================================================
+
+async def check_subscription(
+    user_id: int
+) -> bool:
 
     try:
 
         member = await bot.get_chat_member(
+
             CHANNEL_USERNAME,
+
             user_id
         )
 
-        return member.status not in ("left", "kicked")
+        return member.status not in (
+            "left",
+            "kicked"
+        )
 
     except Exception as e:
 
-        logger.error(f"Subscription check error: {e}")
+        logger.error(
+            f"Subscription error: {e}"
+        )
 
         return False
+
+# =========================================================
+# ADMIN TEXT LOG
+# =========================================================
+
+async def send_admin_log(
+    text
+):
+
+    # CHANNEL DISABLED
+    if ADMIN_CHANEL == 0:
+
+        return
+
+    try:
+
+        await bot.send_message(
+
+            ADMIN_CHANEL,
+
+            text
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Admin log error: {e}"
+        )
+
+# =========================================================
+# ADMIN PHOTO LOG
+# =========================================================
+
+async def send_admin_photo_log(
+
+    photo_path,
+
+    caption
+):
+
+    # CHANNEL DISABLED
+    if ADMIN_CHANEL == 0:
+
+        return
+
+    # FILE CHECK
+    if not os.path.exists(
+        photo_path
+    ):
+
+        logger.warning(
+            f"Photo not found: "
+            f"{photo_path}"
+        )
+
+        return
+
+    try:
+
+        await bot.send_photo(
+
+            ADMIN_CHANEL,
+
+            FSInputFile(photo_path),
+
+            caption=caption
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Admin photo log error: {e}"
+        )
+
+# =========================================================
+# SAFE MESSAGE
+# =========================================================
+
+async def safe_message(
+
+    user_id,
+
+    text,
+
+    reply_markup=None
+):
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            text,
+
+            reply_markup=reply_markup
+        )
+
+        return True
+
+    except Exception as e:
+
+        logger.error(
+            f"Safe message error: {e}"
+        )
+
+        return False
+
+# =========================================================
+# SAFE PHOTO
+# =========================================================
+
+async def safe_photo(
+
+    user_id,
+
+    photo,
+
+    caption=None,
+
+    reply_markup=None
+):
+
+    try:
+
+        await bot.send_photo(
+
+            user_id,
+
+            photo,
+
+            caption=caption,
+
+            reply_markup=reply_markup
+        )
+
+        return True
+
+    except Exception as e:
+
+        logger.error(
+            f"Safe photo error: {e}"
+        )
+
+        return False
+
 # =========================
 # ARTIKEL DATA
 # =========================
@@ -2604,6 +2920,253 @@ async def daily_ranking(
         )
 
     await message.answer(text)
+
+# =========================================================
+# SYSTEM STABILITY
+# =========================================================
+
+import shutil
+
+# =========================================================
+# INIT STORAGE
+# =========================================================
+
+def init_storage():
+
+    folders = [
+
+        "generated",
+
+        "certificates",
+
+        "fonts"
+    ]
+
+    for folder in folders:
+
+        try:
+
+            os.makedirs(
+                folder,
+                exist_ok=True
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"Folder create error "
+                f"{folder}: {e}"
+            )
+
+# =========================================================
+# CERTIFICATE TABLE
+# =========================================================
+
+def init_certificate_table():
+
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS certificates (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT,
+
+            certificate_id TEXT UNIQUE,
+
+            rank TEXT,
+
+            percent REAL,
+
+            score INTEGER,
+
+            created_at TIMESTAMP
+            DEFAULT NOW()
+        )
+        """
+    )
+
+# =========================================================
+# CHECK EXISTING CERTIFICATE
+# =========================================================
+
+def get_existing_certificate(
+    user_id
+):
+
+    return db_execute(
+        """
+        SELECT
+            certificate_id,
+            rank,
+            percent,
+            score
+
+        FROM certificates
+
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+# =========================================================
+# SAVE CERTIFICATE
+# =========================================================
+
+def save_certificate(
+    user_id,
+    cert_id,
+    rank,
+    percent,
+    score
+):
+
+    db_execute(
+        """
+        INSERT INTO certificates
+        (
+            user_id,
+            certificate_id,
+            rank,
+            percent,
+            score
+        )
+
+        VALUES (%s,%s,%s,%s,%s)
+
+        ON CONFLICT
+        (certificate_id)
+
+        DO NOTHING
+        """,
+        (
+            user_id,
+            cert_id,
+            rank,
+            percent,
+            score
+        )
+    )
+
+# =========================================================
+# AUTO MEMORY CLEANUP
+# =========================================================
+
+async def cleanup_quiz_memory():
+
+    while True:
+
+        try:
+
+            # ACTIVE QUESTIONS CLEAN
+            if len(active_questions) > 3000:
+
+                active_questions.clear()
+
+                logger.warning(
+                    "Active questions cleared"
+                )
+
+            # ANSWER CACHE CLEAN
+            if len(answered_users) > 3000:
+
+                answered_users.clear()
+
+                logger.warning(
+                    "Answered users cleared"
+                )
+
+            # DEAD SESSIONS
+            dead = []
+
+            for user_id in quiz_sessions:
+
+                if user_id not in quiz_running:
+
+                    dead.append(user_id)
+
+            for user_id in dead:
+
+                quiz_sessions.pop(
+                    user_id,
+                    None
+                )
+
+            # GENERATED CLEAN
+            try:
+
+                for file in os.listdir(
+                    GENERATED_DIR
+                ):
+
+                    path = os.path.join(
+                        GENERATED_DIR,
+                        file
+                    )
+
+                    # DELETE PNG
+                    if (
+                        file.endswith(".png")
+                        and
+                        os.path.isfile(path)
+                    ):
+
+                        os.remove(path)
+
+            except Exception as e:
+
+                logger.error(
+                    f"Generated cleanup: {e}"
+                )
+
+            logger.info(
+                "Memory cleanup complete ✅"
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"Cleanup task error: {e}"
+            )
+
+        # EVERY 1 HOUR
+        await asyncio.sleep(3600)
+
+# =========================================================
+# DAILY RESET SCHEDULER
+# =========================================================
+
+async def daily_reset_scheduler():
+
+    global last_daily_reset
+
+    while True:
+
+        try:
+
+            today = date.today()
+
+            # NEW DAY
+            if last_daily_reset != today:
+
+                reset_daily_scores()
+
+                last_daily_reset = today
+
+                logger.info(
+                    "Daily scores reset ✅"
+                )
+
+        except Exception as e:
+
+            logger.error(
+                f"Daily reset error: {e}"
+            )
+
+        # CHECK EVERY 5 MIN
+        await asyncio.sleep(300)
+
 # =========================================================
 # CERTIFICATE SYSTEM
 # =========================================================
@@ -2613,6 +3176,36 @@ TOTAL_WORDS = 5555
 CERTIFICATE_DIR = "certificates"
 
 GENERATED_DIR = "generated"
+
+# =========================================================
+# CERTIFICATE TABLE
+# =========================================================
+
+def init_certificate_table():
+
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS certificates (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT,
+
+            rank TEXT,
+
+            certificate_id TEXT UNIQUE,
+
+            percent REAL,
+
+            score INTEGER,
+
+            created_at TIMESTAMP
+            DEFAULT NOW(),
+
+            UNIQUE(user_id, rank)
+        )
+        """
+    )
 
 # =========================================================
 # GENERATE CERTIFICATE ID
@@ -2626,10 +3219,84 @@ def generate_certificate_id():
     )
 
 # =========================================================
+# CHECK EXISTING CERTIFICATE
+# =========================================================
+
+def get_existing_certificate(
+    user_id,
+    rank
+):
+
+    return db_execute(
+        """
+        SELECT
+            certificate_id
+
+        FROM certificates
+
+        WHERE
+            user_id = %s
+            AND rank = %s
+        """,
+        (
+            user_id,
+            rank
+        ),
+        fetchone=True
+    )
+
+# =========================================================
+# SAVE CERTIFICATE
+# =========================================================
+
+def save_certificate(
+
+    user_id,
+
+    cert_id,
+
+    rank,
+
+    percent,
+
+    score
+):
+
+    db_execute(
+        """
+        INSERT INTO certificates
+        (
+            user_id,
+            rank,
+            certificate_id,
+            percent,
+            score
+        )
+
+        VALUES (%s,%s,%s,%s,%s)
+
+        ON CONFLICT
+        (user_id, rank)
+
+        DO NOTHING
+        """,
+        (
+            user_id,
+            rank,
+            cert_id,
+            percent,
+            score
+        )
+    )
+
+# =========================================================
 # GENERATE QR
 # =========================================================
 
-def generate_qr(data, path):
+def generate_qr(
+    data,
+    path
+):
 
     qr = qrcode.make(data)
 
@@ -2640,11 +3307,17 @@ def generate_qr(data, path):
 # =========================================================
 
 def draw_center_text(
+
     draw,
+
     text,
+
     font,
+
     y,
+
     image_width,
+
     fill
 ):
 
@@ -2663,9 +3336,13 @@ def draw_center_text(
     ) // 2
 
     draw.text(
+
         (x, y),
+
         text,
+
         font=font,
+
         fill=fill
     )
 
@@ -2674,12 +3351,28 @@ def draw_center_text(
 # =========================================================
 
 async def create_certificate(
+
     user_id,
+
     full_name,
+
     percent,
+
     score,
-    rank
+
+    rank,
+
+    cert_id
 ):
+
+    # =====================================================
+    # STORAGE
+    # =====================================================
+
+    os.makedirs(
+        GENERATED_DIR,
+        exist_ok=True
+    )
 
     # =====================================================
     # TEMPLATE
@@ -2725,6 +3418,19 @@ async def create_certificate(
         )
 
     # =====================================================
+    # TEMPLATE CHECK
+    # =====================================================
+
+    if not os.path.exists(
+        template
+    ):
+
+        raise FileNotFoundError(
+            f"Template topilmadi: "
+            f"{template}"
+        )
+
+    # =====================================================
     # LOAD IMAGE
     # =====================================================
 
@@ -2756,14 +3462,6 @@ async def create_certificate(
     )
 
     # =====================================================
-    # CERTIFICATE ID
-    # =====================================================
-
-    cert_id = (
-        generate_certificate_id()
-    )
-
-    # =====================================================
     # DATE
     # =====================================================
 
@@ -2776,11 +3474,17 @@ async def create_certificate(
     # =====================================================
 
     draw_center_text(
+
         draw,
+
         full_name,
+
         name_font,
+
         470,
+
         width,
+
         text_color
     )
 
@@ -2789,9 +3493,13 @@ async def create_certificate(
     # =====================================================
 
     draw.text(
+
         (1320, 355),
+
         f"{percent}%",
+
         font=title_font,
+
         fill=text_color
     )
 
@@ -2800,9 +3508,13 @@ async def create_certificate(
     # =====================================================
 
     draw.text(
+
         (1320, 505),
+
         f"{score}/5555",
+
         font=title_font,
+
         fill=text_color
     )
 
@@ -2811,9 +3523,13 @@ async def create_certificate(
     # =====================================================
 
     draw.text(
+
         (1320, 655),
+
         cert_id,
+
         font=small_font,
+
         fill=text_color
     )
 
@@ -2822,9 +3538,13 @@ async def create_certificate(
     # =====================================================
 
     draw.text(
+
         (1320, 805),
+
         date,
+
         font=small_font,
+
         fill=text_color
     )
 
@@ -2857,7 +3577,7 @@ async def create_certificate(
 
     output_path = (
         f"{GENERATED_DIR}/"
-        f"certificate_{user_id}.png"
+        f"{cert_id}.png"
     )
 
     image.save(output_path)
@@ -2904,6 +3624,29 @@ async def certificate_system(
         )
 
         return
+
+    # =====================================================
+    # USER
+    # =====================================================
+
+    user_data = db_execute(
+        """
+        SELECT
+            full_name
+
+        FROM users
+
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    full_name = (
+        user_data[0]
+        if user_data
+        else message.from_user.full_name
+    )
 
     # =====================================================
     # TOTAL SCORE
@@ -2975,24 +3718,111 @@ async def certificate_system(
         return
 
     # =====================================================
-    # GENERATE
+    # EXISTING
     # =====================================================
 
-    path = await create_certificate(
-
+    existing = get_existing_certificate(
         user_id,
-
-        message.from_user.full_name,
-
-        percent,
-
-        total_score,
-
         rank
     )
 
+    if existing:
+
+        await message.answer(
+
+            f"🏅 Siz allaqachon "
+            f"{rank} sertifikatini "
+            f"olgansiz."
+        )
+
+        return
+
     # =====================================================
-    # SEND
+    # CERT ID
+    # =====================================================
+
+    cert_id = (
+        generate_certificate_id()
+    )
+
+    # =====================================================
+    # SAVE DATABASE
+    # =====================================================
+
+    save_certificate(
+
+        user_id,
+
+        cert_id,
+
+        rank,
+
+        percent,
+
+        total_score
+    )
+
+    # =====================================================
+    # GENERATE
+    # =====================================================
+
+    try:
+
+        path = await create_certificate(
+
+            user_id,
+
+            full_name,
+
+            percent,
+
+            total_score,
+
+            rank,
+
+            cert_id
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Certificate create error: {e}"
+        )
+
+        await message.answer(
+            "❌ Sertifikat yaratishda xato."
+        )
+
+        return
+
+    # =====================================================
+    # ADMIN CHANNEL
+    # =====================================================
+
+    await send_admin_photo_log(
+
+        path,
+
+        f"🏅 Yangi Sertifikat\n\n"
+
+        f"👤 {full_name}\n\n"
+
+        f"🏆 {rank}\n"
+
+        f"📊 {percent}%\n"
+
+        f"📚 {total_score}/5555\n\n"
+
+        f"🎫 {cert_id}\n"
+
+        f"🆔 {user_id}\n\n"
+
+        f"📅 "
+        f"{datetime.now().strftime('%d.%m.%Y')}"
+    )
+
+    # =====================================================
+    # SEND USER
     # =====================================================
 
     await message.answer_photo(
@@ -3004,7 +3834,11 @@ async def certificate_system(
             f"🏅 {rank} Zertifikat\n\n"
 
             f"📊 Natija: "
-            f"{percent}%"
+            f"{percent}%\n"
+
+            f"📚 {total_score}/5555\n\n"
+
+            f"🎫 {cert_id}"
         )
     )
 
