@@ -1131,46 +1131,71 @@ last_daily_reset = None
 LEVEL_CONFIG = {
 
     "A1": {
-        "file": "data/A1-words.csv",
+
+        "file": "A1-words.csv",
+
         "blocks": 10,
+
         "size": 100,
+
         "required": 600
     },
 
     "A2": {
-        "file": "data/A2-words.csv",
+
+        "file": "A2-words.csv",
+
         "blocks": 10,
+
         "size": 100,
+
         "required": 600
     },
 
     "B1": {
-        "file": "data/B1-words.csv",
+
+        "file": "B1-words.csv",
+
         "blocks": 10,
+
         "size": 100,
+
         "required": 600
     },
 
     "B2": {
-        "file": "data/B2-words.csv",
+
+        "file": "B2-words.csv",
+
         "blocks": 15,
+
         "size": 100,
+
         "required": 900
     },
 
     "C1": {
-        "file": "data/C1-words.csv",
+
+        "file": "C1-words.csv",
+
         "blocks": 11,
+
         "size": 100,
-        "required": 0
+
+        "required": 600
     }
 }
 
 LEVEL_ORDER = [
+
     "A1",
+
     "A2",
+
     "B1",
+
     "B2",
+
     "C1"
 ]
 # =========================================================
