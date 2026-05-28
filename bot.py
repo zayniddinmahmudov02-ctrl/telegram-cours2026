@@ -7,6 +7,19 @@ import csv
 import random
 import logging
 
+from PIL import (
+    Image,
+    ImageDraw,
+    ImageFont
+)
+
+import qrcode
+
+from datetime import datetime
+
+from datetime import datetime
+
+
 from contextlib import contextmanager
 
 import psycopg2
@@ -27,6 +40,8 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1124,6 +1139,15 @@ admin_sessions = {}
 
 # DAILY RESET TRACKER
 last_daily_reset = None
+
+# =========================================================
+# REGISTER STATES
+# =========================================================
+
+class RegisterStates(StatesGroup):
+
+    waiting_full_name = State()
+
 # =========================================================
 # LEVEL CONFIG
 # =========================================================
@@ -1468,15 +1492,167 @@ def build_block_keyboard(level):
 # =========================================================
 
 @dp.message(F.text == "🎮 So'z O'yini")
-async def word_game_handler(message: Message):
+async def word_game_handler(
+    message: Message,
+    state: FSMContext
+):
+
+    user_id = message.from_user.id
+
+    # =====================================================
+    # CHECK FULL NAME
+    # =====================================================
+
+    result = db_execute(
+        """
+        SELECT full_name
+
+        FROM users
+
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    full_name = (
+        result[0]
+        if result
+        else None
+    )
+
+    # =====================================================
+    # ASK NAME
+    # =====================================================
+
+    if (
+        not full_name
+        or
+        full_name == "Unknown"
+    ):
+
+        await message.answer(
+
+            "📝 To'liq ism familiyangizni kiriting.\n\n"
+
+            "Masalan:\n"
+            "Zayniddinkhuja Makhmudov"
+        )
+
+        await state.set_state(
+            RegisterStates.waiting_full_name
+        )
+
+        return
+
+    # =====================================================
+    # OPEN MENU
+    # =====================================================
 
     menu = await build_level_menu(
-        message.from_user.id
+        user_id
     )
 
     await message.answer(
+
         "🎮 WortSpiel\n\n"
         "Darajani tanlang:",
+
+        reply_markup=menu
+    )
+# =========================================================
+# SAVE FULL NAME
+# =========================================================
+
+@dp.message(
+    RegisterStates.waiting_full_name
+)
+async def save_full_name(
+    message: Message,
+    state: FSMContext
+):
+
+    user_id = message.from_user.id
+
+    full_name = (
+        message.text.strip()
+    )
+
+    # =====================================================
+    # VALIDATION
+    # =====================================================
+
+    if len(full_name) < 5:
+
+        await message.answer(
+            "❌ Juda qisqa ism."
+        )
+
+        return
+
+    if len(full_name) > 50:
+
+        await message.answer(
+            "❌ Juda uzun ism."
+        )
+
+        return
+
+    # AT LEAST 2 WORDS
+    if len(full_name.split()) < 2:
+
+        await message.answer(
+
+            "❌ Ism va familiya kiriting.\n\n"
+
+            "Masalan:\n"
+            "Zayniddinkhuja Makhmudov"
+        )
+
+        return
+
+    # =====================================================
+    # SAVE DATABASE
+    # =====================================================
+
+    db_execute(
+        """
+        UPDATE users
+
+        SET full_name = %s
+
+        WHERE user_id = %s
+        """,
+        (
+            full_name,
+            user_id
+        )
+    )
+
+    await state.clear()
+
+    # =====================================================
+    # SUCCESS
+    # =====================================================
+
+    await message.answer(
+        f"✅ Saqlandi:\n"
+        f"{full_name}"
+    )
+
+    # =====================================================
+    # OPEN QUIZ MENU
+    # =====================================================
+
+    menu = await build_level_menu(
+        user_id
+    )
+
+    await message.answer(
+
+        "🎮 WortSpiel\n\n"
+        "Darajani tanlang:",
+
         reply_markup=menu
     )
 
@@ -2428,6 +2604,409 @@ async def daily_ranking(
         )
 
     await message.answer(text)
+# =========================================================
+# CERTIFICATE SYSTEM
+# =========================================================
+
+TOTAL_WORDS = 5555
+
+CERTIFICATE_DIR = "certificates"
+
+GENERATED_DIR = "generated"
+
+# =========================================================
+# GENERATE CERTIFICATE ID
+# =========================================================
+
+def generate_certificate_id():
+
+    return (
+        f"VIZU-"
+        f"{random.randint(100000,999999)}"
+    )
+
+# =========================================================
+# GENERATE QR
+# =========================================================
+
+def generate_qr(data, path):
+
+    qr = qrcode.make(data)
+
+    qr.save(path)
+
+# =========================================================
+# DRAW CENTER TEXT
+# =========================================================
+
+def draw_center_text(
+    draw,
+    text,
+    font,
+    y,
+    image_width,
+    fill
+):
+
+    bbox = draw.textbbox(
+        (0,0),
+        text,
+        font=font
+    )
+
+    text_width = (
+        bbox[2] - bbox[0]
+    )
+
+    x = (
+        image_width - text_width
+    ) // 2
+
+    draw.text(
+        (x, y),
+        text,
+        font=font,
+        fill=fill
+    )
+
+# =========================================================
+# CREATE CERTIFICATE
+# =========================================================
+
+async def create_certificate(
+    user_id,
+    full_name,
+    percent,
+    score,
+    rank
+):
+
+    # =====================================================
+    # TEMPLATE
+    # =====================================================
+
+    if rank == "GOLD":
+
+        template = (
+            f"{CERTIFICATE_DIR}/"
+            "gold_template.png"
+        )
+
+        text_color = (
+            255,
+            215,
+            0
+        )
+
+    elif rank == "SILVER":
+
+        template = (
+            f"{CERTIFICATE_DIR}/"
+            "silver_template.png"
+        )
+
+        text_color = (
+            40,
+            40,
+            40
+        )
+
+    else:
+
+        template = (
+            f"{CERTIFICATE_DIR}/"
+            "bronze_template.png"
+        )
+
+        text_color = (
+            90,
+            40,
+            20
+        )
+
+    # =====================================================
+    # LOAD IMAGE
+    # =====================================================
+
+    image = Image.open(
+        template
+    ).convert("RGBA")
+
+    draw = ImageDraw.Draw(image)
+
+    width, height = image.size
+
+    # =====================================================
+    # FONTS
+    # =====================================================
+
+    name_font = ImageFont.truetype(
+        "fonts/GreatVibes-Regular.ttf",
+        90
+    )
+
+    title_font = ImageFont.truetype(
+        "fonts/Montserrat-Bold.ttf",
+        42
+    )
+
+    small_font = ImageFont.truetype(
+        "fonts/Montserrat-Regular.ttf",
+        28
+    )
+
+    # =====================================================
+    # CERTIFICATE ID
+    # =====================================================
+
+    cert_id = (
+        generate_certificate_id()
+    )
+
+    # =====================================================
+    # DATE
+    # =====================================================
+
+    date = datetime.now().strftime(
+        "%d.%m.%Y"
+    )
+
+    # =====================================================
+    # NAME
+    # =====================================================
+
+    draw_center_text(
+        draw,
+        full_name,
+        name_font,
+        470,
+        width,
+        text_color
+    )
+
+    # =====================================================
+    # PERCENT
+    # =====================================================
+
+    draw.text(
+        (1320, 355),
+        f"{percent}%",
+        font=title_font,
+        fill=text_color
+    )
+
+    # =====================================================
+    # SCORE
+    # =====================================================
+
+    draw.text(
+        (1320, 505),
+        f"{score}/5555",
+        font=title_font,
+        fill=text_color
+    )
+
+    # =====================================================
+    # CERTIFICATE ID
+    # =====================================================
+
+    draw.text(
+        (1320, 655),
+        cert_id,
+        font=small_font,
+        fill=text_color
+    )
+
+    # =====================================================
+    # DATE
+    # =====================================================
+
+    draw.text(
+        (1320, 805),
+        date,
+        font=small_font,
+        fill=text_color
+    )
+
+    # =====================================================
+    # QR
+    # =====================================================
+
+    qr_path = (
+        f"{GENERATED_DIR}/"
+        f"qr_{user_id}.png"
+    )
+
+    generate_qr(
+        cert_id,
+        qr_path
+    )
+
+    qr = Image.open(
+        qr_path
+    ).resize((180,180))
+
+    image.paste(
+        qr,
+        (1450, 850)
+    )
+
+    # =====================================================
+    # SAVE
+    # =====================================================
+
+    output_path = (
+        f"{GENERATED_DIR}/"
+        f"certificate_{user_id}.png"
+    )
+
+    image.save(output_path)
+
+    return output_path
+
+# =========================================================
+# CERTIFICATE COMMAND
+# =========================================================
+
+@dp.message(F.text == "🏅 Sertifikat")
+async def certificate_system(
+    message: Message
+):
+
+    user_id = message.from_user.id
+
+    # =====================================================
+    # CHECK LAST BLOCK
+    # =====================================================
+
+    result = db_execute(
+        """
+        SELECT best_score
+
+        FROM quiz_progress
+
+        WHERE
+            user_id = %s
+            AND level = 'C1'
+            AND block_number = 11
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    if not result:
+
+        await message.answer(
+
+            "🔒 Sertifikat hali yopiq.\n\n"
+
+            "🎯 C1 oxirgi blokni tugating."
+        )
+
+        return
+
+    # =====================================================
+    # TOTAL SCORE
+    # =====================================================
+
+    total = db_execute(
+        """
+        SELECT
+            COALESCE(
+                SUM(best_score),
+                0
+            )
+
+        FROM quiz_progress
+
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    total_score = (
+        total[0]
+        if total
+        else 0
+    )
+
+    # =====================================================
+    # PERCENT
+    # =====================================================
+
+    percent = round(
+
+        (
+            total_score
+            /
+            TOTAL_WORDS
+        ) * 100,
+
+        1
+    )
+
+    # =====================================================
+    # RANK
+    # =====================================================
+
+    if percent >= 85:
+
+        rank = "GOLD"
+
+    elif percent >= 70:
+
+        rank = "SILVER"
+
+    elif percent >= 60:
+
+        rank = "BRONZE"
+
+    else:
+
+        await message.answer(
+
+            "❌ Minimum 60% kerak.\n\n"
+
+            f"📊 Natija: "
+            f"{percent}%"
+        )
+
+        return
+
+    # =====================================================
+    # GENERATE
+    # =====================================================
+
+    path = await create_certificate(
+
+        user_id,
+
+        message.from_user.full_name,
+
+        percent,
+
+        total_score,
+
+        rank
+    )
+
+    # =====================================================
+    # SEND
+    # =====================================================
+
+    await message.answer_photo(
+
+        FSInputFile(path),
+
+        caption=(
+
+            f"🏅 {rank} Zertifikat\n\n"
+
+            f"📊 Natija: "
+            f"{percent}%"
+        )
+    )
 
 # =========================
 # ADMIN PANEL
