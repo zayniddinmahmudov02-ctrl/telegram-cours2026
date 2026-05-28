@@ -579,9 +579,8 @@ class PersonalMessageState(StatesGroup):
 # =========================
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="📚 Artikel Topish")],
-        [KeyboardButton(text="🎮 So'z O'yini")],
         [KeyboardButton(text="🎥 Video Kurslar")],
+        [KeyboardButton(text="📚 Artikel Topish"), KeyboardButton(text="🎮 So'z O'yini")],
         [KeyboardButton(text="👨‍🏫 Ustoz haqida"), KeyboardButton(text="🏆 Natijalar")],
         [KeyboardButton(text="📞 Admin bilan bog'lanish")],
     ],
