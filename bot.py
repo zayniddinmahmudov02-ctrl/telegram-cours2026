@@ -2254,20 +2254,22 @@ async def open_rating_menu(
 # TOTAL RANKING
 # =========================================================
 
-@dp.message(
-    F.text == "🏆 Umumiy Reyting"
-)
+@dp.message(F.text == "🏆 Umumiy Reyting")
 async def total_ranking(
     message: Message
 ):
 
-    result = db_execute(
+    rankings = db_execute(
         """
         SELECT
             COALESCE(full_name,'Unknown'),
             total_score
 
         FROM users
+
+        WHERE
+            total_score IS NOT NULL
+            AND total_score > 0
 
         ORDER BY total_score DESC
 
@@ -2276,10 +2278,12 @@ async def total_ranking(
         fetchall=True
     )
 
-    if not result:
+    # EMPTY
+    if not rankings:
 
         await message.answer(
-            "❌ Reyting bo'sh."
+            "📭 Reyting hali bo'sh.\n\n"
+            "🎮 Birinchi bo'lib test ishlang!"
         )
 
         return
@@ -2289,15 +2293,16 @@ async def total_ranking(
     )
 
     medals = {
+
         1: "🥇",
         2: "🥈",
         3: "🥉"
     }
 
-    for i, (name, score) in enumerate(
-        result,
-        1
-    ):
+    for i, (
+        full_name,
+        score
+    ) in enumerate(rankings, 1):
 
         medal = medals.get(
             i,
@@ -2306,9 +2311,13 @@ async def total_ranking(
 
         text += (
             f"{medal} "
-            f"{name} — "
+            f"{full_name} — "
             f"{score} XP\n"
         )
+
+    # =====================================================
+    # MY SCORE
+    # =====================================================
 
     my = db_execute(
         """
@@ -2322,52 +2331,34 @@ async def total_ranking(
 
     my_score = my[0] if my else 0
 
-    found = False
-
-    for _, score in result:
-
-        if my_score >= score:
-
-            found = True
-
-            break
-
-    if not found and result:
-
-        needed = (
-            result[-1][1]
-            - my_score
-            + 1
-        )
+    if my_score <= 0:
 
         text += (
-            f"\n━━━━━━━━━━\n"
-            f"📊 Sizning XP: "
-            f"{my_score}\n"
-            f"📈 TOP100 uchun "
-            f"yana {needed} XP kerak."
+            "\n━━━━━━━━━━\n"
+            "🎮 Siz hali test ishlamagansiz."
         )
 
     await message.answer(text)
-
 # =========================================================
 # DAILY RANKING
 # =========================================================
 
-@dp.message(
-    F.text == "⚡ Kunlik Reyting"
-)
+@dp.message(F.text == "⚡ Kunlik Reyting")
 async def daily_ranking(
     message: Message
 ):
 
-    result = db_execute(
+    rankings = db_execute(
         """
         SELECT
             COALESCE(full_name,'Unknown'),
             daily_score
 
         FROM users
+
+        WHERE
+            daily_score IS NOT NULL
+            AND daily_score > 0
 
         ORDER BY daily_score DESC
 
@@ -2376,10 +2367,12 @@ async def daily_ranking(
         fetchall=True
     )
 
-    if not result:
+    # EMPTY
+    if not rankings:
 
         await message.answer(
-            "❌ Bugungi reyting bo'sh."
+            "📭 Bugungi reyting hali bo'sh.\n\n"
+            "🎮 Birinchi bo'lib test ishlang!"
         )
 
         return
@@ -2389,15 +2382,16 @@ async def daily_ranking(
     )
 
     medals = {
+
         1: "🥇",
         2: "🥈",
         3: "🥉"
     }
 
-    for i, (name, score) in enumerate(
-        result,
-        1
-    ):
+    for i, (
+        full_name,
+        score
+    ) in enumerate(rankings, 1):
 
         medal = medals.get(
             i,
@@ -2406,9 +2400,13 @@ async def daily_ranking(
 
         text += (
             f"{medal} "
-            f"{name} — "
+            f"{full_name} — "
             f"{score} XP\n"
         )
+
+    # =====================================================
+    # MY SCORE
+    # =====================================================
 
     my = db_execute(
         """
@@ -2422,33 +2420,15 @@ async def daily_ranking(
 
     my_score = my[0] if my else 0
 
-    found = False
-
-    for _, score in result:
-
-        if my_score >= score:
-
-            found = True
-
-            break
-
-    if not found and result:
-
-        needed = (
-            result[-1][1]
-            - my_score
-            + 1
-        )
+    if my_score <= 0:
 
         text += (
-            f"\n━━━━━━━━━━\n"
-            f"📊 Sizning XP: "
-            f"{my_score}\n"
-            f"📈 TOP100 uchun "
-            f"yana {needed} XP kerak."
+            "\n━━━━━━━━━━\n"
+            "🎮 Siz hali bugun test ishlamagansiz."
         )
 
     await message.answer(text)
+
 # =========================
 # ADMIN PANEL
 # =========================
