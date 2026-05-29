@@ -3021,15 +3021,17 @@ def check_level_unlock(
 # =========================================================
 # START QUIZ BLOCK
 # =========================================================
-
 async def start_quiz_block(
     message: Message,
     level: str,
     block: int,
-    force_restart=False
+    force_restart=False,
+    user_id=None
 ):
 
-    user_id = message.from_user.id
+    if user_id is None:
+
+        user_id = message.from_user.id
 
     # ACTIVE QUIZ CHECK
     if user_id in quiz_running:
@@ -3874,8 +3876,9 @@ async def restart_quiz_handler(
 
     try:
 
-        # FORCE CLEAN OLD SESSION
         user_id = callback.from_user.id
+
+        # FULL CLEAN
 
         quiz_running.discard(
             user_id
@@ -3886,6 +3889,31 @@ async def restart_quiz_handler(
             None
         )
 
+        remove_keys = [
+
+            key
+
+            for key in active_questions.keys()
+
+            if key.startswith(
+                f"{user_id}_"
+            )
+        ]
+
+        for key in remove_keys:
+
+            active_questions.pop(
+                key,
+                None
+            )
+
+            answered_users.pop(
+                key,
+                None
+            )
+
+        # CALLBACK PARSE
+
         parts = callback.data.split(
             ":"
         )
@@ -3893,7 +3921,7 @@ async def restart_quiz_handler(
         if len(parts) != 3:
 
             await callback.answer(
-                "❌ Noto'g'ri callback.",
+                "❌ Callback xatosi.",
                 show_alert=True
             )
 
@@ -3910,16 +3938,20 @@ async def restart_quiz_handler(
             await callback.message.delete()
 
         except Exception:
+
             pass
 
-        await start_quiz_block(
-            callback.message,
-            level,
-            block,
-            force_restart=True
+        await callback.answer(
+            "🔄 Test qayta boshlandi."
         )
 
-        await callback.answer()
+        await start_quiz_block(
+            message=callback.message,
+            level=level,
+            block=block,
+            force_restart=True,
+            user_id=user_id
+        )
 
     except Exception as e:
 
@@ -3931,6 +3963,7 @@ async def restart_quiz_handler(
             "❌ Xatolik yuz berdi.",
             show_alert=True
         )
+
 
 # =========================================================
 # CANCEL RESTART
