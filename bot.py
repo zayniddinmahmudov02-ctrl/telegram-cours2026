@@ -3233,6 +3233,35 @@ async def start_quiz_block(
         block_questions
     )
 
+    # FORCE CLEAN OLD QUIZ
+
+    quiz_running.discard(
+        user_id
+    )
+
+    quiz_sessions.pop(
+        user_id,
+        None
+    )
+
+    for key in list(
+        active_questions.keys()
+    ):
+
+        if key.startswith(
+            f"{user_id}_"
+        ):
+
+            active_questions.pop(
+                key,
+                None
+            )
+
+            answered_users.pop(
+                key,
+                None
+            )
+
     quiz_running.add(
         user_id
     )
@@ -3255,6 +3284,7 @@ async def start_quiz_block(
         message.chat.id,
         user_id
     )
+
 # =========================================================
 # START BLOCK
 # =========================================================
