@@ -3493,24 +3493,6 @@ async def quiz_answer(
 
     question_data = active_questions[qid]
 
-    # OWNER SECURITY
-
-    question_owner = question_data.get(
-        "user_id"
-    )
-
-    if (
-        question_owner
-        and question_owner != user_id
-    ):
-
-        await callback.answer(
-            "❌ Bu sizning testingiz emas.",
-            show_alert=True
-        )
-
-        return
-
     # DOUBLE ANSWER BLOCK
 
     if qid not in answered_users:
