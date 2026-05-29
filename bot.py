@@ -1262,25 +1262,35 @@ async def send_admin_log(
     text
 ):
 
-    # CHANNEL DISABLED
-    if ADMIN_CHANNEL == 0:
+    logger.info(
+        f"ADMIN_CHANNEL = {ADMIN_CHANNEL}"
+    )
+
+    if not ADMIN_CHANNEL:
+
+        logger.warning(
+            "ADMIN_CHANNEL topilmadi!"
+        )
 
         return
 
     try:
 
         await bot.send_message(
+            chat_id=ADMIN_CHANNEL,
+            text=text
+        )
 
-            ADMIN_CHANNEL,
-
-            text
+        logger.info(
+            "ADMIN LOG SENT ✅"
         )
 
     except Exception as e:
 
-        logger.error(
+        logger.exception(
             f"Admin log error: {e}"
         )
+
 
 # =========================================================
 # ADMIN PHOTO LOG
@@ -1293,19 +1303,24 @@ async def send_admin_photo_log(
     caption
 ):
 
-    # CHANNEL DISABLED
-    if ADMIN_CHANNEL == 0:
+    logger.info(
+        f"ADMIN_CHANNEL = {ADMIN_CHANNEL}"
+    )
+
+    if not ADMIN_CHANNEL:
+
+        logger.warning(
+            "ADMIN_CHANNEL topilmadi!"
+        )
 
         return
 
-    # FILE CHECK
     if not os.path.exists(
         photo_path
     ):
 
         logger.warning(
-            f"Photo not found: "
-            f"{photo_path}"
+            f"Photo not found: {photo_path}"
         )
 
         return
@@ -1314,16 +1329,22 @@ async def send_admin_photo_log(
 
         await bot.send_photo(
 
-            ADMIN_CHANNEL,
+            chat_id=ADMIN_CHANNEL,
 
-            FSInputFile(photo_path),
+            photo=FSInputFile(
+                photo_path
+            ),
 
             caption=caption
         )
 
+        logger.info(
+            "ADMIN PHOTO SENT ✅"
+        )
+
     except Exception as e:
 
-        logger.error(
+        logger.exception(
             f"Admin photo log error: {e}"
         )
 
@@ -3129,22 +3150,24 @@ async def start_quiz_block(
         )
 
         return
-
     # =====================================================
     # PREVIOUS BLOCK CHECK
     # =====================================================
 
-    if block > 1:
+    if block > 1 and not force_restart:
 
         prev_block = block - 1
 
         result = db_execute(
             """
             SELECT best_score
+
             FROM quiz_progress
-            WHERE user_id = %s
-            AND level = %s
-            AND block_number = %s
+
+            WHERE
+                user_id = %s
+                AND level = %s
+                AND block_number = %s
             """,
             (
                 user_id,
@@ -3168,7 +3191,6 @@ async def start_quiz_block(
             )
 
             return
-
     # =====================================================
     # LOAD QUESTIONS
     # =====================================================
