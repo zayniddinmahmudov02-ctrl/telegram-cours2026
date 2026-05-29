@@ -3295,6 +3295,7 @@ async def send_next_question(
 ):
 
     # MEMORY SAFETY
+
     if user_id not in quiz_sessions:
 
         quiz_running.discard(
@@ -3320,6 +3321,7 @@ async def send_next_question(
     index = session["index"]
 
     # QUIZ FINISH
+
     if index >= len(questions):
 
         await finish_quiz(
@@ -3340,7 +3342,9 @@ async def send_next_question(
         question["wrong2"]
     ]
 
-    random.shuffle(answers)
+    random.shuffle(
+        answers
+    )
 
     qid = (
         f"{user_id}_"
@@ -3393,30 +3397,57 @@ async def send_next_question(
         inline_keyboard=callback_buttons
     )
 
+    # ACTIVE QUESTION SAVE
+
     active_questions[qid] = {
+
+        "user_id": user_id,
+
+        "question_id": question["id"],
 
         "correct": question["correct"],
 
         "answers": callback_map
     }
 
-    await bot.send_message(
+    try:
 
-        chat_id,
+        await bot.send_message(
 
-        f"📚 "
-        f"{session['level']}"
-        f"-{session['block']}\n"
+            chat_id,
 
-        f"📊 "
-        f"{index+1}/"
-        f"{len(questions)}\n\n"
+            f"📚 {session['level']}-{session['block']}\n"
+            f"📊 {index + 1}/{len(questions)}\n\n"
+            f"🇩🇪 {question['german']}",
 
-        f"🇩🇪 "
-        f"{question['german']}",
+            reply_markup=keyboard
+        )
 
-        reply_markup=keyboard
-    )
+    except Exception as e:
+
+        logger.error(
+            f"Send question error: {e}"
+        )
+
+        quiz_running.discard(
+            user_id
+        )
+
+        quiz_sessions.pop(
+            user_id,
+            None
+        )
+
+        active_questions.pop(
+            qid,
+            None
+        )
+
+        answered_users.pop(
+            qid,
+            None
+        )
+
 
 # =========================================================
 # ANSWER
@@ -3440,7 +3471,7 @@ async def quiz_answer(
             )
         )
 
-    except:
+    except Exception:
 
         await callback.answer(
             "❌ Callback xatosi.",
@@ -3449,12 +3480,29 @@ async def quiz_answer(
 
         return
 
+    # QUESTION EXISTS
+
+    if qid not in active_questions:
+
+        await callback.answer(
+            "❌ Savol tugagan yoki eskirgan.",
+            show_alert=True
+        )
+
+        return
+
+    question_data = active_questions[qid]
+
     # OWNER SECURITY
-    owner_id = int(
-        qid.split("_")[0]
+
+    question_owner = question_data.get(
+        "user_id"
     )
 
-    if owner_id != user_id:
+    if (
+        question_owner
+        and question_owner != user_id
+    ):
 
         await callback.answer(
             "❌ Bu sizning testingiz emas.",
@@ -3463,17 +3511,12 @@ async def quiz_answer(
 
         return
 
-    # QUESTION EXISTS
-    if qid not in active_questions:
-
-        await callback.answer(
-            "❌ Savol tugagan.",
-            show_alert=True
-        )
-
-        return
-
     # DOUBLE ANSWER BLOCK
+
+    if qid not in answered_users:
+
+        answered_users[qid] = set()
+
     if user_id in answered_users[qid]:
 
         await callback.answer(
@@ -3486,8 +3529,6 @@ async def quiz_answer(
     answered_users[qid].add(
         user_id
     )
-
-    question_data = active_questions[qid]
 
     answers_map = question_data["answers"]
 
@@ -3507,9 +3548,15 @@ async def quiz_answer(
             user_id
         )
 
+        await callback.answer(
+            "❌ Test sessiyasi topilmadi.",
+            show_alert=True
+        )
+
         return
 
     # CORRECT
+
     if selected == correct:
 
         session["score"] += 1
@@ -3519,6 +3566,7 @@ async def quiz_answer(
         )
 
     # WRONG
+
     else:
 
         await callback.answer(
@@ -3545,7 +3593,8 @@ async def quiz_answer(
             reply_markup=None
         )
 
-    except:
+    except Exception:
+
         pass
 
     await send_next_question(
