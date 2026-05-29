@@ -347,12 +347,12 @@ def db_execute(
         )
 
         return None
-
 # =========================================================
 # INIT TABLES
 # =========================================================
 
 def init_tables():
+
     # =====================================================
     # USERS TABLE
     # =====================================================
@@ -379,6 +379,115 @@ def init_tables():
             unlocked_level TEXT DEFAULT 'A1',
 
             last_daily_reset DATE
+        )
+    """)
+
+    # =====================================================
+    # LESSON PROGRESS
+    # =====================================================
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS lesson_progress (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+
+            level TEXT NOT NULL,
+
+            lesson INTEGER NOT NULL,
+
+            completed BOOLEAN DEFAULT FALSE,
+
+            completed_at TIMESTAMP DEFAULT NOW(),
+
+            UNIQUE(
+                user_id,
+                level,
+                lesson
+            )
+        )
+    """)
+    # =====================================================
+    # LESSON TASK PROGRESS
+    # =====================================================
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS lesson_task_progress (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+
+            level TEXT NOT NULL,
+
+            lesson INTEGER NOT NULL,
+
+            task_name TEXT NOT NULL,
+
+            completed BOOLEAN DEFAULT FALSE,
+
+            completed_at TIMESTAMP DEFAULT NOW(),
+
+            UNIQUE(
+                user_id,
+                level,
+                lesson,
+                task_name
+            )
+        )
+    """)
+
+    # =====================================================
+    # LEVEL EXAMS
+    # =====================================================
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS level_exams (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+
+            level TEXT NOT NULL,
+
+            score INTEGER DEFAULT 0,
+
+            final_exam_passed BOOLEAN DEFAULT FALSE,
+
+            passed_at TIMESTAMP DEFAULT NOW(),
+
+            UNIQUE(
+                user_id,
+                level
+            )
+        )
+    """)
+
+    # =====================================================
+    # LESSON ANSWERS
+    # =====================================================
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS lesson_answers (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+
+            level TEXT NOT NULL,
+
+            lesson INTEGER NOT NULL,
+
+            task_type TEXT,
+
+            answer_text TEXT,
+
+            answer_file TEXT,
+
+            checked BOOLEAN DEFAULT FALSE,
+
+            created_at TIMESTAMP DEFAULT NOW()
         )
     """)
 
@@ -575,12 +684,36 @@ class PersonalMessageState(StatesGroup):
 # =========================
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="🎥 Video Kurslar")],
-        [KeyboardButton(text="📚 Artikel Topish"), KeyboardButton(text="🎮 So'z O'yini")],
-        [KeyboardButton(text="👨‍🏫 Ustoz haqida"), KeyboardButton(text="🏆 Natijalar")],
-        [KeyboardButton(text="📞 Admin bilan bog'lanish")],
+
+        [
+            KeyboardButton(
+                text="🎥 Video Kurslar"
+            )
+        ],
+
+        [
+            KeyboardButton(
+                text="🎓 Darslarni O'rganish"
+            )
+        ],
+
+        [
+            KeyboardButton(
+                text="📚 Ma'lumotlar"
+            )
+        ],
+
+        [
+            KeyboardButton(
+                text="📚 Artikel Topish"
+            ),
+            KeyboardButton(
+                text="🎮 So'z O'yini"
+            )
+        ]
+
     ],
-    resize_keyboard=True,
+    resize_keyboard=True
 )
 video_menu = ReplyKeyboardMarkup(
     keyboard=[
@@ -606,6 +739,27 @@ admin_menu = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
+info_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="👨‍🏫 Ustoz haqida")],
+        [KeyboardButton(text="🏆 Natijalar")],
+        [KeyboardButton(text="📞 Admin bilan bog'lanish")],
+        [KeyboardButton(text="⬅️ Orqaga")],
+    ],
+    resize_keyboard=True,
+)
+
+lessons_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="🇩🇪 A1"), KeyboardButton(text="🇩🇪 A2")],
+        [KeyboardButton(text="🇩🇪 B1"), KeyboardButton(text="🇩🇪 B2")],
+        [KeyboardButton(text="🇩🇪 C1")],
+        [KeyboardButton(text="🤖 AI Teacher")],
+        [KeyboardButton(text="⬅️ Orqaga")],
+    ],
+    resize_keyboard=True,
+)
+
 # =========================
 # HELPERS
 # =========================
@@ -618,6 +772,537 @@ def is_admin(
         message.from_user.id
         == ADMIN_ID
     )
+
+# =========================================================
+# LESSON TASKS MENU
+# =========================================================
+
+lesson_tasks_menu = ReplyKeyboardMarkup(
+    keyboard=[
+
+        [KeyboardButton(
+            text="📝 Grammatik"
+        )],
+
+        [KeyboardButton(
+            text="📖 Lesen"
+        )],
+
+        [KeyboardButton(
+            text="🎧 Hören"
+        )],
+
+        [KeyboardButton(
+            text="✍️ Schreiben"
+        )],
+
+        [KeyboardButton(
+            text="🎤 Sprechen"
+        )],
+
+        [KeyboardButton(
+            text="⬅️ Orqaga"
+        )]
+
+    ],
+    resize_keyboard=True
+)
+# =========================================================
+# LESSON TASKS
+# =========================================================
+
+LESSON_TASKS = [
+
+    "Grammatik",
+
+    "Lesen",
+
+    "Hören",
+
+    "Schreiben",
+
+    "Sprechen"
+]
+
+
+def build_task_menu(
+    next_task
+):
+
+    keyboard = []
+
+    for task in LESSON_TASKS:
+
+        if task == next_task:
+
+            icon = "📖"
+
+        else:
+
+            icon = "🔒"
+
+        keyboard.append([
+            KeyboardButton(
+                text=f"{icon} {task}"
+            )
+        ])
+
+    keyboard.append([
+        KeyboardButton(
+            text="⬅️ Orqaga"
+        )
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+
+# =========================================================
+# LESSON COUNTS
+# =========================================================
+
+LESSON_COUNTS = {
+
+    "A1": 14,
+
+    "A2": 14,
+
+    "B1": 20,
+
+    "B2": 30,
+
+    "C1": 22
+}
+
+
+# =========================================================
+# LESSON LEVEL ACCESS
+# =========================================================
+
+def get_available_levels(course):
+
+    if course == "🇩🇪 A1":
+
+        return ["A1"]
+
+    elif course == "🇩🇪 A2":
+
+        return ["A2"]
+
+    elif course == "🇩🇪 B1":
+
+        return ["B1"]
+
+    elif course == "🔥 A1-B1":
+
+        return [
+            "A1",
+            "A2",
+            "B1"
+        ]
+
+    elif course == "🔥 A1-C1":
+
+        return [
+            "A1",
+            "A2",
+            "B1",
+            "B2",
+            "C1"
+        ]
+
+    return []
+
+
+# =========================================================
+# BUILD LEVELS MENU
+# =========================================================
+
+def build_lessons_menu(
+    levels
+):
+
+    keyboard = []
+
+    row = []
+
+    for level in levels:
+
+        row.append(
+            KeyboardButton(
+                text=f"📘 {level}"
+            )
+        )
+
+        if len(row) == 2:
+
+            keyboard.append(row)
+
+            row = []
+
+    if row:
+
+        keyboard.append(row)
+
+    keyboard.append([
+        KeyboardButton(
+            text="🤖 AI Teacher"
+        )
+    ])
+
+    keyboard.append([
+        KeyboardButton(
+            text="⬅️ Orqaga"
+        )
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+
+# =========================================================
+# LESSON PROGRESS
+# =========================================================
+
+def get_unlocked_lesson(
+    user_id,
+    level
+):
+
+    row = db_execute(
+        """
+        SELECT MAX(lesson)
+
+        FROM lesson_progress
+
+        WHERE
+            user_id = %s
+            AND level = %s
+            AND completed = TRUE
+        """,
+        (
+            user_id,
+            level
+        ),
+        fetchone=True
+    )
+
+    if not row:
+
+        return 1
+
+    if row[0] is None:
+
+        return 1
+
+    return row[0] + 1
+
+# =========================================================
+# NEXT TASK
+# =========================================================
+
+def get_next_task(
+    user_id,
+    level,
+    lesson
+):
+
+    for task in LESSON_TASKS:
+
+        row = db_execute(
+            """
+            SELECT completed
+
+            FROM lesson_task_progress
+
+            WHERE
+                user_id = %s
+                AND level = %s
+                AND lesson = %s
+                AND task_name = %s
+            """,
+            (
+                user_id,
+                level,
+                lesson,
+                task
+            ),
+            fetchone=True
+        )
+
+        if not row:
+
+            return task
+
+        if not row[0]:
+
+            return task
+
+    return None
+
+# =========================================================
+# BUILD TASK MENU
+# =========================================================
+
+def build_task_menu(
+    next_task
+):
+
+    keyboard = []
+
+    for task in LESSON_TASKS:
+
+        if task == next_task:
+
+            icon = "📖"
+
+        else:
+
+            icon = "🔒"
+
+        keyboard.append([
+            KeyboardButton(
+                text=f"{icon} {task}"
+            )
+        ])
+
+    keyboard.append([
+
+        KeyboardButton(
+            text="⬅️ Orqaga"
+        )
+
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+# =========================================================
+# FINAL EXAM STATUS
+# =========================================================
+
+def is_final_exam_passed(
+    user_id,
+    level
+):
+
+    row = db_execute(
+        """
+        SELECT final_exam_passed
+
+        FROM level_exams
+
+        WHERE
+            user_id = %s
+            AND level = %s
+        """,
+        (
+            user_id,
+            level
+        ),
+        fetchone=True
+    )
+
+    if not row:
+
+        return False
+
+    return bool(
+        row[0]
+    )
+
+
+# =========================================================
+# LEVEL LESSONS MENU
+# =========================================================
+
+def build_level_lessons_menu(
+    level,
+    unlocked,
+    exam_passed=False
+):
+
+    total_lessons = LESSON_COUNTS[
+        level
+    ]
+
+    keyboard = []
+
+    # LESSONS
+
+    for lesson in range(
+        1,
+        total_lessons + 1
+    ):
+
+        if lesson <= unlocked:
+
+            text = (
+                f"📖 Unterricht "
+                f"{lesson}"
+            )
+
+        else:
+
+            text = (
+                f"🔒 Unterricht "
+                f"{lesson}"
+            )
+
+        keyboard.append([
+            KeyboardButton(
+                text=text
+            )
+        ])
+
+    # FINAL EXAM
+
+    if unlocked > total_lessons:
+
+        keyboard.append([
+            KeyboardButton(
+                text="🎓 Yakuniy Imtihon"
+            )
+        ])
+
+    else:
+
+        keyboard.append([
+            KeyboardButton(
+                text="🔒 Yakuniy Imtihon"
+            )
+        ])
+
+    # CERTIFICATE
+
+    if exam_passed:
+
+        keyboard.append([
+            KeyboardButton(
+                text=f"🏆 {level} Sertifikati"
+            )
+        ])
+
+    else:
+
+        keyboard.append([
+            KeyboardButton(
+                text=f"🔒 {level} Sertifikati"
+            )
+        ])
+
+    keyboard.append([
+        KeyboardButton(
+            text="⬅️ Orqaga"
+        )
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+# =========================================================
+# UNTERRICHT HANDLER
+# =========================================================
+
+@dp.message(
+    F.text.regexp(
+        r"^📖 Unterricht \d+$"
+    )
+)
+async def lesson_handler(
+    message: Message
+):
+
+    try:
+
+        lesson = int(
+            message.text.split()[-1]
+        )
+
+        user_id = (
+            message.from_user.id
+        )
+
+        level = None
+
+        # FIND CURRENT LEVEL
+        row = db_execute(
+            """
+            SELECT course
+
+            FROM users
+
+            WHERE user_id = %s
+            """,
+            (user_id,),
+            fetchone=True
+        )
+
+        if row:
+
+            course = row[0]
+
+            levels = (
+                get_available_levels(
+                    course
+                )
+            )
+
+            if levels:
+
+                level = levels[0]
+
+        if not level:
+
+            level = "A1"
+
+        # SAVE ACTIVE LESSON
+        active_lessons[
+            user_id
+        ] = {
+
+            "level": level,
+
+            "lesson": lesson
+        }
+
+        next_task = get_next_task(
+            user_id,
+            level,
+            lesson
+        )
+
+        await message.answer(
+
+            f"🇩🇪 {level}\n\n"
+
+            f"📖 Unterricht "
+            f"{lesson}\n\n"
+
+            f"Kerakli vazifani bajaring:",
+
+            reply_markup=
+            build_task_menu(
+                next_task
+            )
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Lesson handler error: {e}"
+        )
+
+        await message.answer(
+            "❌ Darsni ochishda xatolik."
+        )
 
 # =========================================================
 # CHECK SUBSCRIPTION
@@ -986,55 +1671,254 @@ async def check_sub_callback(callback: CallbackQuery):
             show_alert=True
         )
 # =========================
+# MA'LUMOTLAR MENU
+# =========================
+
+@dp.message(F.text == "📚 Ma'lumotlar")
+async def information_menu(message: Message):
+
+    await message.answer(
+        "📚 Ma'lumotlar bo'limi",
+        reply_markup=info_menu
+    )
+
+
+# =========================
 # USTOZ HAQIDA
 # =========================
+
 @dp.message(F.text == "👨‍🏫 Ustoz haqida")
 async def teacher_info(message: Message):
+
     if not os.path.exists("teacher.jpg"):
-        await message.answer("Ustoz haqida ma'lumot tez orada qo'shiladi.")
+
+        await message.answer(
+            "Ustoz haqida ma'lumot tez orada qo'shiladi."
+        )
+
         return
-    photo = FSInputFile("teacher.jpg")
-    await message.answer_photo(photo=photo)
+
+    photo = FSInputFile(
+        "teacher.jpg"
+    )
+
+    await message.answer_photo(
+        photo=photo
+    )
+
 
 # =========================
 # NATIJALAR
 # =========================
+
 @dp.message(F.text == "🏆 Natijalar")
 async def results(message: Message):
-    await message.answer("🏆 O'quvchilar natijalari:\nhttps://t.me/+o8b2cf3rwAs1MzFi")
+
+    await message.answer(
+        "🏆 O'quvchilar natijalari:\n"
+        "https://t.me/+o8b2cf3rwAs1MzFi"
+    )
+
 
 # =========================
 # ADMIN CONTACT
 # =========================
+
 @dp.message(F.text == "📞 Admin bilan bog'lanish")
 async def admin_contact(message: Message):
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="👨‍💻 Admin Profil", url="https://t.me/Mahmudow_Z")
-    ]])
-    await message.answer("📩 Admin bilan bog'lanish uchun tugmani bosing 👇", reply_markup=keyboard)
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="👨‍💻 Admin Profil",
+                    url="https://t.me/Mahmudow_Z"
+                )
+            ]
+        ]
+    )
+
+    await message.answer(
+        "📩 Admin bilan bog'lanish uchun tugmani bosing 👇",
+        reply_markup=keyboard
+    )
+
 
 # =========================
 # VIDEO COURSES
 # =========================
+
 @dp.message(F.text == "🎥 Video Kurslar")
 async def video_courses(message: Message):
-    artikel_users.pop(message.from_user.id, None)
-    await message.answer("🎥 Kerakli kursni tanlang:", reply_markup=video_menu)
+
+    artikel_users.pop(
+        message.from_user.id,
+        None
+    )
+
+    await message.answer(
+        "🎥 Kerakli kursni tanlang:",
+        reply_markup=video_menu
+    )
+
+# =========================
+# LESSONS HOME
+# =========================
+
+@dp.message(F.text == "🎓 Darslarni O'rganish")
+async def lessons_home(
+    message: Message
+):
+
+    row = db_execute(
+        """
+        SELECT
+            approved,
+            course
+        FROM users
+        WHERE user_id = %s
+        """,
+        (message.from_user.id,),
+        fetchone=True
+    )
+
+    if not row:
+
+        await message.answer(
+            "❌ Foydalanuvchi topilmadi."
+        )
+
+        return
+
+    approved = row[0]
+
+    course = row[1]
+
+    if approved != 1:
+
+        await message.answer(
+            "🔒 Avval kurs sotib oling."
+        )
+
+        return
+
+    levels = get_available_levels(
+        course
+    )
+
+    if not levels:
+
+        await message.answer(
+            "❌ Kurs ma'lumoti topilmadi."
+        )
+
+        return
+
+    await message.answer(
+        "🎓 Darslarni O'rganish\n\n"
+        "Darajani tanlang:",
+        reply_markup=
+        build_lessons_menu(
+            levels
+        )
+    )
+
+# =========================================================
+# LEVEL HANDLERS
+# =========================================================
+
+@dp.message(
+    F.text.in_(
+        [
+            "📘 A1",
+            "📘 A2",
+            "📘 B1",
+            "📘 B2",
+            "📘 C1"
+        ]
+    )
+)
+async def level_lessons(
+    message: Message
+):
+
+    level = (
+        message.text
+        .replace("📘 ", "")
+        .strip()
+    )
+
+    unlocked = get_unlocked_lesson(
+        message.from_user.id,
+        level
+    )
+
+    exam_passed = (
+        is_final_exam_passed(
+            message.from_user.id,
+            level
+        )
+    )
+
+    await message.answer(
+        f"🇩🇪 {level} Darajasi\n\n"
+        f"Darsni tanlang:",
+        reply_markup=
+        build_level_lessons_menu(
+            level,
+            unlocked,
+            exam_passed
+        )
+    )
+
+# =========================
+# AI TEACHER
+# =========================
+
+@dp.message(F.text == "🤖 AI Teacher")
+async def ai_teacher_menu(
+    message: Message
+):
+
+    await message.answer(
+        "🤖 AI Teacher\n\n"
+        "🚧 Tez orada ishga tushadi."
+    )
+
 
 # =========================
 # SAMPLE LESSON
 # =========================
+
 @dp.message(F.text == "🎬 Namuna Dars")
-async def sample_lesson(message: Message):
-    await message.answer("🎬 Namuna Dars:\nhttps://t.me/+yUxu7EOWyd82ODhi")
+async def sample_lesson(
+    message: Message
+):
+
+    await message.answer(
+        "🎬 Namuna Dars:\n"
+        "https://t.me/+yUxu7EOWyd82ODhi"
+    )
+
 
 # =========================
 # BACK
 # =========================
+
 @dp.message(F.text == "⬅️ Orqaga")
-async def go_back(message: Message):
-   artikel_users.pop(message.from_user.id, None) 
-   await message.answer("🏠 Asosiy Menu", reply_markup=main_menu)
+async def go_back(
+    message: Message
+):
+
+    artikel_users.pop(
+        message.from_user.id,
+        None
+    )
+
+    await message.answer(
+        "🏠 Asosiy Menu",
+        reply_markup=main_menu
+    )
 
 # =========================
 # COURSE HANDLER
@@ -1451,6 +2335,8 @@ admin_sessions = {}
 # DAILY RESET TRACKER
 last_daily_reset = None
 
+# ACTIVE LESSONS
+active_lessons = {}
 # =========================================================
 # REGISTER STATES
 # =========================================================
