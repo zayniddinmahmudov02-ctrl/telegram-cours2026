@@ -5265,7 +5265,6 @@ async def send_broadcast(
 
 async def main():
 
-    # DATABASE
     init_db_pool()
 
     init_tables()
@@ -5274,7 +5273,6 @@ async def main():
         "DATABASE READY ✅"
     )
 
-    # LOAD SYSTEMS
     load_artikel()
 
     load_all_quizzes()
@@ -5285,7 +5283,6 @@ async def main():
         "SYSTEMS LOADED ✅"
     )
 
-    # DELETE OLD WEBHOOK
     try:
 
         await bot.delete_webhook(
@@ -5302,7 +5299,6 @@ async def main():
             f"Webhook error: {e}"
         )
 
-    # KEEP ALIVE
     try:
 
         Thread(
@@ -5320,9 +5316,7 @@ async def main():
             f"Flask error: {e}"
         )
 
-    # START BOT
     await start_bot()
-
 
 # =========================
 # RUN
@@ -5332,33 +5326,18 @@ async def start_bot():
 
     # MEMORY CLEAN
     quiz_running.clear()
-
     quiz_sessions.clear()
-
     active_questions.clear()
-
     answered_users.clear()
 
-    while True:
+    logger.info(
+        "BOT ISHGA TUSHDI ✅"
+    )
 
-        try:
-
-            logger.info(
-                "BOT ISHGA TUSHDI ✅"
-            )
-
-            await dp.start_polling(
-                bot
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"BOT CRASH: {e}"
-            )
-
-            await asyncio.sleep(10)
-
+    await dp.start_polling(
+        bot,
+        allowed_updates=dp.resolve_used_update_types()
+    )
 
 # =========================
 # START APP
