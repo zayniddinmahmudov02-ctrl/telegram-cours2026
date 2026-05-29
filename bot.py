@@ -401,13 +401,14 @@ def init_tables():
 
             completed_at TIMESTAMP DEFAULT NOW(),
 
-            UNIQUE(
+            UNIQUE (
                 user_id,
                 level,
                 lesson
             )
         )
     """)
+
     # =====================================================
     # LESSON TASK PROGRESS
     # =====================================================
@@ -429,7 +430,7 @@ def init_tables():
 
             completed_at TIMESTAMP DEFAULT NOW(),
 
-            UNIQUE(
+            UNIQUE (
                 user_id,
                 level,
                 lesson,
@@ -457,7 +458,7 @@ def init_tables():
 
             passed_at TIMESTAMP DEFAULT NOW(),
 
-            UNIQUE(
+            UNIQUE (
                 user_id,
                 level
             )
@@ -498,15 +499,15 @@ def init_tables():
     db_execute("""
         CREATE TABLE IF NOT EXISTS quiz_progress (
 
-            user_id BIGINT,
+            user_id BIGINT NOT NULL,
 
-            level TEXT,
+            level TEXT NOT NULL,
 
-            block_number INTEGER,
+            block_number INTEGER NOT NULL,
 
             best_score INTEGER DEFAULT 0,
 
-            PRIMARY KEY(
+            PRIMARY KEY (
                 user_id,
                 level,
                 block_number
@@ -515,98 +516,12 @@ def init_tables():
     """)
 
     # =====================================================
-    # SAFE MIGRATIONS
-    # =====================================================
-
-    try:
-
-        db_execute("""
-            ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS score
-            INTEGER DEFAULT 0
-        """)
-
-    except Exception as e:
-
-        logger.error(e)
-
-    try:
-
-        db_execute("""
-            ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS course
-            TEXT
-        """)
-
-    except Exception as e:
-
-        logger.error(e)
-
-    try:
-
-        db_execute("""
-            ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS total_score
-            INTEGER DEFAULT 0
-        """)
-
-    except Exception as e:
-
-        logger.error(e)
-
-    try:
-
-        db_execute("""
-            ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS daily_score
-            INTEGER DEFAULT 0
-        """)
-
-    except Exception as e:
-
-        logger.error(e)
-
-    try:
-
-        db_execute("""
-            ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS unlocked_level
-            TEXT DEFAULT 'A1'
-        """)
-
-    except Exception as e:
-
-        logger.error(e)
-
-    try:
-
-        db_execute("""
-            ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS last_daily_reset
-            DATE
-        """)
-
-    except Exception as e:
-
-        logger.error(e)
-
-    # =====================================================
     # INDEXES
     # =====================================================
 
     db_execute("""
         CREATE INDEX IF NOT EXISTS idx_users_score
         ON users(score)
-    """)
-
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_approved
-        ON users(approved)
-    """)
-
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_course
-        ON users(course)
     """)
 
     db_execute("""
@@ -620,17 +535,22 @@ def init_tables():
     """)
 
     db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_course
+        ON users(course)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_approved
+        ON users(approved)
+    """)
+
+    db_execute("""
         CREATE INDEX IF NOT EXISTS idx_quiz_progress_user
         ON quiz_progress(user_id)
     """)
 
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_quiz_progress_level
-        ON quiz_progress(level)
-    """)
-
     logger.info(
-        "Database tables ready ✅"
+        "DATABASE TABLES READY ✅"
     )
 
 # =========================
@@ -1534,6 +1454,46 @@ def load_artikel():
 
     logger.info(
         f"Artikel loaded: {len(artikel)} words"
+    )
+# =========================
+# ARTIKEL TOPISH
+# =========================
+
+_MENU_BUTTONS = {
+    "🎮 So'z O'yini",
+    "🎥 Video Kurslar",
+    "🎓 Darslarni O'rganish",
+    "📚 Ma'lumotlar",
+    "⬅️ Orqaga"
+}
+
+@dp.message(F.text == "📚 Artikel Topish")
+async def artikel_start(message: Message):
+    artikel_users[message.from_user.id] = True
+
+    await message.answer(
+        "🔍 Nemischa so'z yuboring.\n\n"
+        "Masalan:\nHaus\nAuto\nMann"
+    )
+
+@dp.message(F.text)
+async def artikel_handler(message: Message):
+
+    user_id = message.from_user.id
+
+    if user_id not in artikel_users:
+        return
+
+    if message.text in _MENU_BUTTONS:
+        artikel_users.pop(user_id, None)
+        return
+
+    word = message.text.lower().strip()
+
+    result = artikel.get(word)
+
+    await message.answer(
+        result if result else "❌ So'z topilmadi"
     )
 # =========================
 # START
@@ -3020,11 +2980,24 @@ async def start_quiz_block(
     # ACTIVE QUIZ CHECK
     if user_id in quiz_running:
 
-        await message.answer(
-            "⚠️ Sizda aktiv test mavjud."
+        session = quiz_sessions.get(
+            user_id
         )
 
-        return
+        # STUCK SESSION FIX
+        if not session:
+
+            quiz_running.discard(
+                user_id
+            )
+
+        else:
+
+            await message.answer(
+                "⚠️ Sizda aktiv test mavjud."
+            )
+
+            return
 
     # =====================================================
     # RESTART WARNING
@@ -3060,9 +3033,7 @@ async def start_quiz_block(
                     [
                         InlineKeyboardButton(
                             text="🔄 Qayta ishlash",
-                            callback_data=(
-                                f"restartquiz:{level}:{block}"
-                            )
+                            callback_data=f"restartquiz:{level}:{block}"
                         )
                     ],
                     [
@@ -3084,7 +3055,6 @@ async def start_quiz_block(
             )
 
             return
-
     # =====================================================
     # USER LEVEL SECURITY
     # =====================================================
@@ -3755,7 +3725,6 @@ async def finish_quiz(
             None
         )
 
-
 # =========================================================
 # RESTART QUIZ
 # =========================================================
@@ -3770,6 +3739,18 @@ async def restart_quiz_handler(
 ):
 
     try:
+
+        # FORCE CLEAN OLD SESSION
+        user_id = callback.from_user.id
+
+        quiz_running.discard(
+            user_id
+        )
+
+        quiz_sessions.pop(
+            user_id,
+            None
+        )
 
         parts = callback.data.split(
             ":"
@@ -3795,7 +3776,6 @@ async def restart_quiz_handler(
             await callback.message.delete()
 
         except Exception:
-
             pass
 
         await start_quiz_block(
@@ -3817,7 +3797,6 @@ async def restart_quiz_handler(
             "❌ Xatolik yuz berdi.",
             show_alert=True
         )
-
 
 # =========================================================
 # CANCEL RESTART
@@ -5280,12 +5259,32 @@ async def send_broadcast(
     )
 
     await state.clear()
+# =========================
+# MAIN
+# =========================
 
+async def main():
+
+    init_db_pool()
+
+    init_tables()
+
+    load_artikel()
+
+    load_all_quizzes()
+
+    await start_bot()
 # =========================
 # RUN
 # =========================
 
 async def start_bot():
+
+    # MEMORY CLEAN
+    quiz_running.clear()
+    quiz_sessions.clear()
+    active_questions.clear()
+    answered_users.clear()
 
     while True:
 
@@ -5305,11 +5304,7 @@ async def start_bot():
                 f"BOT CRASH: {e}"
             )
 
-            # reconnect delay
             await asyncio.sleep(10)
-
-
-async def main():
 
     # =====================================================
     # DATABASE
