@@ -3512,13 +3512,7 @@ async def quiz_answer(
         user_id
     )
 
-    answers_map = question_data["answers"]
-
-    selected = answers_map.get(
-        answer_key
-    )
-
-    correct = question_data["correct"]
+    # SESSION CHECK
 
     session = quiz_sessions.get(
         user_id
@@ -3526,16 +3520,40 @@ async def quiz_answer(
 
     if not session:
 
+        logger.warning(
+            f"QUIZ SESSION LOST | "
+            f"user_id={user_id}"
+        )
+
+        active_questions.pop(
+            qid,
+            None
+        )
+
+        answered_users.pop(
+            qid,
+            None
+        )
+
         quiz_running.discard(
             user_id
         )
 
         await callback.answer(
-            "❌ Test sessiyasi topilmadi.",
+            "♻️ Test qayta ishga tushirilgan.\n"
+            "Blokni qaytadan oching.",
             show_alert=True
         )
 
         return
+
+    answers_map = question_data["answers"]
+
+    selected = answers_map.get(
+        answer_key
+    )
+
+    correct = question_data["correct"]
 
     # CORRECT
 
