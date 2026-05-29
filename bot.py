@@ -36,7 +36,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-
+from aiogram.filters import StateFilter
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -599,9 +599,17 @@ class PersonalMessageState(StatesGroup):
     waiting_for_id   = State()
     waiting_for_text = State()
 
+# =========================================================
+# PROFILE STATE
+# =========================================================
+
+class ProfileState(StatesGroup):
+
+    change_name = State()
 # =========================
 # KEYBOARDS
 # =========================
+
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
 
@@ -630,11 +638,19 @@ main_menu = ReplyKeyboardMarkup(
             KeyboardButton(
                 text="🎮 So'z O'yini"
             )
+        ],
+
+        [
+            KeyboardButton(
+                text="👤 Mening Profilim"
+            )
         ]
 
     ],
+
     resize_keyboard=True
 )
+
 video_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="🇩🇪 A1"), KeyboardButton(text="🇩🇪 A2")],
@@ -679,6 +695,38 @@ lessons_menu = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True,
 )
+# =========================================================
+# PROFILE KEYBOARD
+# =========================================================
+
+def profile_keyboard():
+
+    return ReplyKeyboardMarkup(
+
+        keyboard=[
+
+            [
+                KeyboardButton(
+                    text="✏️ Ism Familiyani o'zgartirish"
+                )
+            ],
+
+            [
+                KeyboardButton(
+                    text="🔥 XP Reytingi"
+                )
+            ],
+
+            [
+                KeyboardButton(
+                    text="⬅️ Orqaga"
+                )
+            ]
+        ],
+
+        resize_keyboard=True
+    )
+
 
 # =========================
 # HELPERS
@@ -1774,6 +1822,193 @@ async def video_courses(message: Message):
         "🎥 Kerakli kursni tanlang:",
         reply_markup=video_menu
     )
+# =========================================================
+# MY PROFILE
+# =========================================================
+
+@dp.message(
+    F.text == "👤 Mening Profilim"
+)
+async def my_profile(
+    message: Message
+):
+
+    user = db_execute(
+        """
+        SELECT
+
+            full_name,
+            phone,
+            course,
+            total_score,
+            daily_score,
+            unlocked_level
+
+        FROM users
+
+        WHERE user_id = %s
+        """,
+        (
+            message.from_user.id,
+        ),
+        fetchone=True
+    )
+
+    if not user:
+
+        await message.answer(
+            "❌ Profil topilmadi."
+        )
+        return
+
+    await message.answer(
+
+        f"👤 Mening Profilim\n\n"
+
+        f"👨 Ism: {user[0] or '-'}\n"
+        f"📱 Telefon: {user[1] or '-'}\n"
+        f"🎓 Kurs: {user[2] or '-'}\n\n"
+
+        f"🏆 Umumiy XP: {user[3] or 0}\n"
+        f"🔥 Bugungi XP: {user[4] or 0}\n"
+
+        f"🔓 Daraja: {user[5] or 'A1'}",
+
+        reply_markup=profile_keyboard()
+    )
+
+
+# =========================================================
+# CHANGE NAME START
+# =========================================================
+
+@dp.message(
+    F.text == "✏️ Ism Familiyani o'zgartirish"
+)
+async def change_name_start(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        ProfileState.change_name
+    )
+
+    await message.answer(
+        "✏️ Yangi ism va familiyangizni yuboring.\n\n"
+        "Masalan:\n"
+        "Zayniddin Mahmudov"
+    )
+
+
+# =========================================================
+# CHANGE NAME SAVE
+# =========================================================
+
+@dp.message(
+    StateFilter(
+        ProfileState.change_name
+    )
+)
+
+
+async def change_name_save(
+    message: Message,
+    state: FSMContext
+):
+
+    full_name = message.text.strip()
+
+    if len(
+        full_name.split()
+    ) < 2:
+
+        await message.answer(
+            "❌ Ism va familiya kiriting."
+        )
+
+        return
+
+    db_execute(
+        """
+        UPDATE users
+
+        SET full_name = %s
+
+        WHERE user_id = %s
+        """,
+        (
+            full_name,
+            message.from_user.id
+        )
+    )
+
+    await state.clear()
+
+    await message.answer(
+        "✅ Ism familiya yangilandi.",
+        reply_markup=profile_keyboard()
+    )
+
+
+# =========================================================
+# XP RATING
+# =========================================================
+
+@dp.message(
+    F.text == "🔥 XP Reytingi"
+)
+async def xp_rating(
+    message: Message
+):
+
+    rows = db_execute(
+        """
+        SELECT
+
+            full_name,
+            total_score
+
+        FROM users
+
+        WHERE approved = 1
+
+        ORDER BY total_score DESC
+
+        LIMIT 10
+        """,
+        fetchall=True
+    )
+
+    text = "🏆 TOP 10 XP Reyting\n\n"
+
+    medals = [
+        "🥇",
+        "🥈",
+        "🥉"
+    ]
+
+    for i, row in enumerate(
+        rows,
+        start=1
+    ):
+
+        medal = (
+            medals[i - 1]
+            if i <= 3
+            else f"{i}."
+        )
+
+        text += (
+            f"{medal} "
+            f"{row[0]} — "
+            f"{row[1]} XP\n"
+        )
+
+    await message.answer(
+        text
+    )
+
 
 # =========================
 # LESSONS HOME
@@ -2358,7 +2593,6 @@ active_lessons = {}
 class RegisterStates(StatesGroup):
 
     waiting_full_name = State()
-
 # =========================================================
 # LEVEL CONFIG
 # =========================================================
