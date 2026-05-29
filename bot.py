@@ -78,9 +78,9 @@ ADMIN_PASSWORD = os.getenv(
     ""
 )
 
-ADMIN_CHANEL = int(
+ADMIN_CHANNEL = int(
     os.getenv(
-        "ADMIN_CHANEL",
+        "ADMIN_CHANNEL",
         "0"
     )
 )
@@ -1263,7 +1263,7 @@ async def send_admin_log(
 ):
 
     # CHANNEL DISABLED
-    if ADMIN_CHANEL == 0:
+    if ADMIN_CHANNEL == 0:
 
         return
 
@@ -1271,7 +1271,7 @@ async def send_admin_log(
 
         await bot.send_message(
 
-            ADMIN_CHANEL,
+            ADMIN_CHANNEL,
 
             text
         )
@@ -1294,7 +1294,7 @@ async def send_admin_photo_log(
 ):
 
     # CHANNEL DISABLED
-    if ADMIN_CHANEL == 0:
+    if ADMIN_CHANNEL == 0:
 
         return
 
@@ -1314,7 +1314,7 @@ async def send_admin_photo_log(
 
         await bot.send_photo(
 
-            ADMIN_CHANEL,
+            ADMIN_CHANNEL,
 
             FSInputFile(photo_path),
 
@@ -1469,31 +1469,64 @@ _MENU_BUTTONS = {
 
 @dp.message(F.text == "📚 Artikel Topish")
 async def artikel_start(message: Message):
-    artikel_users[message.from_user.id] = True
+
+    artikel_users[
+        message.from_user.id
+    ] = True
 
     await message.answer(
         "🔍 Nemischa so'z yuboring.\n\n"
-        "Masalan:\nHaus\nAuto\nMann"
+        "Masalan:\n"
+        "Haus\n"
+        "Auto\n"
+        "Mann"
     )
 
-@dp.message(F.text)
-async def artikel_handler(message: Message):
 
-    user_id = message.from_user.id
+@dp.message(
+    F.text,
+    lambda message: (
+        message.from_user.id
+        in artikel_users
+    )
+)
+async def artikel_handler(
+    message: Message
+):
 
-    if user_id not in artikel_users:
-        return
+    user_id = (
+        message.from_user.id
+    )
+
+    # MENU BOSILSA REJIMDAN CHIQISH
 
     if message.text in _MENU_BUTTONS:
-        artikel_users.pop(user_id, None)
+
+        artikel_users.pop(
+            user_id,
+            None
+        )
+
         return
 
-    word = message.text.lower().strip()
+    word = (
+        message.text
+        .lower()
+        .strip()
+    )
 
     result = artikel.get(word)
 
     await message.answer(
-        result if result else "❌ So'z topilmadi"
+
+        result
+
+        if result
+
+        else (
+            "❌ So'z topilmadi.\n\n"
+            "Boshqa so'z yuboring."
+        )
     )
 # =========================
 # START
