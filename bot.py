@@ -5265,15 +5265,65 @@ async def send_broadcast(
 
 async def main():
 
+    # DATABASE
     init_db_pool()
 
     init_tables()
 
+    logger.info(
+        "DATABASE READY ✅"
+    )
+
+    # LOAD SYSTEMS
     load_artikel()
 
     load_all_quizzes()
 
+    reset_daily_scores()
+
+    logger.info(
+        "SYSTEMS LOADED ✅"
+    )
+
+    # DELETE OLD WEBHOOK
+    try:
+
+        await bot.delete_webhook(
+            drop_pending_updates=True
+        )
+
+        logger.info(
+            "WEBHOOK TOZALANDI ✅"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Webhook error: {e}"
+        )
+
+    # KEEP ALIVE
+    try:
+
+        Thread(
+            target=run_web,
+            daemon=True
+        ).start()
+
+        logger.info(
+            "KEEP ALIVE STARTED ✅"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Flask error: {e}"
+        )
+
+    # START BOT
     await start_bot()
+
+
 # =========================
 # RUN
 # =========================
@@ -5282,8 +5332,11 @@ async def start_bot():
 
     # MEMORY CLEAN
     quiz_running.clear()
+
     quiz_sessions.clear()
+
     active_questions.clear()
+
     answered_users.clear()
 
     while True:
@@ -5306,79 +5359,10 @@ async def start_bot():
 
             await asyncio.sleep(10)
 
-    # =====================================================
-    # DATABASE
-    # =====================================================
 
-    init_db_pool()
-
-    init_tables()
-
-    logger.info(
-        "DATABASE READY ✅"
-    )
-
-    # =====================================================
-    # LOAD SYSTEMS
-    # =====================================================
-
-    load_artikel()
-    load_all_quizzes()
-
-
-    reset_daily_scores()
-
-    logger.info(
-        "SYSTEMS LOADED ✅"
-    )
-
-    # =====================================================
-    # DELETE OLD WEBHOOK
-    # =====================================================
-
-    try:
-
-        await bot.delete_webhook(
-            drop_pending_updates=True
-        )
-
-        logger.info(
-            "WEBHOOK TOZALANDI ✅"
-        )
-
-    except Exception as e:
-
-        logger.error(
-            f"Webhook error: {e}"
-        )
-
-    # =====================================================
-    # KEEP ALIVE
-    # =====================================================
-
-    try:
-
-        Thread(
-            target=run_web,
-            daemon=True
-        ).start()
-
-        logger.info(
-            "KEEP ALIVE STARTED ✅"
-        )
-
-    except Exception as e:
-
-        logger.error(
-            f"Flask error: {e}"
-        )
-
-    # =====================================================
-    # START BOT
-    # =====================================================
-
-    await start_bot()
-
+# =========================
+# START APP
+# =========================
 
 if __name__ == "__main__":
 
