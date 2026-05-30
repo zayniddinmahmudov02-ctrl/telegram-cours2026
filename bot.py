@@ -126,7 +126,7 @@ COURSE_LINKS = {
     "https://t.me/+ILaI0GhJkS1jYmQy",
 
     "🔥 A1-C1":
-    "https://t.me/+J7IoPtpXu0s3ZGIy",
+    "https://t.me/+9sT2uj8rbHM1YTNi",
 }
 
 # =========================================================
@@ -148,7 +148,7 @@ GROUP_LINKS = {
     "https://t.me/+ILaI0GhJkS1jYmQy",
 
     "🔥 A1-C1":
-    "https://t.me/+J7IoPtpXu0s3ZGIy",
+    "https://t.me/+pW308gWaYUwwNmY6",
 }
 
 # =========================================================
@@ -1271,6 +1271,145 @@ async def lesson_handler(
         await message.answer(
             "❌ Darsni ochishda xatolik."
         )
+# =========================================================
+# GRAMMATIK
+# =========================================================
+
+@dp.message(
+    F.text == "📖 Grammatik"
+)
+async def grammatik_handler(
+    message: Message
+):
+
+    user_id = message.from_user.id
+
+    lesson_data = active_lessons.get(
+        user_id
+    )
+
+    if not lesson_data:
+
+        await message.answer(
+            "❌ Avval Unterricht tanlang."
+        )
+
+        return
+
+    level = lesson_data["level"]
+    lesson = lesson_data["lesson"]
+
+    await message.answer(
+        f"📝 {level} - Unterricht {lesson}\n\n"
+        f"Grammatik testi boshlanmoqda..."
+    )
+
+    # KEYIN CSV TEST START
+    # start_grammar_test(...)
+
+# =========================================================
+# LESEN
+# =========================================================
+
+@dp.message(
+    F.text == "📖 Lesen"
+)
+async def lesen_handler(
+    message: Message
+):
+
+    user_id = message.from_user.id
+
+    lesson_data = active_lessons.get(
+        user_id
+    )
+
+    if not lesson_data:
+
+        await message.answer(
+            "❌ Avval Unterricht tanlang."
+        )
+
+        return
+
+    level = lesson_data["level"]
+    lesson = lesson_data["lesson"]
+
+    # GRAMMATIK CHECK
+
+    row = db_execute(
+        """
+        SELECT completed
+
+        FROM lesson_task_progress
+
+        WHERE
+            user_id = %s
+            AND level = %s
+            AND lesson = %s
+            AND task_name = 'Grammatik'
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchone=True
+    )
+
+    if not row or not row[0]:
+
+        await message.answer(
+            "🔒 Avval Grammatik vazifasini tugating."
+        )
+
+        return
+
+    try:
+
+        file_path = (
+            f"{level}-Level/texts/"
+            f"{level}-{lesson}-lesen.txt"
+        )
+
+        with open(
+            file_path,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            text = f.read()
+
+        keyboard = ReplyKeyboardMarkup(
+            keyboard=[
+                [
+                    KeyboardButton(
+                        text="✅ O'qib chiqdim"
+                    )
+                ],
+                [
+                    KeyboardButton(
+                        text="⬅️ Orqaga"
+                    )
+                ]
+            ],
+            resize_keyboard=True
+        )
+
+        await message.answer(
+            f"📖 LESEN\n\n{text}",
+            reply_markup=keyboard
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Lesen error: {e}"
+        )
+
+        await message.answer(
+            "❌ Lesen matni topilmadi."
+        )
 
 # =========================================================
 # CHECK SUBSCRIPTION
@@ -2019,6 +2158,22 @@ async def lessons_home(
     message: Message
 ):
 
+    user_id = message.from_user.id
+
+    # ADMIN FULL ACCESS
+
+    if user_id == ADMIN_ID:
+
+        await message.answer(
+            "🎓 Darslarni O'rganish\n\n"
+            "Darajani tanlang:",
+            reply_markup=build_lessons_menu(
+                ["A1", "A2", "B1", "B2", "C1"]
+            )
+        )
+
+        return
+
     row = db_execute(
         """
         SELECT
@@ -2027,7 +2182,7 @@ async def lessons_home(
         FROM users
         WHERE user_id = %s
         """,
-        (message.from_user.id,),
+        (user_id,),
         fetchone=True
     )
 
