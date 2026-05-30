@@ -1271,6 +1271,7 @@ async def lesson_handler(
         await message.answer(
             "❌ Darsni ochishda xatolik."
         )
+
 # =========================================================
 # GRAMMATIK
 # =========================================================
@@ -1297,15 +1298,51 @@ async def grammatik_handler(
         return
 
     level = lesson_data["level"]
+
     lesson = lesson_data["lesson"]
+
+    questions = load_lesson_csv(
+        f"{level}-Level/{level}-Grammatik.csv",
+        lesson
+    )
+
+    if not questions:
+
+        await message.answer(
+            "❌ Grammatik test topilmadi."
+        )
+
+        return
+
+    random.shuffle(
+        questions
+    )
+
+    lesson_quiz_sessions[user_id] = {
+
+        "level": level,
+
+        "lesson": lesson,
+
+        "task": "Grammatik",
+
+        "questions": questions,
+
+        "index": 0,
+
+        "score": 0
+    }
 
     await message.answer(
         f"📝 {level} - Unterricht {lesson}\n\n"
-        f"Grammatik testi boshlanmoqda..."
+        f"📚 Savollar: {len(questions)}"
     )
 
-    # KEYIN CSV TEST START
-    # start_grammar_test(...)
+    await send_lesson_question(
+        message.chat.id,
+        user_id
+    )
+
 
 # =========================================================
 # LESEN
@@ -2742,6 +2779,17 @@ last_daily_reset = None
 # ACTIVE LESSONS
 active_lessons = {}
 # =========================================================
+# LESSON QUIZ SYSTEM
+# =========================================================
+
+LESSON_QUIZ_DATA = {}
+
+lesson_quiz_sessions = {}
+
+lesson_active_questions = {}
+
+lesson_answered_users = {}
+# =========================================================
 # REGISTER STATES
 # =========================================================
 
@@ -2958,6 +3006,68 @@ def load_all_quizzes():
     logger.info(
         "All quizzes loaded ✅"
     )
+
+
+# =========================================================
+# LOAD LESSON CSV
+# =========================================================
+
+def load_lesson_csv(
+    filename,
+    lesson
+):
+
+    data = []
+
+    if not os.path.exists(
+        filename
+    ):
+        return []
+
+    with open(
+        filename,
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(
+            f
+        )
+
+        for row in reader:
+
+            try:
+
+                if int(
+                    row["lesson"]
+                ) != lesson:
+
+                    continue
+
+                data.append({
+
+                    "id": int(
+                        row["task_id"]
+                    ),
+
+                    "question": row["question"],
+
+                    "correct": row["correct"],
+
+                    "wrong1": row["wrong1"],
+
+                    "wrong2": row["wrong2"]
+
+                })
+
+            except Exception as e:
+
+                logger.error(
+                    f"Lesson CSV error: {e}"
+                )
+
+    return data
+
 # =========================================================
 # DAILY RESET
 # =========================================================
@@ -3869,6 +3979,261 @@ async def send_next_question(
             None
         )
 
+# =========================================================
+# SEND LESSON QUESTION
+# =========================================================
+
+async def send_lesson_question(
+    chat_id,
+    user_id
+):
+
+    session = lesson_quiz_sessions.get(
+        user_id
+    )
+
+    if not session:
+        return
+
+    questions = session["questions"]
+
+    index = session["index"]
+
+    if index >= len(questions):
+
+        await finish_lesson_quiz(
+            chat_id,
+            user_id
+        )
+
+        return
+
+    question = questions[index]
+
+    answers = [
+
+        question["correct"],
+
+        question["wrong1"],
+
+        question["wrong2"]
+    ]
+
+    random.shuffle(
+        answers
+    )
+
+    qid = (
+        f"lesson_{user_id}_"
+        f"{question['id']}"
+    )
+
+    callback_map = {}
+
+    buttons = []
+
+    for i, answer in enumerate(
+        answers
+    ):
+
+        answer_key = f"a{i}"
+
+        callback_map[
+            answer_key
+        ] = answer
+
+        buttons.append([
+
+            InlineKeyboardButton(
+
+                text=answer,
+
+                callback_data=
+                f"lessonquiz:{qid}:{answer_key}"
+            )
+        ])
+
+    lesson_active_questions[qid] = {
+
+        "user_id": user_id,
+
+        "correct": question["correct"],
+
+        "answers": callback_map
+    }
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+    await bot.send_message(
+
+        chat_id,
+
+        f"📝 Savol "
+        f"{index+1}/"
+        f"{len(questions)}\n\n"
+        f"{question['question']}",
+
+        reply_markup=keyboard
+    )
+# =========================================================
+# LESSON QUIZ ANSWER
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "lessonquiz:"
+    )
+)
+async def lesson_quiz_answer(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    try:
+
+        _, qid, answer_key = (
+            callback.data.split(
+                ":",
+                2
+            )
+        )
+
+    except:
+
+        return
+
+    if qid not in lesson_active_questions:
+
+        await callback.answer(
+            "❌ Savol tugagan.",
+            show_alert=True
+        )
+
+        return
+
+    question_data = (
+        lesson_active_questions[qid]
+    )
+
+    if (
+        question_data["user_id"]
+        != user_id
+    ):
+
+        await callback.answer(
+            "❌ Bu sizning testingiz emas.",
+            show_alert=True
+        )
+
+        return
+
+    session = lesson_quiz_sessions.get(
+        user_id
+    )
+
+    if not session:
+        return
+
+    selected = (
+        question_data["answers"]
+        .get(answer_key)
+    )
+
+    if selected == question_data["correct"]:
+
+        session["score"] += 1
+
+        await callback.answer(
+            "✅ To'g'ri!"
+        )
+
+    else:
+
+        await callback.answer(
+            f"❌ To'g'ri javob:\n\n"
+            f"{question_data['correct']}",
+            show_alert=True
+        )
+
+    session["index"] += 1
+
+    lesson_active_questions.pop(
+        qid,
+        None
+    )
+
+    try:
+
+        await callback.message.edit_reply_markup(
+            reply_markup=None
+        )
+
+    except:
+        pass
+
+    await send_lesson_question(
+        callback.message.chat.id,
+        user_id
+    )
+
+# =========================================================
+# FINISH LESSON QUIZ
+# =========================================================
+
+async def finish_lesson_quiz(
+    chat_id,
+    user_id
+):
+
+    session = lesson_quiz_sessions.get(
+        user_id
+    )
+
+    if not session:
+        return
+
+    score = session["score"]
+
+    total = len(
+        session["questions"]
+    )
+
+    percent = (
+        score * 100
+    ) // total
+
+    if percent >= 70:
+
+        await bot.send_message(
+
+            chat_id,
+
+            f"✅ Vazifa bajarildi!\n\n"
+            f"📊 Natija: "
+            f"{score}/{total}\n"
+            f"🎯 {percent}%"
+        )
+
+    else:
+
+        await bot.send_message(
+
+            chat_id,
+
+            f"❌ Vazifa bajarilmadi.\n\n"
+            f"📊 Natija: "
+            f"{score}/{total}\n"
+            f"🎯 {percent}%\n\n"
+            f"Kamida 70% kerak."
+        )
+
+    lesson_quiz_sessions.pop(
+        user_id,
+        None
+    )
 
 # =========================================================
 # ANSWER
