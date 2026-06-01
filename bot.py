@@ -150,49 +150,38 @@ GROUP_LINKS = {
     "🔥 A1-C1":
     "https://t.me/+pW308gWaYUwwNmY6",
 }
-
-# =========================================================
-# COURSE INFO
-# =========================================================
-
 COURSE_INFO = {
 
     "🇩🇪 A1": {
-
         "lessons": 14,
-
-        "price": "100.000 so'm"
+        "old_price": "200.000 so'm",
+        "price": "50.000 so'm"
     },
 
     "🇩🇪 A2": {
-
         "lessons": 14,
-
-        "price": "150.000 so'm"
+        "old_price": "300.000 so'm",
+        "price": "100.000 so'm"
     },
 
     "🇩🇪 B1": {
-
         "lessons": 20,
-
-        "price": "200.000 so'm"
+        "old_price": "400.000 so'm",
+        "price": "150.000 so'm"
     },
 
     "🔥 A1-B1": {
-
         "lessons": 48,
-
-        "price": "300.000 so'm"
+        "old_price": "600.000 so'm",
+        "price": "200.000 so'm"
     },
 
     "🔥 A1-C1": {
-
         "lessons": 100,
-
-        "price": "600.000 so'm"
+        "old_price": "1.200.000 so'm",
+        "price": "400.000 so'm"
     },
 }
-
 # =========================================================
 # DATABASE
 # =========================================================
@@ -1846,7 +1835,7 @@ async def cmd_start(message: Message):
         "🇩🇪 Nemis Tili Video Darslari Botiga "
         "Xush Kelibsiz!\n\n"
         "🎉 Hozirda barcha kurslar "
-        "50% CHEGIRMADA!",
+        "70% CHEGIRMADA!",
         reply_markup=main_menu,
     )
 
@@ -2360,42 +2349,38 @@ async def go_back(
         "🏠 Asosiy Menu",
         reply_markup=main_menu
     )
-
 # =========================
 # COURSE HANDLER
 # =========================
+
 async def send_course_info(message: Message, course: str):
     info = COURSE_INFO[course]
+
     text = (
-        f"🎉 Hozirda barcha kurslar 50% CHEGIRMADA!\n\n"
+        f"🎉 Hozirda barcha kurslar 70% CHEGIRMADA!\n\n"
+
         f"{course} Video Darslari\n\n"
+
         f"📚 {info['lessons']} dars\n\n"
-        f"🔥 Narx: {info['price']}\n\n"
-        f"✅ Grammatika\n✅ Lesen\n✅ Hören\n✅ Schreiben\n✅ Sprechen\n\n"
-        f"💳 To'lov:\n9860 3501 4490 7192\n\n"
+
+        f"❌ Eski narx: {info['old_price']}\n"
+        f"🔥 Chegirmadagi narx: {info['price']}\n\n"
+
+        f"💳 To'lov:\n"
+        f"9860 3501 4490 7192\n\n"
+
         f"👤 Zayniddinkhuja Makhmudov\n\n"
+
         f"📩 To'lovdan keyin chekni shu botga yuboring.\n"
         f"Admin tasdiqlaydi va kurs havolasini yuboradi."
     )
-    # store chosen course in DB immediately
-    db_execute("UPDATE users SET course = %s WHERE user_id = %s", (course, message.from_user.id))
+
+    db_execute(
+        "UPDATE users SET course = %s WHERE user_id = %s",
+        (course, message.from_user.id)
+    )
+
     await message.answer(text)
-
-@dp.message(F.text == "🇩🇪 A1")
-async def course_a1(message: Message): await send_course_info(message, "🇩🇪 A1")
-
-@dp.message(F.text == "🇩🇪 A2")
-async def course_a2(message: Message): await send_course_info(message, "🇩🇪 A2")
-
-@dp.message(F.text == "🇩🇪 B1")
-async def course_b1(message: Message): await send_course_info(message, "🇩🇪 B1")
-
-
-@dp.message(F.text == "🔥 A1-B1")
-async def course_a1b1(message: Message): await send_course_info(message, "🔥 A1-B1")
-
-@dp.message(F.text == "🔥 A1-C1")
-async def course_a1c1(message: Message): await send_course_info(message, "🔥 A1-C1")
 # =========================
 # CHECK PHOTO (payment receipt)
 # =========================
