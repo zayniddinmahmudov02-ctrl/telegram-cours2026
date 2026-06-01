@@ -731,40 +731,6 @@ def is_admin(
     )
 
 # =========================================================
-# LESSON TASKS MENU
-# =========================================================
-
-lesson_tasks_menu = ReplyKeyboardMarkup(
-    keyboard=[
-
-        [KeyboardButton(
-            text="📝 Grammatik"
-        )],
-
-        [KeyboardButton(
-            text="📖 Lesen"
-        )],
-
-        [KeyboardButton(
-            text="🎧 Hören"
-        )],
-
-        [KeyboardButton(
-            text="✍️ Schreiben"
-        )],
-
-        [KeyboardButton(
-            text="🎤 Sprechen"
-        )],
-
-        [KeyboardButton(
-            text="⬅️ Orqaga"
-        )]
-
-    ],
-    resize_keyboard=True
-)
-# =========================================================
 # LESSON TASKS
 # =========================================================
 
@@ -780,42 +746,113 @@ LESSON_TASKS = [
 
     "Sprechen"
 ]
-
+# =========================================================
+# BUILD TASK MENU
+# =========================================================
 
 def build_task_menu(
-    next_task
+    user_id,
+    level,
+    lesson
 ):
 
     keyboard = []
 
     for task in LESSON_TASKS:
 
-        if task == next_task:
+        row = db_execute(
+            """
+            SELECT completed
 
-            icon = "📖"
+            FROM lesson_task_progress
+
+            WHERE
+                user_id = %s
+                AND level = %s
+                AND lesson = %s
+                AND task_name = %s
+            """,
+            (
+                user_id,
+                level,
+                lesson,
+                task
+            ),
+            fetchone=True
+        )
+
+        # TASK COMPLETED
+        if row and row[0]:
+
+            icon = "✅"
 
         else:
 
-            icon = "🔒"
+            unlocked = True
 
-        keyboard.append([
-            KeyboardButton(
-                text=f"{icon} {task}"
+            current_index = LESSON_TASKS.index(
+                task
             )
-        ])
 
-    keyboard.append([
-        KeyboardButton(
-            text="⬅️ Orqaga"
+            # CHECK PREVIOUS TASKS
+            for prev_task in LESSON_TASKS[
+                :current_index
+            ]:
+
+                prev_row = db_execute(
+                    """
+                    SELECT completed
+
+                    FROM lesson_task_progress
+
+                    WHERE
+                        user_id = %s
+                        AND level = %s
+                        AND lesson = %s
+                        AND task_name = %s
+                    """,
+                    (
+                        user_id,
+                        level,
+                        lesson,
+                        prev_task
+                    ),
+                    fetchone=True
+                )
+
+                if not prev_row or not prev_row[0]:
+
+                    unlocked = False
+                    break
+
+            if unlocked:
+
+                icon = "📖"
+
+            else:
+
+                icon = "🔒"
+
+        keyboard.append(
+            [
+                KeyboardButton(
+                    text=f"{icon} {task}"
+                )
+            ]
         )
-    ])
+
+    keyboard.append(
+        [
+            KeyboardButton(
+                text="⬅️ Orqaga"
+            )
+        ]
+    )
 
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
         resize_keyboard=True
     )
-
-
 # =========================================================
 # LESSON COUNTS
 # =========================================================
@@ -4183,7 +4220,6 @@ async def lesson_quiz_answer(
         callback.message.chat.id,
         user_id
     )
-
 # =========================================================
 # FINISH LESSON QUIZ
 # =========================================================
@@ -4210,16 +4246,59 @@ async def finish_lesson_quiz(
         score * 100
     ) // total
 
+    level = session["level"]
+    lesson = session["lesson"]
+    task = session["task"]
+
     if percent >= 70:
+
+        # TASK COMPLETE
+        db_execute(
+            """
+            INSERT INTO lesson_task_progress
+            (
+                user_id,
+                level,
+                lesson,
+                task_name,
+                completed
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s,
+                TRUE
+            )
+
+            ON CONFLICT
+            (
+                user_id,
+                level,
+                lesson,
+                task_name
+            )
+            DO UPDATE SET
+                completed = TRUE,
+                completed_at = NOW()
+            """,
+            (
+                user_id,
+                level,
+                lesson,
+                task
+            )
+        )
 
         await bot.send_message(
 
             chat_id,
 
             f"✅ Vazifa bajarildi!\n\n"
-            f"📊 Natija: "
-            f"{score}/{total}\n"
-            f"🎯 {percent}%"
+            f"📊 Natija: {score}/{total}\n"
+            f"🎯 {percent}%\n\n"
+            f"🔓 Keyingi bo'lim ochildi!"
         )
 
     else:
@@ -4229,8 +4308,7 @@ async def finish_lesson_quiz(
             chat_id,
 
             f"❌ Vazifa bajarilmadi.\n\n"
-            f"📊 Natija: "
-            f"{score}/{total}\n"
+            f"📊 Natija: {score}/{total}\n"
             f"🎯 {percent}%\n\n"
             f"Kamida 70% kerak."
         )
@@ -4239,7 +4317,6 @@ async def finish_lesson_quiz(
         user_id,
         None
     )
-
 # =========================================================
 # ANSWER
 # =========================================================
