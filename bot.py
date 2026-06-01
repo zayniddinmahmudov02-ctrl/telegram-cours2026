@@ -2349,6 +2349,7 @@ async def go_back(
         "🏠 Asosiy Menu",
         reply_markup=main_menu
     )
+    
 # =========================
 # COURSE HANDLER
 # =========================
@@ -2381,6 +2382,25 @@ async def send_course_info(message: Message, course: str):
     )
 
     await message.answer(text)
+@dp.message(F.text == "🇩🇪 A1")
+async def course_a1(message: Message):
+    await send_course_info(message, "🇩🇪 A1")
+
+@dp.message(F.text == "🇩🇪 A2")
+async def course_a2(message: Message):
+    await send_course_info(message, "🇩🇪 A2")
+
+@dp.message(F.text == "🇩🇪 B1")
+async def course_b1(message: Message):
+    await send_course_info(message, "🇩🇪 B1")
+
+@dp.message(F.text == "🔥 A1-B1")
+async def course_a1b1(message: Message):
+    await send_course_info(message, "🔥 A1-B1")
+
+@dp.message(F.text == "🔥 A1-C1")
+async def course_a1c1(message: Message):
+    await send_course_info(message, "🔥 A1-C1")
 # =========================
 # CHECK PHOTO (payment receipt)
 # =========================
