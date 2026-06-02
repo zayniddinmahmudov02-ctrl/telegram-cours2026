@@ -426,12 +426,13 @@ def profile_keyboard():
         ],
         resize_keyboard=True
     )
-
 # =========================================================
 # GLOBAL CONSTANTS
 # =========================================================
 LESSON_TASKS = ["Grammatik", "Lesen", "Hören", "Schreiben", "Sprechen"]
 
+# Har bir daraja uchun darslar nomini dinamik hosil qilish uchun 
+# bazaviy raqamlarni saqlaymiz
 LESSON_COUNTS = {
     "A1": 14,
     "A2": 14,
@@ -439,6 +440,14 @@ LESSON_COUNTS = {
     "B2": 30,
     "C1": 22
 }
+
+def get_lesson_list(level):
+    """
+    Berilgan daraja uchun "1-dars", "2-dars" ... formatida 
+    list qaytaruvchi funksiya.
+    """
+    max_count = LESSON_COUNTS.get(level, 0)
+    return [f"{i}-dars" for i in range(1, max_count + 1)]
 
 # =========================================================
 # HELPER FUNCTIONS & OPTIMIZED DB GETTERS
@@ -571,23 +580,13 @@ def build_level_lessons_menu(level, unlocked, exam_passed=False):
         input_field_placeholder=f"🇩🇪 {level} darslaridan birini tanlang..."
     )
 # =========================================================
-# BUILD TASK MENU
+# BUILD TASK MENU (OPTIMALLASHTIRILGAN)
 # =========================================================
+def build_task_menu(user_id, level, lesson):
+    builder = InlineKeyboardBuilder()
 
-def build_task_menu(
-    user_id,
-    level,
-    lesson
-):
-    keyboard = []
+    next_task = get_next_task(user_id, level, lesson)
 
-    next_task = get_next_task(
-        user_id,
-        level,
-        lesson
-    )
-
-    # Foydalanuvchining ushbu darsdagi barcha bajarilgan vazifalarini bitta so'rovda olamiz (Optimallashtirildi)
     rows = db_execute(
         """
         SELECT task_name 
@@ -601,29 +600,16 @@ def build_task_menu(
 
     for task in LESSON_TASKS:
         if task in completed_tasks:
-            icon = "✅"
+            icon, callback = "✅", f"start_{task}_{lesson}"
         elif task == next_task:
-            icon = "📖"
+            icon, callback = "📖", f"start_{task}_{lesson}"
         else:
-            icon = "🔒"
+            icon, callback = "🔒", "locked_task"
 
-        keyboard.append([
-            KeyboardButton(
-                text=f"{icon} {task}"
-            )
-        ])
+        builder.row(InlineKeyboardButton(text=f"{icon} {task}", callback_data=callback))
 
-    keyboard.append([
-        KeyboardButton(
-            text="⬅️ Orqaga"
-        )
-    ])
-
-    return ReplyKeyboardMarkup(
-        keyboard=keyboard,
-        resize_keyboard=True
-    )
-
+    builder.row(InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"level_{level}"))
+    return builder.as_markup()
 # =========================================================
 # UNTERRICHT HANDLER
 # =========================================================
@@ -631,22 +617,21 @@ def build_task_menu(
 @dp.message(F.text.regexp(r"^📖 Unterricht \d+$"))
 async def lesson_handler(message: Message):
     user_id = message.from_user.id
-
     try:
-        lesson = int(message.text.split()[-1])
+        # Xabardan dars raqamini olish (masalan, "Unterricht 1" -> 1)
+        lesson_num = int(message.text.split()[-1])
+        # Bazaga saqlash uchun "1-dars" formatiga o'tkazamiz
+        lesson_id = f"{lesson_num}-dars"
 
+        # Foydalanuvchining joriy darajasini bazadan olish
         row = db_execute(
-            """
-            SELECT level
-            FROM active_lessons
-            WHERE user_id = %s
-            """,
+            "SELECT level FROM active_lessons WHERE user_id = %s",
             (user_id,),
             fetchone=True
         )
-
         level = row[0] if row else "A1"
 
+        # Active lessons jadvalini yangilash
         db_execute(
             """
             INSERT INTO active_lessons (user_id, level, lesson)
@@ -657,14 +642,15 @@ async def lesson_handler(message: Message):
                 lesson = EXCLUDED.lesson,
                 updated_at = NOW()
             """,
-            (user_id, level, lesson)
+            (user_id, level, lesson_id)
         )
 
+        # Inline menyu bilan javob qaytarish
         await message.answer(
             f"🇩🇪 {level}\n\n"
-            f"📖 Unterricht {lesson}\n\n"
+            f"📖 Unterricht {lesson_num}\n\n"
             f"Kerakli vazifani bajaring:",
-            reply_markup=build_task_menu(user_id, level, lesson)
+            reply_markup=build_task_menu(user_id, level, lesson_id)
         )
 
     except Exception as e:
@@ -672,7 +658,7 @@ async def lesson_handler(message: Message):
         await message.answer("❌ Darsni ochishda xatolik yuz berdi.")
 
 # =========================================================
-# GRAMMATIKA TESTINI YAKUNLASH
+# GRAMMATIK
 # =========================================================
 
 async def finish_grammatik_quiz(message: Message, user_id: int):
@@ -1701,7 +1687,7 @@ async def reject_user(callback: CallbackQuery):
 
     await callback.message.answer(f"❌ {full_name} rad qilindi.")
     await callback.answer("❌ Rad qilindi")
-    
+
 # =========================================================
 # SEND LESSON QUESTION (MUKAMMAL INTEGRATSIYA)
 # =========================================================
