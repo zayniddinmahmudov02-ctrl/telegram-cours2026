@@ -603,25 +603,85 @@ def build_task_menu(user_id, level, lesson):
 # =========================================================
 # UNTERRICHT HANDLER
 # =========================================================
-@dp.message(F.text.regexp(r"^📖 Unterricht \d+$"))
-async def lesson_handler(message: Message):
-    user_id = message.from_user.id
-    try:
-        lesson_num = int(message.text.split()[-1])
-        lesson_id = f"{lesson_num}-dars" # Bazaga mos format
-        
-        row = db_execute("SELECT course FROM users WHERE user_id = %s", (user_id,), fetchone=True)
-        level = get_available_levels(row[0])[0] if row and get_available_levels(row[0]) else "A1"
 
-        active_lessons[user_id] = {"level": level, "lesson": lesson_id}
+@dp.message(
+    F.text.regexp(
+        r"^📖 Unterricht \d+$"
+    )
+)
+async def lesson_handler(
+    message: Message
+):
+
+    user_id = message.from_user.id
+
+    try:
+
+        lesson_num = int(
+            message.text.split()[-1]
+        )
+
+        row = db_execute(
+            """
+            SELECT course
+
+            FROM users
+
+            WHERE user_id = %s
+            """,
+            (user_id,),
+            fetchone=True
+        )
+
+        if row and row[0]:
+
+            levels = get_available_levels(
+                row[0]
+            )
+
+            level = (
+                levels[0]
+                if levels
+                else "A1"
+            )
+
+        else:
+
+            level = "A1"
+
+        # ACTIVE LESSON
+        active_lessons[user_id] = {
+
+            "level": level,
+
+            "lesson": lesson_num
+        }
 
         await message.answer(
-            f"🇩🇪 {level}\n\n📖 Unterricht {lesson_num}\n\nKerakli vazifani bajaring:",
-            reply_markup=build_task_menu(user_id, level, lesson_id)
+
+            f"🇩🇪 {level}\n\n"
+
+            f"📖 Unterricht {lesson_num}\n\n"
+
+            f"Kerakli vazifani bajaring:",
+
+            reply_markup=
+            build_task_menu(
+                user_id,
+                level,
+                lesson_num
+            )
         )
+
     except Exception as e:
-        logger.exception(f"LESSON_HANDLER_ERROR: {e}")
-        await message.answer("❌ Darsni ochishda xatolik.")
+
+        logger.exception(
+            f"LESSON_HANDLER_ERROR: {e}"
+        )
+
+        await message.answer(
+            "❌ Darsni ochishda xatolik."
+        )
 # =========================================================
 # FINISH GRAMMATIK QUIZ (YAKUNIY)
 # =========================================================
@@ -1769,73 +1829,132 @@ async def reject_user(callback: CallbackQuery):
     await callback.answer("❌ Rad qilindi")
 
 # =========================================================
-# SEND LESSON QUESTION (MUKAMMAL INTEGRATSIYA)
+# SEND LESSON QUESTION
 # =========================================================
 
-async def send_lesson_question(message: Message, user_id: int):
-    session = lesson_quiz_sessions.get(user_id)
+async def send_lesson_question(
+    message,
+    user_id
+):
+
+    session = lesson_quiz_sessions.get(
+        user_id
+    )
+
     if not session:
         return
 
     questions = session["questions"]
+
     index = session["index"]
 
-    # Agar savollar tugasa, Grammatika yakunlash funksiyasini chaqiramiz
+    # QUIZ FINISHED
+
     if index >= len(questions):
-        await finish_grammatik_quiz(message, user_id)
+
+        await finish_lesson_quiz(
+            message,
+            user_id
+        )
+
         return
 
-    # CSV jadvalidagi tartib bo'yicha ma'lumotlarni olamiz:
-    # lesson, task_id, type, question, correct, wrong1, wrong2
     question_data = questions[index]
-    
-    task_id = question_data[1]
-    question_text = question_data[3]
-    correct_ans = str(question_data[4])
-    wrong1_ans = str(question_data[5])
-    wrong2_ans = str(question_data[6])
 
-    # Variantlarni ro'yxatga olib aralashtiramiz
-    answers = [correct_ans, wrong1_ans, wrong2_ans]
-    random.shuffle(answers)
+    task_id = question_data["id"]
 
-    # Telegram callback_data xavfsizligi uchun QID yaratamiz
-    qid = f"lesson_{user_id}_{task_id}"
+    question_text = question_data["question"]
+
+    correct_ans = question_data["correct"]
+
+    wrong1_ans = question_data["wrong1"]
+
+    wrong2_ans = question_data["wrong2"]
+
+    answers = [
+
+        correct_ans,
+
+        wrong1_ans,
+
+        wrong2_ans
+
+    ]
+
+    random.shuffle(
+        answers
+    )
+
+    qid = (
+        f"lesson_"
+        f"{user_id}_"
+        f"{task_id}"
+    )
 
     callback_map = {}
+
     buttons = []
 
-    # Javoblarni 'a0', 'a1', 'a2' kalitlariga xaritaga (map) joylaymiz
-    for i, answer in enumerate(answers):
+    for i, answer in enumerate(
+        answers
+    ):
+
         answer_key = f"a{i}"
-        callback_map[answer_key] = answer
+
+        callback_map[
+            answer_key
+        ] = answer
 
         buttons.append([
             InlineKeyboardButton(
                 text=answer,
-                # callback_data: gq:QID:kalit (uzunlik qisqa va xavfsiz bo'ladi)
-                callback_data=f"gq:{qid}:{answer_key}"
+                callback_data=
+                f"gq:{qid}:{answer_key}"
             )
         ])
 
-    # Kesh xotiraga to'g'ri javob va variantlar xaritasi saqlanadi
     lesson_active_questions[qid] = {
+
         "user_id": user_id,
+
         "correct": correct_ans,
+
         "answers": callback_map
     }
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-    
-    # Chat IDni message ob'ektidan xavfsiz aniqlaymiz
-    chat_id = message.chat.id if hasattr(message, 'chat') else message.message.chat.id
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+    if hasattr(
+        message,
+        "chat"
+    ):
+
+        chat_id = message.chat.id
+
+    else:
+
+        chat_id = (
+            message.message.chat.id
+        )
+
+    task_name = session.get(
+        "task",
+        "Test"
+    )
 
     await bot.send_message(
-        chat_id=chat_id,
-        text=f"📝 <b>Grammatika test | Savol {index + 1}/{len(questions)}</b>\n\n"
-             f"{question_text}",
+
+        chat_id,
+
+        f"📝 {task_name}\n\n"
+        f"📊 {index + 1}/{len(questions)}\n\n"
+        f"{question_text}",
+
         reply_markup=keyboard
     )
+
 # =========================================================
 # LESSON QUIZ ANSWER (GRAMMATIKA JAVOBLARINI TEKSHIRISH)
 # =========================================================
