@@ -747,113 +747,6 @@ LESSON_TASKS = [
     "Sprechen"
 ]
 # =========================================================
-# BUILD TASK MENU
-# =========================================================
-
-def build_task_menu(
-    user_id,
-    level,
-    lesson
-):
-
-    keyboard = []
-
-    for task in LESSON_TASKS:
-
-        row = db_execute(
-            """
-            SELECT completed
-
-            FROM lesson_task_progress
-
-            WHERE
-                user_id = %s
-                AND level = %s
-                AND lesson = %s
-                AND task_name = %s
-            """,
-            (
-                user_id,
-                level,
-                lesson,
-                task
-            ),
-            fetchone=True
-        )
-
-        # TASK COMPLETED
-        if row and row[0]:
-
-            icon = "✅"
-
-        else:
-
-            unlocked = True
-
-            current_index = LESSON_TASKS.index(
-                task
-            )
-
-            # CHECK PREVIOUS TASKS
-            for prev_task in LESSON_TASKS[
-                :current_index
-            ]:
-
-                prev_row = db_execute(
-                    """
-                    SELECT completed
-
-                    FROM lesson_task_progress
-
-                    WHERE
-                        user_id = %s
-                        AND level = %s
-                        AND lesson = %s
-                        AND task_name = %s
-                    """,
-                    (
-                        user_id,
-                        level,
-                        lesson,
-                        prev_task
-                    ),
-                    fetchone=True
-                )
-
-                if not prev_row or not prev_row[0]:
-
-                    unlocked = False
-                    break
-
-            if unlocked:
-
-                icon = "📖"
-
-            else:
-
-                icon = "🔒"
-
-        keyboard.append(
-            [
-                KeyboardButton(
-                    text=f"{icon} {task}"
-                )
-            ]
-        )
-
-    keyboard.append(
-        [
-            KeyboardButton(
-                text="⬅️ Orqaga"
-            )
-        ]
-    )
-
-    return ReplyKeyboardMarkup(
-        keyboard=keyboard,
-        resize_keyboard=True
-    )
-# =========================================================
 # LESSON COUNTS
 # =========================================================
 
@@ -1037,45 +930,6 @@ def get_next_task(
             return task
 
     return None
-
-# =========================================================
-# BUILD TASK MENU
-# =========================================================
-
-def build_task_menu(
-    next_task
-):
-
-    keyboard = []
-
-    for task in LESSON_TASKS:
-
-        if task == next_task:
-
-            icon = "📖"
-
-        else:
-
-            icon = "🔒"
-
-        keyboard.append([
-            KeyboardButton(
-                text=f"{icon} {task}"
-            )
-        ])
-
-    keyboard.append([
-
-        KeyboardButton(
-            text="⬅️ Orqaga"
-        )
-
-    ])
-
-    return ReplyKeyboardMarkup(
-        keyboard=keyboard,
-        resize_keyboard=True
-    )
 # =========================================================
 # FINAL EXAM STATUS
 # =========================================================
@@ -1202,6 +1056,75 @@ def build_level_lessons_menu(
     )
 
 # =========================================================
+# BUILD TASK MENU
+# =========================================================
+
+def build_task_menu(
+    user_id,
+    level,
+    lesson
+):
+
+    keyboard = []
+
+    next_task = get_next_task(
+        user_id,
+        level,
+        lesson
+    )
+
+    for task in LESSON_TASKS:
+
+        row = db_execute(
+            """
+            SELECT completed
+
+            FROM lesson_task_progress
+
+            WHERE
+                user_id = %s
+                AND level = %s
+                AND lesson = %s
+                AND task_name = %s
+            """,
+            (
+                user_id,
+                level,
+                lesson,
+                task
+            ),
+            fetchone=True
+        )
+
+        if row and row[0]:
+
+            icon = "✅"
+
+        elif task == next_task:
+
+            icon = "📖"
+
+        else:
+
+            icon = "🔒"
+
+        keyboard.append([
+            KeyboardButton(
+                text=f"{icon} {task}"
+            )
+        ])
+
+    keyboard.append([
+        KeyboardButton(
+            text="⬅️ Orqaga"
+        )
+    ])
+
+    return ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+# =========================================================
 # UNTERRICHT HANDLER
 # =========================================================
 
@@ -1216,75 +1139,46 @@ async def lesson_handler(
 
     try:
 
+        user_id = message.from_user.id
+
         lesson = int(
             message.text.split()[-1]
         )
 
-        user_id = (
-            message.from_user.id
+        lesson_data = active_lessons.get(
+            user_id
         )
 
-        level = None
+        if lesson_data:
 
-        # FIND CURRENT LEVEL
-        row = db_execute(
-            """
-            SELECT course
-
-            FROM users
-
-            WHERE user_id = %s
-            """,
-            (user_id,),
-            fetchone=True
-        )
-
-        if row:
-
-            course = row[0]
-
-            levels = (
-                get_available_levels(
-                    course
-                )
+            level = lesson_data.get(
+                "level",
+                "A1"
             )
 
-            if levels:
-
-                level = levels[0]
-
-        if not level:
+        else:
 
             level = "A1"
 
-        # SAVE ACTIVE LESSON
-        active_lessons[
-            user_id
-        ] = {
+        active_lessons[user_id] = {
 
             "level": level,
 
             "lesson": lesson
-        }
 
-        next_task = get_next_task(
-            user_id,
-            level,
-            lesson
-        )
+        }
 
         await message.answer(
 
             f"🇩🇪 {level}\n\n"
-
-            f"📖 Unterricht "
-            f"{lesson}\n\n"
-
+            f"📖 Unterricht {lesson}\n\n"
             f"Kerakli vazifani bajaring:",
 
             reply_markup=
             build_task_menu(
-                next_task
+                user_id,
+                level,
+                lesson
             )
         )
 
@@ -1298,6 +1192,45 @@ async def lesson_handler(
             "❌ Darsni ochishda xatolik."
         )
 
+        # =====================================
+        # NEXT TASK
+        # =====================================
+
+        next_task = get_next_task(
+            user_id,
+            level,
+            lesson
+        )
+
+        # =====================================
+        # OPEN LESSON
+        # =====================================
+
+        await message.answer(
+
+            f"🇩🇪 {level}\n\n"
+
+            f"📖 Unterricht {lesson}\n\n"
+
+            f"Kerakli vazifani bajaring:",
+
+            reply_markup=
+            build_task_menu(
+                user_id,
+                level,
+                lesson
+            )
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Lesson handler error: {e}"
+        )
+
+        await message.answer(
+            "❌ Darsni ochishda xatolik."
+        )
 # =========================================================
 # GRAMMATIK
 # =========================================================
@@ -4247,12 +4180,17 @@ async def finish_lesson_quiz(
     ) // total
 
     level = session["level"]
+
     lesson = session["lesson"]
+
     task = session["task"]
 
     if percent >= 70:
 
-        # TASK COMPLETE
+        # =====================================
+        # SAVE COMPLETED TASK
+        # =====================================
+
         db_execute(
             """
             INSERT INTO lesson_task_progress
@@ -4291,6 +4229,18 @@ async def finish_lesson_quiz(
             )
         )
 
+        # =====================================
+        # UPDATE ACTIVE LESSON
+        # =====================================
+
+        active_lessons[user_id] = {
+
+            "level": level,
+
+            "lesson": lesson
+
+        }
+
         await bot.send_message(
 
             chat_id,
@@ -4299,6 +4249,26 @@ async def finish_lesson_quiz(
             f"📊 Natija: {score}/{total}\n"
             f"🎯 {percent}%\n\n"
             f"🔓 Keyingi bo'lim ochildi!"
+        )
+
+        # =====================================
+        # SHOW UPDATED MENU
+        # =====================================
+
+        await bot.send_message(
+
+            chat_id,
+
+            f"🇩🇪 {level}\n\n"
+            f"📖 Unterricht {lesson}\n\n"
+            f"Keyingi vazifani tanlang:",
+
+            reply_markup=
+            build_task_menu(
+                user_id,
+                level,
+                lesson
+            )
         )
 
     else:
