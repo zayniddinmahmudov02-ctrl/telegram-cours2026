@@ -580,17 +580,11 @@ def build_level_lessons_menu(level, unlocked, exam_passed=False):
 # =========================================================
 def build_task_menu(user_id, level, lesson):
     builder = InlineKeyboardBuilder()
-
     next_task = get_next_task(user_id, level, lesson)
 
     rows = db_execute(
-        """
-        SELECT task_name 
-        FROM lesson_task_progress 
-        WHERE user_id = %s AND level = %s AND lesson = %s AND completed = TRUE
-        """,
-        (user_id, level, lesson),
-        fetchall=True
+        "SELECT task_name FROM lesson_task_progress WHERE user_id = %s AND level = %s AND lesson = %s AND completed = TRUE",
+        (user_id, level, lesson), fetchall=True
     )
     completed_tasks = {r[0] for r in rows} if rows else set()
 
@@ -606,93 +600,33 @@ def build_task_menu(user_id, level, lesson):
 
     builder.row(InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"level_{level}"))
     return builder.as_markup()
-
 # =========================================================
 # UNTERRICHT HANDLER
 # =========================================================
-
-@dp.message(
-    F.text.regexp(
-        r"^📖 Unterricht \d+$"
-    )
-)
-async def lesson_handler(
-    message: Message
-):
-
+@dp.message(F.text.regexp(r"^📖 Unterricht \d+$"))
+async def lesson_handler(message: Message):
     user_id = message.from_user.id
-
     try:
+        lesson_num = int(message.text.split()[-1])
+        lesson_id = f"{lesson_num}-dars" # Bazaga mos format
+        
+        row = db_execute("SELECT course FROM users WHERE user_id = %s", (user_id,), fetchone=True)
+        level = get_available_levels(row[0])[0] if row and get_available_levels(row[0]) else "A1"
 
-        lesson = int(
-            message.text.split()[-1]
-        )
-
-        row = db_execute(
-            """
-            SELECT course
-
-            FROM users
-
-            WHERE user_id = %s
-            """,
-            (user_id,),
-            fetchone=True
-        )
-
-        level = "A1"
-
-        if row:
-
-            course = row[0]
-
-            levels = get_available_levels(
-                course
-            )
-
-            if levels:
-
-                level = levels[0]
-
-        active_lessons[user_id] = {
-
-            "level": level,
-
-            "lesson": lesson
-        }
+        active_lessons[user_id] = {"level": level, "lesson": lesson_id}
 
         await message.answer(
-
-            f"🇩🇪 {level}\n\n"
-
-            f"📖 Unterricht "
-            f"{lesson}\n\n"
-
-            f"Kerakli vazifani bajaring:",
-
-            reply_markup=
-            build_task_menu(
-                user_id,
-                level,
-                lesson
-            )
+            f"🇩🇪 {level}\n\n📖 Unterricht {lesson_num}\n\nKerakli vazifani bajaring:",
+            reply_markup=build_task_menu(user_id, level, lesson_id)
         )
-
     except Exception as e:
-
-        logger.exception(
-            f"LESSON_HANDLER_ERROR: {e}"
-        )
-
-        await message.answer(
-            "❌ Darsni ochishda xatolik."
-        )
-
+        logger.exception(f"LESSON_HANDLER_ERROR: {e}")
+        await message.answer("❌ Darsni ochishda xatolik.")
 # =========================================================
-# GRAMMATIK
+# FINISH GRAMMATIK QUIZ (YAKUNIY)
 # =========================================================
-
 async def finish_grammatik_quiz(message: Message, user_id: int):
+    # Sessiyani olish
     session = lesson_quiz_sessions.get(user_id)
     if not session:
         return
@@ -701,113 +635,228 @@ async def finish_grammatik_quiz(message: Message, user_id: int):
     lesson = session["lesson"]
     score = session["score"]
     total = len(session["questions"])
-
-    # ZeroDivisionError oldini olish uchun tekshiruv
     percentage = (score / total) * 100 if total > 0 else 0
 
     if percentage >= 70:
-        lesson_quiz_sessions.pop(user_id, None)
-
-        db_execute(
-            """
+        # BAZANI YANGILASH
+        db_execute("""
             INSERT INTO lesson_task_progress (user_id, level, lesson, task_name, completed, completed_at)
             VALUES (%s, %s, %s, 'Grammatik', TRUE, NOW())
-            ON CONFLICT (user_id, level, lesson, task_name)
+            ON CONFLICT (user_id, level, lesson, task_name) 
             DO UPDATE SET completed = TRUE, completed_at = NOW()
-            """,
-            (user_id, level, lesson)
-        )
+        """, (user_id, level, lesson))
 
         await message.answer(
             f"🎉 <b>Ajoyib natija! Grammatika testidan o'tdingiz!</b>\n\n"
             f"📊 Natijangiz: <b>{score}/{total}</b> ({percentage:.1f}%)\n"
-            f"🔓 <b>Keyingi bo'lim:</b> Ushbu darsning '📖 Lesen' (Matn o'qish va test) qismi ochildi. Davom etishingiz mumkin!",
-            reply_markup=build_task_menu(user_id, level, lesson) 
+            f"🔓 <b>Keyingi bo'lim:</b> Endi '📖 Lesen' qismini boshlashingiz mumkin.",
+            reply_markup=build_task_menu(user_id, level, lesson),
+            parse_mode="HTML"
         )
     else:
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="🔄 Testni Qayta Ishlash",
-                        callback_data="retry_grammatik"
-                    )
-                ]
-            ]
-        )
-
+        # QAYTA ISHLASH TUGMASI
+        builder = InlineKeyboardBuilder()
+        builder.row(InlineKeyboardButton(
+            text="🔄 Testni Qayta Ishlash", 
+            callback_data=f"start_Grammatik_{lesson}"
+        ))
+        
         await message.answer(
             f"⚠️ <b>Grammatika testidan o'ta olmadingiz.</b>\n\n"
             f"📊 Oxirgi natijangiz: <b>{score}/{total}</b> ({percentage:.1f}%)\n"
             f"🎯 O'tish bali: <b>70%</b>\n\n"
             f"Iltimos, darsni qayta ko'rib chiqing va quyidagi tugma orqali testni qaytadan topshiring:",
-            reply_markup=keyboard
+            reply_markup=builder.as_markup(),
+            parse_mode="HTML"
         )
+
+    # MUHIM: Xotirani tozalash
+    lesson_quiz_sessions.pop(user_id, None)
+    
+    # Active questions ham tozalash (agar kerak bo'lsa)
+    prefix = f"{user_id}_"
+    for key in [k for k in lesson_active_questions if k.startswith(prefix)]:
+        lesson_active_questions.pop(key, None)
 
 # =========================================================
 # LESEN
 # =========================================================
 
-@dp.message(F.text == "📖 Lesen")
-async def lesen_handler(message: Message):
-    user_id = message.from_user.id
+@dp.callback_query(
+    F.data.startswith("start_Lesen_")
+)
+async def lesen_callback_handler(
+    callback: CallbackQuery
+):
 
-    row = db_execute(
-        """
-        SELECT level, lesson
-        FROM active_lessons
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
+    user_id = callback.from_user.id
+
+    lesson = int(
+        callback.data.split("_")[-1]
     )
 
-    if not row:
-        await message.answer("❌ Avval Unterricht tanlang.")
-        return
-
-    level = row[0]
-    lesson = row[1]
-
-    row = db_execute(
+    check = db_execute(
         """
         SELECT completed
+
         FROM lesson_task_progress
-        WHERE user_id = %s
-          AND level = %s
-          AND lesson = %s
-          AND task_name = 'Grammatik'
+
+        WHERE
+            user_id = %s
+            AND task_name = 'Grammatik'
+            AND lesson = %s
         """,
-        (user_id, level, lesson),
+        (
+            user_id,
+            lesson
+        ),
         fetchone=True
     )
 
-    if not row or not row[0]:
-        await message.answer("🔒 Avval Grammatik vazifasini tugating.")
-        return
+    if not check or not check[0]:
 
-    try:
-        file_path = f"{level}-Level/texts/{level}-{lesson}-lesen.txt"
-
-        with open(file_path, "r", encoding="utf-8") as f:
-            text = f.read()
-
-        keyboard = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="✅ O'qib chiqdim")],
-                [KeyboardButton(text="⬅️ Orqaga")]
-            ],
-            resize_keyboard=True
+        await callback.answer(
+            "🔒 Avval Grammatikani tugating!",
+            show_alert=True
         )
 
-        await message.answer(
+        return
+
+    lesson_data = active_lessons.get(
+        user_id
+    )
+
+    if not lesson_data:
+
+        await callback.answer(
+            "❌ Dars topilmadi.",
+            show_alert=True
+        )
+
+        return
+
+    level = lesson_data["level"]
+
+    try:
+
+        file_path = (
+            f"{level}-Level/texts/"
+            f"{level}-{lesson}-lesen.txt"
+        )
+
+        with open(
+            file_path,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            text = f.read()
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="✅ O'qib chiqdim",
+                        callback_data=
+                        f"read_lesen_{lesson}"
+                    )
+                ]
+            ]
+        )
+
+        await callback.message.answer(
             f"📖 LESEN\n\n{text}",
             reply_markup=keyboard
         )
 
     except Exception as e:
-        logger.exception(f"LESEN_ERROR: {e}")
-        await message.answer("❌ Lesen matni topilmadi.")
+
+        logger.error(
+            f"Lesen text error: {e}"
+        )
+
+        await callback.answer(
+            "❌ Matn topilmadi.",
+            show_alert=True
+        )
+
+
+# =========================================================
+# LESEN TEST START
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("read_lesen_")
+)
+async def lesen_quiz_start(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    lesson = int(
+        callback.data.split("_")[-1]
+    )
+
+    lesson_data = active_lessons.get(
+        user_id
+    )
+
+    if not lesson_data:
+
+        await callback.answer(
+            "❌ Dars topilmadi.",
+            show_alert=True
+        )
+
+        return
+
+    level = lesson_data["level"]
+
+    questions = load_lesson_csv(
+        f"{level}-Level/{level}-Lesen.csv",
+        lesson
+    )
+
+    if not questions:
+
+        await callback.answer(
+            "❌ Lesen test topilmadi.",
+            show_alert=True
+        )
+
+        return
+
+    random.shuffle(
+        questions
+    )
+
+    lesson_quiz_sessions[user_id] = {
+
+        "level": level,
+
+        "lesson": lesson,
+
+        "task": "Lesen",
+
+        "questions": questions,
+
+        "index": 0,
+
+        "score": 0
+    }
+
+    await callback.message.answer(
+        f"📝 Lesen testi boshlandi!\n\n"
+        f"📚 Savollar: {len(questions)}"
+    )
+
+    await send_lesson_question(
+        callback.message.chat.id,
+        user_id
+    )
+
+    await callback.answer()
 
 # =========================================================
 # CHECK SUBSCRIPTION
