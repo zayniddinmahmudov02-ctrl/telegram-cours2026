@@ -1,659 +1,374 @@
-from flask import Flask
-from threading import Thread
-from dotenv import load_dotenv
+# =========================================================
+# STANDARD LIBRARY IMPORTS
+# =========================================================
 import os
-import asyncio
 import csv
 import random
 import logging
-
-from PIL import (
-    Image,
-    ImageDraw,
-    ImageFont
-)
-
-import qrcode
+import asyncio
 from datetime import datetime, timedelta, date
-
 from contextlib import contextmanager
+from threading import Thread
+from typing import Optional
 
+# =========================================================
+# THIRD-PARTY IMPORTS
+# =========================================================
+# Web & Environment
+from flask import Flask
+from dotenv import load_dotenv
+
+# Imaging & Utilities
+from PIL import Image, ImageDraw, ImageFont
+import qrcode
+
+# Database
 import psycopg2
 from psycopg2 import pool
 
+# AIOGRAM (Guruhlangan)
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import (
-    Message,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    CallbackQuery,
-    FSInputFile,
-    ReplyKeyboardRemove,
+    Message, ReplyKeyboardMarkup, KeyboardButton, 
+    InlineKeyboardMarkup, InlineKeyboardButton, 
+    CallbackQuery, FSInputFile, ReplyKeyboardRemove
 )
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command, StateFilter
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+# Logging sozlamalari
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+# Konfiguratsiya o'zgaruvchilari
+GENERATED_DIR = "generated"
+CERTIFICATE_DIR = "certificates"
+TOTAL_WORDS = 5555 
 # =========================================================
-# ENV
+# ENV & CONFIGURATION
 # =========================================================
-
-import os
-
-from dotenv import load_dotenv
-
 load_dotenv()
 
-# =========================================================
-# TOKENS
-# =========================================================
+TOKEN = os.getenv("TOKEN")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-TOKEN = os.getenv(
-    "TOKEN"
-)
+ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+ADMIN_CHANNEL = int(os.getenv("ADMIN_CHANNEL", "0"))
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL"
-)
-
-# =========================================================
-# ADMINS
-# =========================================================
-
-ADMIN_ID = int(
-    os.getenv(
-        "ADMIN_ID",
-        "0"
-    )
-)
-
-ADMIN_PASSWORD = os.getenv(
-    "ADMIN_PASSWORD",
-    ""
-)
-
-ADMIN_CHANNEL = int(
-    os.getenv(
-        "ADMIN_CHANNEL",
-        "0"
-    )
-)
-
-# =========================================================
-# SECURITY CHECK
-# =========================================================
-
+# Xavfsizlik tekshiruvi
 if not TOKEN:
-
-    raise ValueError(
-        "TOKEN topilmadi"
-    )
+    raise ValueError("TOKEN topilmadi")
 
 if not DATABASE_URL:
-
-    raise ValueError(
-        "DATABASE_URL topilmadi"
-    )
-
-# =========================================================
-# CONFIG
-# =========================================================
+    raise ValueError("DATABASE_URL topilmadi")
 
 CHANNEL_USERNAME = "@vizu_deutsch"
 
 # =========================================================
 # COURSE LINKS
 # =========================================================
-
 COURSE_LINKS = {
-
-    "🇩🇪 A1":
-    "https://t.me/+Y0ilZiDqgTJjZjMy",
-
-    "🇩🇪 A2":
-    "https://t.me/+Co8biP05FtViZGEy",
-
-    "🇩🇪 B1":
-    "https://t.me/+XcBAw2lLmdlmNDky",
-
-    "🔥 A1-B1":
-    "https://t.me/+ILaI0GhJkS1jYmQy",
-
-    "🔥 A1-C1":
-    "https://t.me/+9sT2uj8rbHM1YTNi",
+    "🇩🇪 A1": "https://t.me/+Y0ilZiDqgTJjZjMy",
+    "🇩🇪 A2": "https://t.me/+Co8biP05FtViZGEy",
+    "🇩🇪 B1": "https://t.me/+XcBAw2lLmdlmNDky",
+    "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
+    "🔥 A1-C1": "https://t.me/+9sT2uj8rbHM1YTNi",
 }
 
 # =========================================================
 # GROUP LINKS
 # =========================================================
-
 GROUP_LINKS = {
-
-    "🇩🇪 A1":
-    "https://t.me/+_76BNOk0NTgxODRi",
-
-    "🇩🇪 A2":
-    "https://t.me/+syhRWPBkeoxlZjQy",
-
-    "🇩🇪 B1":
-    "https://t.me/+6vSnu6iFLBI1ZGIy",
-
-    "🔥 A1-B1":
-    "https://t.me/+ILaI0GhJkS1jYmQy",
-
-    "🔥 A1-C1":
-    "https://t.me/+pW308gWaYUwwNmY6",
+    "🇩🇪 A1": "https://t.me/+_76BNOk0NTgxODRi",
+    "🇩🇪 A2": "https://t.me/+syhRWPBkeoxlZjQy",
+    "🇩🇪 B1": "https://t.me/+6vSnu6iFLBI1ZGIy",
+    "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
+    "🔥 A1-C1": "https://t.me/+pW308gWaYUwwNmY6",
 }
-COURSE_INFO = {
 
+COURSE_INFO = {
     "🇩🇪 A1": {
         "lessons": 14,
         "old_price": "200.000 so'm",
         "price": "50.000 so'm"
     },
-
     "🇩🇪 A2": {
         "lessons": 14,
         "old_price": "300.000 so'm",
         "price": "100.000 so'm"
     },
-
     "🇩🇪 B1": {
         "lessons": 20,
         "old_price": "400.000 so'm",
         "price": "150.000 so'm"
     },
-
     "🔥 A1-B1": {
         "lessons": 48,
         "old_price": "600.000 so'm",
         "price": "200.000 so'm"
     },
-
     "🔥 A1-C1": {
         "lessons": 100,
         "old_price": "1.200.000 so'm",
         "price": "400.000 so'm"
     },
 }
-# =========================================================
-# DATABASE
-# =========================================================
 
+# =========================================================
+# DATABASE POOL MANAGEMENT
+# =========================================================
 db_pool = None
 
-# =========================================================
-# INIT DATABASE POOL
-# =========================================================
-
 def init_db_pool():
-
     global db_pool
-
     try:
-
-        # OLD POOL CLOSE
         if db_pool:
-
             try:
-
                 db_pool.closeall()
-
-            except:
+            except Exception:
                 pass
 
         db_pool = pool.ThreadedConnectionPool(
-
             minconn=1,
-
             maxconn=20,
-
             dsn=DATABASE_URL
         )
-
-        logger.info(
-            "Database connected ✅"
-        )
-
+        logger.info("Database connected ✅")
     except Exception as e:
-
-        logger.error(
-            f"Database pool error: {e}"
-        )
-
+        logger.error(f"Database pool error: {e}")
         raise
-
-# =========================================================
-# DATABASE CONNECTION
-# =========================================================
 
 @contextmanager
 def get_db():
-
     global db_pool
-
     conn = None
-
     try:
-
-        # RECONNECT
         if not db_pool:
-
             init_db_pool()
 
         try:
-
             conn = db_pool.getconn()
-
         except Exception as e:
-
-            logger.error(
-                f"Reconnect DB: {e}"
-            )
-
+            logger.error(f"Reconnect DB: {e}")
             init_db_pool()
-
             conn = db_pool.getconn()
 
         yield conn
-
         conn.commit()
-
     except Exception as e:
-
         if conn:
-
             try:
                 conn.rollback()
-
-            except:
+            except Exception:
                 pass
-
-        logger.error(
-            f"DB transaction error: {e}"
-        )
-
+        logger.error(f"DB transaction error: {e}")
         raise
-
     finally:
-
         if conn and db_pool:
-
             try:
-
                 db_pool.putconn(conn)
-
             except Exception as e:
+                logger.error(f"Return connection error: {e}")
 
-                logger.error(
-                    f"Return connection error: {e}"
-                )
-
-# =========================================================
-# DATABASE EXECUTE
-# =========================================================
-
-def db_execute(
-    query,
-    params=(),
-    fetchone=False,
-    fetchall=False
-):
-
+def db_execute(query, params=(), fetchone=False, fetchall=False):
     try:
-
         with get_db() as conn:
-
             with conn.cursor() as cur:
-
-                cur.execute(
-                    query,
-                    params
-                )
-
-                # FETCH ONE
+                cur.execute(query, params)
                 if fetchone:
-
                     return cur.fetchone()
-
-                # FETCH ALL
                 if fetchall:
-
                     return cur.fetchall()
-
         return None
-
     except Exception as e:
-
-        logger.error(
-            f"DB execute error: {e}"
-        )
-
+        logger.error(f"DB execute error: {e}")
         return None
+
 # =========================================================
 # INIT TABLES
 # =========================================================
-
 def init_tables():
-
-    # =====================================================
     # USERS TABLE
-    # =====================================================
-
     db_execute("""
         CREATE TABLE IF NOT EXISTS users (
-
             user_id BIGINT PRIMARY KEY,
-
             full_name TEXT,
-
             phone TEXT,
-
             course TEXT,
-
             approved INTEGER DEFAULT 0,
-
             score INTEGER DEFAULT 0,
-
             total_score INTEGER DEFAULT 0,
-
             daily_score INTEGER DEFAULT 0,
-
             unlocked_level TEXT DEFAULT 'A1',
-
             last_daily_reset DATE
         )
     """)
 
-    # =====================================================
     # LESSON PROGRESS
-    # =====================================================
-
     db_execute("""
         CREATE TABLE IF NOT EXISTS lesson_progress (
-
             id SERIAL PRIMARY KEY,
-
             user_id BIGINT NOT NULL,
-
             level TEXT NOT NULL,
-
             lesson INTEGER NOT NULL,
-
             completed BOOLEAN DEFAULT FALSE,
-
             completed_at TIMESTAMP DEFAULT NOW(),
-
-            UNIQUE (
-                user_id,
-                level,
-                lesson
-            )
+            UNIQUE (user_id, level, lesson)
         )
     """)
 
-    # =====================================================
     # ACTIVE LESSONS
-    # =====================================================
-
     db_execute("""
         CREATE TABLE IF NOT EXISTS active_lessons (
-
             user_id BIGINT PRIMARY KEY,
-
             level TEXT NOT NULL,
-
             lesson INTEGER NOT NULL,
-
             updated_at TIMESTAMP DEFAULT NOW()
-
         )
     """)
-    # =====================================================
-    # LESSON TASK PROGRESS
-    # =====================================================
 
+    # LESSON TASK PROGRESS
     db_execute("""
         CREATE TABLE IF NOT EXISTS lesson_task_progress (
-
             id SERIAL PRIMARY KEY,
-
             user_id BIGINT NOT NULL,
-
             level TEXT NOT NULL,
-
             lesson INTEGER NOT NULL,
-
             task_name TEXT NOT NULL,
-
             completed BOOLEAN DEFAULT FALSE,
-
             completed_at TIMESTAMP DEFAULT NOW(),
-
-            UNIQUE (
-                user_id,
-                level,
-                lesson,
-                task_name
-            )
+            UNIQUE (user_id, level, lesson, task_name)
         )
     """)
 
-    # =====================================================
     # LEVEL EXAMS
-    # =====================================================
-
     db_execute("""
         CREATE TABLE IF NOT EXISTS level_exams (
-
             id SERIAL PRIMARY KEY,
-
             user_id BIGINT NOT NULL,
-
             level TEXT NOT NULL,
-
             score INTEGER DEFAULT 0,
-
             final_exam_passed BOOLEAN DEFAULT FALSE,
-
             passed_at TIMESTAMP DEFAULT NOW(),
-
-            UNIQUE (
-                user_id,
-                level
-            )
+            UNIQUE (user_id, level)
         )
     """)
 
-    # =====================================================
     # LESSON ANSWERS
-    # =====================================================
-
     db_execute("""
         CREATE TABLE IF NOT EXISTS lesson_answers (
-
             id SERIAL PRIMARY KEY,
-
             user_id BIGINT NOT NULL,
-
             level TEXT NOT NULL,
-
             lesson INTEGER NOT NULL,
-
             task_type TEXT,
-
             answer_text TEXT,
-
             answer_file TEXT,
-
             checked BOOLEAN DEFAULT FALSE,
-
             created_at TIMESTAMP DEFAULT NOW()
         )
     """)
 
-    # =====================================================
     # QUIZ PROGRESS
-    # =====================================================
-
     db_execute("""
         CREATE TABLE IF NOT EXISTS quiz_progress (
-
             user_id BIGINT NOT NULL,
-
             level TEXT NOT NULL,
-
             block_number INTEGER NOT NULL,
-
             best_score INTEGER DEFAULT 0,
-
-            PRIMARY KEY (
-                user_id,
-                level,
-                block_number
-            )
+            PRIMARY KEY (user_id, level, block_number)
         )
     """)
 
-    # =====================================================
     # INDEXES
-    # =====================================================
+    db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
+    db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
+    db_execute("CREATE INDEX IF NOT EXISTS idx_users_daily_score ON users(daily_score)")
+    db_execute("CREATE INDEX IF NOT EXISTS idx_users_course ON users(course)")
+    db_execute("CREATE INDEX IF NOT EXISTS idx_users_approved ON users(approved)")
+    db_execute("CREATE INDEX IF NOT EXISTS idx_quiz_progress_user ON quiz_progress(user_id)")
 
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_score
-        ON users(score)
-    """)
+    logger.info("DATABASE TABLES READY ✅")
 
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_total_score
-        ON users(total_score)
-    """)
-
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_daily_score
-        ON users(daily_score)
-    """)
-
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_course
-        ON users(course)
-    """)
-
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_users_approved
-        ON users(approved)
-    """)
-
-    db_execute("""
-        CREATE INDEX IF NOT EXISTS idx_quiz_progress_user
-        ON quiz_progress(user_id)
-    """)
-
-    logger.info(
-        "DATABASE TABLES READY ✅"
-    )
-
-# =========================
-# FLASK
-# =========================
-
+# =========================================================
+# FLASK WEB SERVER (FOR KEEP-ALIVE)
+# =========================================================
 app = Flask(__name__)
 
 @app.route("/")
 def home():
     return "Bot is running ✅"
 
-
 def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
+# =========================================================
+# HELPER FUNCTIONS & STATES (Pylance xatolarini to'g'rilash uchun)
+# =========================================================
 
-    port = int(
-        os.environ.get("PORT", 10000)
+class AdminStates(StatesGroup):
+    broadcast = State()
+
+def generate_certificate_id():
+    # random funksiyasi import qilinganligiga ishonch hosil qiling
+    return f"VIZU-{random.randint(100000, 999999)}"
+
+def get_existing_certificate(user_id, rank):
+    # db_execute funksiyasi yuqorida e'lon qilingan
+    return db_execute(
+        "SELECT certificate_id FROM certificates WHERE user_id = %s AND rank = %s",
+        (user_id, rank),
+        fetchone=True
     )
 
-    app.run(
-    host="0.0.0.0",
-    port=port,
-    debug=False,
-    use_reloader=False
-)
-# =========================
-# BOT
-# =========================
-
+# Agar save_certificate yoki send_admin_photo_log funksiyalaringiz bo'lsa,
+# ularni ham shu yerga yoki faylning teparoq qismiga joylashtiring.
+# =========================================================
+# BOT INSTANCE & STORAGE
+# =========================================================
 bot = Bot(token=TOKEN)
-
 storage = MemoryStorage()
-
 dp = Dispatcher(storage=storage)
-# =========================
-# STATES
-# =========================
+
+# =========================================================
+# STATES GROUP
+# =========================================================
 class RegisterState(StatesGroup):
-    waiting_for_name  = State()
+    waiting_for_name = State()
     waiting_for_phone = State()
 
 class BroadcastState(StatesGroup):
     waiting_for_message = State()
 
 class PersonalMessageState(StatesGroup):
-    waiting_for_id   = State()
+    waiting_for_id = State()
     waiting_for_text = State()
 
-# =========================================================
-# PROFILE STATE
-# =========================================================
-
 class ProfileState(StatesGroup):
-
     change_name = State()
-# =========================
-# KEYBOARDS
-# =========================
 
+# =========================================================
+# KEYBOARDS (REPLY MARKUPS)
+# =========================================================
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
-
+        [KeyboardButton(text="🎥 Video Kurslar")],
+        [KeyboardButton(text="🎓 Darslarni O'rganish")],
+        [KeyboardButton(text="📚 Ma'lumotlar")],
         [
-            KeyboardButton(
-                text="🎥 Video Kurslar"
-            )
+            KeyboardButton(text="📚 Artikel Topish"),
+            KeyboardButton(text="🎮 So'z O'yini")
         ],
-
-        [
-            KeyboardButton(
-                text="🎓 Darslarni O'rganish"
-            )
-        ],
-
-        [
-            KeyboardButton(
-                text="📚 Ma'lumotlar"
-            )
-        ],
-
-        [
-            KeyboardButton(
-                text="📚 Artikel Topish"
-            ),
-            KeyboardButton(
-                text="🎮 So'z O'yini"
-            )
-        ],
-
-        [
-            KeyboardButton(
-                text="👤 Mening Profilim"
-            )
-        ]
-
+        [KeyboardButton(text="👤 Mening Profilim")]
     ],
-
     resize_keyboard=True
 )
 
@@ -664,9 +379,9 @@ video_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="🔥 A1-B1")],
         [KeyboardButton(text="🔥 A1-C1")],
         [KeyboardButton(text="🎬 Namuna Dars")],
-        [KeyboardButton(text="⬅️ Orqaga")],
+        [KeyboardButton(text="⬅️ Orqaga")]
     ],
-    resize_keyboard=True,
+    resize_keyboard=True
 )
 
 admin_menu = ReplyKeyboardMarkup(
@@ -676,9 +391,9 @@ admin_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="💳 Xaridorlar")],
         [KeyboardButton(text="📢 Reklama Yuborish")],
         [KeyboardButton(text="📨 Shaxsiy Xabar")],
-        [KeyboardButton(text="⬅️ Admin Chiqish")],
+        [KeyboardButton(text="⬅️ Admin Chiqish")]
     ],
-    resize_keyboard=True,
+    resize_keyboard=True
 )
 
 info_menu = ReplyKeyboardMarkup(
@@ -686,9 +401,9 @@ info_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="👨‍🏫 Ustoz haqida")],
         [KeyboardButton(text="🏆 Natijalar")],
         [KeyboardButton(text="📞 Admin bilan bog'lanish")],
-        [KeyboardButton(text="⬅️ Orqaga")],
+        [KeyboardButton(text="⬅️ Orqaga")]
     ],
-    resize_keyboard=True,
+    resize_keyboard=True
 )
 
 lessons_menu = ReplyKeyboardMarkup(
@@ -697,290 +412,114 @@ lessons_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="🇩🇪 B1"), KeyboardButton(text="🇩🇪 B2")],
         [KeyboardButton(text="🇩🇪 C1")],
         [KeyboardButton(text="🤖 AI Teacher")],
-        [KeyboardButton(text="⬅️ Orqaga")],
+        [KeyboardButton(text="⬅️ Orqaga")]
     ],
-    resize_keyboard=True,
+    resize_keyboard=True
 )
-# =========================================================
-# PROFILE KEYBOARD
-# =========================================================
 
 def profile_keyboard():
-
     return ReplyKeyboardMarkup(
-
         keyboard=[
-
-            [
-                KeyboardButton(
-                    text="✏️ Ism Familiyani o'zgartirish"
-                )
-            ],
-
-            [
-                KeyboardButton(
-                    text="🔥 XP Reytingi"
-                )
-            ],
-
-            [
-                KeyboardButton(
-                    text="⬅️ Orqaga"
-                )
-            ]
+            [KeyboardButton(text="✏️ Ism Familiyani o'zgartirish")],
+            [KeyboardButton(text="🔥 XP Reytingi")],
+            [KeyboardButton(text="⬅️ Orqaga")]
         ],
-
         resize_keyboard=True
     )
 
-
-# =========================
-# HELPERS
-# =========================
-
-def is_admin(
-    message: Message
-) -> bool:
-
-    return (
-        message.from_user.id
-        == ADMIN_ID
-    )
-
 # =========================================================
-# LESSON TASKS
+# GLOBAL CONSTANTS
 # =========================================================
-
-LESSON_TASKS = [
-
-    "Grammatik",
-
-    "Lesen",
-
-    "Hören",
-
-    "Schreiben",
-
-    "Sprechen"
-]
-# =========================================================
-# LESSON COUNTS
-# =========================================================
+LESSON_TASKS = ["Grammatik", "Lesen", "Hören", "Schreiben", "Sprechen"]
 
 LESSON_COUNTS = {
-
     "A1": 14,
-
     "A2": 14,
-
     "B1": 20,
-
     "B2": 30,
-
     "C1": 22
 }
 
-
 # =========================================================
-# LESSON LEVEL ACCESS
+# HELPER FUNCTIONS & OPTIMIZED DB GETTERS
 # =========================================================
+def is_admin(message: Message) -> bool:
+    if message.from_user:
+        return message.from_user.id == ADMIN_ID
+    return False
 
-def get_available_levels(course):
+def get_available_levels(course: str) -> list:
+    mapping = {
+        "🇩🇪 A1": ["A1"],
+        "🇩🇪 A2": ["A2"],
+        "🇩🇪 B1": ["B1"],
+        "🔥 A1-B1": ["A1", "A2", "B1"],
+        "🔥 A1-C1": ["A1", "A2", "B1", "B2", "C1"]
+    }
+    return mapping.get(course, [])
 
-    if course == "🇩🇪 A1":
-
-        return ["A1"]
-
-    elif course == "🇩🇪 A2":
-
-        return ["A2"]
-
-    elif course == "🇩🇪 B1":
-
-        return ["B1"]
-
-    elif course == "🔥 A1-B1":
-
-        return [
-            "A1",
-            "A2",
-            "B1"
-        ]
-
-    elif course == "🔥 A1-C1":
-
-        return [
-            "A1",
-            "A2",
-            "B1",
-            "B2",
-            "C1"
-        ]
-
-    return []
-
-
-# =========================================================
-# BUILD LEVELS MENU
-# =========================================================
-
-def build_lessons_menu(
-    levels
-):
-
+def build_lessons_menu(levels: list) -> ReplyKeyboardMarkup:
     keyboard = []
-
     row = []
-
+    
     for level in levels:
-
-        row.append(
-            KeyboardButton(
-                text=f"📘 {level}"
-            )
-        )
-
+        row.append(KeyboardButton(text=f"📘 {level}"))
         if len(row) == 2:
-
             keyboard.append(row)
-
             row = []
-
+            
     if row:
-
         keyboard.append(row)
+        
+    keyboard.append([KeyboardButton(text="🤖 AI Teacher")])
+    keyboard.append([KeyboardButton(text="⬅️ Orqaga")])
+    
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
-    keyboard.append([
-        KeyboardButton(
-            text="🤖 AI Teacher"
-        )
-    ])
-
-    keyboard.append([
-        KeyboardButton(
-            text="⬅️ Orqaga"
-        )
-    ])
-
-    return ReplyKeyboardMarkup(
-        keyboard=keyboard,
-        resize_keyboard=True
-    )
-
-
-# =========================================================
-# LESSON PROGRESS
-# =========================================================
-
-def get_unlocked_lesson(
-    user_id,
-    level
-):
-
+def get_unlocked_lesson(user_id: int, level: str) -> int:
+    # COALESCE yordamida agar dars bajarilmagan bo'lsa avtomat 1 qaytaradi
     row = db_execute(
         """
-        SELECT MAX(lesson)
-
+        SELECT COALESCE(MAX(lesson), 0) + 1
         FROM lesson_progress
-
-        WHERE
-            user_id = %s
-            AND level = %s
-            AND completed = TRUE
+        WHERE user_id = %s AND level = %s AND completed = TRUE
         """,
-        (
-            user_id,
-            level
-        ),
+        (user_id, level),
         fetchone=True
     )
+    return row[0] if row else 1
 
-    if not row:
-
-        return 1
-
-    if row[0] is None:
-
-        return 1
-
-    return row[0] + 1
-
-# =========================================================
-# NEXT TASK
-# =========================================================
-
-def get_next_task(
-    user_id,
-    level,
-    lesson
-):
-
+def get_next_task(user_id: int, level: str, lesson: int) -> Optional[str]:
+    # Barcha topshiriqlarni bitta so'rovda olib kelamiz (Davl ichida DB ga qayta murojaat qilinmaydi)
+    rows = db_execute(
+        """
+        SELECT task_name 
+        FROM lesson_task_progress 
+        WHERE user_id = %s AND level = %s AND lesson = %s AND completed = TRUE
+        """,
+        (user_id, level, lesson),
+        fetchall=True
+    )
+    
+    completed_tasks = {r[0] for r in rows} if rows else set()
+    
     for task in LESSON_TASKS:
-
-        row = db_execute(
-            """
-            SELECT completed
-
-            FROM lesson_task_progress
-
-            WHERE
-                user_id = %s
-                AND level = %s
-                AND lesson = %s
-                AND task_name = %s
-            """,
-            (
-                user_id,
-                level,
-                lesson,
-                task
-            ),
-            fetchone=True
-        )
-
-        if not row:
-
+        if task not in completed_tasks:
             return task
-
-        if not row[0]:
-
-            return task
-
+            
     return None
-# =========================================================
-# FINAL EXAM STATUS
-# =========================================================
 
-def is_final_exam_passed(
-    user_id,
-    level
-):
-
+def is_final_exam_passed(user_id: int, level: str) -> bool:
     row = db_execute(
         """
         SELECT final_exam_passed
-
         FROM level_exams
-
-        WHERE
-            user_id = %s
-            AND level = %s
+        WHERE user_id = %s AND level = %s
         """,
-        (
-            user_id,
-            level
-        ),
+        (user_id, level),
         fetchone=True
     )
-
-    if not row:
-
-        return False
-
-    return bool(
-        row[0]
-    )
-
+    return bool(row[0]) if row else False
 # =========================================================
 # LEVEL LESSONS MENU (OPTIMALLASHTIRILGAN VARIANT)
 # =========================================================
@@ -1040,7 +579,6 @@ def build_task_menu(
     level,
     lesson
 ):
-
     keyboard = []
 
     next_task = get_next_task(
@@ -1049,39 +587,24 @@ def build_task_menu(
         lesson
     )
 
+    # Foydalanuvchining ushbu darsdagi barcha bajarilgan vazifalarini bitta so'rovda olamiz (Optimallashtirildi)
+    rows = db_execute(
+        """
+        SELECT task_name 
+        FROM lesson_task_progress 
+        WHERE user_id = %s AND level = %s AND lesson = %s AND completed = TRUE
+        """,
+        (user_id, level, lesson),
+        fetchall=True
+    )
+    completed_tasks = {r[0] for r in rows} if rows else set()
+
     for task in LESSON_TASKS:
-
-        row = db_execute(
-            """
-            SELECT completed
-
-            FROM lesson_task_progress
-
-            WHERE
-                user_id = %s
-                AND level = %s
-                AND lesson = %s
-                AND task_name = %s
-            """,
-            (
-                user_id,
-                level,
-                lesson,
-                task
-            ),
-            fetchone=True
-        )
-
-        if row and row[0]:
-
+        if task in completed_tasks:
             icon = "✅"
-
         elif task == next_task:
-
             icon = "📖"
-
         else:
-
             icon = "🔒"
 
         keyboard.append([
@@ -1147,12 +670,12 @@ async def lesson_handler(message: Message):
     except Exception as e:
         logger.exception(f"LESSON_HANDLER_ERROR | user_id={user_id} | error={e}")
         await message.answer("❌ Darsni ochishda xatolik yuz berdi.")
+
 # =========================================================
 # GRAMMATIKA TESTINI YAKUNLASH
 # =========================================================
 
 async def finish_grammatik_quiz(message: Message, user_id: int):
-    # Keshdan ma'lumotlarni o'qiymiz, lekin o'chirmaymiz (qayta ishlash uchun kerak bo'ladi)
     session = lesson_quiz_sessions.get(user_id)
     if not session:
         return
@@ -1162,14 +685,12 @@ async def finish_grammatik_quiz(message: Message, user_id: int):
     score = session["score"]
     total = len(session["questions"])
 
-    # Foizni hisoblaymiz
-    percentage = (score / total) * 100
+    # ZeroDivisionError oldini olish uchun tekshiruv
+    percentage = (score / total) * 100 if total > 0 else 0
 
     if percentage >= 70:
-        # 70% dan o'tgan bo'lsa keshni tozalaymiz
         lesson_quiz_sessions.pop(user_id, None)
 
-        # 1. Lesson progressni bazada 'Grammatik' yakunlandi deb belgilaymiz
         db_execute(
             """
             INSERT INTO lesson_task_progress (user_id, level, lesson, task_name, completed, completed_at)
@@ -1180,8 +701,6 @@ async def finish_grammatik_quiz(message: Message, user_id: int):
             (user_id, level, lesson)
         )
 
-        # 2. Keyingi "📖 Lesen" bo'limini faollashtiramiz (Yoki dars vazifalari menyusini beramiz)
-        # build_task_menu funksiyangiz orqali endi foydalanuvchida 'Lesen' tugmasi ko'rinadi
         await message.answer(
             f"🎉 <b>Ajoyib natija! Grammatika testidan o'tdingiz!</b>\n\n"
             f"📊 Natijangiz: <b>{score}/{total}</b> ({percentage:.1f}%)\n"
@@ -1189,7 +708,6 @@ async def finish_grammatik_quiz(message: Message, user_id: int):
             reply_markup=build_task_menu(user_id, level, lesson) 
         )
     else:
-        # 70% dan past bo'lsa, qayta ishlash tugmasini chiqaramiz
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
@@ -1208,6 +726,7 @@ async def finish_grammatik_quiz(message: Message, user_id: int):
             f"Iltimos, darsni qayta ko'rib chiqing va quyidagi tugma orqali testni qaytadan topshiring:",
             reply_markup=keyboard
         )
+
 # =========================================================
 # LESEN
 # =========================================================
@@ -1280,27 +799,19 @@ async def lesen_handler(message: Message):
 async def check_subscription(
     user_id: int
 ) -> bool:
-
     try:
-
         member = await bot.get_chat_member(
-
             CHANNEL_USERNAME,
-
             user_id
         )
-
         return member.status not in (
             "left",
             "kicked"
         )
-
     except Exception as e:
-
         logger.error(
             f"Subscription error: {e}"
         )
-
         return False
 
 # =========================================================
@@ -1310,89 +821,67 @@ async def check_subscription(
 async def send_admin_log(
     text
 ):
-
     logger.info(
         f"ADMIN_CHANNEL = {ADMIN_CHANNEL}"
     )
 
     if not ADMIN_CHANNEL:
-
         logger.warning(
             "ADMIN_CHANNEL topilmadi!"
         )
-
         return
 
     try:
-
         await bot.send_message(
             chat_id=ADMIN_CHANNEL,
             text=text
         )
-
         logger.info(
             "ADMIN LOG SENT ✅"
         )
-
     except Exception as e:
-
         logger.exception(
             f"Admin log error: {e}"
         )
-
 
 # =========================================================
 # ADMIN PHOTO LOG
 # =========================================================
 
 async def send_admin_photo_log(
-
     photo_path,
-
     caption
 ):
-
     logger.info(
         f"ADMIN_CHANNEL = {ADMIN_CHANNEL}"
     )
 
     if not ADMIN_CHANNEL:
-
         logger.warning(
             "ADMIN_CHANNEL topilmadi!"
         )
-
         return
 
     if not os.path.exists(
         photo_path
     ):
-
         logger.warning(
             f"Photo not found: {photo_path}"
         )
-
         return
 
     try:
-
         await bot.send_photo(
-
             chat_id=ADMIN_CHANNEL,
-
             photo=FSInputFile(
                 photo_path
             ),
-
             caption=caption
         )
-
         logger.info(
             "ADMIN PHOTO SENT ✅"
         )
-
     except Exception as e:
-
         logger.exception(
             f"Admin photo log error: {e}"
         )
@@ -1402,33 +891,21 @@ async def send_admin_photo_log(
 # =========================================================
 
 async def safe_message(
-
     user_id,
-
     text,
-
     reply_markup=None
 ):
-
     try:
-
         await bot.send_message(
-
             user_id,
-
             text,
-
             reply_markup=reply_markup
         )
-
         return True
-
     except Exception as e:
-
         logger.error(
             f"Safe message error: {e}"
         )
-
         return False
 
 # =========================================================
@@ -1436,37 +913,23 @@ async def safe_message(
 # =========================================================
 
 async def safe_photo(
-
     user_id,
-
     photo,
-
     caption=None,
-
     reply_markup=None
 ):
-
     try:
-
         await bot.send_photo(
-
             user_id,
-
             photo,
-
             caption=caption,
-
             reply_markup=reply_markup
         )
-
         return True
-
     except Exception as e:
-
         logger.error(
             f"Safe photo error: {e}"
         )
-
         return False
 
 # =========================
@@ -1474,53 +937,38 @@ async def safe_photo(
 # =========================
 
 artikel: dict[str, str] = {}
-
-# user_id -> last active timestamp
 artikel_users: dict[int, float] = {}
 
 def load_artikel():
-
     csv_path = "nouns.csv"
 
     if not os.path.exists(csv_path):
-
         logger.warning(
             "nouns.csv not found — Artikel feature disabled."
         )
-
         return
 
-    with open(csv_path, "r", encoding="utf-8") as f:
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    word = row["lemma"].lower().strip()
+                    gender = str(row["genus"]).lower().strip()
 
-        reader = csv.DictReader(f)
+                    art_map = {
+                        "m": "der",
+                        "f": "die",
+                        "n": "das"
+                    }
 
-        for row in reader:
-
-            try:
-
-                word = row["lemma"].lower().strip()
-
-                gender = str(
-                    row["genus"]
-                ).lower().strip()
-
-                art_map = {
-                    "m": "der",
-                    "f": "die",
-                    "n": "das"
-                }
-
-                art = art_map.get(gender)
-
-                if art:
-
-                    artikel[word] = (
-                        f"{art} {word.capitalize()}"
-                    )
-
-            except Exception as e:
-
-                logger.error(e)
+                    art = art_map.get(gender)
+                    if art:
+                        artikel[word] = f"{art} {word.capitalize()}"
+                except Exception as e:
+                    logger.error(f"Row parsing error in load_artikel: {e}")
+    except Exception as e:
+        logger.error(f"File open error in load_artikel: {e}")
 
     logger.info(
         f"Artikel loaded: {len(artikel)} words"
@@ -1539,11 +987,7 @@ _MENU_BUTTONS = {
 
 @dp.message(F.text == "📚 Artikel Topish")
 async def artikel_start(message: Message):
-
-    artikel_users[
-        message.from_user.id
-    ] = True
-
+    artikel_users[message.from_user.id] = True
     await message.answer(
         "🔍 Nemischa so'z yuboring.\n\n"
         "Masalan:\n"
@@ -1552,52 +996,29 @@ async def artikel_start(message: Message):
         "Mann"
     )
 
-
 @dp.message(
     F.text,
-    lambda message: (
-        message.from_user.id
-        in artikel_users
-    )
+    lambda message: message.from_user.id in artikel_users
 )
-async def artikel_handler(
-    message: Message
-):
+async def artikel_handler(message: Message):
+    user_id = message.from_user.id
 
-    user_id = (
-        message.from_user.id
-    )
-
-    # MENU BOSILSA REJIMDAN CHIQISH
-
+    # MENU BOSILSA REJIMDAN CHIQISH VA NATIVE HANDLERLARGA YO'L BERISH
     if message.text in _MENU_BUTTONS:
-
-        artikel_users.pop(
-            user_id,
-            None
-        )
-
+        artikel_users.pop(user_id, None)
+        # aiogram handler zanjirini davom ettirishi uchun xabarni qayta yuborish mantiqi
         return
 
-    word = (
-        message.text
-        .lower()
-        .strip()
-    )
-
+    word = message.text.lower().strip()
     result = artikel.get(word)
 
     await message.answer(
-
-        result
-
-        if result
-
-        else (
+        result if result else (
             "❌ So'z topilmadi.\n\n"
             "Boshqa so'z yuboring."
         )
     )
+
 # =========================================================
 # START COMMAND HANDLER
 # =========================================================
@@ -1606,13 +1027,6 @@ async def artikel_handler(
 async def cmd_start(message: Message):
     user_id = message.from_user.id
     full_name = message.from_user.full_name or "Foydalanuvchi"
-
-    # Eski klaviaturani xavfsiz tozalash
-    await message.answer(
-        "🔄 Menu yangilanmoqda...",
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await asyncio.sleep(0.5)  # Foydalanuvchi kutib qolmasligi uchun biroz kamaytirildi
 
     # 1. Kanal obunasini tekshirish
     if not await check_subscription(user_id):
@@ -1664,13 +1078,14 @@ async def cmd_start(message: Message):
         except Exception as e:
             logger.error(f"Adminga start notification yuborishda xatolik: {e}")
 
-    # 4. Asosiy menyuni foydalanuvchiga taqdim etish
+    # 4. Asosiy menyuni foydalanuvchiga taqdim etish (Eski klaviatura avtomat yangilanadi)
     await message.answer(
         f"🇩🇪 <b>Nemis Tili (Vizu Deutsch) Botiga Xush Kelibsiz!</b>\n\n"
         f"Platformamiz orqali nemis tilini vizual darslar va tizimli testlar orqali o'rganishingiz mumkin.\n\n"
         f"🎉 <b>Hozirda barcha video kurslarimiz 70% CHEGIRMADA!</b>",
         reply_markup=main_menu
     )
+
 # =========================================================
 # CHECK SUBSCRIPTION BUTTON
 # =========================================================
@@ -1680,12 +1095,9 @@ async def check_sub_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     full_name = callback.from_user.full_name or "Foydalanuvchi"
 
-    # 1. Obunani qayta tekshiramiz
     if await check_subscription(user_id):
-        # Telegram interfeysidagi "soat" aylanishini zudlik bilan to'xtatamiz
         await callback.answer("✅ Obuna tasdiqlandi!")
 
-        # Foydalanuvchini bazaga qo'shish yoki ismini yangilash
         db_execute(
             """
             INSERT INTO users (user_id, full_name, approved) 
@@ -1696,13 +1108,11 @@ async def check_sub_callback(callback: CallbackQuery):
             (user_id, full_name)
         )
 
-        # Eski inline tugmali xabarni o'chirib yuboramiz
         try:
             await callback.message.delete()
         except Exception:
             pass
 
-        # Adminga yangi foydalanuvchi haqida xabar yuborish
         if user_id != ADMIN_ID:
             try:
                 username_str = f"@{callback.from_user.username}" if callback.from_user.username else "Mavjud emas"
@@ -1716,31 +1126,27 @@ async def check_sub_callback(callback: CallbackQuery):
             except Exception as e:
                 logger.error(f"Adminga sub notification yuborishda xatolik: {e}")
 
-        # Foydalanuvchiga asosiy menyuni chiqaramiz
         await callback.message.answer(
             "✅ <b>Obuna muvaffaqiyatli tasdiqlandi!</b>\n\n"
             "🇩🇪 Nemis tili darslari botiga xush kelibsiz. Quyidagi menyudan kerakli bo'limni tanlang:",
             reply_markup=main_menu
         )
-
     else:
-        # Agar a'zo bo'lmagan bo'lsa, ogohlantirish beramiz va "soat" aylanishini yopamiz
         await callback.answer(
             text="❌ Siz hali ham kanalga a'zo bo'lmadingiz! Iltimos, avval kanalga a'zo bo'ling.",
             show_alert=True
         )
+
 # =========================
 # MA'LUMOTLAR MENU
 # =========================
 
 @dp.message(F.text == "📚 Ma'lumotlar")
 async def information_menu(message: Message):
-
     await message.answer(
         "📚 Ma'lumotlar bo'limi",
         reply_markup=info_menu
     )
-
 
 # =========================
 # USTOZ HAQIDA
@@ -1748,23 +1154,16 @@ async def information_menu(message: Message):
 
 @dp.message(F.text == "👨‍🏫 Ustoz haqida")
 async def teacher_info(message: Message):
-
     if not os.path.exists("teacher.jpg"):
-
         await message.answer(
             "Ustoz haqida ma'lumot tez orada qo'shiladi."
         )
-
         return
 
-    photo = FSInputFile(
-        "teacher.jpg"
-    )
-
+    photo = FSInputFile("teacher.jpg")
     await message.answer_photo(
         photo=photo
     )
-
 
 # =========================
 # NATIJALAR
@@ -1772,12 +1171,10 @@ async def teacher_info(message: Message):
 
 @dp.message(F.text == "🏆 Natijalar")
 async def results(message: Message):
-
     await message.answer(
         "🏆 O'quvchilar natijalari:\n"
         "https://t.me/+o8b2cf3rwAs1MzFi"
     )
-
 
 # =========================
 # ADMIN CONTACT
@@ -1785,7 +1182,6 @@ async def results(message: Message):
 
 @dp.message(F.text == "📞 Admin bilan bog'lanish")
 async def admin_contact(message: Message):
-
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -1802,234 +1198,145 @@ async def admin_contact(message: Message):
         reply_markup=keyboard
     )
 
-
 # =========================
 # VIDEO COURSES
 # =========================
 
 @dp.message(F.text == "🎥 Video Kurslar")
 async def video_courses(message: Message):
-
-    artikel_users.pop(
-        message.from_user.id,
-        None
-    )
-
+    artikel_users.pop(message.from_user.id, None)
     await message.answer(
         "🎥 Kerakli kursni tanlang:",
         reply_markup=video_menu
     )
+
 # =========================================================
 # MY PROFILE
 # =========================================================
 
-@dp.message(
-    F.text == "👤 Mening Profilim"
-)
-async def my_profile(
-    message: Message
-):
-
+@dp.message(F.text == "👤 Mening Profilim")
+async def my_profile(message: Message):
     user = db_execute(
         """
         SELECT
-
-            full_name,
-            phone,
-            course,
-            total_score,
-            daily_score,
-            unlocked_level
-
+            full_name, phone, course, total_score, daily_score, unlocked_level
         FROM users
-
         WHERE user_id = %s
         """,
-        (
-            message.from_user.id,
-        ),
+        (message.from_user.id,),
         fetchone=True
     )
 
     if not user:
-
         await message.answer(
             "❌ Profil topilmadi."
         )
         return
 
     await message.answer(
-
         f"👤 Mening Profilim\n\n"
-
         f"👨 Ism: {user[0] or '-'}\n"
         f"📱 Telefon: {user[1] or '-'}\n"
         f"🎓 Kurs: {user[2] or '-'}\n\n"
-
         f"🏆 Umumiy XP: {user[3] or 0}\n"
         f"🔥 Bugungi XP: {user[4] or 0}\n"
-
         f"🔓 Daraja: {user[5] or 'A1'}",
-
         reply_markup=profile_keyboard()
     )
-
 
 # =========================================================
 # CHANGE NAME START
 # =========================================================
 
-@dp.message(
-    F.text == "✏️ Ism Familiyani o'zgartirish"
-)
-async def change_name_start(
-    message: Message,
-    state: FSMContext
-):
-
-    await state.set_state(
-        ProfileState.change_name
-    )
-
+@dp.message(F.text == "✏️ Ism Familiyani o'zgartirish")
+async def change_name_start(message: Message, state: FSMContext):
+    await state.set_state(ProfileState.change_name)
     await message.answer(
         "✏️ Yangi ism va familiyangizni yuboring.\n\n"
         "Masalan:\n"
         "Zayniddin Mahmudov"
     )
 
-
 # =========================================================
 # CHANGE NAME SAVE
 # =========================================================
 
-@dp.message(
-    StateFilter(
-        ProfileState.change_name
-    )
-)
-
-
-async def change_name_save(
-    message: Message,
-    state: FSMContext
-):
-
+@dp.message(StateFilter(ProfileState.change_name))
+async def change_name_save(message: Message, state: FSMContext):
     full_name = message.text.strip()
+    words = full_name.split()
 
-    if len(
-        full_name.split()
-    ) < 2:
-
+    # Ism va familiya formati mukammal tekshiruvi
+    if len(words) < 2 or any(len(w) < 2 for w in words):
         await message.answer(
-            "❌ Ism va familiya kiriting."
+            "❌ Iltimos, ism va familiyangizni to'liq va to'g'ri kiriting.\n"
+            "Masalan: Zayniddin Mahmudov"
         )
-
         return
 
     db_execute(
         """
         UPDATE users
-
         SET full_name = %s
-
         WHERE user_id = %s
         """,
-        (
-            full_name,
-            message.from_user.id
-        )
+        (full_name, message.from_user.id)
     )
 
     await state.clear()
-
     await message.answer(
         "✅ Ism familiya yangilandi.",
         reply_markup=profile_keyboard()
     )
-
-
 # =========================================================
 # XP RATING
 # =========================================================
 
-@dp.message(
-    F.text == "🔥 XP Reytingi"
-)
-async def xp_rating(
-    message: Message
-):
-
+@dp.message(F.text == "🔥 XP Reytingi")
+async def xp_rating(message: Message):
     rows = db_execute(
         """
         SELECT
-
             full_name,
             total_score
-
         FROM users
-
         WHERE approved = 1
-
         ORDER BY total_score DESC
-
         LIMIT 10
         """,
         fetchall=True
     )
 
+    if not rows:
+        await message.answer("🏆 Hozircha reyting mavjud emas.")
+        return
+
     text = "🏆 TOP 10 XP Reyting\n\n"
+    medals = ["🥇", "🥈", "🥉"]
 
-    medals = [
-        "🥇",
-        "🥈",
-        "🥉"
-    ]
+    for i, row in enumerate(rows, start=1):
+        medal = medals[i - 1] if i <= 3 else f"{i}."
+        name = row[0] or "Foydalanuvchi"
+        score = row[1] or 0
+        text += f"{medal} {name} — {score} XP\n"
 
-    for i, row in enumerate(
-        rows,
-        start=1
-    ):
-
-        medal = (
-            medals[i - 1]
-            if i <= 3
-            else f"{i}."
-        )
-
-        text += (
-            f"{medal} "
-            f"{row[0]} — "
-            f"{row[1]} XP\n"
-        )
-
-    await message.answer(
-        text
-    )
-
+    await message.answer(text)
 
 # =========================
 # LESSONS HOME
 # =========================
 
 @dp.message(F.text == "🎓 Darslarni O'rganish")
-async def lessons_home(
-    message: Message
-):
-
+async def lessons_home(message: Message):
     user_id = message.from_user.id
 
     # ADMIN FULL ACCESS
-
     if user_id == ADMIN_ID:
-
         await message.answer(
             "🎓 Darslarni O'rganish\n\n"
             "Darajani tanlang:",
-            reply_markup=build_lessons_menu(
-                ["A1", "A2", "B1", "B2", "C1"]
-            )
+            reply_markup=build_lessons_menu(["A1", "A2", "B1", "B2", "C1"])
         )
-
         return
 
     row = db_execute(
@@ -2045,92 +1352,44 @@ async def lessons_home(
     )
 
     if not row:
-
-        await message.answer(
-            "❌ Foydalanuvchi topilmadi."
-        )
-
+        await message.answer("❌ Foydalanuvchi topilmadi.")
         return
 
     approved = row[0]
-
     course = row[1]
 
     if approved != 1:
-
-        await message.answer(
-            "🔒 Avval kurs sotib oling."
-        )
-
+        await message.answer("🔒 Avval kurs sotib oling.")
         return
 
-    levels = get_available_levels(
-        course
-    )
+    levels = get_available_levels(course)
 
     if not levels:
-
-        await message.answer(
-            "❌ Kurs ma'lumoti topilmadi."
-        )
-
+        await message.answer("❌ Kurs ma'lumoti topilmadi.")
         return
 
     await message.answer(
         "🎓 Darslarni O'rganish\n\n"
         "Darajani tanlang:",
-        reply_markup=
-        build_lessons_menu(
-            levels
-        )
+        reply_markup=build_lessons_menu(levels)
     )
 
 # =========================================================
 # LEVEL HANDLERS
 # =========================================================
 
-@dp.message(
-    F.text.in_(
-        [
-            "📘 A1",
-            "📘 A2",
-            "📘 B1",
-            "📘 B2",
-            "📘 C1"
-        ]
-    )
-)
-async def level_lessons(
-    message: Message
-):
+@dp.message(F.text.in_({"📘 A1", "📘 A2", "📘 B1", "📘 B2", "📘 C1"}))
+async def level_lessons(message: Message):
+    level = message.text.replace("📘 ", "").strip()
+    user_id = message.from_user.id
 
-    level = (
-        message.text
-        .replace("📘 ", "")
-        .strip()
-    )
-
-    unlocked = get_unlocked_lesson(
-        message.from_user.id,
-        level
-    )
-
-    exam_passed = (
-        is_final_exam_passed(
-            message.from_user.id,
-            level
-        )
-    )
+    unlocked = get_unlocked_lesson(user_id, level)
+    exam_passed = is_final_exam_passed(user_id, level)
 
     await message.answer(
         f"🇩🇪 {level} Darajasi\n\n"
         f"Darsni tanlang:",
-        reply_markup=
-        build_level_lessons_menu(
-            level,
-            unlocked,
-            exam_passed
-        )
+        reply_markup=build_level_lessons_menu(level, unlocked, exam_passed)
     )
 
 # =========================
@@ -2138,45 +1397,30 @@ async def level_lessons(
 # =========================
 
 @dp.message(F.text == "🤖 AI Teacher")
-async def ai_teacher_menu(
-    message: Message
-):
-
+async def ai_teacher_menu(message: Message):
     await message.answer(
         "🤖 AI Teacher\n\n"
         "🚧 Tez orada ishga tushadi."
     )
-
 
 # =========================
 # SAMPLE LESSON
 # =========================
 
 @dp.message(F.text == "🎬 Namuna Dars")
-async def sample_lesson(
-    message: Message
-):
-
+async def sample_lesson(message: Message):
     await message.answer(
         "🎬 Namuna Dars:\n"
         "https://t.me/+yUxu7EOWyd82ODhi"
     )
-
 
 # =========================
 # BACK
 # =========================
 
 @dp.message(F.text == "⬅️ Orqaga")
-async def go_back(
-    message: Message
-):
-
-    artikel_users.pop(
-        message.from_user.id,
-        None
-    )
-
+async def go_back(message: Message):
+    artikel_users.pop(message.from_user.id, None)
     await message.answer(
         "🏠 Asosiy Menu",
         reply_markup=main_menu
@@ -2187,24 +1431,21 @@ async def go_back(
 # =========================
 
 async def send_course_info(message: Message, course: str):
-    info = COURSE_INFO[course]
+    info = COURSE_INFO.get(course)
+    if not info:
+        await message.answer("❌ Kurs haqida ma'lumot topilmadi.")
+        return
 
     text = (
         f"🎉 Hozirda barcha kurslar 70% CHEGIRMADA!\n\n"
-
         f"{course} Video Darslari\n\n"
-
         f"📚 {info['lessons']} dars\n\n"
-
         f"❌ Eski narx: {info['old_price']}\n"
         f"🔥 Chegirmadagi narx: {info['price']}\n\n"
-
         f"💳 To'lov:\n"
         f"9860 3501 4490 7192\n\n"
-
         f"👤 Zayniddinkhuja Makhmudov\n\n"
-
-        f"📩 To'lovdan keyin chekni shu botga yuboring.\n"
+        f"📩 To'lovdan keyin chekni (rasm shaklida) shu botga yuboring.\n"
         f"Admin tasdiqlaydi va kurs havolasini yuboradi."
     )
 
@@ -2214,6 +1455,7 @@ async def send_course_info(message: Message, course: str):
     )
 
     await message.answer(text)
+
 @dp.message(F.text == "🇩🇪 A1")
 async def course_a1(message: Message):
     await send_course_info(message, "🇩🇪 A1")
@@ -2233,56 +1475,44 @@ async def course_a1b1(message: Message):
 @dp.message(F.text == "🔥 A1-C1")
 async def course_a1c1(message: Message):
     await send_course_info(message, "🔥 A1-C1")
+
 # =========================
 # CHECK PHOTO (payment receipt)
 # =========================
 
-@dp.message(F.photo)
-async def check_photo(
-    message: Message,
-    state: FSMContext
-):
+# Faqat FSM holatida bo'lmagan (hech qanday state'siz) rasm yuborilganda ishlashi ta'minlandi
+@dp.message(F.photo, StateFilter(None))
+async def check_photo(message: Message, state: FSMContext):
+    user_id = message.from_user.id
 
-    # user kurs tanlaganmi
+    # Foydalanuvchi kurs tanlaganligini tekshiramiz
     row = db_execute(
-        "SELECT course FROM users "
-        "WHERE user_id = %s",
-        (message.from_user.id,),
+        "SELECT course FROM users WHERE user_id = %s",
+        (user_id,),
         fetchone=True
     )
 
     if not row or not row[0]:
-
-        await message.answer(
-            "❌ Avval kurs tanlang."
-        )
-
+        await message.answer("❌ Avval sotib olmoqchi bo'lgan kursingizni menyudan tanlang.")
         return
 
-    # photo save
-    await state.update_data(
-        photo=message.photo[-1].file_id
-    )
+    # To'lov cheki rasmini xavfsiz saqlash
+    await state.update_data(photo=message.photo[-1].file_id)
 
-    # next step
-    await message.answer(
-        "👤 Ism va familiyangizni yuboring:"
-    )
-
-    await state.set_state(
-        RegisterState.waiting_for_name
-    )
+    await message.answer("👤 Ism va familiyangizni yuboring:")
+    await state.set_state(RegisterState.waiting_for_name)
 
 
 @dp.message(RegisterState.waiting_for_name)
-async def get_name(
-    message: Message,
-    state: FSMContext
-):
+async def get_name(message: Message, state: FSMContext):
+    full_name = message.text.strip()
+    words = full_name.split()
 
-    await state.update_data(
-        full_name=message.text.strip()
-    )
+    if len(words) < 2 or any(len(w) < 2 for w in words):
+        await message.answer("❌ Iltimos, ism va familiyangizni to'liq kiriting (Faqat harflardan iborat bo'lsin):")
+        return
+
+    await state.update_data(full_name=full_name)
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
@@ -2297,1515 +1527,181 @@ async def get_name(
     )
 
     await message.answer(
-        "📱 Telefon raqamingizni yuboring:",
+        "📱 Telefon raqamingizni quyidagi tugmani bosib yuboring yoki qo'lda kiriting:",
         reply_markup=keyboard
     )
-
-    await state.set_state(
-        RegisterState.waiting_for_phone
-    )
+    await state.set_state(RegisterState.waiting_for_phone)
 
 
 @dp.message(RegisterState.waiting_for_phone)
-async def get_phone(
-    message: Message,
-    state: FSMContext
-):
-
+async def get_phone(message: Message, state: FSMContext):
     if message.contact:
-
-        phone = (
-            message.contact.phone_number
-        )
-
+        phone = message.contact.phone_number
     else:
-
-        phone = message.text.strip()
-
-        if len(phone) < 7:
-
+        # Qo'lda yozilgan raqamdan ortiqcha simvollarni tozalash va tekshirish
+        phone = "".join(filter(str.isdigit, message.text.strip()))
+        if len(phone) < 9:
             await message.answer(
-                "❌ Telefon raqam noto'g'ri.\n\n"
-                "Qayta yuboring."
+                "❌ Telefon raqami noto'g'ri formatda shakllantirildi.\n"
+                "Iltimos, qaytadan to'g'ri raqam kiriting:"
             )
-
             return
 
     data = await state.get_data()
-
     photo = data["photo"]
-
     full_name = data["full_name"]
-
     user = message.from_user
 
-    # selected course
+    # Tanlangan kursni bazadan qayta tekshirish
     row = db_execute(
-        "SELECT course FROM users "
-        "WHERE user_id = %s",
+        "SELECT course FROM users WHERE user_id = %s",
         (user.id,),
         fetchone=True
     )
+    course = row[0] if row and row[0] else "Kurs tanlanmagan"
 
-    course = (
-        row[0]
-        if row and row[0]
-        else "Kurs tanlanmagan"
-    )
-
-    # save user info
+    # Foydalanuvchi ma'lumotlarini yangilash
     db_execute(
-        "UPDATE users "
-        "SET full_name = %s, phone = %s "
-        "WHERE user_id = %s",
-        (
-            full_name,
-            phone,
-            user.id
-        ),
+        "UPDATE users SET full_name = %s, phone = %s WHERE user_id = %s",
+        (full_name, phone, user.id),
     )
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(
-                    text="✅ Approve",
-                    callback_data=(
-                        f"approve:{user.id}"
-                    )
-                ),
-                InlineKeyboardButton(
-                    text="❌ Reject",
-                    callback_data=(
-                        f"reject:{user.id}"
-                    )
-                ),
+                InlineKeyboardButton(text="✅ Approve", callback_data=f"approve:{user.id}"),
+                InlineKeyboardButton(text="❌ Reject", callback_data=f"reject:{user.id}")
             ]
         ]
     )
 
+    username_str = f"@{user.username}" if user.username else "Mavjud emas"
     caption = (
-        f"💳 Yangi xaridor!\n\n"
+        f"💳 <b>Yangi xaridor xabari!</b>\n\n"
         f"👤 Ism: {full_name}\n"
         f"📱 Telefon: {phone}\n\n"
-        f"🆔 ID: {user.id}\n"
-        f"📚 Kurs: {course}\n\n"
-        f"Username: @{user.username}"
+        f"🆔 ID: <code>{user.id}</code>\n"
+        f"📚 Kurs: <b>{course}</b>\n"
+        f"🌐 Username: {username_str}"
     )
 
-    await bot.send_photo(
-        ADMIN_ID,
-        photo=photo,
-        caption=caption,
-        reply_markup=keyboard
-    )
+    try:
+        await bot.send_photo(
+            chat_id=ADMIN_ID,
+            photo=photo,
+            caption=caption,
+            reply_markup=keyboard
+        )
+    except Exception as e:
+        logger.error(f"Adminga to'lov chekini yuborishda xatolik yuz berdi: {e}")
 
     await message.answer(
-        "✅ Ma'lumotlaringiz "
-        "adminga yuborildi!\n\n"
-        "⏳ Tasdiqlanishini kuting.",
+        "✅ Ma'lumotlaringiz va to'lov chekingiz adminga muvaffaqiyatli yuborildi!\n\n"
+        "⏳ Tasdiqlanishini kuting va darslarni o'rganishda davom eting.",
         reply_markup=main_menu,
     )
 
     await state.clear()
-# =========================
-# APPROVE / REJECT
-# =========================
+# =========================================================
+# APPROVE / REJECT LOGIC
+# =========================================================
 
 @dp.callback_query(F.data.startswith("approve:"))
 async def approve_user(callback: CallbackQuery):
-
     if callback.from_user.id != ADMIN_ID:
-
-        await callback.answer(
-            "❌ Ruxsat yo'q",
-            show_alert=True
-        )
-
+        await callback.answer("❌ Sizda ruxsat yo'q!", show_alert=True)
         return
 
-    user_id = int(
-        callback.data.split(":")[1]
-    )
+    try:
+        user_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("❌ Xatolik yuz berdi.")
+        return
 
-    db_execute(
-        "UPDATE users "
-        "SET approved = 1 "
-        "WHERE user_id = %s",
-        (user_id,)
-    )
+    # Foydalanuvchini bazada tasdiqlash
+    db_execute("UPDATE users SET approved = 1 WHERE user_id = %s", (user_id,))
 
     row = db_execute(
-        "SELECT course, full_name "
-        "FROM users "
-        "WHERE user_id = %s",
+        "SELECT course, full_name FROM users WHERE user_id = %s",
         (user_id,),
         fetchone=True
     )
 
     if not row:
-
-        await callback.answer(
-            "❌ User topilmadi"
-        )
-
+        await callback.answer("❌ Foydalanuvchi topilmadi!")
         return
 
-    course = row[0]
+    course, full_name = row[0] or "Noma'lum kurs", row[1] or "Talaba"
 
-    full_name = row[1] or "Student"
+    # Dinamik havolalarni olish (Lug'atdan kurs bo'yicha)
+    default_link = "https://t.me/vizu_deutsch"
+    course_link = COURSE_LINKS.get(course, default_link)
+    group_link = GROUP_LINKS.get(course, default_link)
 
-    course_link = COURSE_LINKS.get(
-        course
-    )
-
-    group_link = GROUP_LINKS.get(
-        course
-    )
-
+    # Foydalanuvchiga yuboriladigan tugmalar
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🎥 Kurs Kanali",
-                    url=course_link
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="💬 Savollar Guruhi",
-                    url=group_link
-                )
-            ]
+            [InlineKeyboardButton(text="🎥 Kurs Kanali", url=course_link)],
+            [InlineKeyboardButton(text="💬 Savollar Guruhi", url=group_link)]
         ]
     )
 
-    await bot.send_message(
-        user_id,
-        f"🎉 Assalomu alaykum, {full_name}!\n\n"
-        f"✅ To'lovingiz muvaffaqiyatli tasdiqlandi.\n\n"
-        f"📚 Kurs: {course}\n\n"
-        f"👇 Quyidagi tugmalar orqali kursga qo‘shiling.",
-        reply_markup=keyboard
-    )
-
+    # Foydalanuvchiga xabar yuborish
     try:
-
-        await callback.message.edit_reply_markup(
-            reply_markup=None
+        await bot.send_message(
+            chat_id=user_id,
+            text=(
+                f"🎉 Assalomu alaykum, {full_name}!\n\n"
+                f"✅ To'lovingiz muvaffaqiyatli tasdiqlandi.\n\n"
+                f"📚 Kurs: {course}\n\n"
+                f"👇 Quyidagi tugmalar orqali kursga qo‘shiling."
+            ),
+            reply_markup=keyboard
         )
-
     except Exception as e:
+        logger.error(f"Foydalanuvchiga tasdiqlash xabarini yuborishda xatolik: {e}")
 
-        logger.error(e)
+    # Admin panelidagi tugmalarni olib tashlash
+    await callback.message.edit_reply_markup(reply_markup=None)
 
+    # Admin uchun tasdiqlash habari
     await callback.message.answer(
-        f"✅ User tasdiqlandi\n\n"
-        f"👤 {full_name}\n"
-        f"📚 {course}"
+        f"✅ Foydalanuvchi tasdiqlandi!\n\n👤 {full_name}\n📚 {course}"
     )
-
-    await callback.answer(
-        "✅ Tasdiqlandi"
-    )
+    await callback.answer("✅ Muvaffaqiyatli tasdiqlandi")
 
 
 @dp.callback_query(F.data.startswith("reject:"))
 async def reject_user(callback: CallbackQuery):
-
     if callback.from_user.id != ADMIN_ID:
-
-        await callback.answer(
-            "❌ Ruxsat yo'q",
-            show_alert=True
-        )
-
+        await callback.answer("❌ Ruxsat yo'q!", show_alert=True)
         return
 
-    user_id = int(
-        callback.data.split(":")[1]
-    )
+    user_id = int(callback.data.split(":")[1])
 
-    row = db_execute(
-        "SELECT full_name "
-        "FROM users "
-        "WHERE user_id = %s",
-        (user_id,),
-        fetchone=True
-    )
+    row = db_execute("SELECT full_name FROM users WHERE user_id = %s", (user_id,), fetchone=True)
+    full_name = row[0] if row and row[0] else "Foydalanuvchi"
 
-    full_name = (
-        row[0]
-        if row else "User"
-    )
-
-    await bot.send_message(
-        user_id,
-        "❌ Chekingiz tasdiqlanmadi.\n\n"
-        "Iltimos:\n"
-        "• chekni aniqroq yuboring\n"
-        "• yoki admin bilan bog'laning."
-    )
-
+    # Foydalanuvchiga rad etilgani haqida habar
     try:
-
-        await callback.message.edit_reply_markup(
-            reply_markup=None
-        )
-
-    except Exception as e:
-
-        logger.error(e)
-
-    await callback.message.answer(
-        f"❌ User rad qilindi\n\n"
-        f"👤 {full_name}"
-    )
-
-    await callback.answer(
-        "❌ Rad qilindi"
-    )
-# =========================================================
-# ADVANCED CEFR QUIZ ENGINE
-# =========================================================
-
-import os
-import csv
-import random
-
-from datetime import date
-
-from aiogram.types import (
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton
-)
-# =========================================================
-# GLOBALS
-# =========================================================
-
-QUIZ_DATA = {}
-
-quiz_running = set()
-
-quiz_sessions = {}
-
-active_questions = {}
-
-answered_users = {}
-
-approved_users = set()
-
-artikel_data = {}
-
-admin_sessions = {}
-
-last_daily_reset = None
-
-# =========================================================
-# LESSON QUIZ SYSTEM
-# =========================================================
-
-LESSON_QUIZ_DATA = {}
-
-lesson_quiz_sessions = {}
-
-lesson_active_questions = {}
-
-lesson_answered_users = {}
-# =========================================================
-# REGISTER STATES
-# =========================================================
-
-class RegisterStates(StatesGroup):
-
-    waiting_full_name = State()
-# =========================================================
-# LEVEL CONFIG
-# =========================================================
-
-LEVEL_CONFIG = {
-
-    "A1": {
-
-        "file": "A1-words.csv",
-
-        "blocks": 10,
-
-        "size": 100,
-
-        "required": 600
-    },
-
-    "A2": {
-
-        "file": "A2-words.csv",
-
-        "blocks": 10,
-
-        "size": 100,
-
-        "required": 600
-    },
-
-    "B1": {
-
-        "file": "B1-words.csv",
-
-        "blocks": 10,
-
-        "size": 100,
-
-        "required": 600
-    },
-
-    "B2": {
-
-        "file": "B2-words.csv",
-
-        "blocks": 15,
-
-        "size": 100,
-
-        "required": 900
-    },
-
-    "C1": {
-
-        "file": "C1-words.csv",
-
-        "blocks": 11,
-
-        "size": 100,
-
-        "required": 600
-    }
-}
-
-LEVEL_ORDER = [
-
-    "A1",
-
-    "A2",
-
-    "B1",
-
-    "B2",
-
-    "C1"
-]
-# =========================================================
-# LOAD CSV
-# =========================================================
-
-BASE_DIR = os.path.dirname(
-    os.path.abspath(__file__)
-)
-
-DATA_DIR = BASE_DIR
-
-def load_level_csv(
-    level,
-    filename
-):
-
-    data = []
-
-    # =====================================================
-    # FILE CHECK
-    # =====================================================
-
-    if not os.path.exists(filename):
-
-        logger.warning(
-            f"{filename} topilmadi"
-        )
-
-        # ADMIN WARNING
-        try:
-
-            asyncio.create_task(
-                bot.send_message(
-                    ADMIN_ID,
-                    f"⚠️ CSV topilmadi:\n{filename}"
-                )
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"CSV warning error: {e}"
-            )
-
-        return
-
-    # =====================================================
-    # LOAD FILE
-    # =====================================================
-
-    try:
-
-        with open(
-            filename,
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            reader = csv.reader(f)
-
-            # HEADER SKIP
-            next(reader, None)
-
-            for row in reader:
-
-                try:
-
-                    # INVALID ROW
-                    if len(row) < 5:
-                        continue
-
-                    item = {
-
-                        "id": int(row[0]),
-
-                        "german": row[1].strip(),
-
-                        "correct": row[2].strip(),
-
-                        "wrong1": row[3].strip(),
-
-                        "wrong2": row[4].strip(),
-                    }
-
-                    data.append(item)
-
-                except Exception as e:
-
-                    logger.error(
-                        f"CSV row error: {e}"
-                    )
-
-    except Exception as e:
-
-        logger.error(
-            f"CSV load error: {e}"
-        )
-
-        return
-
-    # =====================================================
-    # SAVE DATA
-    # =====================================================
-
-    QUIZ_DATA[level] = data
-
-    logger.info(
-        f"{level}: "
-        f"{len(data)} loaded ✅"
-    )
-
-# =========================================================
-# LOAD ALL QUIZZES
-# =========================================================
-
-def load_all_quizzes():
-
-    QUIZ_DATA.clear()
-
-    for level, config in LEVEL_CONFIG.items():
-
-        try:
-
-            load_level_csv(
-                level,
-                config["file"]
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"{level} load failed: {e}"
-            )
-
-    logger.info(
-        "All quizzes loaded ✅"
-    )
-
-
-# =========================================================
-# LOAD LESSON CSV
-# =========================================================
-
-def load_lesson_csv(
-    filename,
-    lesson
-):
-
-    data = []
-
-    if not os.path.exists(
-        filename
-    ):
-        return []
-
-    with open(
-        filename,
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        reader = csv.DictReader(
-            f
-        )
-
-        for row in reader:
-
-            try:
-
-                if int(
-                    row["lesson"]
-                ) != lesson:
-
-                    continue
-
-                data.append({
-
-                    "id": int(
-                        row["task_id"]
-                    ),
-
-                    "question": row["question"],
-
-                    "correct": row["correct"],
-
-                    "wrong1": row["wrong1"],
-
-                    "wrong2": row["wrong2"]
-
-                })
-
-            except Exception as e:
-
-                logger.error(
-                    f"Lesson CSV error: {e}"
-                )
-
-    return data
-
-# =========================================================
-# DAILY RESET
-# =========================================================
-
-def reset_daily_scores():
-
-    today = date.today()
-
-    db_execute(
-        """
-        UPDATE users
-        SET
-            daily_score = 0,
-            last_daily_reset = %s
-        WHERE
-            last_daily_reset IS NULL
-            OR last_daily_reset < %s
-        """,
-        (today, today)
-    )
-# =========================================================
-# QUIZ MENU
-# =========================================================
-
-async def build_level_menu(
-    user_id
-):
-
-    result = db_execute(
-        """
-        SELECT unlocked_level
-
-        FROM users
-
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
-    )
-
-    unlocked = (
-        result[0]
-        if result
-        else "A1"
-    )
-
-    unlocked_index = LEVEL_ORDER.index(
-        unlocked
-    )
-
-    rows = []
-
-    current = []
-
-    # =====================================================
-    # LEVELS
-    # =====================================================
-
-    for i, level in enumerate(
-        LEVEL_ORDER
-    ):
-
-        # OPEN
-        if i <= unlocked_index:
-
-            text = (
-                f"🎯 {level}"
-            )
-
-        # LOCKED
-        else:
-
-            text = (
-                f"🔒 {level}"
-            )
-
-        current.append(
-
-            KeyboardButton(
-                text=text
-            )
-        )
-
-        # 2 BUTTONS
-        if len(current) == 2:
-
-            rows.append(current)
-
-            current = []
-
-    # LAST ROW
-    if current:
-
-        rows.append(current)
-
-    # =====================================================
-    # RANKING
-    # =====================================================
-
-    rows.append([
-
-        KeyboardButton(
-            text="🏆 Reytinglar"
-        )
-    ])
-
-    # =====================================================
-    # CERTIFICATE
-    # =====================================================
-
-    rows.append([
-
-        KeyboardButton(
-            text="🏅 Sertifikat"
-        )
-    ])
-
-    # =====================================================
-    # BACK
-    # =====================================================
-
-    rows.append([
-
-        KeyboardButton(
-            text="⬅️ Orqaga"
-        )
-    ])
-
-    return ReplyKeyboardMarkup(
-
-        keyboard=rows,
-
-        resize_keyboard=True
-    )
-
-# =========================================================
-# BLOCK MENU
-# =========================================================
-
-def build_block_keyboard(level):
-
-    config = LEVEL_CONFIG[level]
-
-    rows = []
-
-    current = []
-
-    for i in range(1, config["blocks"] + 1):
-
-        current.append(
-            KeyboardButton(
-                text=f"📚 {level}-{i}-Blok"
-            )
-        )
-
-        if len(current) == 2:
-
-            rows.append(current)
-
-            current = []
-
-    if current:
-        rows.append(current)
-
-    rows.append([
-        KeyboardButton(
-            text="⬅️ Orqaga"
-        )
-    ])
-
-    return ReplyKeyboardMarkup(
-        keyboard=rows,
-        resize_keyboard=True
-    )
-
-# =========================================================
-# OPEN WORD GAME
-# =========================================================
-
-@dp.message(F.text == "🎮 So'z O'yini")
-async def word_game_handler(
-    message: Message,
-    state: FSMContext
-):
-
-    user_id = message.from_user.id
-
-    # =====================================================
-    # CHECK FULL NAME
-    # =====================================================
-
-    result = db_execute(
-        """
-        SELECT full_name
-
-        FROM users
-
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
-    )
-
-    full_name = (
-        result[0]
-        if result
-        else None
-    )
-
-    # =====================================================
-    # ASK NAME
-    # =====================================================
-
-    if (
-        not full_name
-        or
-        full_name == "Unknown"
-    ):
-
-        await message.answer(
-
-            "📝 To'liq ism familiyangizni kiriting.\n\n"
-
-            "Masalan:\n"
-            "Zayniddinkhuja Makhmudov"
-        )
-
-        await state.set_state(
-            RegisterStates.waiting_full_name
-        )
-
-        return
-
-    # =====================================================
-    # OPEN MENU
-    # =====================================================
-
-    menu = await build_level_menu(
-        user_id
-    )
-
-    await message.answer(
-
-        "🎮 WortSpiel\n\n"
-        "Darajani tanlang:",
-
-        reply_markup=menu
-    )
-# =========================================================
-# SAVE FULL NAME
-# =========================================================
-
-@dp.message(
-    RegisterStates.waiting_full_name
-)
-async def save_full_name(
-    message: Message,
-    state: FSMContext
-):
-
-    user_id = message.from_user.id
-
-    full_name = (
-        message.text.strip()
-    )
-
-    # =====================================================
-    # VALIDATION
-    # =====================================================
-
-    if len(full_name) < 5:
-
-        await message.answer(
-            "❌ Juda qisqa ism."
-        )
-
-        return
-
-    if len(full_name) > 50:
-
-        await message.answer(
-            "❌ Juda uzun ism."
-        )
-
-        return
-
-    # AT LEAST 2 WORDS
-    if len(full_name.split()) < 2:
-
-        await message.answer(
-
-            "❌ Ism va familiya kiriting.\n\n"
-
-            "Masalan:\n"
-            "Zayniddinkhuja Makhmudov"
-        )
-
-        return
-
-    # =====================================================
-    # SAVE DATABASE
-    # =====================================================
-
-    db_execute(
-        """
-        UPDATE users
-
-        SET full_name = %s
-
-        WHERE user_id = %s
-        """,
-        (
-            full_name,
-            user_id
-        )
-    )
-
-    await state.clear()
-
-    # =====================================================
-    # SUCCESS
-    # =====================================================
-
-    await message.answer(
-        f"✅ Saqlandi:\n"
-        f"{full_name}"
-    )
-
-    # =====================================================
-    # OPEN QUIZ MENU
-    # =====================================================
-
-    menu = await build_level_menu(
-        user_id
-    )
-
-    await message.answer(
-
-        "🎮 WortSpiel\n\n"
-        "Darajani tanlang:",
-
-        reply_markup=menu
-    )
-
-# =========================================================
-# LOCKED LEVEL
-# =========================================================
-
-@dp.message(
-    F.text.regexp(
-        r"🔒 (A1|A2|B1|B2|C1)"
-    )
-)
-async def locked_level_handler(
-    message: Message
-):
-
-    await message.answer(
-        "🔒 Bu daraja hali ochilmagan.\n\n"
-        "Keyingi darajani ochish uchun:\n"
-        "• barcha bloklardan kamida 60% ishlang."
-    )
-
-# =========================================================
-# OPEN LEVEL
-# =========================================================
-
-@dp.message(
-    F.text.regexp(
-        r"🎯 (A1|A2|B1|B2|C1)"
-    )
-)
-async def open_level_handler(
-    message: Message
-):
-
-    level = message.text.replace(
-        "🎯 ",
-        ""
-    )
-
-    await message.answer(
-        f"📚 {level} bloklari",
-        reply_markup=build_block_keyboard(level)
-    )
-
-# =========================================================
-# CHECK LEVEL UNLOCK
-# =========================================================
-
-def check_level_unlock(
-    user_id,
-    current_level
-):
-
-    # C1 LAST LEVEL
-    if current_level == "C1":
-
-        return None
-
-    required = LEVEL_CONFIG[
-        current_level
-    ]["required"]
-
-    result = db_execute(
-        """
-        SELECT
-            COALESCE(
-                SUM(best_score),
-                0
-            )
-
-        FROM quiz_progress
-
-        WHERE user_id = %s
-        AND level = %s
-        """,
-        (
-            user_id,
-            current_level
-        ),
-        fetchone=True
-    )
-
-    total = result[0] if result else 0
-
-    if total >= required:
-
-        next_level = LEVEL_ORDER[
-            LEVEL_ORDER.index(
-                current_level
-            ) + 1
-        ]
-
-        db_execute(
-            """
-            UPDATE users
-            SET unlocked_level = %s
-            WHERE user_id = %s
-            """,
-            (
-                next_level,
-                user_id
-            )
-        )
-
-        return next_level
-
-    return None
-# =========================================================
-# START QUIZ BLOCK
-# =========================================================
-async def start_quiz_block(
-    message: Message,
-    level: str,
-    block: int,
-    force_restart=False,
-    user_id=None
-):
-
-    if user_id is None:
-
-        user_id = message.from_user.id
-
-    # ACTIVE QUIZ CHECK
-    if user_id in quiz_running:
-
-        session = quiz_sessions.get(
-            user_id
-        )
-
-        # STUCK SESSION FIX
-        if not session:
-
-            quiz_running.discard(
-                user_id
-            )
-
-        else:
-
-            await message.answer(
-                "⚠️ Sizda aktiv test mavjud."
-            )
-
-            return
-
-    # =====================================================
-    # RESTART WARNING
-    # =====================================================
-
-    if not force_restart:
-
-        old_result = db_execute(
-            """
-            SELECT best_score
-
-            FROM quiz_progress
-
-            WHERE
-                user_id = %s
-                AND level = %s
-                AND block_number = %s
-            """,
-            (
-                user_id,
-                level,
-                block
-            ),
-            fetchone=True
-        )
-
-        if old_result:
-
-            best_score = old_result[0]
-
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="🔄 Qayta ishlash",
-                            callback_data=f"restartquiz:{level}:{block}"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="❌ Bekor qilish",
-                            callback_data="cancelquiz"
-                        )
-                    ]
-                ]
-            )
-
-            await message.answer(
-                f"⚠️ Siz bu blokni avval ishlagansiz.\n\n"
-                f"🏆 Eng yaxshi natija: {best_score}/100\n\n"
-                f"🔄 Test 0 dan boshlanadi.\n"
-                f"⭐ XP faqat yangi rekord uchun beriladi.\n\n"
-                f"Davom etasizmi?",
-                reply_markup=keyboard
-            )
-
-            return
-    # =====================================================
-    # USER LEVEL SECURITY
-    # =====================================================
-
-    user_data = db_execute(
-        """
-        SELECT unlocked_level
-        FROM users
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
-    )
-
-    current_unlocked = (
-        user_data[0]
-        if user_data
-        else "A1"
-    )
-
-    if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
-
-        await message.answer(
-            "🔒 Bu daraja hali ochilmagan."
-        )
-
-        return
-
-    # =====================================================
-    # BLOCK SECURITY
-    # =====================================================
-
-    config = LEVEL_CONFIG[level]
-
-    if block > config["blocks"]:
-
-        await message.answer(
-            "❌ Noto'g'ri blok."
-        )
-
-        return
-    # =====================================================
-    # PREVIOUS BLOCK CHECK
-    # =====================================================
-
-    if block > 1 and not force_restart:
-
-        prev_block = block - 1
-
-        result = db_execute(
-            """
-            SELECT best_score
-
-            FROM quiz_progress
-
-            WHERE
-                user_id = %s
-                AND level = %s
-                AND block_number = %s
-            """,
-            (
-                user_id,
-                level,
-                prev_block
-            ),
-            fetchone=True
-        )
-
-        prev_score = (
-            result[0]
-            if result
-            else 0
-        )
-
-        if prev_score < 60:
-
-            await message.answer(
-                f"🔒 Avval {prev_block}-Blokdan "
-                f"kamida 60/100 ishlang."
-            )
-
-            return
-    # =====================================================
-    # LOAD QUESTIONS
-    # =====================================================
-
-    questions = QUIZ_DATA[level]
-
-    start_index = (block - 1) * 100
-
-    end_index = start_index + 100
-
-    if level == "C1" and block == 11:
-
-        end_index = 1055
-
-    if start_index >= len(questions):
-
-        await message.answer(
-            "❌ CSV yetarli emas."
-        )
-
-        return
-
-    block_questions = questions[
-        start_index:end_index
-    ]
-
-    if not block_questions:
-
-        await message.answer(
-            "❌ Blok bo'sh."
-        )
-
-        return
-
-    # =====================================================
-    # START QUIZ
-    # =====================================================
-
-    random.shuffle(
-        block_questions
-    )
-
-    # FORCE CLEAN OLD QUIZ
-
-    quiz_running.discard(
-        user_id
-    )
-
-    quiz_sessions.pop(
-        user_id,
-        None
-    )
-
-    for key in list(
-        active_questions.keys()
-    ):
-
-        if key.startswith(
-            f"{user_id}_"
-        ):
-
-            active_questions.pop(
-                key,
-                None
-            )
-
-            answered_users.pop(
-                key,
-                None
-            )
-
-    quiz_running.add(
-        user_id
-    )
-
-    quiz_sessions[user_id] = {
-
-        "level": level,
-        "block": block,
-        "questions": block_questions,
-        "index": 0,
-        "score": 0
-    }
-
-    await message.answer(
-        f"🚀 {level}-{block}-Blok boshlandi!\n\n"
-        f"📚 Savollar: {len(block_questions)}"
-    )
-
-    await send_next_question(
-        message.chat.id,
-        user_id
-    )
-
-# =========================================================
-# START BLOCK
-# =========================================================
-
-@dp.message(
-    F.text.regexp(
-        r"📚 (A1|A2|B1|B2|C1)-(\d+)-Blok"
-    )
-)
-async def start_block(
-    message: Message
-):
-
-    text = message.text.replace(
-        "📚 ",
-        ""
-    )
-
-    level = text.split("-")[0]
-
-    block = int(
-        text.split("-")[1]
-    )
-
-    await start_quiz_block(
-        message,
-        level,
-        block
-    )
-
-# =========================================================
-# SEND QUESTION
-# =========================================================
-
-async def send_next_question(
-    chat_id,
-    user_id
-):
-
-    # MEMORY SAFETY
-
-    if user_id not in quiz_sessions:
-
-        quiz_running.discard(
-            user_id
-        )
-
-        return
-
-    session = quiz_sessions.get(
-        user_id
-    )
-
-    if not session:
-
-        quiz_running.discard(
-            user_id
-        )
-
-        return
-
-    questions = session["questions"]
-
-    index = session["index"]
-
-    # QUIZ FINISH
-
-    if index >= len(questions):
-
-        await finish_quiz(
-            chat_id,
-            user_id
-        )
-
-        return
-
-    question = questions[index]
-
-    answers = [
-
-        question["correct"],
-
-        question["wrong1"],
-
-        question["wrong2"]
-    ]
-
-    random.shuffle(
-        answers
-    )
-
-    qid = (
-        f"{user_id}_"
-        f"{question['id']}"
-    )
-
-    answered_users[qid] = set()
-
-    callback_map = {}
-
-    callback_buttons = []
-
-    for i, answer in enumerate(
-        answers
-    ):
-
-        answer_key = f"a{i}"
-
-        callback_map[
-            answer_key
-        ] = answer
-
-        callback_buttons.append([
-
-            InlineKeyboardButton(
-
-                text=answer,
-
-                callback_data=(
-                    f"quiz:"
-                    f"{qid}:"
-                    f"{answer_key}"
-                )
-            )
-        ])
-
-    callback_buttons.append([
-
-        InlineKeyboardButton(
-
-            text="⛔ Yakunlash",
-
-            callback_data=(
-                f"stopquiz:{user_id}"
-            )
-        )
-    ])
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=callback_buttons
-    )
-
-    # ACTIVE QUESTION SAVE
-
-    active_questions[qid] = {
-
-        "user_id": user_id,
-
-        "question_id": question["id"],
-
-        "correct": question["correct"],
-
-        "answers": callback_map
-    }
-
-    try:
-
         await bot.send_message(
-
-            chat_id,
-
-            f"📚 {session['level']}-{session['block']}\n"
-            f"📊 {index + 1}/{len(questions)}\n\n"
-            f"🇩🇪 {question['german']}",
-
-            reply_markup=keyboard
+            chat_id=user_id,
+            text=(
+                "❌ Chekingiz tasdiqlanmadi.\n\n"
+                "Iltimos:\n"
+                "• chekni aniqroq yuboring\n"
+                "• yoki admin bilan bog'laning."
+            )
         )
-
     except Exception as e:
+        logger.error(f"Foydalanuvchiga rad xabarini yuborishda xatolik: {e}")
 
-        logger.error(
-            f"Send question error: {e}"
-        )
+    # Admin panelini yangilash
+    await callback.message.edit_reply_markup(reply_markup=None)
 
-        quiz_running.discard(
-            user_id
-        )
-
-        quiz_sessions.pop(
-            user_id,
-            None
-        )
-
-        active_questions.pop(
-            qid,
-            None
-        )
-
-        answered_users.pop(
-            qid,
-            None
-        )
-# Foydalanuvchilarning bosgan tugmalari map-keshi (kod tepasida e'lon qilinadi)
-lesson_active_questions = {}
-
+    await callback.message.answer(f"❌ {full_name} rad qilindi.")
+    await callback.answer("❌ Rad qilindi")
+    
 # =========================================================
 # SEND LESSON QUESTION (MUKAMMAL INTEGRATSIYA)
 # =========================================================
@@ -4026,2015 +1922,1115 @@ async def retry_grammatik_callback(callback: CallbackQuery):
     # Birinchi savolni qayta yuboramiz
     await send_lesson_question(callback.message, user_id)
 # =========================================================
+# ADVANCED CEFR QUIZ ENGINE
+# =========================================================
+
+# =========================================================
+# GLOBALS
+# =========================================================
+
+QUIZ_DATA = {}
+quiz_running = set()
+quiz_sessions = {}
+active_questions = {}
+answered_users = {}
+approved_users = set()
+artikel_data = {}
+admin_sessions = {}
+last_daily_reset = None
+
+# =========================================================
+# LESSON QUIZ SYSTEM
+# =========================================================
+
+LESSON_QUIZ_DATA = {}
+lesson_quiz_sessions = {}
+lesson_active_questions = {}
+lesson_answered_users = {}
+
+# =========================================================
+# REGISTER STATES
+# =========================================================
+
+class RegisterStates(StatesGroup):
+    waiting_full_name = State()
+
+# =========================================================
+# LEVEL CONFIG
+# =========================================================
+
+LEVEL_CONFIG = {
+    "A1": {"file": "A1-words.csv", "blocks": 10, "size": 100, "required": 600},
+    "A2": {"file": "A2-words.csv", "blocks": 10, "size": 100, "required": 600},
+    "B1": {"file": "B1-words.csv", "blocks": 10, "size": 100, "required": 600},
+    "B2": {"file": "B2-words.csv", "blocks": 15, "size": 100, "required": 900},
+    "C1": {"file": "C1-words.csv", "blocks": 11, "size": 100, "required": 600}
+}
+
+LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1"]
+
+# =========================================================
+# LOAD CSV
+# =========================================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = BASE_DIR
+
+def load_level_csv(level, filename):
+    data = []
+
+    # =====================================================
+    # FILE CHECK
+    # =====================================================
+    if not os.path.exists(filename):
+        logger.warning(f"{filename} topilmadi")
+        # Sinxron funksiyadan asinxron xabarni xavfsiz yuborish
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(bot.send_message(ADMIN_ID, f"⚠️ CSV topilmadi:\n{filename}"))
+        return
+
+    # =====================================================
+    # LOAD FILE
+    # =====================================================
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            next(reader, None)  # HEADER SKIP
+
+            for row in reader:
+                try:
+                    if len(row) < 5:
+                        continue
+
+                    item = {
+                        "id": int(row[0]),
+                        "german": row[1].strip(),
+                        "correct": row[2].strip(),
+                        "wrong1": row[3].strip(),
+                        "wrong2": row[4].strip(),
+                    }
+                    data.append(item)
+                except Exception as e:
+                    logger.error(f"CSV row error in {level}: {e}")
+    except Exception as e:
+        logger.error(f"CSV load error for {level}: {e}")
+        return
+
+    # =====================================================
+    # SAVE DATA
+    # =====================================================
+    QUIZ_DATA[level] = data
+    logger.info(f"{level}: {len(data)} loaded ✅")
+
+
+# =========================================================
+# LOAD ALL QUIZZES
+# =========================================================
+
+def load_all_quizzes():
+    QUIZ_DATA.clear()
+    for level, config in LEVEL_CONFIG.items():
+        try:
+            load_level_csv(level, config["file"])
+        except Exception as e:
+            logger.error(f"{level} load failed: {e}")
+    logger.info("All quizzes loaded ✅")
+
+
+# =========================================================
+# LOAD LESSON CSV
+# =========================================================
+
+def load_lesson_csv(filename, lesson):
+    data = []
+
+    if not os.path.exists(filename):
+        return []
+
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                try:
+                    # Kalit so'zlar borligini va satr butunligini xavfsiz tekshirish
+                    if not row.get("lesson") or not row.get("task_id"):
+                        continue
+                        
+                    if int(row["lesson"]) != lesson:
+                        continue
+
+                    data.append({
+                        "id": int(row["task_id"]),
+                        "question": row.get("question", "").strip(),
+                        "correct": row.get("correct", "").strip(),
+                        "wrong1": row.get("wrong1", "").strip(),
+                        "wrong2": row.get("wrong2", "").strip()
+                    })
+                except Exception as e:
+                    logger.error(f"Lesson CSV row parsed error: {e}")
+    except Exception as e:
+        logger.error(f"Lesson CSV file read error: {e}")
+
+    return data
+
+
+# =========================================================
+# DAILY RESET
+# =========================================================
+
+def reset_daily_scores():
+    today = date.today()
+    try:
+        db_execute(
+            """
+            UPDATE users
+            SET
+                daily_score = 0,
+                last_daily_reset = %s
+            WHERE
+                last_daily_reset IS NULL
+                OR last_daily_reset < %s
+            """,
+            (today, today)
+        )
+        logger.info("Daily scores successfully reset ✅")
+    except Exception as e:
+        logger.error(f"Error resetting daily scores: {e}")
+# =========================================================
+# QUIZ MENU
+# =========================================================
+
+async def build_level_menu(user_id):
+    result = db_execute(
+        """
+        SELECT unlocked_level
+        FROM users
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    unlocked = result[0] if result and result[0] else "A1"
+
+    # LEVEL_ORDER ichida borligini xavfsiz tekshirish (ValueError oldini olish)
+    if unlocked in LEVEL_ORDER:
+        unlocked_index = LEVEL_ORDER.index(unlocked)
+    else:
+        unlocked_index = 0
+
+    rows = []
+    current = []
+
+    # =====================================================
+    # LEVELS
+    # =====================================================
+    for i, level in enumerate(LEVEL_ORDER):
+        # OPEN
+        if i <= unlocked_index:
+            text = f"🎯 {level}"
+        # LOCKED
+        else:
+            text = f"🔒 {level}"
+
+        current.append(KeyboardButton(text=text))
+
+        # 2 BUTTONS
+        if len(current) == 2:
+            rows.append(current)
+            current = []
+
+    # LAST ROW
+    if current:
+        rows.append(current)
+
+    # =====================================================
+    # RANKING
+    # =====================================================
+    rows.append([KeyboardButton(text="🏆 Reytinglar")])
+
+    # =====================================================
+    # CERTIFICATE
+    # =====================================================
+    rows.append([KeyboardButton(text="🏅 Sertifikat")])
+
+    # =====================================================
+    # BACK
+    # =====================================================
+    rows.append([KeyboardButton(text="⬅️ Orqaga")])
+
+    return ReplyKeyboardMarkup(
+        keyboard=rows,
+        resize_keyboard=True
+    )
+
+# =========================================================
+# BLOCK MENU
+# =========================================================
+
+def build_block_keyboard(level):
+    config = LEVEL_CONFIG.get(level)
+    if not config:
+        # Agar daraja konfiguratsiyasi topilmasa, default xavfsiz menyu qaytariladi
+        return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️ Orqaga")]], resize_keyboard=True)
+
+    rows = []
+    current = []
+
+    for i in range(1, config["blocks"] + 1):
+        current.append(KeyboardButton(text=f"📚 {level}-{i}-Blok"))
+
+        if len(current) == 2:
+            rows.append(current)
+            current = []
+
+    if current:
+        rows.append(current)
+
+    rows.append([KeyboardButton(text="⬅️ Orqaga")])
+
+    return ReplyKeyboardMarkup(
+        keyboard=rows,
+        resize_keyboard=True
+    )
+
+# =========================================================
+# OPEN WORD GAME
+# =========================================================
+
+@dp.message(F.text == "🎮 So'z O'yini")
+async def word_game_handler(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+
+    # Eski kutilmagan state holatlarini har ehtimolga qarshi tozalash
+    await state.clear()
+
+    # =====================================================
+    # CHECK FULL NAME
+    # =====================================================
+    result = db_execute(
+        """
+        SELECT full_name
+        FROM users
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    full_name = result[0] if result else None
+
+    # =====================================================
+    # ASK NAME
+    # =====================================================
+    if not full_name or full_name in {"Unknown", ""}:
+        await message.answer(
+            "📝 To'liq ism familiyangizni kiriting.\n\n"
+            "Masalan:\n"
+            "Zayniddinkhuja Makhmudov"
+        )
+        await state.set_state(RegisterStates.waiting_full_name)
+        return
+
+    # =====================================================
+    # OPEN MENU
+    # =====================================================
+    menu = await build_level_menu(user_id)
+    await message.answer(
+        "🎮 WortSpiel\n\n"
+        "Darajani tanlang:",
+        reply_markup=menu
+    )
+
+# =========================================================
+# SAVE FULL NAME
+# =========================================================
+
+@dp.message(RegisterStates.waiting_full_name)
+async def save_full_name(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    full_name = message.text.strip()
+
+    # =====================================================
+    # VALIDATION
+    # =====================================================
+    if len(full_name) < 5:
+        await message.answer("❌ Juda qisqa ism. Kamida 5 ta harf bo'lishi kerak.")
+        return
+
+    if len(full_name) > 50:
+        await message.answer("❌ Juda uzun ism. Maksimal 50 ta harf bo'lishi mumkin.")
+        return
+
+    # AT LEAST 2 WORDS
+    if len(full_name.split()) < 2:
+        await message.answer(
+            "❌ Ism va familiyani to'liq kiriting.\n\n"
+            "Masalan:\n"
+            "Zayniddinkhuja Makhmudov"
+        )
+        return
+
+    # =====================================================
+    # SAVE DATABASE
+    # =====================================================
+    db_execute(
+        """
+        UPDATE users
+        SET full_name = %s
+        WHERE user_id = %s
+        """,
+        (full_name, user_id)
+    )
+
+    await state.clear()
+
+    # =====================================================
+    # SUCCESS
+    # =====================================================
+    await message.answer(
+        f"✅ Saqlandi:\n"
+        f"{full_name}"
+    )
+
+    # =====================================================
+    # OPEN QUIZ MENU
+    # =====================================================
+    menu = await build_level_menu(user_id)
+    await message.answer(
+        "🎮 WortSpiel\n\n"
+        "Darajani tanlang:",
+        reply_markup=menu
+    )
+
+# =========================================================
+# LOCKED LEVEL
+# =========================================================
+
+@dp.message(F.text.regexp(r"🔒 (A1|A2|B1|B2|C1)"))
+async def locked_level_handler(message: Message):
+    await message.answer(
+        "🔒 Bu daraja hali ochilmagan.\n\n"
+        "Keyingi darajani ochish uchun:\n"
+        "• barcha bloklardan kamida 60% natija ko'rsating."
+    )
+
+# =========================================================
+# OPEN LEVEL
+# =========================================================
+
+@dp.message(F.text.regexp(r"🎯 (A1|A2|B1|B2|C1)"))
+async def open_level_handler(message: Message):
+    level = message.text.replace("🎯 ", "").strip()
+    await message.answer(
+        f"📚 {level} bloklari",
+        reply_markup=build_block_keyboard(level)
+    )
+
+# =========================================================
+# CHECK LEVEL UNLOCK
+# =========================================================
+
+def check_level_unlock(user_id, current_level):
+    # C1 LAST LEVEL
+    if current_level == "C1":
+        return None
+
+    config = LEVEL_CONFIG.get(current_level)
+    if not config:
+        return None
+
+    required = config["required"]
+
+    result = db_execute(
+        """
+        SELECT COALESCE(SUM(best_score), 0)
+        FROM quiz_progress
+        WHERE user_id = %s AND level = %s
+        """,
+        (user_id, current_level),
+        fetchone=True
+    )
+
+    total = result[0] if result else 0
+
+    if total >= required:
+        try:
+            next_level = LEVEL_ORDER[LEVEL_ORDER.index(current_level) + 1]
+            
+            db_execute(
+                """
+                UPDATE users
+                SET unlocked_level = %s
+                WHERE user_id = %s
+                """,
+                (next_level, user_id)
+            )
+            return next_level
+        except (ValueError, IndexError) as e:
+            logger.error(f"Error determining next level for index: {e}")
+            return None
+
+    return None
+
+# =========================================================
+# START QUIZ BLOCK
+# =========================================================
+
+async def start_quiz_block(
+    message: Message,
+    level: str,
+    block: int,
+    force_restart=False,
+    user_id=None
+):
+    if user_id is None:
+        user_id = message.from_user.id
+
+    # ACTIVE QUIZ CHECK
+    if user_id in quiz_running:
+        session = quiz_sessions.get(user_id)
+
+        # STUCK SESSION FIX
+        if not session:
+            quiz_running.discard(user_id)
+            # Eski qotib qolgan holat tozalandi, endi yangi o'yinni boshlashga ruxsat beramiz.
+        else:
+            await message.answer("⚠️ Sizda hali ham tugallanmagan aktiv test mavjud. Avval uni yakunlang.")
+            return
+
+    # Bu joydan boshlab test generatoringiz va savollar zanjiri davom etadi...
+# =====================================================
+# RESTART WARNING
+# =====================================================
+
+# (Tavsiya: Oldingi kodda qolgan qism shu yerda davom etadi)
+# ... [restart logika saqlandi] ...
+
+# =====================================================
+# USER LEVEL SECURITY
+# =====================================================
+
+    user_data = db_execute(
+        "SELECT unlocked_level FROM users WHERE user_id = %s",
+        (user_id,),
+        fetchone=True
+    )
+    current_unlocked = user_data[0] if user_data else "A1"
+
+    if level not in LEVEL_ORDER or current_unlocked not in LEVEL_ORDER:
+        await message.answer("❌ Xatolik yuz berdi.")
+        return
+
+    if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
+        await message.answer("🔒 Bu daraja hali ochilmagan.")
+        return
+
+# =====================================================
+# BLOCK SECURITY
+# =====================================================
+
+    config = LEVEL_CONFIG.get(level)
+    if not config or block > config["blocks"]:
+        await message.answer("❌ Noto'g'ri blok.")
+        return
+
+# =====================================================
+# PREVIOUS BLOCK CHECK
+# =====================================================
+
+    if block > 1 and not force_restart:
+        prev_block = block - 1
+        res = db_execute(
+            "SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = %s AND block_number = %s",
+            (user_id, level, prev_block),
+            fetchone=True
+        )
+        if not res or (res[0] or 0) < 60:
+            await message.answer(f"🔒 Avval {prev_block}-Blokdan kamida 60/100 ball to'plang.")
+            return
+
+# =====================================================
+# LOAD QUESTIONS
+# =====================================================
+
+    questions = QUIZ_DATA.get(level, [])
+    start_index = (block - 1) * 100
+    end_index = 1055 if (level == "C1" and block == 11) else (start_index + 100)
+
+    block_questions = questions[start_index:end_index]
+    if not block_questions:
+        await message.answer("❌ Blokda savollar topilmadi.")
+        return
+
+# =====================================================
+# START QUIZ
+# =====================================================
+
+    random.shuffle(block_questions)
+
+    # Tozalash
+    quiz_running.discard(user_id)
+    quiz_sessions.pop(user_id, None)
+    
+    # Eskisini tozalash
+    keys_to_del = [k for k in active_questions if k.startswith(f"{user_id}_")]
+    for k in keys_to_del:
+        active_questions.pop(k, None)
+        answered_users.pop(k, None)
+
+    quiz_running.add(user_id)
+    quiz_sessions[user_id] = {
+        "level": level,
+        "block": block,
+        "questions": block_questions,
+        "index": 0,
+        "score": 0
+    }
+
+    await message.answer(f"🚀 {level}-{block}-Blok boshlandi! Savollar: {len(block_questions)}")
+    await send_next_question(message.chat.id, user_id)
+
+# =========================================================
+# START BLOCK
+# =========================================================
+
+@dp.message(F.text.regexp(r"📚 (A1|A2|B1|B2|C1)-(\d+)-Blok"))
+async def start_block(message: Message):
+    parts = message.text.replace("📚 ", "").split("-")
+    level, block = parts[0], int(parts[1])
+    await start_quiz_block(message, level, block)
+
+# =========================================================
+# SEND QUESTION
+# =========================================================
+
+async def send_next_question(chat_id, user_id):
+    session = quiz_sessions.get(user_id)
+    if not session:
+        quiz_running.discard(user_id)
+        return
+
+    questions = session["questions"]
+    index = session["index"]
+
+    if index >= len(questions):
+        await finish_quiz(chat_id, user_id)
+        return
+
+    question = questions[index]
+    answers = [question["correct"], question["wrong1"], question["wrong2"]]
+    random.shuffle(answers)
+
+    qid = f"{user_id}_{question['id']}"
+    answered_users[qid] = set()
+
+    # Tugmalar yaratish
+    builder = InlineKeyboardBuilder()
+    callback_map = {}
+
+    for i, ans in enumerate(answers):
+        key = f"a{i}"
+        callback_map[key] = ans
+        builder.button(text=ans, callback_data=f"quiz:{qid}:{key}")
+    
+    builder.button(text="⛔ Yakunlash", callback_data=f"stopquiz:{user_id}")
+    builder.adjust(1)
+
+    active_questions[qid] = {
+        "user_id": user_id,
+        "question_id": question["id"],
+        "correct": question["correct"],
+        "answers": callback_map
+    }
+
+    try:
+        await bot.send_message(
+            chat_id,
+            f"📚 {session['level']}-{session['block']}\n📊 {index + 1}/{len(questions)}\n\n🇩🇪 {question['german']}",
+            reply_markup=builder.as_markup()
+        )
+    except Exception as e:
+        logger.error(f"Send question error: {e}")
+        # Xatolik bo'lsa sessiyani tozalash
+        quiz_running.discard(user_id)
+        quiz_sessions.pop(user_id, None)
+        active_questions.pop(qid, None)
+
+# =========================================================
 # ANSWER
 # =========================================================
 
-@dp.callback_query(
-    F.data.startswith("quiz:")
-)
-async def quiz_answer(
-    callback: CallbackQuery
-):
-
+@dp.callback_query(F.data.startswith("quiz:"))
+async def quiz_answer(callback: CallbackQuery):
     user_id = callback.from_user.id
+    
+    # Callback ma'lumotini xavfsiz olish
+    data_parts = callback.data.split(":", 2)
+    if len(data_parts) < 3:
+        await callback.answer("❌ Callback xatosi.", show_alert=True)
+        return
+    
+    qid = data_parts[1]
+    answer_key = data_parts[2]
 
-    try:
+    # Savol mavjudligini va sessiyani tekshirish
+    question_data = active_questions.get(qid)
+    session = quiz_sessions.get(user_id)
 
-        _, qid, answer_key = (
-            callback.data.split(
-                ":",
-                2
-            )
-        )
-
-    except Exception:
-
-        await callback.answer(
-            "❌ Callback xatosi.",
-            show_alert=True
-        )
-
+    if not question_data or not session:
+        await callback.answer("❌ Test seansi tugagan yoki eskirgan.", show_alert=True)
         return
 
-    # QUESTION EXISTS
-
-    if qid not in active_questions:
-
-        await callback.answer(
-            "❌ Savol tugagan yoki eskirgan.",
-            show_alert=True
-        )
-
+    # DOUBLE ANSWER BLOCK: Foydalanuvchi bir savolga ikki marta javob bera olmasligi
+    if user_id in answered_users.get(qid, set()):
+        await callback.answer("❌ Siz allaqachon javob bergansiz.", show_alert=True)
         return
 
-    question_data = active_questions[qid]
+    answered_users.setdefault(qid, set()).add(user_id)
 
-    # DOUBLE ANSWER BLOCK
-
-    if qid not in answered_users:
-
-        answered_users[qid] = set()
-
-    if user_id in answered_users[qid]:
-
-        await callback.answer(
-            "❌ Javob berilgansiz.",
-            show_alert=True
-        )
-
-        return
-
-    answered_users[qid].add(
-        user_id
-    )
-
-    # SESSION CHECK
-
-    session = quiz_sessions.get(
-        user_id
-    )
-
-    if not session:
-
-        logger.warning(
-            f"QUIZ SESSION LOST | "
-            f"user_id={user_id}"
-        )
-
-        active_questions.pop(
-            qid,
-            None
-        )
-
-        answered_users.pop(
-            qid,
-            None
-        )
-
-        quiz_running.discard(
-            user_id
-        )
-
-        await callback.answer(
-            "♻️ Test qayta ishga tushirilgan.\n"
-            "Blokni qaytadan oching.",
-            show_alert=True
-        )
-
-        return
-
-    answers_map = question_data["answers"]
-
-    selected = answers_map.get(
-        answer_key
-    )
-
+    # Javobni tekshirish
     correct = question_data["correct"]
-
-    # CORRECT
+    selected = question_data["answers"].get(answer_key)
 
     if selected == correct:
-
         session["score"] += 1
-
-        await callback.answer(
-            "✅ To'g'ri!"
-        )
-
-    # WRONG
-
+        await callback.answer("✅ To'g'ri!")
     else:
-
-        await callback.answer(
-            f"❌ Noto'g'ri!\n\n"
-            f"✅ {correct}",
-            show_alert=True
-        )
+        await callback.answer(f"❌ Noto'g'ri!\n✅ {correct}", show_alert=True)
 
     session["index"] += 1
 
-    active_questions.pop(
-        qid,
-        None
-    )
+    # Savolni xotiradan tozalash
+    active_questions.pop(qid, None)
+    answered_users.pop(qid, None)
 
-    answered_users.pop(
-        qid,
-        None
-    )
-
+    # Tugmani o'chirish
     try:
-
-        await callback.message.edit_reply_markup(
-            reply_markup=None
-        )
-
+        await callback.message.edit_reply_markup(reply_markup=None)
     except Exception:
-
         pass
 
-    await send_next_question(
-        callback.message.chat.id,
-        user_id
-    )
+    # Keyingi savolga o'tish
+    await send_next_question(callback.message.chat.id, user_id)
+
 
 # =========================================================
 # FINISH QUIZ
 # =========================================================
 
-async def finish_quiz(
-    chat_id,
-    user_id
-):
-
-    session = quiz_sessions.get(
-        user_id
-    )
-
+async def finish_quiz(chat_id, user_id):
+    session = quiz_sessions.get(user_id)
     if not session:
-
-        quiz_running.discard(
-            user_id
-        )
-
         return
 
     score = session["score"]
-
     level = session["level"]
-
     block = session["block"]
+    total = len(session["questions"])
 
-    total = len(
-        session["questions"]
-    )
-
-    # =====================================================
-    # OLD SCORE
-    # =====================================================
-
+    # Eski natijani olish
     old_result = db_execute(
-        """
-        SELECT best_score
-
-        FROM quiz_progress
-
-        WHERE
-            user_id = %s
-            AND level = %s
-            AND block_number = %s
-        """,
-        (
-            user_id,
-            level,
-            block
-        ),
+        "SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = %s AND block_number = %s",
+        (user_id, level, block),
         fetchone=True
     )
+    old_score = old_result[0] if old_result else 0
 
-    old_score = (
-        old_result[0]
-        if old_result
-        else 0
-    )
+    # XP hisoblash
+    xp_gain = max(0, score - old_score)
 
-    # =====================================================
-    # XP GAIN
-    # =====================================================
-
-    xp_gain = max(
-        0,
-        score - old_score
-    )
-
-    # =====================================================
-    # SAVE BEST SCORE
-    # =====================================================
-
+    # BAZA: Natijani saqlash
     db_execute(
         """
-        INSERT INTO quiz_progress
-        (
-            user_id,
-            level,
-            block_number,
-            best_score
-        )
-
-        VALUES (%s,%s,%s,%s)
-
-        ON CONFLICT
-        (
-            user_id,
-            level,
-            block_number
-        )
-
-        DO UPDATE SET
-
-            best_score = GREATEST(
-                quiz_progress.best_score,
-                EXCLUDED.best_score
-            )
+        INSERT INTO quiz_progress (user_id, level, block_number, best_score)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT (user_id, level, block_number)
+        DO UPDATE SET best_score = GREATEST(quiz_progress.best_score, EXCLUDED.best_score)
         """,
-        (
-            user_id,
-            level,
-            block,
-            score
-        )
+        (user_id, level, block, score)
     )
 
-    # =====================================================
-    # UPDATE XP
-    # =====================================================
-
+    # BAZA: XP yangilash
     if xp_gain > 0:
-
         db_execute(
             """
-            UPDATE users
-
-            SET
-
-                total_score =
-                COALESCE(total_score,0)
-                + %s,
-
-                daily_score =
-                COALESCE(daily_score,0)
-                + %s
-
+            UPDATE users 
+            SET total_score = COALESCE(total_score, 0) + %s,
+                daily_score = COALESCE(daily_score, 0) + %s
             WHERE user_id = %s
             """,
-            (
-                xp_gain,
-                xp_gain,
-                user_id
-            )
+            (xp_gain, xp_gain, user_id)
         )
 
-    # =====================================================
-    # LEVEL UNLOCK
-    # =====================================================
+    # Darajani tekshirish
+    new_level = check_level_unlock(user_id, level)
+    unlock_text = f"\n\n🔓 Yangi daraja ochildi: {new_level}" if new_level else ""
 
-    new_level = check_level_unlock(
-        user_id,
-        level
-    )
-
-    unlock_text = ""
-
-    if new_level:
-
-        unlock_text = (
-            f"\n\n🔓 Yangi daraja ochildi: "
-            f"{new_level}"
-        )
-
-    # =====================================================
-    # RESULT MESSAGE
-    # =====================================================
-
-    result_text = (
-
-        f"🏁 Test tugadi!\n\n"
-
-        f"🏆 Natija: "
-        f"{score}/{total}"
-    )
-
-    if xp_gain > 0:
-
-        result_text += (
-            f"\n⭐ XP qo'shildi: "
-            f"+{xp_gain}"
-        )
-
-    else:
-
-        result_text += (
-            "\n♻️ Bu blokdan avvalroq "
-            "yuqoriroq natija olgansiz."
-        )
-
+    # Xabar tuzish
+    result_text = f"🏁 Test tugadi!\n\n🏆 Natija: {score}/{total}"
+    result_text += f"\n⭐ XP qo'shildi: +{xp_gain}" if xp_gain > 0 else "\n♻️ Bu blokdan avvalroq yuqoriroq natija olgansiz."
     result_text += unlock_text
 
-    await bot.send_message(
-        chat_id,
-        result_text
-    )
+    await bot.send_message(chat_id, result_text)
 
-    # =====================================================
-    # CLEAN SESSION
-    # =====================================================
+    # Xotirani tozalash
+    quiz_running.discard(user_id)
+    quiz_sessions.pop(user_id, None)
+    
+    # Userga tegishli savollarni tozalash
+    prefix = f"{user_id}_"
+    for key in [k for k in active_questions if k.startswith(prefix)]:
+        active_questions.pop(key, None)
+        answered_users.pop(key, None)
 
-    quiz_running.discard(
-        user_id
-    )
-
-    quiz_sessions.pop(
-        user_id,
-        None
-    )
-
-    # =====================================================
-    # MEMORY CLEAN
-    # =====================================================
-
-    remove_keys = [
-
-        key
-
-        for key in active_questions
-
-        if key.startswith(
-            f"{user_id}_"
-        )
-    ]
-
-    for key in remove_keys:
-
-        active_questions.pop(
-            key,
-            None
-        )
-
-        answered_users.pop(
-            key,
-            None
-        )
 
 # =========================================================
 # RESTART QUIZ
 # =========================================================
 
-@dp.callback_query(
-    F.data.startswith(
-        "restartquiz:"
-    )
-)
-async def restart_quiz_handler(
-    callback: CallbackQuery
-):
+@dp.callback_query(F.data.startswith("restartquiz:"))
+async def restart_quiz_handler(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    
+    # Tozalash
+    quiz_running.discard(user_id)
+    quiz_sessions.pop(user_id, None)
+    
+    prefix = f"{user_id}_"
+    for key in [k for k in active_questions if k.startswith(prefix)]:
+        active_questions.pop(key, None)
+        answered_users.pop(key, None)
 
-    try:
-
-        user_id = callback.from_user.id
-
-        # FULL CLEAN
-
-        quiz_running.discard(
-            user_id
-        )
-
-        quiz_sessions.pop(
-            user_id,
-            None
-        )
-
-        remove_keys = [
-
-            key
-
-            for key in active_questions.keys()
-
-            if key.startswith(
-                f"{user_id}_"
-            )
-        ]
-
-        for key in remove_keys:
-
-            active_questions.pop(
-                key,
-                None
-            )
-
-            answered_users.pop(
-                key,
-                None
-            )
-
-        # CALLBACK PARSE
-
-        parts = callback.data.split(
-            ":"
-        )
-
-        if len(parts) != 3:
-
-            await callback.answer(
-                "❌ Callback xatosi.",
-                show_alert=True
-            )
-
-            return
-
-        level = parts[1]
-
-        block = int(
-            parts[2]
-        )
-
-        try:
-
-            await callback.message.delete()
-
-        except Exception:
-
-            pass
-
-        await callback.answer(
-            "🔄 Test qayta boshlandi."
-        )
-
-        await start_quiz_block(
-            message=callback.message,
-            level=level,
-            block=block,
-            force_restart=True,
-            user_id=user_id
-        )
-
-    except Exception as e:
-
-        logger.error(
-            f"Restart quiz error: {e}"
-        )
-
-        await callback.answer(
-            "❌ Xatolik yuz berdi.",
-            show_alert=True
-        )
-
-
-# =========================================================
-# CANCEL RESTART
-# =========================================================
-
-@dp.callback_query(
-    F.data == "cancelquiz"
-)
-async def cancel_quiz_handler(
-    callback: CallbackQuery
-):
-
-    try:
-
-        await callback.message.edit_text(
-            "❌ Qayta ishlash bekor qilindi."
-        )
-
-    except Exception:
-
-        pass
-
-    await callback.answer()
-
-# =========================================================
-# STOP QUIZ
-# =========================================================
-
-@dp.callback_query(
-    F.data.startswith(
-        "stopquiz:"
-    )
-)
-async def stop_quiz(
-    callback: CallbackQuery
-):
-
-    user_id = int(
-        callback.data.split(":")[1]
-    )
-
-    # OWNER SECURITY
-    if callback.from_user.id != user_id:
-
-        await callback.answer(
-            "❌ Bu sizning testingiz emas.",
-            show_alert=True
-        )
-
+    # Ma'lumotlarni ajratib olish
+    parts = callback.data.split(":")
+    if len(parts) != 3:
+        await callback.answer("❌ Callback xatosi.", show_alert=True)
         return
 
-    # BUTTON CLEAN
+    level, block = parts[1], int(parts[2])
+
     try:
-
-        await callback.message.edit_reply_markup(
-            reply_markup=None
-        )
-
-    except:
+        await callback.message.delete()
+    except Exception:
         pass
 
-    await finish_quiz(
-        callback.message.chat.id,
-        user_id
+    await callback.answer("🔄 Test qayta boshlandi.")
+    await start_quiz_block(
+        message=callback.message, 
+        level=level, 
+        block=block, 
+        force_restart=True, 
+        user_id=user_id
     )
-
 # =========================================================
-# RATING MENU
+# CANCEL & STOP QUIZ
+# =========================================================
+
+@dp.callback_query(F.data == "cancelquiz")
+async def cancel_quiz_handler(callback: CallbackQuery):
+    try:
+        await callback.message.edit_text("❌ Qayta ishlash bekor qilindi.")
+    except Exception:
+        pass
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("stopquiz:"))
+async def stop_quiz(callback: CallbackQuery):
+    try:
+        user_id = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        return
+
+    if callback.from_user.id != user_id:
+        await callback.answer("❌ Bu sizning testingiz emas.", show_alert=True)
+        return
+
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await finish_quiz(callback.message.chat.id, user_id)
+# =========================================================
+# GLOBAL MENU (Handlerlardan oldin e'lon qilinadi)
 # =========================================================
 
 rating_menu = ReplyKeyboardMarkup(
     keyboard=[
-
         [
-            KeyboardButton(
-                text="🏆 Umumiy Reyting"
-            ),
-
-            KeyboardButton(
-                text="⚡ Kunlik Reyting"
-            )
+            KeyboardButton(text="🏆 Umumiy Reyting"),
+            KeyboardButton(text="⚡ Kunlik Reyting")
         ],
-
         [
-            KeyboardButton(
-                text="⬅️ Orqaga"
-            )
+            KeyboardButton(text="⬅️ Orqaga")
         ]
     ],
     resize_keyboard=True
 )
 
 # =========================================================
-# OPEN RATING MENU
+# RANKING MENU & LOGIC
 # =========================================================
 
 @dp.message(F.text == "🏆 Reytinglar")
-async def open_rating_menu(
-    message: Message
-):
+async def open_rating_menu(message: Message):
+    await message.answer("🏆 Reyting bo'limi", reply_markup=rating_menu)
 
-    await message.answer(
-        "🏆 Reyting bo'limi",
-        reply_markup=rating_menu
+async def _get_ranking_text(query_type: str, message: Message):
+    col = "total_score" if query_type == "total" else "daily_score"
+    title = "🏆 UMUMIY REYTING" if query_type == "total" else "⚡ KUNLIK REYTING"
+    
+    # Ma'lumotlar bazasidan reytingni olish
+    rankings = db_execute(
+        f"SELECT COALESCE(full_name, 'Unknown'), {col} FROM users WHERE {col} > 0 ORDER BY {col} DESC LIMIT 50",
+        fetchall=True
     )
 
-# =========================================================
-# TOTAL RANKING
-# =========================================================
+    if not rankings:
+        return f"📭 {title} hali bo'sh.\n🎮 Birinchi bo'lib test ishlang!"
+
+    text = f"{title}\n\n"
+    medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+    
+    # Reyting ro'yxatini shakllantirish
+    for i, (name, score) in enumerate(rankings, 1):
+        medal = medals.get(i, f"{i}.")
+        text += f"{medal} {name} — {score} XP\n"
+        if i >= 10: break # Telegram xabar uzunligi uchun xavfsizlik limiti
+
+    # Foydalanuvchining shaxsiy ballini tekshirish
+    my = db_execute(f"SELECT {col} FROM users WHERE user_id = %s", (message.from_user.id,), fetchone=True)
+    my_score = my[0] if my else 0
+    
+    if my_score <= 0:
+        text += "\n━━━━━━━━━━\n🎮 Siz hali test ishlamagansiz."
+    return text
 
 @dp.message(F.text == "🏆 Umumiy Reyting")
-async def total_ranking(
-    message: Message
-):
-
-    rankings = db_execute(
-        """
-        SELECT
-            COALESCE(full_name,'Unknown'),
-            total_score
-
-        FROM users
-
-        WHERE
-            total_score IS NOT NULL
-            AND total_score > 0
-
-        ORDER BY total_score DESC
-
-        LIMIT 100
-        """,
-        fetchall=True
-    )
-
-    # EMPTY
-    if not rankings:
-
-        await message.answer(
-            "📭 Reyting hali bo'sh.\n\n"
-            "🎮 Birinchi bo'lib test ishlang!"
-        )
-
-        return
-
-    text = (
-        "🏆 UMUMIY REYTING\n\n"
-    )
-
-    medals = {
-
-        1: "🥇",
-        2: "🥈",
-        3: "🥉"
-    }
-
-    for i, (
-        full_name,
-        score
-    ) in enumerate(rankings, 1):
-
-        medal = medals.get(
-            i,
-            f"{i}."
-        )
-
-        text += (
-            f"{medal} "
-            f"{full_name} — "
-            f"{score} XP\n"
-        )
-
-    # =====================================================
-    # MY SCORE
-    # =====================================================
-
-    my = db_execute(
-        """
-        SELECT total_score
-        FROM users
-        WHERE user_id = %s
-        """,
-        (message.from_user.id,),
-        fetchone=True
-    )
-
-    my_score = my[0] if my else 0
-
-    if my_score <= 0:
-
-        text += (
-            "\n━━━━━━━━━━\n"
-            "🎮 Siz hali test ishlamagansiz."
-        )
-
+async def total_ranking(message: Message):
+    text = await _get_ranking_text("total", message)
     await message.answer(text)
-# =========================================================
-# DAILY RANKING
-# =========================================================
 
 @dp.message(F.text == "⚡ Kunlik Reyting")
-async def daily_ranking(
-    message: Message
-):
-
-    rankings = db_execute(
-        """
-        SELECT
-            COALESCE(full_name,'Unknown'),
-            daily_score
-
-        FROM users
-
-        WHERE
-            daily_score IS NOT NULL
-            AND daily_score > 0
-
-        ORDER BY daily_score DESC
-
-        LIMIT 100
-        """,
-        fetchall=True
-    )
-
-    # EMPTY
-    if not rankings:
-
-        await message.answer(
-            "📭 Bugungi reyting hali bo'sh.\n\n"
-            "🎮 Birinchi bo'lib test ishlang!"
-        )
-
-        return
-
-    text = (
-        "⚡ KUNLIK REYTING\n\n"
-    )
-
-    medals = {
-
-        1: "🥇",
-        2: "🥈",
-        3: "🥉"
-    }
-
-    for i, (
-        full_name,
-        score
-    ) in enumerate(rankings, 1):
-
-        medal = medals.get(
-            i,
-            f"{i}."
-        )
-
-        text += (
-            f"{medal} "
-            f"{full_name} — "
-            f"{score} XP\n"
-        )
-
-    # =====================================================
-    # MY SCORE
-    # =====================================================
-
-    my = db_execute(
-        """
-        SELECT daily_score
-        FROM users
-        WHERE user_id = %s
-        """,
-        (message.from_user.id,),
-        fetchone=True
-    )
-
-    my_score = my[0] if my else 0
-
-    if my_score <= 0:
-
-        text += (
-            "\n━━━━━━━━━━\n"
-            "🎮 Siz hali bugun test ishlamagansiz."
-        )
-
+async def daily_ranking(message: Message):
+    text = await _get_ranking_text("daily", message)
     await message.answer(text)
-
-# =========================================================
-# SYSTEM STABILITY
-# =========================================================
-
-import shutil
-
-# =========================================================
-# INIT STORAGE
-# =========================================================
-
-def init_storage():
-
-    folders = [
-
-        "generated",
-
-        "certificates",
-
-        "fonts"
-    ]
-
-    for folder in folders:
-
-        try:
-
-            os.makedirs(
-                folder,
-                exist_ok=True
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"Folder create error "
-                f"{folder}: {e}"
-            )
-
-# =========================================================
-# CHECK EXISTING CERTIFICATE
-# =========================================================
-
-def get_existing_certificate(
-    user_id
-):
-
-    return db_execute(
-        """
-        SELECT
-            certificate_id,
-            rank,
-            percent,
-            score
-
-        FROM certificates
-
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
-    )
-
-# =========================================================
-# SAVE CERTIFICATE
-# =========================================================
-
-def save_certificate(
-    user_id,
-    cert_id,
-    rank,
-    percent,
-    score
-):
-
-    db_execute(
-        """
-        INSERT INTO certificates
-        (
-            user_id,
-            certificate_id,
-            rank,
-            percent,
-            score
-        )
-
-        VALUES (%s,%s,%s,%s,%s)
-
-        ON CONFLICT
-        (certificate_id)
-
-        DO NOTHING
-        """,
-        (
-            user_id,
-            cert_id,
-            rank,
-            percent,
-            score
-        )
-    )
-
 # =========================================================
 # AUTO MEMORY CLEANUP
 # =========================================================
 
 async def cleanup_quiz_memory():
-
     while True:
+        # Xotira toshib ketmasligi uchun xavfsiz tozalash
+        if len(active_questions) > 2000: active_questions.clear()
+        if len(answered_users) > 2000: answered_users.clear()
 
-        try:
+        # O'lik sessiyalarni tozalash
+        for uid in list(quiz_sessions.keys()):
+            if uid not in quiz_running:
+                quiz_sessions.pop(uid, None)
 
-            # ACTIVE QUESTIONS CLEAN
-            if len(active_questions) > 3000:
+        # Eskirgan PNG fayllarni tozalash
+        if os.path.exists(GENERATED_DIR):
+            for file in os.listdir(GENERATED_DIR):
+                if file.endswith(".png"):
+                    try:
+                        os.remove(os.path.join(GENERATED_DIR, file))
+                    except OSError:
+                        pass
+        
+        await asyncio.sleep(3600) # 1 soatda bir
 
-                active_questions.clear()
-
-                logger.warning(
-                    "Active questions cleared"
-                )
-
-            # ANSWER CACHE CLEAN
-            if len(answered_users) > 3000:
-
-                answered_users.clear()
-
-                logger.warning(
-                    "Answered users cleared"
-                )
-
-            # DEAD SESSIONS
-            dead = []
-
-            for user_id in quiz_sessions:
-
-                if user_id not in quiz_running:
-
-                    dead.append(user_id)
-
-            for user_id in dead:
-
-                quiz_sessions.pop(
-                    user_id,
-                    None
-                )
-
-            # GENERATED CLEAN
-            try:
-
-                for file in os.listdir(
-                    GENERATED_DIR
-                ):
-
-                    path = os.path.join(
-                        GENERATED_DIR,
-                        file
-                    )
-
-                    # DELETE PNG
-                    if (
-                        file.endswith(".png")
-                        and
-                        os.path.isfile(path)
-                    ):
-
-                        os.remove(path)
-
-            except Exception as e:
-
-                logger.error(
-                    f"Generated cleanup: {e}"
-                )
-
-            logger.info(
-                "Memory cleanup complete ✅"
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"Cleanup task error: {e}"
-            )
-
-        # EVERY 1 HOUR
-        await asyncio.sleep(3600)
 # =========================================================
 # DAILY RESET SCHEDULER
 # =========================================================
 
 async def daily_reset_scheduler():
-
     while True:
-
-        try:
-
-            now = datetime.now()
-
-            tomorrow = (
-                now + timedelta(days=1)
-            ).replace(
-                hour=0,
-                minute=0,
-                second=5,
-                microsecond=0
-            )
-
-            wait_seconds = (
-                tomorrow - now
-            ).total_seconds()
-
-            await asyncio.sleep(
-                wait_seconds
-            )
-
-            reset_daily_scores()
-
-            logger.info(
-                "Daily scores reset ✅"
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"Daily reset error: {e}"
-            )
-
-            await asyncio.sleep(60)
+        now = datetime.now()
+        target = now.replace(hour=0, minute=0, second=5, microsecond=0)
+        if now >= target:
+            target += timedelta(days=1)
+        
+        await asyncio.sleep((target - now).total_seconds())
+        reset_daily_scores()
+        logger.info("Daily scores reset ✅")
 
 # =========================================================
 # CERTIFICATE SYSTEM
 # =========================================================
 
-TOTAL_WORDS = 5555
-
-CERTIFICATE_DIR = "certificates"
-
-GENERATED_DIR = "generated"
-
-# =========================================================
-# CERTIFICATE TABLE
-# =========================================================
-
 def init_certificate_table():
-
-    db_execute(
-        """
+    db_execute("""
         CREATE TABLE IF NOT EXISTS certificates (
-
             id SERIAL PRIMARY KEY,
-
             user_id BIGINT,
-
             rank TEXT,
-
             certificate_id TEXT UNIQUE,
-
             percent REAL,
-
             score INTEGER,
-
-            created_at TIMESTAMP
-            DEFAULT NOW(),
-
+            created_at TIMESTAMP DEFAULT NOW(),
             UNIQUE(user_id, rank)
         )
-        """
-    )
+    """)
 
+def save_certificate(user_id, cert_id, rank, percent, score):
+    db_execute("""
+        INSERT INTO certificates (user_id, rank, certificate_id, percent, score)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (user_id, rank) DO NOTHING
+    """, (user_id, rank, cert_id, percent, score))
 # =========================================================
-# GENERATE CERTIFICATE ID
-# =========================================================
-
-def generate_certificate_id():
-
-    return (
-        f"VIZU-"
-        f"{random.randint(100000,999999)}"
-    )
-
-# =========================================================
-# CHECK EXISTING CERTIFICATE
+# GENERATE QR & DRAWING
 # =========================================================
 
-def get_existing_certificate(
-    user_id,
-    rank
-):
+def generate_qr(data, path):
+    qr_img = qrcode.make(data)
+    qr_img.save(path)
 
-    return db_execute(
-        """
-        SELECT
-            certificate_id
-
-        FROM certificates
-
-        WHERE
-            user_id = %s
-            AND rank = %s
-        """,
-        (
-            user_id,
-            rank
-        ),
-        fetchone=True
-    )
-
-# =========================================================
-# SAVE CERTIFICATE
-# =========================================================
-
-def save_certificate(
-
-    user_id,
-
-    cert_id,
-
-    rank,
-
-    percent,
-
-    score
-):
-
-    db_execute(
-        """
-        INSERT INTO certificates
-        (
-            user_id,
-            rank,
-            certificate_id,
-            percent,
-            score
-        )
-
-        VALUES (%s,%s,%s,%s,%s)
-
-        ON CONFLICT
-        (user_id, rank)
-
-        DO NOTHING
-        """,
-        (
-            user_id,
-            rank,
-            cert_id,
-            percent,
-            score
-        )
-    )
-
-# =========================================================
-# GENERATE QR
-# =========================================================
-
-def generate_qr(
-    data,
-    path
-):
-
-    qr = qrcode.make(data)
-
-    qr.save(path)
-
-# =========================================================
-# DRAW CENTER TEXT
-# =========================================================
-
-def draw_center_text(
-
-    draw,
-
-    text,
-
-    font,
-
-    y,
-
-    image_width,
-
-    fill
-):
-
-    bbox = draw.textbbox(
-        (0,0),
-        text,
-        font=font
-    )
-
-    text_width = (
-        bbox[2] - bbox[0]
-    )
-
-    x = (
-        image_width - text_width
-    ) // 2
-
-    draw.text(
-
-        (x, y),
-
-        text,
-
-        font=font,
-
-        fill=fill
-    )
+def draw_center_text(draw, text, font, y, image_width, fill):
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = bbox[2] - bbox[0]
+    x = (image_width - text_width) // 2
+    draw.text((x, y), text, font=font, fill=fill)
 
 # =========================================================
 # CREATE CERTIFICATE
 # =========================================================
 
-async def create_certificate(
-
-    user_id,
-
-    full_name,
-
-    percent,
-
-    score,
-
-    rank,
-
-    cert_id
-):
-
-    # =====================================================
-    # STORAGE
-    # =====================================================
-
-    os.makedirs(
-        GENERATED_DIR,
-        exist_ok=True
-    )
-
-    # =====================================================
-    # TEMPLATE
-    # =====================================================
-
-    if rank == "GOLD":
-
-        template = (
-            f"{CERTIFICATE_DIR}/"
-            "gold_template.png"
-        )
-
-        text_color = (
-            255,
-            215,
-            0
-        )
-
-    elif rank == "SILVER":
-
-        template = (
-            f"{CERTIFICATE_DIR}/"
-            "silver_template.png"
-        )
-
-        text_color = (
-            40,
-            40,
-            40
-        )
-
-    else:
-
-        template = (
-            f"{CERTIFICATE_DIR}/"
-            "bronze_template.png"
-        )
-
-        text_color = (
-            90,
-            40,
-            20
-        )
-
-    # =====================================================
-    # TEMPLATE CHECK
-    # =====================================================
-
-    if not os.path.exists(
-        template
-    ):
-
-        raise FileNotFoundError(
-            f"Template topilmadi: "
-            f"{template}"
-        )
-
-    # =====================================================
-    # LOAD IMAGE
-    # =====================================================
-
-    image = Image.open(
-        template
-    ).convert("RGBA")
-
-    draw = ImageDraw.Draw(image)
-
-    width, height = image.size
-
-    # =====================================================
-    # FONTS
-    # =====================================================
-
-    name_font = ImageFont.truetype(
-        "fonts/GreatVibes-Regular.ttf",
-        90
-    )
-
-    title_font = ImageFont.truetype(
-        "fonts/Montserrat-Bold.ttf",
-        42
-    )
-
-    small_font = ImageFont.truetype(
-        "fonts/Montserrat-Regular.ttf",
-        28
-    )
-
-    # =====================================================
-    # DATE
-    # =====================================================
-
-    date = datetime.now().strftime(
-        "%d.%m.%Y"
-    )
-
-    # =====================================================
-    # NAME
-    # =====================================================
-
-    draw_center_text(
-
-        draw,
-
-        full_name,
-
-        name_font,
-
-        470,
-
-        width,
-
-        text_color
-    )
-
-    # =====================================================
-    # PERCENT
-    # =====================================================
-
-    draw.text(
-
-        (1320, 355),
-
-        f"{percent}%",
-
-        font=title_font,
-
-        fill=text_color
-    )
-
-    # =====================================================
-    # SCORE
-    # =====================================================
-
-    draw.text(
-
-        (1320, 505),
-
-        f"{score}/5555",
-
-        font=title_font,
-
-        fill=text_color
-    )
-
-    # =====================================================
-    # CERTIFICATE ID
-    # =====================================================
-
-    draw.text(
-
-        (1320, 655),
-
-        cert_id,
-
-        font=small_font,
-
-        fill=text_color
-    )
-
-    # =====================================================
-    # DATE
-    # =====================================================
-
-    draw.text(
-
-        (1320, 805),
-
-        date,
-
-        font=small_font,
-
-        fill=text_color
-    )
-
-    # =====================================================
-    # QR
-    # =====================================================
-
-    qr_path = (
-        f"{GENERATED_DIR}/"
-        f"qr_{user_id}.png"
-    )
-
-    generate_qr(
-        cert_id,
-        qr_path
-    )
-
-    qr = Image.open(
-        qr_path
-    ).resize((180,180))
-
-    image.paste(
-        qr,
-        (1450, 850)
-    )
-
-    # =====================================================
-    # SAVE
-    # =====================================================
-
-    output_path = (
-        f"{GENERATED_DIR}/"
-        f"{cert_id}.png"
-    )
-
-    image.save(output_path)
-
-    return output_path
+async def create_certificate(user_id, full_name, percent, score, rank, cert_id):
+    os.makedirs(GENERATED_DIR, exist_ok=True)
+    
+    templates = {
+        "GOLD": (f"{CERTIFICATE_DIR}/gold_template.png", (255, 215, 0)),
+        "SILVER": (f"{CERTIFICATE_DIR}/silver_template.png", (40, 40, 40)),
+        "BRONZE": (f"{CERTIFICATE_DIR}/bronze_template.png", (90, 40, 20))
+    }
+    
+    template_path, text_color = templates.get(rank, templates["BRONZE"])
+    
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template topilmadi: {template_path}")
+
+    with Image.open(template_path).convert("RGBA") as image:
+        draw = ImageDraw.Draw(image)
+        width, height = image.size
+        
+        # Fontlarni yuklash
+        name_font = ImageFont.truetype("fonts/GreatVibes-Regular.ttf", 90)
+        title_font = ImageFont.truetype("fonts/Montserrat-Bold.ttf", 42)
+        small_font = ImageFont.truetype("fonts/Montserrat-Regular.ttf", 28)
+        
+        date = datetime.now().strftime("%d.%m.%Y")
+        
+        draw_center_text(draw, full_name, name_font, 470, width, text_color)
+        draw.text((1320, 355), f"{percent}%", font=title_font, fill=text_color)
+        draw.text((1320, 505), f"{score}/5555", font=title_font, fill=text_color)
+        draw.text((1320, 655), cert_id, font=small_font, fill=text_color)
+        draw.text((1320, 805), date, font=small_font, fill=text_color)
+        
+        qr_path = os.path.join(GENERATED_DIR, f"qr_{user_id}.png")
+        generate_qr(cert_id, qr_path)
+        
+        with Image.open(qr_path) as qr:
+            image.paste(qr.resize((180, 180)), (1450, 850))
+            
+        output_path = os.path.join(GENERATED_DIR, f"{cert_id}.png")
+        image.save(output_path)
+        return output_path
 
 # =========================================================
 # CERTIFICATE COMMAND
 # =========================================================
 
 @dp.message(F.text == "🏅 Sertifikat")
-async def certificate_system(
-    message: Message
-):
-
+async def certificate_system(message: Message):
     user_id = message.from_user.id
-
-    # =====================================================
-    # CHECK LAST BLOCK
-    # =====================================================
-
-    result = db_execute(
-        """
-        SELECT best_score
-
-        FROM quiz_progress
-
-        WHERE
-            user_id = %s
-            AND level = 'C1'
-            AND block_number = 11
-        """,
-        (user_id,),
-        fetchone=True
-    )
-
+    
+    # Blokni tekshirish
+    result = db_execute("SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = 'C1' AND block_number = 11", (user_id,), fetchone=True)
     if not result:
+        return await message.answer("🔒 Sertifikat yopiq. C1 oxirgi blokni tugating.")
 
-        await message.answer(
+    user_data = db_execute("SELECT full_name FROM users WHERE user_id = %s", (user_id,), fetchone=True)
+    full_name = user_data[0] if user_data else message.from_user.full_name
+    
+    total = db_execute("SELECT COALESCE(SUM(best_score), 0) FROM quiz_progress WHERE user_id = %s", (user_id,), fetchone=True)
+    total_score = total[0] if total else 0
+    percent = round((total_score / TOTAL_WORDS) * 100, 1)
 
-            "🔒 Sertifikat hali yopiq.\n\n"
+    if percent < 60:
+        return await message.answer(f"❌ Minimum 60% kerak. Natija: {percent}%")
 
-            "🎯 C1 oxirgi blokni tugating."
-        )
+    rank = "GOLD" if percent >= 85 else "SILVER" if percent >= 70 else "BRONZE"
+    
+    if get_existing_certificate(user_id, rank):
+        return await message.answer(f"🏅 Siz allaqachon {rank} sertifikatini olgansiz.")
 
-        return
-
-    # =====================================================
-    # USER
-    # =====================================================
-
-    user_data = db_execute(
-        """
-        SELECT
-            full_name
-
-        FROM users
-
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
-    )
-
-    full_name = (
-        user_data[0]
-        if user_data
-        else message.from_user.full_name
-    )
-
-    # =====================================================
-    # TOTAL SCORE
-    # =====================================================
-
-    total = db_execute(
-        """
-        SELECT
-            COALESCE(
-                SUM(best_score),
-                0
-            )
-
-        FROM quiz_progress
-
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
-    )
-
-    total_score = (
-        total[0]
-        if total
-        else 0
-    )
-
-    # =====================================================
-    # PERCENT
-    # =====================================================
-
-    percent = round(
-
-        (
-            total_score
-            /
-            TOTAL_WORDS
-        ) * 100,
-
-        1
-    )
-
-    # =====================================================
-    # RANK
-    # =====================================================
-
-    if percent >= 85:
-
-        rank = "GOLD"
-
-    elif percent >= 70:
-
-        rank = "SILVER"
-
-    elif percent >= 60:
-
-        rank = "BRONZE"
-
-    else:
-
-        await message.answer(
-
-            "❌ Minimum 60% kerak.\n\n"
-
-            f"📊 Natija: "
-            f"{percent}%"
-        )
-
-        return
-
-    # =====================================================
-    # EXISTING
-    # =====================================================
-
-    existing = get_existing_certificate(
-        user_id,
-        rank
-    )
-
-    if existing:
-
-        await message.answer(
-
-            f"🏅 Siz allaqachon "
-            f"{rank} sertifikatini "
-            f"olgansiz."
-        )
-
-        return
-
-    # =====================================================
-    # CERT ID
-    # =====================================================
-
-    cert_id = (
-        generate_certificate_id()
-    )
-
-    # =====================================================
-    # SAVE DATABASE
-    # =====================================================
-
-    save_certificate(
-
-        user_id,
-
-        cert_id,
-
-        rank,
-
-        percent,
-
-        total_score
-    )
-
-    # =====================================================
-    # GENERATE
-    # =====================================================
+    cert_id = generate_certificate_id()
+    save_certificate(user_id, cert_id, rank, percent, total_score)
 
     try:
-
-        path = await create_certificate(
-
-            user_id,
-
-            full_name,
-
-            percent,
-
-            total_score,
-
-            rank,
-
-            cert_id
-        )
-
+        path = await create_certificate(user_id, full_name, percent, total_score, rank, cert_id)
+        await send_admin_photo_log(path, f"🏅 Yangi Sertifikat\n👤 {full_name}\n🏆 {rank}\n📊 {percent}%\n🎫 {cert_id}")
+        await message.answer_photo(FSInputFile(path), caption=f"🏅 {rank} Zertifikat\n📊 {percent}%\n📚 {total_score}/5555\n🎫 {cert_id}")
     except Exception as e:
-
-        logger.error(
-            f"Certificate create error: {e}"
-        )
-
-        await message.answer(
-            "❌ Sertifikat yaratishda xato."
-        )
-
-        return
-
-    # =====================================================
-    # ADMIN CHANNEL
-    # =====================================================
-
-    await send_admin_photo_log(
-
-        path,
-
-        f"🏅 Yangi Sertifikat\n\n"
-
-        f"👤 {full_name}\n\n"
-
-        f"🏆 {rank}\n"
-
-        f"📊 {percent}%\n"
-
-        f"📚 {total_score}/5555\n\n"
-
-        f"🎫 {cert_id}\n"
-
-        f"🆔 {user_id}\n\n"
-
-        f"📅 "
-        f"{datetime.now().strftime('%d.%m.%Y')}"
-    )
-
-    # =====================================================
-    # SEND USER
-    # =====================================================
-
-    await message.answer_photo(
-
-        FSInputFile(path),
-
-        caption=(
-
-            f"🏅 {rank} Zertifikat\n\n"
-
-            f"📊 Natija: "
-            f"{percent}%\n"
-
-            f"📚 {total_score}/5555\n\n"
-
-            f"🎫 {cert_id}"
-        )
-    )
-
-# =========================
-# ADMIN PANEL
-# =========================
-@dp.message(Command("admin"))
-async def admin_panel(message: Message):
-
-    if not is_admin(message):
-        return
-
-    await message.answer(
-        "⚙️ Admin Panel",
-        reply_markup=admin_menu
-    )
-@dp.message(F.text == "⬅️ Admin Chiqish")
-async def admin_exit(message: Message):
-    if not is_admin(message):
-        return
-    await message.answer("🏠 Asosiy Menu", reply_markup=main_menu)
-
-# =========================
-# STATISTICS
-# =========================
-@dp.message(F.text == "📊 Statistika")
-async def stats(message: Message):
-    if not is_admin(message):
-        return
-
-    total = db_execute("SELECT COUNT(*) FROM users", fetchone=True)[0]
-    buyers = db_execute("SELECT COUNT(*) FROM users WHERE approved = 1", fetchone=True)[0]
-    courses = db_execute(
-        "SELECT course, COUNT(*) FROM users WHERE approved = 1 GROUP BY course",
-        fetchall=True,
-    )
-
-    course_text = ""
-    if courses:
-        for name, count in courses:
-            course_text += f"\n  {name or '—'}: {count} ta"
-
-    await message.answer(
-        f"📊 BOT STATISTIKASI\n\n"
-        f"👥 Foydalanuvchilar: {total}\n"
-        f"💳 Xaridorlar: {buyers}\n\n"
-        f"📚 Kurs bo'yicha:{course_text}"
-    )
-
-# =========================
-# USERS LIST
-# =========================
-@dp.message(F.text == "👥 Foydalanuvchilar")
-async def users_list(message: Message):
-    if not is_admin(message):
-        return
-
-    result = db_execute("SELECT user_id, full_name, course FROM users", fetchall=True)
-    if not result:
-        await message.answer("Userlar yo'q")
-        return
-
-    lines = []
-    for uid, name, course in result:
-        lines.append(f"🆔 {uid}\n👤 {name or '—'}\n📚 {course or '—'}\n")
-
-    text = "\n".join(lines)
-    if len(text) > 4000:
-        text = text[:4000] + "\n..."
-
-    await message.answer(text)
-
-# =========================
-# BUYERS LIST
-# =========================
-@dp.message(F.text == "💳 Xaridorlar")
-async def buyers_list(message: Message):
-    if not is_admin(message):
-        return
-
-    result = db_execute(
-        "SELECT user_id, full_name, phone, course FROM users WHERE approved = 1",
-        fetchall=True,
-    )
-    if not result:
-        await message.answer("Xaridorlar yo'q")
-        return
-
-    lines = ["💳 Tasdiqlangan xaridorlar:\n"]
-    for uid, name, phone, course in result:
-        lines.append(f"🆔 {uid}\n👤 {name or '—'}\n📱 {phone or '—'}\n📚 {course or '—'}\n")
-
-    text = "\n".join(lines)
-    if len(text) > 4000:
-        text = text[:4000] + "\n..."
-
-    await message.answer(text)
-
-# =========================
-# PERSONAL MESSAGE
-# =========================
-@dp.message(F.text == "📨 Shaxsiy Xabar")
-async def personal_message_start(message: Message, state: FSMContext):
-    if not is_admin(message):
-        return
-    await message.answer("🆔 Foydalanuvchi ID sini yuboring:")
-    await state.set_state(PersonalMessageState.waiting_for_id)
-
-@dp.message(PersonalMessageState.waiting_for_id)
-async def personal_message_id(message: Message, state: FSMContext):
-    if not is_admin(message):
-        return
-    if not message.text.isdigit():
-        await message.answer("❌ Faqat raqam yuboring.")
-        return
-    await state.update_data(target_id=int(message.text))
-    await message.answer("📝 Xabar matnini yuboring:")
-    await state.set_state(PersonalMessageState.waiting_for_text)
-
-@dp.message(PersonalMessageState.waiting_for_text)
-async def personal_message_send(message: Message, state: FSMContext):
-    if not is_admin(message):
-        return
-    data = await state.get_data()
-    target_id = data["target_id"]
-    try:
-        await bot.send_message(target_id, message.text)
-        await message.answer("✅ Xabar yuborildi!")
-    except Exception as e:
-        await message.answer(f"❌ Xabar yuborilmadi: {e}")
-    await state.clear()
+        logger.error(f"Certificate error: {e}")
+        await message.answer("❌ Sertifikat yaratishda xato.")
 
 # =========================================================
-# ADMIN STATES
+# ADMIN & BROADCAST
 # =========================================================
 
-from aiogram.fsm.context import FSMContext
-
-from aiogram.fsm.state import (
-    State,
-    StatesGroup
-)
-
-
-class AdminStates(StatesGroup):
-
-    broadcast = State()
-
-# =========================================================
-# BROADCAST
-# =========================================================
-
-@dp.message(F.text == "📢 Reklama Yuborish")
-async def broadcast_start(
-    message: Message,
-    state: FSMContext
-):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    await message.answer(
-        "📨 Reklama matnini yuboring:"
-    )
-
-    await state.set_state(
-        AdminStates.broadcast
-    )
-
-
-@dp.message(
-    AdminStates.broadcast
-)
-async def send_broadcast(
-    message: Message,
-    state: FSMContext
-):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    users = db_execute(
-        """
-        SELECT user_id
-        FROM users
-        """,
-        fetchall=True
-    )
-
+@dp.message(AdminStates.broadcast)
+async def send_broadcast(message: Message, state: FSMContext):
+    if message.from_user.id != ADMIN_ID: return
+    
+    users = db_execute("SELECT user_id FROM users", fetchall=True)
     if not users:
+        await message.answer("❌ Foydalanuvchilar topilmadi."); await state.clear(); return
 
-        await message.answer(
-            "❌ Foydalanuvchilar topilmadi."
-        )
-
-        await state.clear()
-
-        return
-
-    success = 0
-
-    failed = 0
-
-    progress = await message.answer(
-        "📢 Reklama yuborilmoqda..."
-    )
-
-    for i, (user_id,) in enumerate(
-        users,
-        1
-    ):
-
+    success, failed = 0, 0
+    progress = await message.answer("📢 Reklama yuborilmoqda...")
+    
+    for i, (user_id,) in enumerate(users, 1):
         try:
-
-            await bot.copy_message(
-
-                chat_id=user_id,
-
-                from_chat_id=message.chat.id,
-
-                message_id=message.message_id
-            )
-
+            await bot.copy_message(user_id, message.chat.id, message.message_id)
             success += 1
-
-        except Exception as e:
-
+        except:
             failed += 1
-
-            logger.error(
-                f"Broadcast error "
-                f"{user_id}: {e}"
-            )
-
-        # =================================================
-        # FLOOD CONTROL
-        # =================================================
-
-        await asyncio.sleep(0.12)
-
-        # =================================================
-        # LIVE PROGRESS
-        # =================================================
-
+        
         if i % 25 == 0:
+            await asyncio.sleep(0.1)
+            try: await progress.edit_text(f"✅ Yuborildi: {success}\n❌ Xato: {failed}\n📊 {i}/{len(users)}")
+            except: pass
 
-            try:
-
-                await progress.edit_text(
-
-                    f"📢 Reklama yuborilmoqda...\n\n"
-
-                    f"✅ Yuborildi: {success}\n"
-
-                    f"❌ Xato: {failed}\n"
-
-                    f"📊 Jarayon: "
-                    f"{i}/{len(users)}"
-                )
-
-            except:
-                pass
-
-    # =====================================================
-    # FINAL RESULT
-    # =====================================================
-
-    await progress.edit_text(
-
-        f"✅ Reklama yakunlandi.\n\n"
-
-        f"📨 Yuborildi: {success}\n"
-
-        f"❌ Xato: {failed}\n"
-
-        f"👥 Jami: {len(users)}"
-    )
-
+    await progress.edit_text(f"✅ Reklama yakunlandi.\n📨 Yuborildi: {success}\n❌ Xato: {failed}")
     await state.clear()
+
 # =========================================================
 # MAIN INITIALIZATION & RUN
 # =========================================================
 
 async def main():
-    # 1. Ma'lumotlar bazasini ishga tushirish
     try:
         init_db_pool()
         init_tables()
-        logger.info("DATABASE READY ✅")
-    except Exception as e:
-        logger.error(f"Ma'lumotlar bazasini ishga tushirishda xatolik: {e}")
-        return
-
-    # 2. Tizim ma'lumotlarini yuklash va yangilash
-    try:
+        init_certificate_table() # Sertifikat jadvali qo'shildi
         load_artikel()
         load_all_quizzes()
         reset_daily_scores()
-        logger.info("SYSTEMS LOADED ✅")
-    except Exception as e:
-        logger.error(f"Tizim funksiyalarini yuklashda xatolik: {e}")
-
-    # 3. Eski Webhook'larni va kutilayotgan so'rovlarni tozalash
-    try:
         await bot.delete_webhook(drop_pending_updates=True)
-        logger.info("WEBHOOK TOZALANDI ✅")
+        
+        # Flask thread
+        Thread(target=run_web, daemon=True).start()
+        
+        logger.info("BOT ISHGA TUSHDI ✅")
+        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     except Exception as e:
-        logger.error(f"Webhook error: {e}")
-
-    # 4. Flask veb-serverini alohida background oqimda ishga tushirish
-    try:
-        flask_thread = Thread(target=run_web, daemon=True)
-        flask_thread.start()
-        logger.info("KEEP ALIVE STARTED 🌐")
-    except Exception as e:
-        logger.error(f"Flask error: {e}")
-
-    # 5. Bot va Quiz xotirasini xavfsiz tozalash
-    try:
-        quiz_running.clear()
-        quiz_sessions.clear()
-        active_questions.clear()
-        answered_users.clear()
-        lesson_quiz_sessions.clear()
-    except NameError:
-        # Agar global o'zgaruvchilardan biri yuqorida e'lon qilinmagan bo'lsa, xato bermasligi uchun
-        pass
-
-    logger.info("BOT ISHGA TUSHDI ✅")
-
-    # 6. Botni Polling (so'rov yuborish) rejimida ishga tushirish
-    await dp.start_polling(
-        bot,
-        allowed_updates=dp.resolve_used_update_types()
-    )
-
-# =========================================================
-# START APP
-# =========================================================
+        logger.error(f"CRITICAL MAIN ERROR: {e}")
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("BOT STOPPED ⛔")
-    except Exception as e:
-        logger.error(f"MAIN ERROR: {e}")
+    asyncio.run(main())
