@@ -538,25 +538,21 @@ def build_level_lessons_menu(level, unlocked, exam_passed=False):
     keyboard = []
     current_row = []
 
-    # 1. LESSONS (Har bir qatorda 4 tadan dars joylashadi)
     for lesson in range(1, total_lessons + 1):
         if lesson <= unlocked:
-            text = f"📖 {lesson}"  # Ochilgan darslar ixcham ko'rinishda
+            text = f"📖 Unterricht {lesson}"  
         else:
-            text = f"🔒 {lesson}"  # Qulflangan darslar
+            text = f"🔒 Unterricht {lesson}"  
 
         current_row.append(KeyboardButton(text=text))
 
-        # 4 ta tugma bo'lganda qatorni asosiy keyboardga qo'shamiz
         if len(current_row) == 4:
             keyboard.append(current_row)
             current_row = []
 
-    # Agar oxirgi qatorda 4 tadan kam tugma qolib ketgan bo'lsa, ularni ham qo'shamiz
     if current_row:
         keyboard.append(current_row)
 
-    # 2. FINAL EXAM & CERTIFICATE (Maxsus tugmalar alohida va keng qatorda)
     if unlocked > total_lessons:
         exam_text = "🎓 Yakuniy Imtihon"
     else:
@@ -610,52 +606,87 @@ def build_task_menu(user_id, level, lesson):
 
     builder.row(InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"level_{level}"))
     return builder.as_markup()
+
 # =========================================================
 # UNTERRICHT HANDLER
 # =========================================================
 
-@dp.message(F.text.regexp(r"^📖 Unterricht \d+$"))
-async def lesson_handler(message: Message):
-    user_id = message.from_user.id
-    try:
-        # Xabardan dars raqamini olish (masalan, "Unterricht 1" -> 1)
-        lesson_num = int(message.text.split()[-1])
-        # Bazaga saqlash uchun "1-dars" formatiga o'tkazamiz
-        lesson_id = f"{lesson_num}-dars"
+@dp.message(
+    F.text.regexp(
+        r"^📖 Unterricht \d+$"
+    )
+)
+async def lesson_handler(
+    message: Message
+):
 
-        # Foydalanuvchining joriy darajasini bazadan olish
+    user_id = message.from_user.id
+
+    try:
+
+        lesson = int(
+            message.text.split()[-1]
+        )
+
         row = db_execute(
-            "SELECT level FROM active_lessons WHERE user_id = %s",
+            """
+            SELECT course
+
+            FROM users
+
+            WHERE user_id = %s
+            """,
             (user_id,),
             fetchone=True
         )
-        level = row[0] if row else "A1"
 
-        # Active lessons jadvalini yangilash
-        db_execute(
-            """
-            INSERT INTO active_lessons (user_id, level, lesson)
-            VALUES (%s, %s, %s)
-            ON CONFLICT (user_id)
-            DO UPDATE SET
-                level = EXCLUDED.level,
-                lesson = EXCLUDED.lesson,
-                updated_at = NOW()
-            """,
-            (user_id, level, lesson_id)
-        )
+        level = "A1"
 
-        # Inline menyu bilan javob qaytarish
+        if row:
+
+            course = row[0]
+
+            levels = get_available_levels(
+                course
+            )
+
+            if levels:
+
+                level = levels[0]
+
+        active_lessons[user_id] = {
+
+            "level": level,
+
+            "lesson": lesson
+        }
+
         await message.answer(
+
             f"🇩🇪 {level}\n\n"
-            f"📖 Unterricht {lesson_num}\n\n"
+
+            f"📖 Unterricht "
+            f"{lesson}\n\n"
+
             f"Kerakli vazifani bajaring:",
-            reply_markup=build_task_menu(user_id, level, lesson_id)
+
+            reply_markup=
+            build_task_menu(
+                user_id,
+                level,
+                lesson
+            )
         )
 
     except Exception as e:
-        logger.exception(f"LESSON_HANDLER_ERROR | user_id={user_id} | error={e}")
-        await message.answer("❌ Darsni ochishda xatolik yuz berdi.")
+
+        logger.exception(
+            f"LESSON_HANDLER_ERROR: {e}"
+        )
+
+        await message.answer(
+            "❌ Darsni ochishda xatolik."
+        )
 
 # =========================================================
 # GRAMMATIK
@@ -1919,6 +1950,7 @@ QUIZ_DATA = {}
 quiz_running = set()
 quiz_sessions = {}
 active_questions = {}
+active_lessons = {}
 answered_users = {}
 approved_users = set()
 artikel_data = {}
