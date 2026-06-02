@@ -399,6 +399,23 @@ def init_tables():
     """)
 
     # =====================================================
+    # ACTIVE LESSONS
+    # =====================================================
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS active_lessons (
+
+            user_id BIGINT PRIMARY KEY,
+
+            level TEXT NOT NULL,
+
+            lesson INTEGER NOT NULL,
+
+            updated_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+    # =====================================================
     # LESSON TASK PROGRESS
     # =====================================================
 
@@ -964,97 +981,56 @@ def is_final_exam_passed(
         row[0]
     )
 
-
 # =========================================================
-# LEVEL LESSONS MENU
+# LEVEL LESSONS MENU (OPTIMALLASHTIRILGAN VARIANT)
 # =========================================================
 
-def build_level_lessons_menu(
-    level,
-    unlocked,
-    exam_passed=False
-):
-
-    total_lessons = LESSON_COUNTS[
-        level
-    ]
-
+def build_level_lessons_menu(level, unlocked, exam_passed=False):
+    total_lessons = LESSON_COUNTS.get(level, 10) # Xatolik bermasligi uchun default 10
     keyboard = []
+    current_row = []
 
-    # LESSONS
-
-    for lesson in range(
-        1,
-        total_lessons + 1
-    ):
-
+    # 1. LESSONS (Har bir qatorda 4 tadan dars joylashadi)
+    for lesson in range(1, total_lessons + 1):
         if lesson <= unlocked:
-
-            text = (
-                f"📖 Unterricht "
-                f"{lesson}"
-            )
-
+            text = f"📖 {lesson}"  # Ochilgan darslar ixcham ko'rinishda
         else:
+            text = f"🔒 {lesson}"  # Qulflangan darslar
 
-            text = (
-                f"🔒 Unterricht "
-                f"{lesson}"
-            )
+        current_row.append(KeyboardButton(text=text))
 
-        keyboard.append([
-            KeyboardButton(
-                text=text
-            )
-        ])
+        # 4 ta tugma bo'lganda qatorni asosiy keyboardga qo'shamiz
+        if len(current_row) == 4:
+            keyboard.append(current_row)
+            current_row = []
 
-    # FINAL EXAM
+    # Agar oxirgi qatorda 4 tadan kam tugma qolib ketgan bo'lsa, ularni ham qo'shamiz
+    if current_row:
+        keyboard.append(current_row)
 
+    # 2. FINAL EXAM & CERTIFICATE (Maxsus tugmalar alohida va keng qatorda)
     if unlocked > total_lessons:
-
-        keyboard.append([
-            KeyboardButton(
-                text="🎓 Yakuniy Imtihon"
-            )
-        ])
-
+        exam_text = "🎓 Yakuniy Imtihon"
     else:
-
-        keyboard.append([
-            KeyboardButton(
-                text="🔒 Yakuniy Imtihon"
-            )
-        ])
-
-    # CERTIFICATE
-
+        exam_text = "🔒 Yakuniy Imtihon"
+    
     if exam_passed:
-
-        keyboard.append([
-            KeyboardButton(
-                text=f"🏆 {level} Sertifikati"
-            )
-        ])
-
+        cert_text = f"🏆 {level} Sertifikati"
     else:
+        cert_text = f"🔒 {level} Sertifikati"
 
-        keyboard.append([
-            KeyboardButton(
-                text=f"🔒 {level} Sertifikati"
-            )
-        ])
-
-    keyboard.append([
-        KeyboardButton(
-            text="⬅️ Orqaga"
-        )
-    ])
+    # Imtihon va Sertifikat tugmalarini yonma-yon yoki alohida chiroyli joylashtiramiz
+    keyboard.append([KeyboardButton(text=exam_text)])
+    keyboard.append([KeyboardButton(text=cert_text)])
+    
+    # Navigatsiya
+    keyboard.append([KeyboardButton(text="⬅️ Orqaga")])
 
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
-        resize_keyboard=True
+        resize_keyboard=True,
+        input_field_placeholder=f"🇩🇪 {level} darslaridan birini tanlang..."
     )
-
 # =========================================================
 # BUILD TASK MENU
 # =========================================================
@@ -1124,270 +1100,166 @@ def build_task_menu(
         keyboard=keyboard,
         resize_keyboard=True
     )
+
 # =========================================================
 # UNTERRICHT HANDLER
 # =========================================================
 
-@dp.message(
-    F.text.regexp(
-        r"^📖 Unterricht \d+$"
-    )
-)
-async def lesson_handler(
-    message: Message
-):
-
-    try:
-
-        user_id = message.from_user.id
-
-        lesson = int(
-            message.text.split()[-1]
-        )
-
-        lesson_data = active_lessons.get(
-            user_id
-        )
-
-        if lesson_data:
-
-            level = lesson_data.get(
-                "level",
-                "A1"
-            )
-
-        else:
-
-            level = "A1"
-
-        active_lessons[user_id] = {
-
-            "level": level,
-
-            "lesson": lesson
-
-        }
-
-        await message.answer(
-
-            f"🇩🇪 {level}\n\n"
-            f"📖 Unterricht {lesson}\n\n"
-            f"Kerakli vazifani bajaring:",
-
-            reply_markup=
-            build_task_menu(
-                user_id,
-                level,
-                lesson
-            )
-        )
-
-    except Exception as e:
-
-        logger.error(
-            f"Lesson handler error: {e}"
-        )
-
-        await message.answer(
-            "❌ Darsni ochishda xatolik."
-        )
-
-        # =====================================
-        # NEXT TASK
-        # =====================================
-
-        next_task = get_next_task(
-            user_id,
-            level,
-            lesson
-        )
-
-        # =====================================
-        # OPEN LESSON
-        # =====================================
-
-        await message.answer(
-
-            f"🇩🇪 {level}\n\n"
-
-            f"📖 Unterricht {lesson}\n\n"
-
-            f"Kerakli vazifani bajaring:",
-
-            reply_markup=
-            build_task_menu(
-                user_id,
-                level,
-                lesson
-            )
-        )
-
-    except Exception as e:
-
-        logger.error(
-            f"Lesson handler error: {e}"
-        )
-
-        await message.answer(
-            "❌ Darsni ochishda xatolik."
-        )
-# =========================================================
-# GRAMMATIK
-# =========================================================
-
-@dp.message(
-    F.text == "📖 Grammatik"
-)
-async def grammatik_handler(
-    message: Message
-):
-
+@dp.message(F.text.regexp(r"^📖 Unterricht \d+$"))
+async def lesson_handler(message: Message):
     user_id = message.from_user.id
 
-    lesson_data = active_lessons.get(
-        user_id
-    )
+    try:
+        lesson = int(message.text.split()[-1])
 
-    if not lesson_data:
-
-        await message.answer(
-            "❌ Avval Unterricht tanlang."
+        row = db_execute(
+            """
+            SELECT level
+            FROM active_lessons
+            WHERE user_id = %s
+            """,
+            (user_id,),
+            fetchone=True
         )
 
-        return
+        level = row[0] if row else "A1"
 
-    level = lesson_data["level"]
-
-    lesson = lesson_data["lesson"]
-
-    questions = load_lesson_csv(
-        f"{level}-Level/{level}-Grammatik.csv",
-        lesson
-    )
-
-    if not questions:
-
-        await message.answer(
-            "❌ Grammatik test topilmadi."
+        db_execute(
+            """
+            INSERT INTO active_lessons (user_id, level, lesson)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_id)
+            DO UPDATE SET
+                level = EXCLUDED.level,
+                lesson = EXCLUDED.lesson,
+                updated_at = NOW()
+            """,
+            (user_id, level, lesson)
         )
 
+        await message.answer(
+            f"🇩🇪 {level}\n\n"
+            f"📖 Unterricht {lesson}\n\n"
+            f"Kerakli vazifani bajaring:",
+            reply_markup=build_task_menu(user_id, level, lesson)
+        )
+
+    except Exception as e:
+        logger.exception(f"LESSON_HANDLER_ERROR | user_id={user_id} | error={e}")
+        await message.answer("❌ Darsni ochishda xatolik yuz berdi.")
+# =========================================================
+# GRAMMATIKA TESTINI YAKUNLASH
+# =========================================================
+
+async def finish_grammatik_quiz(message: Message, user_id: int):
+    # Keshdan ma'lumotlarni o'qiymiz, lekin o'chirmaymiz (qayta ishlash uchun kerak bo'ladi)
+    session = lesson_quiz_sessions.get(user_id)
+    if not session:
         return
 
-    random.shuffle(
-        questions
-    )
+    level = session["level"]
+    lesson = session["lesson"]
+    score = session["score"]
+    total = len(session["questions"])
 
-    lesson_quiz_sessions[user_id] = {
+    # Foizni hisoblaymiz
+    percentage = (score / total) * 100
 
-        "level": level,
+    if percentage >= 70:
+        # 70% dan o'tgan bo'lsa keshni tozalaymiz
+        lesson_quiz_sessions.pop(user_id, None)
 
-        "lesson": lesson,
+        # 1. Lesson progressni bazada 'Grammatik' yakunlandi deb belgilaymiz
+        db_execute(
+            """
+            INSERT INTO lesson_task_progress (user_id, level, lesson, task_name, completed, completed_at)
+            VALUES (%s, %s, %s, 'Grammatik', TRUE, NOW())
+            ON CONFLICT (user_id, level, lesson, task_name)
+            DO UPDATE SET completed = TRUE, completed_at = NOW()
+            """,
+            (user_id, level, lesson)
+        )
 
-        "task": "Grammatik",
+        # 2. Keyingi "📖 Lesen" bo'limini faollashtiramiz (Yoki dars vazifalari menyusini beramiz)
+        # build_task_menu funksiyangiz orqali endi foydalanuvchida 'Lesen' tugmasi ko'rinadi
+        await message.answer(
+            f"🎉 <b>Ajoyib natija! Grammatika testidan o'tdingiz!</b>\n\n"
+            f"📊 Natijangiz: <b>{score}/{total}</b> ({percentage:.1f}%)\n"
+            f"🔓 <b>Keyingi bo'lim:</b> Ushbu darsning '📖 Lesen' (Matn o'qish va test) qismi ochildi. Davom etishingiz mumkin!",
+            reply_markup=build_task_menu(user_id, level, lesson) 
+        )
+    else:
+        # 70% dan past bo'lsa, qayta ishlash tugmasini chiqaramiz
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🔄 Testni Qayta Ishlash",
+                        callback_data="retry_grammatik"
+                    )
+                ]
+            ]
+        )
 
-        "questions": questions,
-
-        "index": 0,
-
-        "score": 0
-    }
-
-    await message.answer(
-        f"📝 {level} - Unterricht {lesson}\n\n"
-        f"📚 Savollar: {len(questions)}"
-    )
-
-    await send_lesson_question(
-        message.chat.id,
-        user_id
-    )
-
-
+        await message.answer(
+            f"⚠️ <b>Grammatika testidan o'ta olmadingiz.</b>\n\n"
+            f"📊 Oxirgi natijangiz: <b>{score}/{total}</b> ({percentage:.1f}%)\n"
+            f"🎯 O'tish bali: <b>70%</b>\n\n"
+            f"Iltimos, darsni qayta ko'rib chiqing va quyidagi tugma orqali testni qaytadan topshiring:",
+            reply_markup=keyboard
+        )
 # =========================================================
 # LESEN
 # =========================================================
 
-@dp.message(
-    F.text == "📖 Lesen"
-)
-async def lesen_handler(
-    message: Message
-):
-
+@dp.message(F.text == "📖 Lesen")
+async def lesen_handler(message: Message):
     user_id = message.from_user.id
 
-    lesson_data = active_lessons.get(
-        user_id
+    row = db_execute(
+        """
+        SELECT level, lesson
+        FROM active_lessons
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
     )
 
-    if not lesson_data:
-
-        await message.answer(
-            "❌ Avval Unterricht tanlang."
-        )
-
+    if not row:
+        await message.answer("❌ Avval Unterricht tanlang.")
         return
 
-    level = lesson_data["level"]
-    lesson = lesson_data["lesson"]
-
-    # GRAMMATIK CHECK
+    level = row[0]
+    lesson = row[1]
 
     row = db_execute(
         """
         SELECT completed
-
         FROM lesson_task_progress
-
-        WHERE
-            user_id = %s
-            AND level = %s
-            AND lesson = %s
-            AND task_name = 'Grammatik'
+        WHERE user_id = %s
+          AND level = %s
+          AND lesson = %s
+          AND task_name = 'Grammatik'
         """,
-        (
-            user_id,
-            level,
-            lesson
-        ),
+        (user_id, level, lesson),
         fetchone=True
     )
 
     if not row or not row[0]:
-
-        await message.answer(
-            "🔒 Avval Grammatik vazifasini tugating."
-        )
-
+        await message.answer("🔒 Avval Grammatik vazifasini tugating.")
         return
 
     try:
+        file_path = f"{level}-Level/texts/{level}-{lesson}-lesen.txt"
 
-        file_path = (
-            f"{level}-Level/texts/"
-            f"{level}-{lesson}-lesen.txt"
-        )
-
-        with open(
-            file_path,
-            "r",
-            encoding="utf-8"
-        ) as f:
-
+        with open(file_path, "r", encoding="utf-8") as f:
             text = f.read()
 
         keyboard = ReplyKeyboardMarkup(
             keyboard=[
-                [
-                    KeyboardButton(
-                        text="✅ O'qib chiqdim"
-                    )
-                ],
-                [
-                    KeyboardButton(
-                        text="⬅️ Orqaga"
-                    )
-                ]
+                [KeyboardButton(text="✅ O'qib chiqdim")],
+                [KeyboardButton(text="⬅️ Orqaga")]
             ],
             resize_keyboard=True
         )
@@ -1398,14 +1270,8 @@ async def lesen_handler(
         )
 
     except Exception as e:
-
-        logger.error(
-            f"Lesen error: {e}"
-        )
-
-        await message.answer(
-            "❌ Lesen matni topilmadi."
-        )
+        logger.exception(f"LESEN_ERROR: {e}")
+        await message.answer("❌ Lesen matni topilmadi.")
 
 # =========================================================
 # CHECK SUBSCRIPTION
@@ -1732,25 +1598,24 @@ async def artikel_handler(
             "Boshqa so'z yuboring."
         )
     )
-# =========================
-# START
-# =========================
+# =========================================================
+# START COMMAND HANDLER
+# =========================================================
+
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
-
     user_id = message.from_user.id
+    full_name = message.from_user.full_name or "Foydalanuvchi"
 
-    # eski keyboardni tozalash
+    # Eski klaviaturani xavfsiz tozalash
     await message.answer(
         "🔄 Menu yangilanmoqda...",
         reply_markup=ReplyKeyboardRemove()
     )
+    await asyncio.sleep(0.5)  # Foydalanuvchi kutib qolmasligi uchun biroz kamaytirildi
 
-    await asyncio.sleep(1)
-
-    # Kanal obunasini tekshirish
+    # 1. Kanal obunasini tekshirish
     if not await check_subscription(user_id):
-
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
@@ -1769,102 +1634,99 @@ async def cmd_start(message: Message):
         )
 
         await message.answer(
-            "❌ Botdan foydalanish uchun kanalga a'zo bo'ling.",
+            "❌ Botdan foydalanish uchun avval rasmiy kanalimizga a'zo bo'lishingiz kerak.",
             reply_markup=keyboard
         )
-
         return
 
-    # userni bazaga qo'shish
+    # 2. Foydalanuvchini ma'lumotlar bazasiga qo'shish yoki yangilash
     db_execute(
-        "INSERT INTO users (user_id, approved) "
-        "VALUES (%s, 0) "
-        "ON CONFLICT DO NOTHING",
-        (user_id,)
+        """
+        INSERT INTO users (user_id, full_name, approved, unlocked_level) 
+        VALUES (%s, %s, 0, 'A1') 
+        ON CONFLICT (user_id) 
+        DO UPDATE SET full_name = EXCLUDED.full_name
+        """,
+        (user_id, full_name)
     )
 
-    # admin notification
+    # 3. Adminga yangi foydalanuvchi haqida xabar yuborish
     if user_id != ADMIN_ID:
-
         try:
-
+            username_str = f"@{message.from_user.username}" if message.from_user.username else "Mavjud emas"
             await bot.send_message(
-                ADMIN_ID,
-                f"🔔 Yangi foydalanuvchi!\n\n"
-                f"👤 Ism: {message.from_user.full_name}\n"
-                f"🆔 ID: {user_id}\n"
-                f"Username: @{message.from_user.username}",
+                chat_id=ADMIN_ID,
+                text=f"🔔 <b>Yangi foydalanuvchi kirdi!</b>\n\n"
+                     f"👤 Ism: {full_name}\n"
+                     f"🆔 ID: <code>{user_id}</code>\n"
+                     f"🌐 Username: {username_str}"
             )
-
         except Exception as e:
+            logger.error(f"Adminga start notification yuborishda xatolik: {e}")
 
-            logger.error(e)
-
-    # main menu
+    # 4. Asosiy menyuni foydalanuvchiga taqdim etish
     await message.answer(
-        "🇩🇪 Nemis Tili Video Darslari Botiga "
-        "Xush Kelibsiz!\n\n"
-        "🎉 Hozirda barcha kurslar "
-        "70% CHEGIRMADA!",
-        reply_markup=main_menu,
+        f"🇩🇪 <b>Nemis Tili (Vizu Deutsch) Botiga Xush Kelibsiz!</b>\n\n"
+        f"Platformamiz orqali nemis tilini vizual darslar va tizimli testlar orqali o'rganishingiz mumkin.\n\n"
+        f"🎉 <b>Hozirda barcha video kurslarimiz 70% CHEGIRMADA!</b>",
+        reply_markup=main_menu
     )
-
-# =========================
+# =========================================================
 # CHECK SUBSCRIPTION BUTTON
-# =========================
+# =========================================================
 
 @dp.callback_query(F.data == "check_sub")
 async def check_sub_callback(callback: CallbackQuery):
-
     user_id = callback.from_user.id
+    full_name = callback.from_user.full_name or "Foydalanuvchi"
 
-    # qayta tekshiradi
+    # 1. Obunani qayta tekshiramiz
     if await check_subscription(user_id):
+        # Telegram interfeysidagi "soat" aylanishini zudlik bilan to'xtatamiz
+        await callback.answer("✅ Obuna tasdiqlandi!")
 
-        # bazaga qo'shadi
+        # Foydalanuvchini bazaga qo'shish yoki ismini yangilash
         db_execute(
-            "INSERT INTO users (user_id, approved) "
-            "VALUES (%s, 0) "
-            "ON CONFLICT DO NOTHING",
-            (user_id,)
+            """
+            INSERT INTO users (user_id, full_name, approved) 
+            VALUES (%s, %s, 0) 
+            ON CONFLICT (user_id) 
+            DO UPDATE SET full_name = EXCLUDED.full_name
+            """,
+            (user_id, full_name)
         )
 
-        # eski xabarni o'chiradi
+        # Eski inline tugmali xabarni o'chirib yuboramiz
         try:
             await callback.message.delete()
-        except:
+        except Exception:
             pass
 
-        # admin notification
+        # Adminga yangi foydalanuvchi haqida xabar yuborish
         if user_id != ADMIN_ID:
-
             try:
-
+                username_str = f"@{callback.from_user.username}" if callback.from_user.username else "Mavjud emas"
                 await bot.send_message(
-                    ADMIN_ID,
-                    f"🔔 Yangi foydalanuvchi!\n\n"
-                    f"👤 Ism: {callback.from_user.full_name}\n"
-                    f"🆔 ID: {user_id}\n"
-                    f"Username: @{callback.from_user.username}",
+                    chat_id=ADMIN_ID,
+                    text=f"🔔 <b>Yangi foydalanuvchi (Obunadan o'tdi):</b>\n\n"
+                         f"👤 Ism: {full_name}\n"
+                         f"🆔 ID: <code>{user_id}</code>\n"
+                         f"🌐 Username: {username_str}"
                 )
-
             except Exception as e:
+                logger.error(f"Adminga sub notification yuborishda xatolik: {e}")
 
-                logger.error(e)
-
-        # userga menu chiqaradi
+        # Foydalanuvchiga asosiy menyuni chiqaramiz
         await callback.message.answer(
-            "✅ Obuna tasdiqlandi!\n\n"
-            "🇩🇪 Botga xush kelibsiz.",
+            "✅ <b>Obuna muvaffaqiyatli tasdiqlandi!</b>\n\n"
+            "🇩🇪 Nemis tili darslari botiga xush kelibsiz. Quyidagi menyudan kerakli bo'limni tanlang:",
             reply_markup=main_menu
         )
 
-        await callback.answer()
-
     else:
-
+        # Agar a'zo bo'lmagan bo'lsa, ogohlantirish beramiz va "soat" aylanishini yopamiz
         await callback.answer(
-            "❌ Hali kanalga a'zo bo'lmagansiz.",
+            text="❌ Siz hali ham kanalga a'zo bo'lmadingiz! Iltimos, avval kanalga a'zo bo'ling.",
             show_alert=True
         )
 # =========================
@@ -2719,40 +2581,28 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton
 )
-
 # =========================================================
 # GLOBALS
 # =========================================================
 
-# QUIZ DATA
 QUIZ_DATA = {}
 
-# ACTIVE QUIZ USERS
 quiz_running = set()
 
-# USER QUIZ SESSIONS
 quiz_sessions = {}
 
-# ACTIVE QUESTIONS
 active_questions = {}
 
-# ANSWER TRACKING
 answered_users = {}
 
-# APPROVED USERS CACHE
 approved_users = set()
 
-# ARTIKEL DATA
 artikel_data = {}
 
-# ADMIN CACHE
 admin_sessions = {}
 
-# DAILY RESET TRACKER
 last_daily_reset = None
 
-# ACTIVE LESSONS
-active_lessons = {}
 # =========================================================
 # LESSON QUIZ SYSTEM
 # =========================================================
@@ -3953,340 +3803,228 @@ async def send_next_question(
             qid,
             None
         )
+# Foydalanuvchilarning bosgan tugmalari map-keshi (kod tepasida e'lon qilinadi)
+lesson_active_questions = {}
 
 # =========================================================
-# SEND LESSON QUESTION
+# SEND LESSON QUESTION (MUKAMMAL INTEGRATSIYA)
 # =========================================================
 
-async def send_lesson_question(
-    chat_id,
-    user_id
-):
-
-    session = lesson_quiz_sessions.get(
-        user_id
-    )
-
+async def send_lesson_question(message: Message, user_id: int):
+    session = lesson_quiz_sessions.get(user_id)
     if not session:
         return
 
     questions = session["questions"]
-
     index = session["index"]
 
+    # Agar savollar tugasa, Grammatika yakunlash funksiyasini chaqiramiz
     if index >= len(questions):
-
-        await finish_lesson_quiz(
-            chat_id,
-            user_id
-        )
-
+        await finish_grammatik_quiz(message, user_id)
         return
 
-    question = questions[index]
+    # CSV jadvalidagi tartib bo'yicha ma'lumotlarni olamiz:
+    # lesson, task_id, type, question, correct, wrong1, wrong2
+    question_data = questions[index]
+    
+    task_id = question_data[1]
+    question_text = question_data[3]
+    correct_ans = str(question_data[4])
+    wrong1_ans = str(question_data[5])
+    wrong2_ans = str(question_data[6])
 
-    answers = [
+    # Variantlarni ro'yxatga olib aralashtiramiz
+    answers = [correct_ans, wrong1_ans, wrong2_ans]
+    random.shuffle(answers)
 
-        question["correct"],
-
-        question["wrong1"],
-
-        question["wrong2"]
-    ]
-
-    random.shuffle(
-        answers
-    )
-
-    qid = (
-        f"lesson_{user_id}_"
-        f"{question['id']}"
-    )
+    # Telegram callback_data xavfsizligi uchun QID yaratamiz
+    qid = f"lesson_{user_id}_{task_id}"
 
     callback_map = {}
-
     buttons = []
 
-    for i, answer in enumerate(
-        answers
-    ):
-
+    # Javoblarni 'a0', 'a1', 'a2' kalitlariga xaritaga (map) joylaymiz
+    for i, answer in enumerate(answers):
         answer_key = f"a{i}"
-
-        callback_map[
-            answer_key
-        ] = answer
+        callback_map[answer_key] = answer
 
         buttons.append([
-
             InlineKeyboardButton(
-
                 text=answer,
-
-                callback_data=
-                f"lessonquiz:{qid}:{answer_key}"
+                # callback_data: gq:QID:kalit (uzunlik qisqa va xavfsiz bo'ladi)
+                callback_data=f"gq:{qid}:{answer_key}"
             )
         ])
 
+    # Kesh xotiraga to'g'ri javob va variantlar xaritasi saqlanadi
     lesson_active_questions[qid] = {
-
         "user_id": user_id,
-
-        "correct": question["correct"],
-
+        "correct": correct_ans,
         "answers": callback_map
     }
 
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=buttons
-    )
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+    
+    # Chat IDni message ob'ektidan xavfsiz aniqlaymiz
+    chat_id = message.chat.id if hasattr(message, 'chat') else message.message.chat.id
 
     await bot.send_message(
-
-        chat_id,
-
-        f"📝 Savol "
-        f"{index+1}/"
-        f"{len(questions)}\n\n"
-        f"{question['question']}",
-
+        chat_id=chat_id,
+        text=f"📝 <b>Grammatika test | Savol {index + 1}/{len(questions)}</b>\n\n"
+             f"{question_text}",
         reply_markup=keyboard
     )
 # =========================================================
-# LESSON QUIZ ANSWER
+# LESSON QUIZ ANSWER (GRAMMATIKA JAVOBLARINI TEKSHIRISH)
 # =========================================================
 
-@dp.callback_query(
-    F.data.startswith(
-        "lessonquiz:"
-    )
-)
-async def lesson_quiz_answer(
-    callback: CallbackQuery
-):
-
+@dp.callback_query(F.data.startswith("gq:"))
+async def lesson_quiz_answer(callback: CallbackQuery):
     user_id = callback.from_user.id
 
     try:
-
-        _, qid, answer_key = (
-            callback.data.split(
-                ":",
-                2
-            )
-        )
-
-    except:
-
+        # Format: gq:qid:answer_key
+        _, qid, answer_key = callback.data.split(":", 2)
+    except ValueError:
         return
 
+    # Savol keshda bormi?
     if qid not in lesson_active_questions:
-
-        await callback.answer(
-            "❌ Savol tugagan.",
-            show_alert=True
-        )
-
+        await callback.answer("❌ Bu savol faol emas yoki eskirgan.", show_alert=True)
         return
 
-    question_data = (
-        lesson_active_questions[qid]
-    )
+    question_data = lesson_active_questions[qid]
 
-    if (
-        question_data["user_id"]
-        != user_id
-    ):
-
-        await callback.answer(
-            "❌ Bu sizning testingiz emas.",
-            show_alert=True
-        )
-
+    # Xavfsizlik tekshiruvi: boshqa foydalanuvchi tugmasini bosib qo'ymasin
+    if question_data["user_id"] != user_id:
+        await callback.answer("❌ Bu sizning testingiz emas.", show_alert=True)
         return
 
-    session = lesson_quiz_sessions.get(
-        user_id
-    )
-
+    session = lesson_quiz_sessions.get(user_id)
     if not session:
+        await callback.answer("❌ Test seansi topilmadi.", show_alert=True)
         return
 
-    selected = (
-        question_data["answers"]
-        .get(answer_key)
-    )
+    # Foydalanuvchi tanlagan matn va to'g'ri javobni olamiz
+    selected = question_data["answers"].get(answer_key)
+    correct_answer = question_data["correct"]
 
-    if selected == question_data["correct"]:
-
+    # To'g'ri yoki noto'g'riligini tekshiramiz
+    if str(selected) == str(correct_answer):
         session["score"] += 1
-
-        await callback.answer(
-            "✅ To'g'ri!"
-        )
-
+        await callback.answer("✅ To'g'ri!")
     else:
+        await callback.answer(f"❌ Noto'g'ri!\n\nTo'g'ri javob: {correct_answer}", show_alert=True)
 
-        await callback.answer(
-            f"❌ To'g'ri javob:\n\n"
-            f"{question_data['correct']}",
-            show_alert=True
-        )
-
+    # Indeksni oshiramiz va savol keshini o'chiramiz
     session["index"] += 1
+    lesson_active_questions.pop(qid, None)
 
-    lesson_active_questions.pop(
-        qid,
-        None
-    )
-
+    # Ekran chiroyli turishi uchun joriy inline tugmalarni o'chirib yuboramiz
     try:
-
-        await callback.message.edit_reply_markup(
-            reply_markup=None
-        )
-
-    except:
+        await callback.message.delete()
+    except Exception:
         pass
 
-    await send_lesson_question(
-        callback.message.chat.id,
-        user_id
-    )
+    # Keyingi savolga o'tamiz (message ob'ektining o'zi uzatiladi!)
+    await send_lesson_question(callback.message, user_id)
 # =========================================================
-# FINISH LESSON QUIZ
+# FINISH LESSON QUIZ (MUKAMMAL NATIJA VA RE-TRY TIZIMI)
 # =========================================================
 
-async def finish_lesson_quiz(
-    chat_id,
-    user_id
-):
-
-    session = lesson_quiz_sessions.get(
-        user_id
-    )
-
+async def finish_lesson_quiz(message: Message, user_id: int):
+    session = lesson_quiz_sessions.get(user_id)
     if not session:
         return
 
     score = session["score"]
-
-    total = len(
-        session["questions"]
-    )
-
-    percent = (
-        score * 100
-    ) // total
+    total = len(session["questions"])
+    
+    # Nolga bo'linish xatosidan himoya
+    percent = (score * 100) // total if total > 0 else 0
 
     level = session["level"]
-
     lesson = session["lesson"]
+    task = session["task"]  # 'Grammatik'
 
-    task = session["task"]
+    chat_id = message.chat.id if hasattr(message, 'chat') else message.message.chat.id
 
     if percent >= 70:
+        # 70% dan o'tgani uchun seansni keshdan o'chiramiz
+        lesson_quiz_sessions.pop(user_id, None)
 
-        # =====================================
-        # SAVE COMPLETED TASK
-        # =====================================
-
+        # 1. Grammatika topshirilganini bazaga yozamiz
         db_execute(
             """
-            INSERT INTO lesson_task_progress
-            (
-                user_id,
-                level,
-                lesson,
-                task_name,
-                completed
-            )
-            VALUES
-            (
-                %s,
-                %s,
-                %s,
-                %s,
-                TRUE
-            )
-
-            ON CONFLICT
-            (
-                user_id,
-                level,
-                lesson,
-                task_name
-            )
-            DO UPDATE SET
-                completed = TRUE,
-                completed_at = NOW()
+            INSERT INTO lesson_task_progress (user_id, level, lesson, task_name, completed)
+            VALUES (%s, %s, %s, %s, TRUE)
+            ON CONFLICT (user_id, level, lesson, task_name)
+            DO UPDATE SET completed = TRUE, completed_at = NOW()
             """,
-            (
-                user_id,
-                level,
-                lesson,
-                task
-            )
+            (user_id, level, lesson, task)
         )
 
-        # =====================================
-        # UPDATE ACTIVE LESSON
-        # =====================================
-
-        active_lessons[user_id] = {
-
-            "level": level,
-
-            "lesson": lesson
-
-        }
-
+        # 2. Xuddi shu darsning keyingi bo'limi (Lesen) ochilganini bildiramiz
+        # build_task_menu funksiyangiz endi foydalanuvchiga '📖 Lesen' tugmasini ko'rsatadi
         await bot.send_message(
-
-            chat_id,
-
-            f"✅ Vazifa bajarildi!\n\n"
-            f"📊 Natija: {score}/{total}\n"
-            f"🎯 {percent}%\n\n"
-            f"🔓 Keyingi bo'lim ochildi!"
-        )
-
-        # =====================================
-        # SHOW UPDATED MENU
-        # =====================================
-
-        await bot.send_message(
-
-            chat_id,
-
-            f"🇩🇪 {level}\n\n"
-            f"📖 Unterricht {lesson}\n\n"
-            f"Keyingi vazifani tanlang:",
-
-            reply_markup=
-            build_task_menu(
-                user_id,
-                level,
-                lesson
-            )
+            chat_id=chat_id,
+            text=f"🎉 <b>Ajoyib! Grammatika vazifasi muvaffaqiyatli topshirildi!</b>\n\n"
+                 f"📊 Natijangiz: <b>{score}/{total}</b>\n"
+                 f"🎯 Ko'rsatkich: <b>{percent}%</b>\n\n"
+                 f"🇩🇪 {level} | Unterricht {lesson}\n"
+                 f"🔓 <b>Yangi bo'lim ochildi:</b> Ushbu darsning '📖 Lesen' (Matn o'qish va tahlil) qismi faollashdi. Davom etishingiz mumkin!",
+            reply_markup=build_task_menu(user_id, level, lesson)
         )
 
     else:
-
-        await bot.send_message(
-
-            chat_id,
-
-            f"❌ Vazifa bajarilmadi.\n\n"
-            f"📊 Natija: {score}/{total}\n"
-            f"🎯 {percent}%\n\n"
-            f"Kamida 70% kerak."
+        # 70% dan past bo'lsa, qayta ishlash so'rovi va oxirgi natija chiqadi
+        retry_keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🔄 Testni Qayta Ishlash",
+                        callback_data="retry_grammatik"
+                    )
+                ]
+            ]
         )
 
-    lesson_quiz_sessions.pop(
-        user_id,
-        None
-    )
+        await bot.send_message(
+            chat_id=chat_id,
+            text=f"⚠️ <b>Afsuski, grammatika testidan o'ta olmadingiz.</b>\n\n"
+                 f"📊 Oxirgi natijangiz: <b>{score}/{total}</b>\n"
+                 f"🎯 Ko'rsatkich: <b>{percent}%</b>\n"
+                 f"📉 O'tish bali: <b>70%</b>\n\n"
+                 f"<i>Dars materiallarini qayta ko'rib chiqishni va quyidagi tugma orqali testni boshqatdan topshirishingizni maslahat beramiz:</i>",
+            reply_markup=retry_keyboard
+        )
+# =========================================================
+# RETRY GRAMMATIK TEST CALLBACK HANDLER
+# =========================================================
+
+@dp.callback_query(F.data == "retry_grammatik")
+async def retry_grammatik_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    session = lesson_quiz_sessions.get(user_id)
+
+    if not session:
+        await callback.answer("❌ Seans eskirgan. Iltimos, '📖 Grammatik' tugmasini qayta bosing.", show_alert=True)
+        return
+
+    # Kesh ichidagi ko'rsatkichlarni nollaymiz va savollarni qayta aralashtiramiz
+    session["index"] = 0
+    session["score"] = 0
+    random.shuffle(session["questions"])
+
+    await callback.answer("🔄 Test boshqatdan boshlanmoqda...")
+    
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+
+    # Birinchi savolni qayta yuboramiz
+    await send_lesson_question(callback.message, user_id)
 # =========================================================
 # ANSWER
 # =========================================================
@@ -6232,104 +5970,71 @@ async def send_broadcast(
     )
 
     await state.clear()
-# =========================
-# MAIN
-# =========================
+# =========================================================
+# MAIN INITIALIZATION & RUN
+# =========================================================
 
 async def main():
-
-    init_db_pool()
-
-    init_tables()
-
-    logger.info(
-        "DATABASE READY ✅"
-    )
-
-    load_artikel()
-
-    load_all_quizzes()
-
-    reset_daily_scores()
-
-    logger.info(
-        "SYSTEMS LOADED ✅"
-    )
-
+    # 1. Ma'lumotlar bazasini ishga tushirish
     try:
-
-        await bot.delete_webhook(
-            drop_pending_updates=True
-        )
-
-        logger.info(
-            "WEBHOOK TOZALANDI ✅"
-        )
-
+        init_db_pool()
+        init_tables()
+        logger.info("DATABASE READY ✅")
     except Exception as e:
+        logger.error(f"Ma'lumotlar bazasini ishga tushirishda xatolik: {e}")
+        return
 
-        logger.error(
-            f"Webhook error: {e}"
-        )
-
+    # 2. Tizim ma'lumotlarini yuklash va yangilash
     try:
-
-        Thread(
-            target=run_web,
-            daemon=True
-        ).start()
-
-        logger.info(
-            "KEEP ALIVE STARTED ✅"
-        )
-
+        load_artikel()
+        load_all_quizzes()
+        reset_daily_scores()
+        logger.info("SYSTEMS LOADED ✅")
     except Exception as e:
+        logger.error(f"Tizim funksiyalarini yuklashda xatolik: {e}")
 
-        logger.error(
-            f"Flask error: {e}"
-        )
+    # 3. Eski Webhook'larni va kutilayotgan so'rovlarni tozalash
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("WEBHOOK TOZALANDI ✅")
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
 
-    await start_bot()
+    # 4. Flask veb-serverini alohida background oqimda ishga tushirish
+    try:
+        flask_thread = Thread(target=run_web, daemon=True)
+        flask_thread.start()
+        logger.info("KEEP ALIVE STARTED 🌐")
+    except Exception as e:
+        logger.error(f"Flask error: {e}")
 
-# =========================
-# RUN
-# =========================
+    # 5. Bot va Quiz xotirasini xavfsiz tozalash
+    try:
+        quiz_running.clear()
+        quiz_sessions.clear()
+        active_questions.clear()
+        answered_users.clear()
+        lesson_quiz_sessions.clear()
+    except NameError:
+        # Agar global o'zgaruvchilardan biri yuqorida e'lon qilinmagan bo'lsa, xato bermasligi uchun
+        pass
 
-async def start_bot():
+    logger.info("BOT ISHGA TUSHDI ✅")
 
-    # MEMORY CLEAN
-    quiz_running.clear()
-    quiz_sessions.clear()
-    active_questions.clear()
-    answered_users.clear()
-
-    logger.info(
-        "BOT ISHGA TUSHDI ✅"
-    )
-
+    # 6. Botni Polling (so'rov yuborish) rejimida ishga tushirish
     await dp.start_polling(
         bot,
         allowed_updates=dp.resolve_used_update_types()
     )
 
-# =========================
+# =========================================================
 # START APP
-# =========================
+# =========================================================
 
 if __name__ == "__main__":
-
     try:
-
         asyncio.run(main())
-
     except KeyboardInterrupt:
-
-        logger.info(
-            "BOT STOPPED ⛔"
-        )
-
+        logger.info("BOT STOPPED ⛔")
     except Exception as e:
-
-        logger.error(
-            f"MAIN ERROR: {e}"
-        )
+        logger.error(f"MAIN ERROR: {e}")
