@@ -1,0 +1,10 @@
+level,lesson,task_id,type,question,correct,wrong1,wrong2
+A1,1,1,test,Tomning ismi nima?,Tom,Anna,Ali
+A1,1,2,test,Tom necha yoshda?,10,9,11
+A1,1,3,test,Tom nimani yaxshi ko'radi?,Fußball,Musik,Malen
+A1,1,4,test,Annaning ismi nima?,Anna,Tom,Maria
+A1,1,5,test,Anna necha yoshda?,9,10,8
+A1,1,6,test,Anna nimani yaxshi ko'radi?,Malen und Musik,Fußball,Deutsch
+A1,1,7,test,Tom va Anna qayerdan?,Usbekistan,Deutschland,Österreich
+A1,1,8,test,Tom va Anna qayerda yashaydi?,Taschkent,Berlin,Hamburg
+A1,1,9,test,Tom va Anna qaysi tilni o'rganadi?,Deutsch,Englisch,Russisch
