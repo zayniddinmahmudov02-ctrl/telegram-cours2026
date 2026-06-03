@@ -3262,7 +3262,7 @@ async def users_list(message: Message):
             course
         FROM users
         ORDER BY id DESC
-        LIMIT 100
+        LIMIT 10000
         """,
         fetchall=True
     )
