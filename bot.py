@@ -1428,7 +1428,7 @@ async def xp_rating(message: Message):
         FROM users
         WHERE approved = 1
         ORDER BY total_score DESC
-        LIMIT 10
+        LIMIT 100
         """,
         fetchall=True
     )
@@ -1437,7 +1437,7 @@ async def xp_rating(message: Message):
         await message.answer("🏆 Hozircha reyting mavjud emas.")
         return
 
-    text = "🏆 TOP 10 XP Reyting\n\n"
+    text = "🏆 TOP 100 XP Reyting\n\n"
     medals = ["🥇", "🥈", "🥉"]
 
     for i, row in enumerate(rows, start=1):
@@ -3165,37 +3165,312 @@ async def certificate_system(message: Message):
     except Exception as e:
         logger.error(f"Certificate error: {e}")
         await message.answer("❌ Sertifikat yaratishda xato.")
+# =========================================================
+# ADMIN STATES
+# =========================================================
+
+class AdminStates(StatesGroup):
+    broadcast = State()
+
+    personal_user_id = State()
+    personal_text = State()
+
 
 # =========================================================
-# ADMIN & BROADCAST
+# ADMIN PANEL
 # =========================================================
 
-@dp.message(AdminStates.broadcast)
-async def send_broadcast(message: Message, state: FSMContext):
-    if message.from_user.id != ADMIN_ID: return
-    
-    users = db_execute("SELECT user_id FROM users", fetchall=True)
+@dp.message(Command("admin"))
+async def admin_panel(message: Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    await message.answer(
+        "⚙️ Admin Panel",
+        reply_markup=admin_menu
+    )
+
+
+# =========================================================
+# STATISTIKA
+# =========================================================
+
+@dp.message(F.text == "📊 Statistika")
+async def admin_statistics(message: Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    total_users = db_execute(
+        "SELECT COUNT(*) FROM users",
+        fetchone=True
+    )[0]
+
+    approved_users = db_execute(
+        "SELECT COUNT(*) FROM users WHERE approved = 1",
+        fetchone=True
+    )[0]
+
+    courses = db_execute(
+        """
+        SELECT
+            course,
+            COUNT(*)
+        FROM users
+        WHERE approved = 1
+        GROUP BY course
+        """,
+        fetchall=True
+    )
+
+    course_text = ""
+
+    if courses:
+
+        for course, count in courses:
+
+            course_text += (
+                f"📚 {course}: {count} ta\n"
+            )
+
+    text = (
+        "📊 BOT STATISTIKASI\n\n"
+        f"👥 Foydalanuvchilar: {total_users}\n"
+        f"💳 Xaridorlar: {approved_users}\n\n"
+        f"{course_text}"
+    )
+
+    await message.answer(text)
+
+
+# =========================================================
+# USERS LIST
+# =========================================================
+
+@dp.message(F.text == "👥 Foydalanuvchilar")
+async def users_list(message: Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    users = db_execute(
+        """
+        SELECT
+            user_id,
+            full_name,
+            course
+        FROM users
+        ORDER BY id DESC
+        LIMIT 100
+        """,
+        fetchall=True
+    )
+
     if not users:
-        await message.answer("❌ Foydalanuvchilar topilmadi."); await state.clear(); return
 
-    success, failed = 0, 0
-    progress = await message.answer("📢 Reklama yuborilmoqda...")
-    
-    for i, (user_id,) in enumerate(users, 1):
-        try:
-            await bot.copy_message(user_id, message.chat.id, message.message_id)
-            success += 1
-        except:
-            failed += 1
-        
-        if i % 25 == 0:
-            await asyncio.sleep(0.1)
-            try: await progress.edit_text(f"✅ Yuborildi: {success}\n❌ Xato: {failed}\n📊 {i}/{len(users)}")
-            except: pass
+        await message.answer(
+            "❌ Foydalanuvchilar topilmadi."
+        )
 
-    await progress.edit_text(f"✅ Reklama yakunlandi.\n📨 Yuborildi: {success}\n❌ Xato: {failed}")
+        return
+
+    text = "👥 OXIRGI 100 FOYDALANUVCHI\n\n"
+
+    for user in users:
+
+        text += (
+            f"🆔 {user[0]}\n"
+            f"👤 {user[1] or '-'}\n"
+            f"📚 {user[2] or '-'}\n\n"
+        )
+
+    await message.answer(
+        text[:4000]
+    )
+
+
+# =========================================================
+# BUYERS LIST
+# =========================================================
+
+@dp.message(F.text == "💳 Xaridorlar")
+async def buyers_list(message: Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    buyers = db_execute(
+        """
+        SELECT
+            user_id,
+            full_name,
+            phone,
+            course
+        FROM users
+        WHERE approved = 1
+        ORDER BY id DESC
+        """,
+        fetchall=True
+    )
+
+    if not buyers:
+
+        await message.answer(
+            "❌ Xaridorlar topilmadi."
+        )
+
+        return
+
+    text = "💳 TASDIQLANGAN XARIDORLAR\n\n"
+
+    for user in buyers:
+
+        text += (
+            f"🆔 {user[0]}\n"
+            f"👤 {user[1] or '-'}\n"
+            f"📱 {user[2] or '-'}\n"
+            f"📚 {user[3] or '-'}\n\n"
+        )
+
+    await message.answer(
+        text[:4000]
+    )
+
+
+# =========================================================
+# START BROADCAST
+# =========================================================
+
+@dp.message(F.text == "📢 Reklama Yuborish")
+async def broadcast_start(
+    message: Message,
+    state: FSMContext
+):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    await state.set_state(
+        AdminStates.broadcast
+    )
+
+    await message.answer(
+        "📢 Reklama xabarini yuboring.\n\n"
+        "Matn, rasm, video yoki forward bo'lishi mumkin."
+    )
+
+
+# =========================================================
+# PERSONAL MESSAGE START
+# =========================================================
+
+@dp.message(F.text == "📨 Shaxsiy Xabar")
+async def personal_message_start(
+    message: Message,
+    state: FSMContext
+):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    await state.set_state(
+        AdminStates.personal_user_id
+    )
+
+    await message.answer(
+        "🆔 Foydalanuvchi ID sini yuboring."
+    )
+
+
+# =========================================================
+# PERSONAL USER ID
+# =========================================================
+
+@dp.message(AdminStates.personal_user_id)
+async def personal_message_user(
+    message: Message,
+    state: FSMContext
+):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    if not message.text.isdigit():
+
+        await message.answer(
+            "❌ ID raqam bo'lishi kerak."
+        )
+
+        return
+
+    await state.update_data(
+        target_user=int(message.text)
+    )
+
+    await state.set_state(
+        AdminStates.personal_text
+    )
+
+    await message.answer(
+        "✉️ Yuboriladigan xabarni yuboring."
+    )
+
+
+# =========================================================
+# PERSONAL MESSAGE SEND
+# =========================================================
+
+@dp.message(AdminStates.personal_text)
+async def personal_message_send(
+    message: Message,
+    state: FSMContext
+):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    data = await state.get_data()
+
+    target_user = data.get(
+        "target_user"
+    )
+
+    try:
+
+        await bot.copy_message(
+            chat_id=target_user,
+            from_chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+
+        await message.answer(
+            "✅ Xabar yuborildi."
+        )
+
+    except Exception as e:
+
+        await message.answer(
+            f"❌ Xatolik:\n{e}"
+        )
+
     await state.clear()
 
+
+# =========================================================
+# ADMIN EXIT
+# =========================================================
+
+@dp.message(F.text == "⬅️ Admin Chiqish")
+async def admin_exit(message: Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    await message.answer(
+        "🏠 Asosiy menyu",
+        reply_markup=main_menu
+    )
 # =========================================================
 # MAIN INITIALIZATION & RUN
 # =========================================================
