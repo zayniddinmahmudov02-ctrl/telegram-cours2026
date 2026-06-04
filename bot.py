@@ -1592,7 +1592,19 @@ async def go_back(message: Message):
         "🏠 Asosiy Menu",
         reply_markup=main_menu
     )
-    
+# =========================================================
+# BACK TO WORD GAME LEVELS
+# =========================================================
+
+@dp.message(F.text == "⬅️ Darajalar")
+async def back_to_levels(message: Message):
+
+    await message.answer(
+        "🎮 So'z O'yini",
+        reply_markup=await build_level_menu(
+            message.from_user.id
+        )
+    )
 # =========================
 # COURSE HANDLER
 # =========================
@@ -2504,7 +2516,7 @@ def build_block_keyboard(level, user_id):
         rows.append(current)
 
     rows.append(
-        [KeyboardButton(text="⬅️ Orqaga")]
+        [KeyboardButton(text="⬅️ Darajalar")]
     )
 
     return ReplyKeyboardMarkup(
@@ -3378,7 +3390,7 @@ rating_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="⚡ Kunlik Reyting")
         ],
         [
-            KeyboardButton(text="⬅️ Orqaga")
+            KeyboardButton(text="⬅️ Darajalar")
         ]
     ],
     resize_keyboard=True
