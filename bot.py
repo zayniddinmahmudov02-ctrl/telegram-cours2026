@@ -1441,7 +1441,7 @@ async def xp_rating(message: Message):
         FROM users
         WHERE approved = 1
         ORDER BY total_score DESC
-        LIMIT 100
+        LIMIT 50
         """,
         fetchall=True
     )
@@ -2396,37 +2396,96 @@ async def build_level_menu(user_id):
         keyboard=rows,
         resize_keyboard=True
     )
-
 # =========================================================
 # BLOCK MENU
 # =========================================================
 
-def build_block_keyboard(level):
+def build_block_keyboard(level, user_id):
+
     config = LEVEL_CONFIG.get(level)
+
     if not config:
-        # Agar daraja konfiguratsiyasi topilmasa, default xavfsiz menyu qaytariladi
-        return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️ Orqaga")]], resize_keyboard=True)
+
+        return ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="⬅️ Orqaga")]
+            ],
+            resize_keyboard=True
+        )
 
     rows = []
     current = []
 
-    for i in range(1, config["blocks"] + 1):
-        current.append(KeyboardButton(text=f"📚 {level}-{i}-Blok"))
+    for i in range(
+        1,
+        config["blocks"] + 1
+    ):
+
+        progress = db_execute(
+            """
+            SELECT best_score
+            FROM quiz_progress
+            WHERE user_id = %s
+            AND level = %s
+            AND block_number = %s
+            """,
+            (
+                user_id,
+                level,
+                i
+            ),
+            fetchone=True
+        )
+
+        if progress:
+
+            score = progress[0] or 0
+
+            if score >= 100:
+
+                text = (
+                    f"🏆 "
+                    f"{level}-{i}-Blok "
+                    f"(100%)"
+                )
+
+            else:
+
+                text = (
+                    f"✅ "
+                    f"{level}-{i}-Blok "
+                    f"({score}%)"
+                )
+
+        else:
+
+            text = (
+                f"📚 "
+                f"{level}-{i}-Blok"
+            )
+
+        current.append(
+            KeyboardButton(text=text)
+        )
 
         if len(current) == 2:
+
             rows.append(current)
+
             current = []
 
     if current:
+
         rows.append(current)
 
-    rows.append([KeyboardButton(text="⬅️ Orqaga")])
+    rows.append(
+        [KeyboardButton(text="⬅️ Orqaga")]
+    )
 
     return ReplyKeyboardMarkup(
         keyboard=rows,
         resize_keyboard=True
     )
-
 # =========================================================
 # OPEN WORD GAME
 # =========================================================
@@ -2547,17 +2606,28 @@ async def locked_level_handler(message: Message):
         "Keyingi darajani ochish uchun:\n"
         "• barcha bloklardan kamida 60% natija ko'rsating."
     )
-
 # =========================================================
 # OPEN LEVEL
 # =========================================================
 
 @dp.message(F.text.regexp(r"🎯 (A1|A2|B1|B2|C1)"))
 async def open_level_handler(message: Message):
-    level = message.text.replace("🎯 ", "").strip()
+
+    level = (
+        message.text
+        .replace("🎯 ", "")
+        .strip()
+    )
+
     await message.answer(
+
         f"📚 {level} bloklari",
-        reply_markup=build_block_keyboard(level)
+
+        reply_markup=
+        build_block_keyboard(
+            level,
+            message.from_user.id
+        )
     )
 
 # =========================================================
@@ -2633,12 +2703,6 @@ async def start_quiz_block(
             return
 
     # Bu joydan boshlab test generatoringiz va savollar zanjiri davom etadi...
-# =====================================================
-# RESTART WARNING
-# =====================================================
-
-# (Tavsiya: Oldingi kodda qolgan qism shu yerda davom etadi)
-# ... [restart logika saqlandi] ...
 
 # =====================================================
 # USER LEVEL SECURITY
@@ -2727,20 +2791,102 @@ async def start_quiz_block(
 # START BLOCK
 # =========================================================
 
-@dp.message(F.text.regexp(r"📚 (A1|A2|B1|B2|C1)-(\d+)-Blok"))
+@dp.message(
+    F.text.regexp(
+        r"(📚|✅|🏆)\s?(A1|A2|B1|B2|C1)-(\d+)-Blok"
+    )
+)
 async def start_block(message: Message):
 
-    parts = message.text.replace(
-        "📚 ",
-        ""
-    ).split("-")
+    import re
 
-    level = parts[0]
+    match = re.search(
+        r"(A1|A2|B1|B2|C1)-(\d+)-Blok",
+        message.text
+    )
 
-    block = int(parts[1])
+    if not match:
+        return
 
-    user_id = message.from_user.id
+    level = match.group(1)
 
+    block = int(
+        match.group(2)
+    )
+
+    user_id = (
+        message.from_user.id
+    )
+
+    # =====================================================
+    # CHECK PREVIOUS RESULT
+    # =====================================================
+
+    row = db_execute(
+        """
+        SELECT best_score
+        FROM quiz_progress
+        WHERE user_id = %s
+        AND level = %s
+        AND block_number = %s
+        """,
+        (
+            user_id,
+            level,
+            block
+        ),
+        fetchone=True
+    )
+
+    if row:
+
+        best_score = row[0] or 0
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🔄 Ha, qayta ishlash",
+                        callback_data=
+                        f"restartquiz:{level}:{block}"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="❌ Yo'q",
+                        callback_data="cancelquiz"
+                    )
+                ]
+            ]
+        )
+
+        await message.answer(
+
+            f"📊 Oxirgi natijangiz\n\n"
+
+            f"🇩🇪 Daraja: {level}\n"
+
+            f"📚 Blok: {block}\n\n"
+
+            f"🏆 Eng yaxshi natija: "
+            f"{best_score}%\n\n"
+
+            f"Qayta ishlamoqchimisiz?",
+
+            reply_markup=keyboard
+        )
+
+        return
+
+    # =====================================================
+    # FIRST START
+    # =====================================================
+
+    await start_quiz_block(
+        message,
+        level,
+        block
+    )
     # =====================================================
     # CHECK PREVIOUS RESULT
     # =====================================================
