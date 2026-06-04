@@ -361,17 +361,22 @@ class ProfileState(StatesGroup):
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="🎥 Video Kurslar")],
+
         [KeyboardButton(text="🎓 Darslarni O'rganish")],
+
+        [KeyboardButton(text="🏅 VIZU-Zertifikat")],
+
         [KeyboardButton(text="📚 Ma'lumotlar")],
+
         [
             KeyboardButton(text="📚 Artikel Topish"),
             KeyboardButton(text="🎮 So'z O'yini")
         ],
+
         [KeyboardButton(text="👤 Mening Profilim")]
     ],
     resize_keyboard=True
 )
-
 video_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="🇩🇪 A1"), KeyboardButton(text="🇩🇪 A2")],
@@ -426,6 +431,21 @@ def profile_keyboard():
         ],
         resize_keyboard=True
     )
+# =========================================================
+# VIZU CERTIFICATE MENU
+# =========================================================
+
+vizu_certificate_menu_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="🏅 VIZU-A1")],
+        [KeyboardButton(text="🏅 VIZU-A2")],
+        [KeyboardButton(text="🏅 VIZU-B1")],
+        [KeyboardButton(text="🏅 VIZU-B2")],
+        [KeyboardButton(text="🏅 VIZU-C1")],
+        [KeyboardButton(text="⬅️ Orqaga")]
+    ],
+    resize_keyboard=True
+)
 # =========================================================
 # GLOBAL CONSTANTS
 # =========================================================
@@ -558,14 +578,7 @@ def build_level_lessons_menu(level, unlocked, exam_passed=False):
     else:
         exam_text = "🔒 Yakuniy Imtihon"
     
-    if exam_passed:
-        cert_text = f"🏆 {level} Sertifikati"
-    else:
-        cert_text = f"🔒 {level} Sertifikati"
-
-    # Imtihon va Sertifikat tugmalarini yonma-yon yoki alohida chiroyli joylashtiramiz
     keyboard.append([KeyboardButton(text=exam_text)])
-    keyboard.append([KeyboardButton(text=cert_text)])
     
     # Navigatsiya
     keyboard.append([KeyboardButton(text="⬅️ Orqaga")])
@@ -1447,7 +1460,18 @@ async def xp_rating(message: Message):
         text += f"{medal} {name} — {score} XP\n"
 
     await message.answer(text)
+# =========================================================
+# VIZU CERTIFICATE HANDLER
+# =========================================================
 
+@dp.message(F.text == "🏅 VIZU-Zertifikat")
+async def vizu_certificate_menu(message: Message):
+
+    await message.answer(
+        "🏅 VIZU Academy Zertifikate\n\n"
+        "Kerakli sertifikat darajasini tanlang:",
+        reply_markup=vizu_certificate_menu_keyboard
+    )
 # =========================
 # LESSONS HOME
 # =========================
