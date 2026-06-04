@@ -1596,7 +1596,7 @@ async def xp_rating(message: Message):
 # =========================================================
 # VIZU CERTIFICATE HANDLERS
 # =========================================================
-
+    await message.answer("HANDLER ISHLADI")
 @dp.message(
     F.text.in_([
         "🏅 VIZU-A1",
@@ -1955,7 +1955,17 @@ async def reject_vizu_payment(callback: CallbackQuery):
         "❌ Rad etildi"
     )
 
+row = db_execute(
+    """
+    SELECT vizu_a1_access
+    FROM users
+    WHERE user_id = %s
+    """,
+    (user_id,),
+    fetchone=True
+)
 
+print("AFTER APPROVE:", row)
 # =========================================================
 # GOLDEN TICKET APPROVE / REJECT
 # =========================================================
@@ -2213,63 +2223,7 @@ async def start_vizu_test(
     )
 
     await callback.answer()
-# =========================================================
-# VIZU A1 OPEN
-# =========================================================
 
-@dp.message(F.text == "🏅 VIZU-A1")
-async def open_vizu_a1(
-    message: Message
-):
-
-    row = db_execute(
-        """
-        SELECT vizu_a1_access
-        FROM users
-        WHERE user_id = %s
-        """,
-        (message.from_user.id,),
-        fetchone=True
-    )
-
-    if not row or row[0] != 1:
-
-        await message.answer(
-
-            "🔒 Sizda VIZU-A1 Mock Test uchun ruxsat yo'q.\n\n"
-
-            "💳 To'lov qiling yoki\n"
-            "🎟 Golden Ticket yuboring."
-
-        )
-
-        return
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🚀 Mock Testni Boshlash",
-                    callback_data="startvizu:VIZU-A1"
-                )
-            ]
-        ]
-    )
-
-    await message.answer(
-
-        "🏅 VIZU-A1 Mock Test\n\n"
-
-        "📚 Lesen\n"
-        "🎧 Hören\n"
-        "✍️ Schreiben\n"
-        "🗣 Sprechen\n\n"
-
-        "🚀 Boshlash uchun tugmani bosing.",
-
-        reply_markup=keyboard
-
-    )
 # =========================================================
 # OPEN LESEN
 # =========================================================
