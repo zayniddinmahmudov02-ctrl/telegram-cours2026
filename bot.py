@@ -385,6 +385,10 @@ dp = Dispatcher(storage=storage)
 # =========================================================
 # STATES GROUP
 # =========================================================
+
+class VizuLesenState(StatesGroup):
+    solving = State()
+
 class RegisterState(StatesGroup):
     waiting_for_name = State()
     waiting_for_phone = State()
@@ -2188,6 +2192,237 @@ async def start_vizu_test(
     )
 
     await callback.answer()
+
+# =========================================================
+# OPEN LESEN
+# =========================================================
+
+@dp.message(F.text == "📚 Lesen")
+async def open_lesen(message: Message):
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Testni Boshlash",
+                    callback_data="lesen_start"
+                )
+            ]
+        ]
+    )
+
+    photo = FSInputFile(
+        "VIZU-A1/Lesen-photo/lesen-intro.png"
+    )
+
+    await message.answer_photo(
+        photo=photo,
+        caption=(
+            "📚 VIZU-A1 Lesen\n\n"
+            "⏱ Davomiyligi: 25 daqiqa\n\n"
+            "📖 Test 3 ta qismdan iborat.\n\n"
+            "🚀 Tayyor bo'lsangiz boshlang."
+        ),
+        reply_markup=keyboard
+    )
+# =========================================================
+# START LESEN
+# =========================================================
+
+@dp.callback_query(
+    F.data == "lesen_start"
+)
+async def start_lesen(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    user_id = callback.from_user.id
+
+    vizu_lesen_progress[user_id] = {
+        "index": 0,
+        "score": 0
+    }
+
+    await state.set_state(
+        VizuLesenState.solving
+    )
+
+    await send_lesen_question(
+        callback.message,
+        user_id
+    )
+
+    await callback.answer()
+# =========================================================
+# LESEN IMAGE
+# =========================================================
+
+def get_lesen_image(task):
+
+    task = int(task)
+
+    if task <= 2:
+        return "VIZU-A1/Lesen-photo/lesen-teil1.1.png"
+
+    elif task <= 5:
+        return "VIZU-A1/Lesen-photo/lesen-teil1.2.png"
+
+    elif task <= 11:
+        return "VIZU-A1/Lesen-photo/lesen-teil2.png"
+
+    elif task <= 13:
+        return "VIZU-A1/Lesen-photo/lesen-teil3.1.png"
+
+    else:
+        return "VIZU-A1/Lesen-photo/lesen-teil3.2.png"
+
+# =========================================================
+# SEND LESEN QUESTION
+# =========================================================
+
+async def send_lesen_question(
+    message,
+    user_id
+):
+
+    progress = vizu_lesen_progress[user_id]
+
+    index = progress["index"]
+
+    if index >= len(vizu_lesen_questions):
+
+        score = progress["score"]
+
+        percent = round(
+            score * 100 /
+            len(vizu_lesen_questions)
+        )
+
+        await message.answer(
+
+            f"📚 LESEN YAKUNLANDI\n\n"
+
+            f"✅ To'g'ri: {score}\n"
+            f"❌ Noto'g'ri: {len(vizu_lesen_questions) - score}\n\n"
+
+            f"📊 Natija: {percent}%"
+
+        )
+
+        vizu_lesen_progress.pop(
+            user_id,
+            None
+        )
+
+        return
+
+    row = vizu_lesen_questions[index]
+
+    task = row["task"]
+
+    question = row["question"]
+
+    image_path = get_lesen_image(task)
+
+    # Teil 2
+    if 6 <= int(task) <= 11:
+
+        options = [
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11"
+        ]
+
+        random.shuffle(options)
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text=opt,
+                        callback_data=f"lesen:{opt}"
+                    )
+                ]
+                for opt in options
+            ]
+        )
+
+    else:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="✅ Richtig",
+                        callback_data="lesen:Richtig"
+                    ),
+                    InlineKeyboardButton(
+                        text="❌ Falsch",
+                        callback_data="lesen:Falsch"
+                    )
+                ]
+            ]
+        )
+
+    photo = FSInputFile(image_path)
+
+    await message.answer_photo(
+        photo=photo,
+        caption=(
+            f"📝 Savol {task}/15\n\n"
+            f"{question}"
+        ),
+        reply_markup=keyboard
+    )
+    
+# =========================================================
+# LESEN ANSWER
+# =========================================================
+
+@dp.callback_query(
+    VizuLesenState.solving,
+    F.data.startswith("lesen:")
+)
+async def lesen_answer(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    user_id = callback.from_user.id
+
+    progress = vizu_lesen_progress.get(
+        user_id
+    )
+
+    if not progress:
+        await callback.answer()
+        return
+
+    index = progress["index"]
+
+    row = vizu_lesen_questions[index]
+
+    user_answer = callback.data.split(":")[1]
+
+    correct_answer = row["correct"]
+
+    if user_answer == correct_answer:
+
+        progress["score"] += 1
+
+    progress["index"] += 1
+
+    await callback.answer()
+
+    await send_lesen_question(
+        callback.message,
+        user_id
+    )
+
 # =========================
 # LESSONS HOME
 # =========================
@@ -2905,6 +3140,8 @@ approved_users = set()
 artikel_data = {}
 admin_sessions = {}
 last_daily_reset = None
+vizu_lesen_questions = []
+vizu_lesen_progress = {}
 
 # =========================================================
 # LESSON QUIZ SYSTEM
@@ -3041,7 +3278,46 @@ def load_lesson_csv(filename, lesson):
         logger.error(f"Lesson CSV file read error: {e}")
 
     return data
+# =========================================================
+# LOAD VIZU LESEN
+# =========================================================
 
+def load_vizu_lesen():
+
+    global vizu_lesen_questions
+
+    csv_path = "VIZU-A1/A1-Lesenmock.csv"
+
+    if not os.path.exists(csv_path):
+
+        logger.warning(
+            "A1-Lesenmock.csv not found."
+        )
+
+        return
+
+    try:
+
+        with open(
+            csv_path,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            reader = csv.DictReader(f)
+
+            vizu_lesen_questions = list(reader)
+
+        logger.info(
+            f"VIZU Lesen loaded: "
+            f"{len(vizu_lesen_questions)} questions"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"VIZU Lesen load error: {e}"
+        )
 
 # =========================================================
 # DAILY RESET
@@ -4699,6 +4975,7 @@ async def main():
         init_tables()
         init_certificate_table() # Sertifikat jadvali qo'shildi
         load_artikel()
+        load_vizu_lesen()
         load_all_quizzes()
         reset_daily_scores()
         await bot.delete_webhook(drop_pending_updates=True)
