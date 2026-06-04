@@ -1461,16 +1461,37 @@ async def xp_rating(message: Message):
 
     await message.answer(text)
 # =========================================================
-# VIZU CERTIFICATE HANDLER
+# VIZU CERTIFICATE HANDLERS
 # =========================================================
 
-@dp.message(F.text == "🏅 VIZU-Zertifikat")
-async def vizu_certificate_menu(message: Message):
+@dp.message(
+    F.text.in_([
+        "🏅 VIZU-A1",
+        "🏅 VIZU-A2",
+        "🏅 VIZU-B1",
+        "🏅 VIZU-B2",
+        "🏅 VIZU-C1"
+    ])
+)
+async def vizu_certificate_level_handler(
+    message: Message
+):
+
+    certificate = message.text.replace(
+        "🏅 ",
+        ""
+    )
 
     await message.answer(
-        "🏅 VIZU Academy Zertifikate\n\n"
-        "Kerakli sertifikat darajasini tanlang:",
-        reply_markup=vizu_certificate_menu_keyboard
+
+        f"🏅 {certificate}\n\n"
+
+        f"🚧 Sertifikat tizimi hali ishga tushirilmagan.\n\n"
+
+        f"📢 Tizim ishga tushgach barcha foydalanuvchilarga "
+        f"xabar beriladi.\n\n"
+
+        f"⏳ Tez orada..."
     )
 # =========================
 # LESSONS HOME
@@ -2702,17 +2723,94 @@ async def start_quiz_block(
 
     await message.answer(f"🚀 {level}-{block}-Blok boshlandi! Savollar: {len(block_questions)}")
     await send_next_question(message.chat.id, user_id)
-
 # =========================================================
 # START BLOCK
 # =========================================================
 
 @dp.message(F.text.regexp(r"📚 (A1|A2|B1|B2|C1)-(\d+)-Blok"))
 async def start_block(message: Message):
-    parts = message.text.replace("📚 ", "").split("-")
-    level, block = parts[0], int(parts[1])
-    await start_quiz_block(message, level, block)
 
+    parts = message.text.replace(
+        "📚 ",
+        ""
+    ).split("-")
+
+    level = parts[0]
+
+    block = int(parts[1])
+
+    user_id = message.from_user.id
+
+    # =====================================================
+    # CHECK PREVIOUS RESULT
+    # =====================================================
+
+    row = db_execute(
+        """
+        SELECT best_score
+        FROM quiz_progress
+        WHERE user_id = %s
+        AND level = %s
+        AND block_number = %s
+        """,
+        (
+            user_id,
+            level,
+            block
+        ),
+        fetchone=True
+    )
+
+    # AGAR OLDIN ISHLAGAN BO'LSA
+    if row:
+
+        best_score = row[0] or 0
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🔄 Ha, qayta ishlash",
+                        callback_data=
+                        f"restartquiz:{level}:{block}"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="❌ Yo'q",
+                        callback_data="cancelquiz"
+                    )
+                ]
+            ]
+        )
+
+        await message.answer(
+
+            f"📊 Oxirgi natijangiz\n\n"
+
+            f"🇩🇪 Daraja: {level}\n"
+
+            f"📚 Blok: {block}\n\n"
+
+            f"🏆 Eng yaxshi natija: "
+            f"{best_score}/100\n\n"
+
+            f"Qayta ishlamoqchimisiz?",
+
+            reply_markup=keyboard
+        )
+
+        return
+
+    # =====================================================
+    # FIRST START
+    # =====================================================
+
+    await start_quiz_block(
+        message,
+        level,
+        block
+    )
 # =========================================================
 # SEND QUESTION
 # =========================================================
@@ -2826,77 +2924,200 @@ async def quiz_answer(callback: CallbackQuery):
     # Keyingi savolga o'tish
     await send_next_question(callback.message.chat.id, user_id)
 
-
 # =========================================================
 # FINISH QUIZ
 # =========================================================
 
-async def finish_quiz(chat_id, user_id):
-    session = quiz_sessions.get(user_id)
+async def finish_quiz(
+    chat_id,
+    user_id
+):
+
+    session = quiz_sessions.get(
+        user_id
+    )
+
     if not session:
         return
 
     score = session["score"]
-    level = session["level"]
-    block = session["block"]
-    total = len(session["questions"])
 
-    # Eski natijani olish
+    level = session["level"]
+
+    block = session["block"]
+
+    total = len(
+        session["questions"]
+    )
+
     old_result = db_execute(
-        "SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = %s AND block_number = %s",
-        (user_id, level, block),
+        """
+        SELECT best_score
+        FROM quiz_progress
+        WHERE user_id = %s
+        AND level = %s
+        AND block_number = %s
+        """,
+        (
+            user_id,
+            level,
+            block
+        ),
         fetchone=True
     )
-    old_score = old_result[0] if old_result else 0
 
-    # XP hisoblash
-    xp_gain = max(0, score - old_score)
-
-    # BAZA: Natijani saqlash
-    db_execute(
-        """
-        INSERT INTO quiz_progress (user_id, level, block_number, best_score)
-        VALUES (%s, %s, %s, %s)
-        ON CONFLICT (user_id, level, block_number)
-        DO UPDATE SET best_score = GREATEST(quiz_progress.best_score, EXCLUDED.best_score)
-        """,
-        (user_id, level, block, score)
+    old_score = (
+        old_result[0]
+        if old_result
+        else 0
     )
 
-    # BAZA: XP yangilash
+    xp_gain = max(
+        0,
+        score - old_score
+    )
+
+    db_execute(
+        """
+        INSERT INTO quiz_progress
+        (
+            user_id,
+            level,
+            block_number,
+            best_score
+        )
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            %s
+        )
+        ON CONFLICT
+        (
+            user_id,
+            level,
+            block_number
+        )
+        DO UPDATE SET
+        best_score =
+        GREATEST(
+            quiz_progress.best_score,
+            EXCLUDED.best_score
+        )
+        """,
+        (
+            user_id,
+            level,
+            block,
+            score
+        )
+    )
+
     if xp_gain > 0:
+
         db_execute(
             """
-            UPDATE users 
-            SET total_score = COALESCE(total_score, 0) + %s,
-                daily_score = COALESCE(daily_score, 0) + %s
+            UPDATE users
+            SET
+            total_score =
+            COALESCE(total_score,0)
+            + %s,
+
+            daily_score =
+            COALESCE(daily_score,0)
+            + %s
+
             WHERE user_id = %s
             """,
-            (xp_gain, xp_gain, user_id)
+            (
+                xp_gain,
+                xp_gain,
+                user_id
+            )
         )
 
-    # Darajani tekshirish
-    new_level = check_level_unlock(user_id, level)
-    unlock_text = f"\n\n🔓 Yangi daraja ochildi: {new_level}" if new_level else ""
+    new_level = check_level_unlock(
+        user_id,
+        level
+    )
 
-    # Xabar tuzish
-    result_text = f"🏁 Test tugadi!\n\n🏆 Natija: {score}/{total}"
-    result_text += f"\n⭐ XP qo'shildi: +{xp_gain}" if xp_gain > 0 else "\n♻️ Bu blokdan avvalroq yuqoriroq natija olgansiz."
-    result_text += unlock_text
+    unlock_text = ""
 
-    await bot.send_message(chat_id, result_text)
+    if new_level:
 
-    # Xotirani tozalash
-    quiz_running.discard(user_id)
-    quiz_sessions.pop(user_id, None)
-    
-    # Userga tegishli savollarni tozalash
+        unlock_text = (
+            f"\n\n"
+            f"🔓 Yangi daraja ochildi:\n"
+            f"🎯 {new_level}"
+        )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🔄 Qayta ishlash",
+                    callback_data=
+                    f"restartquiz:{level}:{block}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏠 Menyuga qaytish",
+                    callback_data=
+                    "cancelquiz"
+                )
+            ]
+        ]
+    )
+
+    await bot.send_message(
+
+        chat_id,
+
+        f"🏁 Test yakunlandi!\n\n"
+
+        f"🇩🇪 Daraja: {level}\n"
+
+        f"📚 Blok: {block}\n\n"
+
+        f"🏆 Natija: "
+        f"{score}/{total}\n"
+
+        f"⭐ XP: +{xp_gain}"
+
+        f"{unlock_text}",
+
+        reply_markup=keyboard
+    )
+
+    quiz_running.discard(
+        user_id
+    )
+
+    quiz_sessions.pop(
+        user_id,
+        None
+    )
+
     prefix = f"{user_id}_"
-    for key in [k for k in active_questions if k.startswith(prefix)]:
-        active_questions.pop(key, None)
-        answered_users.pop(key, None)
 
+    for key in [
+        k
+        for k
+        in active_questions
+        if k.startswith(prefix)
+    ]:
 
+        active_questions.pop(
+            key,
+            None
+        )
+
+        answered_users.pop(
+            key,
+            None
+        )
 # =========================================================
 # RESTART QUIZ
 # =========================================================
@@ -2941,10 +3162,22 @@ async def restart_quiz_handler(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "cancelquiz")
 async def cancel_quiz_handler(callback: CallbackQuery):
+
     try:
-        await callback.message.edit_text("❌ Qayta ishlash bekor qilindi.")
+        await callback.message.delete()
     except Exception:
         pass
+
+    menu = await build_level_menu(
+        callback.from_user.id
+    )
+
+    await bot.send_message(
+        callback.from_user.id,
+        "🎮 WortSpiel\n\nDarajani tanlang:",
+        reply_markup=menu
+    )
+
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("stopquiz:"))
@@ -2979,58 +3212,157 @@ rating_menu = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
-
 # =========================================================
 # RANKING MENU & LOGIC
 # =========================================================
 
 @dp.message(F.text == "🏆 Reytinglar")
 async def open_rating_menu(message: Message):
-    await message.answer("🏆 Reyting bo'limi", reply_markup=rating_menu)
 
-async def _get_ranking_text(query_type: str, message: Message):
-    col = "total_score" if query_type == "total" else "daily_score"
-    title = "🏆 UMUMIY REYTING" if query_type == "total" else "⚡ KUNLIK REYTING"
-    
-    # Ma'lumotlar bazasidan reytingni olish
+    await message.answer(
+        "🏆 Reyting bo'limi",
+        reply_markup=rating_menu
+    )
+
+
+async def _get_ranking_text(
+    query_type: str,
+    message: Message
+):
+
+    col = (
+        "total_score"
+        if query_type == "total"
+        else "daily_score"
+    )
+
+    title = (
+        "🏆 TOP 50 UMUMIY REYTING"
+        if query_type == "total"
+        else "⚡ TOP 50 KUNLIK REYTING"
+    )
+
     rankings = db_execute(
-        f"SELECT COALESCE(full_name, 'Unknown'), {col} FROM users WHERE {col} > 0 ORDER BY {col} DESC LIMIT 50",
+        f"""
+        SELECT
+            COALESCE(full_name,'Unknown'),
+            {col}
+        FROM users
+        WHERE {col} > 0
+        ORDER BY {col} DESC
+        LIMIT 50
+        """,
         fetchall=True
     )
 
     if not rankings:
-        return f"📭 {title} hali bo'sh.\n🎮 Birinchi bo'lib test ishlang!"
+
+        return (
+            f"📭 {title} hali bo'sh.\n\n"
+            f"🎮 Birinchi bo'lib test ishlang!"
+        )
 
     text = f"{title}\n\n"
-    medals = {1: "🥇", 2: "🥈", 3: "🥉"}
-    
-    # Reyting ro'yxatini shakllantirish
-    for i, (name, score) in enumerate(rankings, 1):
-        medal = medals.get(i, f"{i}.")
-        text += f"{medal} {name} — {score} XP\n"
-        if i >= 10: break # Telegram xabar uzunligi uchun xavfsizlik limiti
 
-    # Foydalanuvchining shaxsiy ballini tekshirish
-    my = db_execute(f"SELECT {col} FROM users WHERE user_id = %s", (message.from_user.id,), fetchone=True)
-    my_score = my[0] if my else 0
-    
-    if my_score <= 0:
-        text += "\n━━━━━━━━━━\n🎮 Siz hali test ishlamagansiz."
+    medals = {
+        1: "🥇",
+        2: "🥈",
+        3: "🥉"
+    }
+
+    for i, (name, score) in enumerate(
+        rankings,
+        start=1
+    ):
+
+        medal = medals.get(
+            i,
+            f"{i}."
+        )
+
+        text += (
+            f"{medal} "
+            f"{name} "
+            f"— "
+            f"{score} XP\n"
+        )
+
+    my_score_row = db_execute(
+        f"""
+        SELECT {col}
+        FROM users
+        WHERE user_id = %s
+        """,
+        (message.from_user.id,),
+        fetchone=True
+    )
+
+    my_score = (
+        my_score_row[0]
+        if my_score_row
+        else 0
+    )
+
+    my_rank = db_execute(
+        f"""
+        SELECT COUNT(*) + 1
+        FROM users
+        WHERE {col} > %s
+        """,
+        (my_score,),
+        fetchone=True
+    )
+
+    my_position = (
+        my_rank[0]
+        if my_rank
+        else "-"
+    )
+
+    text += "\n━━━━━━━━━━━━━━\n"
+
+    if my_score > 0:
+
+        text += (
+            f"👤 Sizning o'rningiz: "
+            f"#{my_position}\n"
+            f"⭐ Ballingiz: "
+            f"{my_score} XP"
+        )
+
+    else:
+
+        text += (
+            "🎮 Siz hali test ishlamagansiz."
+        )
+
     return text
+
 
 @dp.message(F.text == "🏆 Umumiy Reyting")
 async def total_ranking(message: Message):
-    text = await _get_ranking_text("total", message)
+
+    text = await _get_ranking_text(
+        "total",
+        message
+    )
+
     await message.answer(text)
+
 
 @dp.message(F.text == "⚡ Kunlik Reyting")
 async def daily_ranking(message: Message):
-    text = await _get_ranking_text("daily", message)
+
+    text = await _get_ranking_text(
+        "daily",
+        message
+    )
+
     await message.answer(text)
+
 # =========================================================
 # AUTO MEMORY CLEANUP
 # =========================================================
-
 async def cleanup_quiz_memory():
     while True:
         # Xotira toshib ketmasligi uchun xavfsiz tozalash
