@@ -349,6 +349,7 @@ def init_vizu_lesen_results_table():
     logger.info(
         "VIZU LESEN RESULTS READY ✅"
     )
+
     # INDEXES
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
@@ -2189,9 +2190,10 @@ async def start_lesen(
 
     row = db_execute(
         """
-        SELECT score
+        SELECT *
         FROM vizu_lesen_results
         WHERE user_id = %s
+        LIMIT 1
         """,
         (user_id,),
         fetchone=True
@@ -2201,7 +2203,7 @@ async def start_lesen(
 
         await callback.message.answer(
 
-            "❌ Siz Lesen testini allaqachon topshirgansiz.\n\n"
+            "❌ Siz Lesen bo'limini allaqachon yakunlagansiz.\n\n"
 
             "Mock Test faqat 1 marta ishlanadi."
 
@@ -2212,8 +2214,11 @@ async def start_lesen(
         return
 
     vizu_lesen_progress[user_id] = {
+
         "index": 0,
+
         "score": 0
+
     }
 
     await state.set_state(
