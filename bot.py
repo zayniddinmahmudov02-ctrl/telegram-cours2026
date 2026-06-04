@@ -56,7 +56,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
-ADMIN_CHANNEL = int(os.getenv("ADMIN_CHANNEL", "0"))
+ADMIN_CHANNEL_ID = int(os.getenv("ADMIN_CHANNEL", "0"))
 
 # Xavfsizlik tekshiruvi
 if not TOKEN:
@@ -961,18 +961,18 @@ async def send_admin_log(
     text
 ):
     logger.info(
-        f"ADMIN_CHANNEL = {ADMIN_CHANNEL}"
+        f"ADMIN_CHANNEL_ID = {ADMIN_CHANNEL_ID}"
     )
 
-    if not ADMIN_CHANNEL:
+    if not ADMIN_CHANNEL_ID:
         logger.warning(
-            "ADMIN_CHANNEL topilmadi!"
+            "ADMIN_CHANNEL_ID topilmadi!"
         )
         return
 
     try:
         await bot.send_message(
-            chat_id=ADMIN_CHANNEL,
+            chat_id=    ADMIN_CHANNEL_ID,
             text=text
         )
         logger.info(
@@ -992,12 +992,12 @@ async def send_admin_photo_log(
     caption
 ):
     logger.info(
-        f"ADMIN_CHANNEL = {ADMIN_CHANNEL}"
+        f"ADMIN_CHANNEL_ID = {ADMIN_CHANNEL_ID}"
     )
 
-    if not ADMIN_CHANNEL:
+    if not ADMIN_CHANNEL_ID:
         logger.warning(
-            "ADMIN_CHANNEL topilmadi!"
+            "ADMIN_CHANNEL_ID topilmadi!"
         )
         return
 
@@ -1011,7 +1011,7 @@ async def send_admin_photo_log(
 
     try:
         await bot.send_photo(
-            chat_id=ADMIN_CHANNEL,
+            chat_id=ADMIN_CHANNEL_ID,
             photo=FSInputFile(
                 photo_path
             ),
@@ -1779,46 +1779,75 @@ async def get_phone(message: Message, state: FSMContext):
 
 @dp.callback_query(F.data.startswith("approve:"))
 async def approve_user(callback: CallbackQuery):
+
     if callback.from_user.id != ADMIN_ID:
-        await callback.answer("❌ Sizda ruxsat yo'q!", show_alert=True)
+        await callback.answer(
+            "❌ Sizda ruxsat yo'q!",
+            show_alert=True
+        )
         return
 
     try:
-        user_id = int(callback.data.split(":")[1])
+        user_id = int(
+            callback.data.split(":")[1]
+        )
     except (IndexError, ValueError):
-        await callback.answer("❌ Xatolik yuz berdi.")
+        await callback.answer(
+            "❌ Xatolik yuz berdi."
+        )
         return
 
-    # Foydalanuvchini bazada tasdiqlash
-    db_execute("UPDATE users SET approved = 1 WHERE user_id = %s", (user_id,))
+    db_execute(
+        """
+        UPDATE users
+        SET approved = 1
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
 
     row = db_execute(
-        "SELECT course, full_name FROM users WHERE user_id = %s",
+        """
+        SELECT course, full_name
+        FROM users
+        WHERE user_id = %s
+        """,
         (user_id,),
         fetchone=True
     )
 
     if not row:
-        await callback.answer("❌ Foydalanuvchi topilmadi!")
+
+        await callback.answer(
+            "❌ Foydalanuvchi topilmadi!"
+        )
         return
 
-    course, full_name = row[0] or "Noma'lum kurs", row[1] or "Talaba"
+    course = row[0] or "Noma'lum kurs"
+    full_name = row[1] or "Talaba"
 
-    # Dinamik havolalarni olish (Lug'atdan kurs bo'yicha)
-    default_link = "https://t.me/vizu_deutsch"
-    course_link = COURSE_LINKS.get(course, default_link)
-    group_link = GROUP_LINKS.get(course, default_link)
+    course_link = COURSE_LINKS.get(course)
+    group_link = GROUP_LINKS.get(course)
 
-    # Foydalanuvchiga yuboriladigan tugmalar
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🎥 Kurs Kanali", url=course_link)],
-            [InlineKeyboardButton(text="💬 Savollar Guruhi", url=group_link)]
+            [
+                InlineKeyboardButton(
+                    text="🎥 Kurs Kanali",
+                    url=course_link
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💬 Savollar Guruhi",
+                    url=group_link
+                )
+            ]
         ]
     )
 
-    # Foydalanuvchiga xabar yuborish
     try:
+
         await bot.send_message(
             chat_id=user_id,
             text=(
@@ -1829,50 +1858,50 @@ async def approve_user(callback: CallbackQuery):
             ),
             reply_markup=keyboard
         )
+
     except Exception as e:
-        logger.error(f"Foydalanuvchiga tasdiqlash xabarini yuborishda xatolik: {e}")
 
-    # Admin panelidagi tugmalarni olib tashlash
-    await callback.message.edit_reply_markup(reply_markup=None)
-
-    # Admin uchun tasdiqlash habari
-    await callback.message.answer(
-        f"✅ Foydalanuvchi tasdiqlandi!\n\n👤 {full_name}\n📚 {course}"
-    )
-    await callback.answer("✅ Muvaffaqiyatli tasdiqlandi")
-
-
-@dp.callback_query(F.data.startswith("reject:"))
-async def reject_user(callback: CallbackQuery):
-    if callback.from_user.id != ADMIN_ID:
-        await callback.answer("❌ Ruxsat yo'q!", show_alert=True)
-        return
-
-    user_id = int(callback.data.split(":")[1])
-
-    row = db_execute("SELECT full_name FROM users WHERE user_id = %s", (user_id,), fetchone=True)
-    full_name = row[0] if row and row[0] else "Foydalanuvchi"
-
-    # Foydalanuvchiga rad etilgani haqida habar
-    try:
-        await bot.send_message(
-            chat_id=user_id,
-            text=(
-                "❌ Chekingiz tasdiqlanmadi.\n\n"
-                "Iltimos:\n"
-                "• chekni aniqroq yuboring\n"
-                "• yoki admin bilan bog'laning."
-            )
+        logger.error(
+            f"Foydalanuvchiga xabar yuborishda xatolik: {e}"
         )
+
+    # =====================================================
+    # SEND TO BUYERS CHANNEL
+    # =====================================================
+
+    try:
+
+        await bot.send_message(
+
+            -1003916093529,
+
+            f"💳 Yangi Xaridor\n\n"
+            f"👤 Ism: {full_name}\n"
+            f"🆔 ID: {user_id}\n"
+            f"📚 Kurs: {course}\n\n"
+            f"✅ To'lov tasdiqlandi"
+
+        )
+
     except Exception as e:
-        logger.error(f"Foydalanuvchiga rad xabarini yuborishda xatolik: {e}")
 
-    # Admin panelini yangilash
-    await callback.message.edit_reply_markup(reply_markup=None)
+        logger.error(
+            f"Kanalga yuborishda xatolik: {e}"
+        )
 
-    await callback.message.answer(f"❌ {full_name} rad qilindi.")
-    await callback.answer("❌ Rad qilindi")
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
 
+    await callback.message.answer(
+        f"✅ Foydalanuvchi tasdiqlandi!\n\n"
+        f"👤 {full_name}\n"
+        f"📚 {course}"
+    )
+
+    await callback.answer(
+        "✅ Muvaffaqiyatli tasdiqlandi"
+    )
 # =========================================================
 # SEND LESSON QUESTION
 # =========================================================
