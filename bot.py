@@ -407,6 +407,9 @@ dp = Dispatcher(storage=storage)
 # STATES GROUP
 # =========================================================
 
+class VizuHorenState(StatesGroup):
+    solving = State()
+
 class VizuLesenState(StatesGroup):
     solving = State()
 
@@ -2586,6 +2589,338 @@ async def lesen_answer(
         user_id
     )
 
+# =========================================================
+# OPEN HOREN
+# =========================================================
+
+@dp.message(F.text == "🎧 Hören")
+async def open_horen(message: Message):
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Testni Boshlash",
+                    callback_data="horen_start"
+                )
+            ]
+        ]
+    )
+
+    photo = FSInputFile(
+        "VIZU-A1/Hören-photo/hören-intro.png"
+    )
+
+    await message.answer_photo(
+        photo=photo,
+        caption=(
+            "🎧 A1 Hören\n\n"
+            "⏱ Davomiyligi: 20 daqiqa\n\n"
+            "🚀 Tayyor bo'lsangiz boshlang."
+        ),
+        reply_markup=keyboard
+    )
+# =========================================================
+# START HOREN
+# =========================================================
+
+@dp.callback_query(
+    F.data == "horen_start"
+)
+async def start_horen(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    user_id = callback.from_user.id
+
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_horen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    if row:
+
+        await callback.message.answer(
+
+            "❌ Siz Hören testini allaqachon topshirgansiz.\n\n"
+
+            "Mock Test faqat 1 marta ishlanadi."
+
+        )
+
+        await callback.answer()
+
+        return
+
+    vizu_horen_progress[user_id] = {
+
+        "index": 0,
+
+        "score": 0
+
+    }
+
+    await state.set_state(
+        VizuHorenState.solving
+    )
+
+    await send_horen_question(
+        callback.message,
+        user_id
+    )
+
+    await callback.answer()
+# =========================================================
+# HOREN AUDIO
+# =========================================================
+
+def get_horen_audio(task):
+
+    task = int(task)
+
+    if task <= 6:
+        return "VIZU-A1/Hören-audio/hören-teil1.m4a"
+
+    elif task <= 10:
+        return "VIZU-A1/Hören-audio/hören-teil2.m4a"
+
+    else:
+        return "VIZU-A1/Hören-audio/hören-teil3.m4a"
+
+# =========================================================
+# HOREN IMAGE
+# =========================================================
+
+def get_horen_image(task):
+
+    task = int(task)
+
+    if task <= 3:
+        return "VIZU-A1/Hören-photo/hören-teil1.png"
+
+    elif task <= 6:
+        return "VIZU-A1/Hören-photo/hören-teil1.2.png"
+
+    elif task <= 10:
+        return "VIZU-A1/Hören-photo/hören-teil2.png"
+
+    else:
+        return "VIZU-A1/Hören-photo/hören-teil3.png"
+
+# =========================================================
+# SEND HOREN QUESTION
+# =========================================================
+
+async def send_horen_question(
+    message,
+    user_id
+):
+
+    progress = vizu_horen_progress[user_id]
+
+    index = progress["index"]
+
+    if index >= len(vizu_horen_questions):
+
+        score = progress["score"]
+
+        percent = round(
+            score * 100 /
+            len(vizu_horen_questions)
+        )
+
+        db_execute(
+            """
+            INSERT INTO vizu_horen_results (
+                user_id,
+                score
+            )
+            VALUES (%s, %s)
+            ON CONFLICT (user_id)
+            DO UPDATE SET
+                score = EXCLUDED.score,
+                completed_at = NOW()
+            """,
+            (
+                user_id,
+                score
+            )
+        )
+
+        await message.answer(
+
+            f"🎧 HÖREN YAKUNLANDI\n\n"
+
+            f"✅ To'g'ri javoblar: {score}\n"
+
+            f"❌ Noto'g'ri javoblar: "
+            f"{len(vizu_horen_questions)-score}\n\n"
+
+            f"📊 Natija: {percent}%"
+
+        )
+
+        vizu_horen_progress.pop(
+            user_id,
+            None
+        )
+
+        return
+
+    row = vizu_horen_questions[index]
+
+    task = row["task"]
+
+    question = row["question"]
+
+    image_path = get_horen_image(task)
+
+    audio_path = get_horen_audio(task)
+
+    # =====================================
+    # TEIL 2 (RICHTIG/FALSCH)
+    # =====================================
+
+    if 7 <= int(task) <= 10:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="✅ Richtig",
+                        callback_data="horen:Richtig"
+                    ),
+                    InlineKeyboardButton(
+                        text="❌ Falsch",
+                        callback_data="horen:Falsch"
+                    )
+                ]
+            ]
+        )
+
+    # =====================================
+    # TEIL 1 + TEIL 3 (A/B/C)
+    # =====================================
+
+    else:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="A",
+                        callback_data="horen:a"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="B",
+                        callback_data="horen:b"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="C",
+                        callback_data="horen:c"
+                    )
+                ]
+            ]
+        )
+
+    await message.answer_audio(
+        audio=FSInputFile(audio_path)
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(image_path),
+
+        caption=(
+
+            f"🎧 A1 Hören\n\n"
+
+            f"📝 Savol {task}/15\n\n"
+
+            f"{question}"
+
+        ),
+
+        reply_markup=keyboard
+
+    )
+# =========================================================
+# HOREN ANSWER
+# =========================================================
+
+@dp.callback_query(
+    VizuHorenState.solving,
+    F.data.startswith("horen:")
+)
+async def horen_answer(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    user_id = callback.from_user.id
+
+    progress = vizu_horen_progress.get(
+        user_id
+    )
+
+    if not progress:
+
+        await callback.answer()
+
+        return
+
+    index = progress["index"]
+
+    row = vizu_horen_questions[index]
+
+    user_answer = callback.data.split(":")[1]
+
+    correct_answer = row["correct"]
+
+    if user_answer.lower() == correct_answer.lower():
+
+        progress["score"] += 1
+
+    progress["index"] += 1
+
+    await callback.answer()
+
+    await send_horen_question(
+        callback.message,
+        user_id
+    )
+# =========================================================
+# VIZU HOREN RESULTS
+# =========================================================
+
+def init_vizu_horen_results_table():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS vizu_horen_results (
+
+            user_id BIGINT PRIMARY KEY,
+
+            score INTEGER DEFAULT 0,
+
+            completed_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+
+    logger.info(
+        "VIZU HOREN RESULTS READY ✅"
+    )
+
 # =========================
 # LESSONS HOME
 # =========================
@@ -3305,6 +3640,8 @@ admin_sessions = {}
 last_daily_reset = None
 vizu_lesen_questions = []
 vizu_lesen_progress = {}
+vizu_horen_questions = []
+vizu_horen_progress = {}
 
 # =========================================================
 # LESSON QUIZ SYSTEM
@@ -3481,6 +3818,33 @@ def load_vizu_lesen():
         logger.error(
             f"VIZU Lesen load error: {e}"
         )
+# =========================================================
+# LOAD VIZU HOREN
+# =========================================================
+
+def load_vizu_horen():
+
+    csv_path = "VIZU-A1/A1-Hörenmock.csv"
+
+    if not os.path.exists(csv_path):
+        logger.warning("Hören csv topilmadi")
+        return
+
+    with open(
+        csv_path,
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            vizu_horen_questions.append(row)
+
+    logger.info(
+        f"VIZU Hören loaded: "
+        f"{len(vizu_horen_questions)} questions"
+    )
 
 # =========================================================
 # DAILY RESET
@@ -5139,8 +5503,10 @@ async def main():
         init_certificate_table() # Sertifikat jadvali qo'shildi
         load_artikel()
         load_vizu_lesen()
+        load_vizu_horen()
         init_vizu_attempts_table()
         init_vizu_lesen_results_table()
+        init_vizu_horen_results_table()
         load_all_quizzes()
         reset_daily_scores()
         await bot.delete_webhook(drop_pending_updates=True)

@@ -1,0 +1,16 @@
+task,question,correct,wrong1,wrong2
+1,Was kauft der Mann?,a,b,c
+2,Wie fährt die Frau zur Arbeit?,b,a,c
+3,Wie ist das Wetter heute?,b,a,c
+4,Wann kommt der Besuch?,c,a,b
+5,Was macht der Junge gern?,c,a,b
+6,Wo wartet die Frau?,a,b,c
+7,Der Zug fährt nach Hamburg.,Richtig,Falsch,-
+8,Die Telefonnummer ist 030 245678.,Falsch,Richtig,-
+9,Die Frau hat Bauchschmerzen.,Richtig,Falsch,-
+10,Der Mann kauft eine rote Jacke.,Richtig,Falsch,-
+11,Wie alt ist der Vater von Max?,b,a,c
+12,Wie ist die Mutter von Max?,b,a,c
+13,Was macht der Bruder Lukas gern?,b,a,c
+14,Wie alt ist die Schwester Mia?,a,b,c
+15,Was macht Max in seiner Freizeit?,c,a,b
