@@ -314,8 +314,6 @@ def run_web():
 # HELPER FUNCTIONS & STATES (Pylance xatolarini to'g'rilash uchun)
 # =========================================================
 
-class AdminStates(StatesGroup):
-    broadcast = State()
 
 def generate_certificate_id():
     # random funksiyasi import qilinganligiga ishonch hosil qiling
@@ -3771,12 +3769,11 @@ async def admin_statistics(message: Message):
     )
 
     await message.answer(text)
-
 # =========================================================
 # BROADCAST SEND
 # =========================================================
 
-@dp.message(AdminStates.broadcast)
+@dp.message(BroadcastState.waiting_for_message)
 async def process_broadcast(
     message: Message,
     state: FSMContext
@@ -3796,6 +3793,10 @@ async def process_broadcast(
     success = 0
     failed = 0
 
+    await message.answer(
+        "📤 Reklama yuborilmoqda..."
+    )
+
     for user in users:
 
         user_id = user[0]
@@ -3810,7 +3811,11 @@ async def process_broadcast(
 
             success += 1
 
-        except Exception:
+        except Exception as e:
+
+            logger.error(
+                f"Broadcast error {user_id}: {e}"
+            )
 
             failed += 1
 
