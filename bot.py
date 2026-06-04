@@ -1569,7 +1569,7 @@ async def xp_rating(message: Message):
 # =========================================================
 # VIZU CERTIFICATE HANDLERS
 # =========================================================
-    await message.answer("HANDLER ISHLADI")
+
 @dp.message(
     F.text.in_([
         "🏅 VIZU-A1",
@@ -1587,6 +1587,37 @@ async def vizu_certificate_level_handler(
         "🏅 ",
         ""
     )
+
+    # =====================================
+    # ADMIN BYPASS
+    # =====================================
+
+    if message.from_user.id == ADMIN_ID:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🚀 Mock Testni Boshlash",
+                        callback_data=f"startvizu:{certificate}"
+                    )
+                ]
+            ]
+        )
+
+        await message.answer(
+
+            f"🏅 {certificate}\n\n"
+
+            f"👨‍💼 Admin rejimi\n\n"
+
+            f"🚀 Mock Testni boshlashingiz mumkin.",
+
+            reply_markup=keyboard
+
+        )
+
+        return
 
     access_column = (
         certificate.lower()
@@ -1610,6 +1641,65 @@ async def vizu_certificate_level_handler(
         row[0] == 1
     )
 
+    # =====================================
+    # ACCESS BOR
+    # =====================================
+
+    if has_access:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🚀 Mock Testni Boshlash",
+                        callback_data=f"startvizu:{certificate}"
+                    )
+                ]
+            ]
+        )
+
+        await message.answer(
+
+            f"🏅 {certificate}\n\n"
+
+            f"✅ Sizda ruxsat mavjud.\n\n"
+
+            f"🚀 Mock Testni boshlashingiz mumkin.",
+
+            reply_markup=keyboard
+
+        )
+
+    else:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="💳 To'lov qilish",
+                        callback_data=f"vizupay:{certificate}"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="🎟 Golden Ticket",
+                        callback_data=f"vizuticket:{certificate}"
+                    )
+                ]
+            ]
+        )
+
+        await message.answer(
+
+            f"🏅 {certificate}\n\n"
+
+            f"❌ Sizda ruxsat mavjud emas.\n\n"
+
+            f"💳 To'lov qiling yoki Golden Ticket yuboring.",
+
+            reply_markup=keyboard
+
+        )
     # =====================================
     # ACCESS OPEN
     # =====================================
