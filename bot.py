@@ -470,6 +470,24 @@ vizu_certificate_menu_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 # =========================================================
+# OPEN VIZU CERTIFICATE MENU
+# =========================================================
+
+@dp.message(F.text == "🏅 VIZU-Zertifikat")
+async def open_vizu_certificate_menu(
+    message: Message
+):
+
+    await message.answer(
+
+        "🏅 VIZU Academy Zertifikate\n\n"
+
+        "Kerakli sertifikat darajasini tanlang:",
+
+        reply_markup=vizu_certificate_menu_keyboard
+
+    )
+# =========================================================
 # GLOBAL CONSTANTS
 # =========================================================
 LESSON_TASKS = ["Grammatik", "Lesen", "Hören", "Schreiben", "Sprechen"]
