@@ -2154,6 +2154,44 @@ async def start_vizu_test(
 
     level = callback.data.split(":")[1]
 
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📚 Lesen")],
+            [KeyboardButton(text="🎧 Hören")],
+            [KeyboardButton(text="✍️ Schreiben")],
+            [KeyboardButton(text="🗣 Sprechen")],
+            [KeyboardButton(text="🏅 Zertifikat")],
+            [KeyboardButton(text="⬅️ Orqaga")]
+        ],
+        resize_keyboard=True
+    )
+
+    # =====================================
+    # ADMIN UCHUN TO'LIQ BYPASS
+    # =====================================
+
+    if callback.from_user.id == ADMIN_ID:
+
+        await callback.message.answer(
+
+            f"🏅 {level} Mock Test\n\n"
+
+            f"👨‍💼 Admin rejimi\n\n"
+
+            f"📚 Kerakli bo'limni tanlang:",
+
+            reply_markup=keyboard
+
+        )
+
+        await callback.answer()
+
+        return
+
+    # =====================================
+    # USER CHEKLOVI
+    # =====================================
+
     row = db_execute(
         """
         SELECT attempted_at
@@ -2170,36 +2208,30 @@ async def start_vizu_test(
         fetchone=True
     )
 
-    # =====================================
-    # ADMIN UCHUN CHEKLOV YO'Q
-    # =====================================
+    if row:
 
-    if callback.from_user.id != ADMIN_ID:
+        last_attempt = row[0]
 
-        if row:
+        if datetime.now() - last_attempt < timedelta(days=30):
 
-            last_attempt = row[0]
+            next_date = (
+                last_attempt +
+                timedelta(days=30)
+            ).strftime("%d.%m.%Y")
 
-            if datetime.now() - last_attempt < timedelta(days=30):
+            await callback.message.answer(
 
-                next_date = (
-                    last_attempt +
-                    timedelta(days=30)
-                ).strftime("%d.%m.%Y")
+                f"❌ Siz {level} Mock Testni "
+                f"oxirgi 30 kun ichida topshirgansiz.\n\n"
 
-                await callback.message.answer(
+                f"📅 Keyingi urinish:\n"
+                f"{next_date}"
 
-                    f"❌ Siz {level} Mock Testni "
-                    f"oxirgi 30 kun ichida topshirgansiz.\n\n"
+            )
 
-                    f"📅 Keyingi urinish:\n"
-                    f"{next_date}"
+            await callback.answer()
 
-                )
-
-                await callback.answer()
-
-                return
+            return
 
     db_execute(
         """
@@ -2213,18 +2245,6 @@ async def start_vizu_test(
             callback.from_user.id,
             level
         )
-    )
-
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📚 Lesen")],
-            [KeyboardButton(text="🎧 Hören")],
-            [KeyboardButton(text="✍️ Schreiben")],
-            [KeyboardButton(text="🗣 Sprechen")],
-            [KeyboardButton(text="🏅 Zertifikat")],
-            [KeyboardButton(text="⬅️ Orqaga")]
-        ],
-        resize_keyboard=True
     )
 
     await callback.message.answer(
