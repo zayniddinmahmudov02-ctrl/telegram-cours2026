@@ -2141,7 +2141,103 @@ async def start_vizu_test(
     )
 
     await callback.answer()
+# =========================================================
+# START VIZU MOCK TEST
+# =========================================================
 
+@dp.callback_query(
+    F.data.startswith("startvizu:")
+)
+async def start_vizu_test(
+    callback: CallbackQuery
+):
+
+    level = callback.data.split(":")[1]
+
+    row = db_execute(
+        """
+        SELECT attempted_at
+        FROM vizu_attempts
+        WHERE user_id = %s
+        AND level = %s
+        ORDER BY attempted_at DESC
+        LIMIT 1
+        """,
+        (
+            callback.from_user.id,
+            level
+        ),
+        fetchone=True
+    )
+
+    # =====================================
+    # ADMIN UCHUN CHEKLOV YO'Q
+    # =====================================
+
+    if callback.from_user.id != ADMIN_ID:
+
+        if row:
+
+            last_attempt = row[0]
+
+            if datetime.now() - last_attempt < timedelta(days=30):
+
+                next_date = (
+                    last_attempt +
+                    timedelta(days=30)
+                ).strftime("%d.%m.%Y")
+
+                await callback.message.answer(
+
+                    f"❌ Siz {level} Mock Testni "
+                    f"oxirgi 30 kun ichida topshirgansiz.\n\n"
+
+                    f"📅 Keyingi urinish:\n"
+                    f"{next_date}"
+
+                )
+
+                await callback.answer()
+
+                return
+
+    db_execute(
+        """
+        INSERT INTO vizu_attempts (
+            user_id,
+            level
+        )
+        VALUES (%s, %s)
+        """,
+        (
+            callback.from_user.id,
+            level
+        )
+    )
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📚 Lesen")],
+            [KeyboardButton(text="🎧 Hören")],
+            [KeyboardButton(text="✍️ Schreiben")],
+            [KeyboardButton(text="🗣 Sprechen")],
+            [KeyboardButton(text="🏅 Zertifikat")],
+            [KeyboardButton(text="⬅️ Orqaga")]
+        ],
+        resize_keyboard=True
+    )
+
+    await callback.message.answer(
+
+        f"🏅 {level} Mock Test\n\n"
+
+        f"📚 Kerakli bo'limni tanlang:",
+
+        reply_markup=keyboard
+
+    )
+
+    await callback.answer()
 # =========================================================
 # OPEN LESEN
 # =========================================================
