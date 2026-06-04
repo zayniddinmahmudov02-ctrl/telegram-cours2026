@@ -186,11 +186,12 @@ def db_execute(query, params=(), fetchone=False, fetchall=False):
     except Exception as e:
         logger.error(f"DB execute error: {e}")
         return None
-
 # =========================================================
 # INIT TABLES
 # =========================================================
+
 def init_tables():
+
     # USERS TABLE
     db_execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -199,11 +200,19 @@ def init_tables():
             phone TEXT,
             course TEXT,
             approved INTEGER DEFAULT 0,
+
             score INTEGER DEFAULT 0,
             total_score INTEGER DEFAULT 0,
             daily_score INTEGER DEFAULT 0,
+
             unlocked_level TEXT DEFAULT 'A1',
-            last_daily_reset DATE
+            last_daily_reset DATE,
+
+            vizu_a1_access INTEGER DEFAULT 0,
+            vizu_a2_access INTEGER DEFAULT 0,
+            vizu_b1_access INTEGER DEFAULT 0,
+            vizu_b2_access INTEGER DEFAULT 0,
+            vizu_c1_access INTEGER DEFAULT 0
         )
     """)
 
@@ -283,6 +292,21 @@ def init_tables():
         )
     """)
 
+    # VIZU CERTIFICATE REQUESTS
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS vizu_requests (
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+            level TEXT NOT NULL,
+
+            status TEXT DEFAULT 'pending',
+
+            approved_by BIGINT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
     # INDEXES
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
@@ -342,6 +366,9 @@ dp = Dispatcher(storage=storage)
 class RegisterState(StatesGroup):
     waiting_for_name = State()
     waiting_for_phone = State()
+
+class VizuCertificateState(StatesGroup):
+    waiting_for_payment_check = State()
 
 class BroadcastState(StatesGroup):
     waiting_for_message = State()
@@ -1478,17 +1505,472 @@ async def vizu_certificate_level_handler(
         ""
     )
 
+    access_column = (
+        certificate.lower()
+        .replace("-", "_")
+        + "_access"
+    )
+
+    row = db_execute(
+        f"""
+        SELECT {access_column}
+        FROM users
+        WHERE user_id = %s
+        """,
+        (message.from_user.id,),
+        fetchone=True
+    )
+
+    has_access = (
+        row
+        and
+        row[0] == 1
+    )
+
+    # =====================================
+    # ACCESS OPEN
+    # =====================================
+
+    if has_access:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🚀 Mock Testni Boshlash",
+                        callback_data=f"startvizu:{certificate}"
+                    )
+                ]
+            ]
+        )
+
+        await message.answer(
+
+            f"🏅 {certificate}\n\n"
+
+            f"✅ Sizning to'lovingiz tasdiqlangan.\n\n"
+
+            f"🚀 Mock Testni boshlashingiz mumkin.",
+
+            reply_markup=keyboard
+
+        )
+
+        return
+
+    # =====================================
+    # PAYMENT MENU
+    # =====================================
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💳 To'lov Qilish",
+                    callback_data=f"vizupay:{certificate}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🎟 Golden Ticket",
+                    callback_data=f"vizuticket:{certificate}"
+                )
+            ]
+        ]
+    )
+
     await message.answer(
 
-        f"🏅 {certificate}\n\n"
+        f"🏅 {certificate} Mock Test\n\n"
 
-        f"🚧 Sertifikat tizimi hali ishga tushirilmagan.\n\n"
+        f"📚 Lesen\n"
+        f"🎧 Hören\n"
+        f"✍️ Schreiben\n"
+        f"🗣 Sprechen\n\n"
 
-        f"📢 Tizim ishga tushgach barcha foydalanuvchilarga "
-        f"xabar beriladi.\n\n"
+        f"💰 Imtihon narxi: 20 000 so'm\n\n"
 
-        f"⏳ Tez orada..."
+        f"🎟 Golden Ticket egalari "
+        f"imtihonni bepul topshirishlari mumkin.\n\n"
+
+        f"👇 Davom etish usulini tanlang:",
+
+        reply_markup=keyboard
     )
+# =========================================================
+# VIZU PAYMENT START
+# =========================================================
+
+@dp.callback_query(F.data.startswith("vizupay:"))
+async def vizu_payment_start(callback: CallbackQuery, state: FSMContext):
+
+    level = callback.data.split(":")[1]
+
+    await state.set_state(
+        VizuCertificateState.waiting_for_payment_check
+    )
+
+    await state.update_data(
+        certificate_level=level
+    )
+
+    await callback.message.answer(
+
+        f"🏅 {level}\n\n"
+
+        f"💰 To'lov summasi: 20 000 so'm\n\n"
+
+        f"📸 To'lov chekini yuboring."
+
+    )
+
+    await callback.answer()
+
+# =========================================================
+# VIZU GOLDEN TICKET
+# =========================================================
+
+@dp.callback_query(F.data.startswith("vizuticket:"))
+async def vizu_ticket_request(callback: CallbackQuery):
+
+    level = callback.data.split(":")[1]
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Golden Ticket Tasdiqlash",
+                    callback_data=f"approveticket:{callback.from_user.id}:{level}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="❌ Rad Etish",
+                    callback_data=f"rejectticket:{callback.from_user.id}:{level}"
+                )
+            ]
+        ]
+    )
+
+    await bot.send_message(
+
+        ADMIN_ID,
+
+        f"🎟 GOLDEN TICKET SO'ROVI\n\n"
+
+        f"👤 {callback.from_user.full_name}\n"
+
+        f"🆔 {callback.from_user.id}\n\n"
+
+        f"🏅 Sertifikat: {level}",
+
+        reply_markup=keyboard
+
+    )
+
+    await callback.message.answer(
+
+        "✅ Golden Ticket so'rovi adminga yuborildi.\n\n"
+
+        "⏳ Tasdiqlanishini kuting."
+
+    )
+
+    await callback.answer()
+# =========================================================
+# VIZU PAYMENT CHECK
+# =========================================================
+
+@dp.message(
+    VizuCertificateState.waiting_for_payment_check,
+    F.photo
+)
+async def vizu_payment_check(
+    message: Message,
+    state: FSMContext
+):
+
+    data = await state.get_data()
+
+    level = data.get(
+        "certificate_level"
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Tasdiqlash",
+                    callback_data=f"approvevizu:{message.from_user.id}:{level}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="❌ Rad etish",
+                    callback_data=f"rejectvizu:{message.from_user.id}:{level}"
+                )
+            ]
+        ]
+    )
+
+    await bot.send_photo(
+
+        ADMIN_ID,
+
+        photo=message.photo[-1].file_id,
+
+        caption=(
+
+            f"🏅 VIZU TO'LOV SO'ROVI\n\n"
+
+            f"👤 {message.from_user.full_name}\n"
+
+            f"🆔 {message.from_user.id}\n\n"
+
+            f"🏅 Sertifikat: {level}\n"
+
+            f"💰 20 000 so'm"
+
+        ),
+
+        reply_markup=keyboard
+
+    )
+
+    await message.answer(
+
+        "✅ Chek adminga yuborildi.\n\n"
+
+        "⏳ Tasdiqlanishini kuting."
+
+    )
+
+    await state.clear()
+# =========================================================
+# VIZU APPROVE / REJECT
+# =========================================================
+
+@dp.callback_query(F.data.startswith("approvevizu:"))
+async def approve_vizu_payment(callback: CallbackQuery):
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    _, user_id, level = callback.data.split(":")
+
+    user_id = int(user_id)
+
+    access_column = level.lower().replace("-", "_") + "_access"
+
+    db_execute(
+        f"""
+        UPDATE users
+        SET {access_column} = 1
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    db_execute(
+        """
+        INSERT INTO vizu_requests (
+            user_id,
+            level,
+            status,
+            approved_by
+        )
+        VALUES (%s, %s, 'approved', %s)
+        """,
+        (
+            user_id,
+            level,
+            callback.from_user.id
+        )
+    )
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"🎉 {level} Mock Test tasdiqlandi.\n\n"
+
+            f"✅ Endi siz imtihonni topshirishingiz mumkin."
+
+        )
+
+    except Exception:
+        pass
+
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
+
+    await callback.answer(
+        "✅ Tasdiqlandi"
+    )
+
+
+@dp.callback_query(F.data.startswith("rejectvizu:"))
+async def reject_vizu_payment(callback: CallbackQuery):
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    _, user_id, level = callback.data.split(":")
+
+    user_id = int(user_id)
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"❌ {level} uchun yuborilgan to'lov tasdiqlanmadi.\n\n"
+
+            f"Iltimos chekni qayta yuboring."
+
+        )
+
+    except Exception:
+        pass
+
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
+
+    await callback.answer(
+        "❌ Rad etildi"
+    )
+
+
+# =========================================================
+# GOLDEN TICKET APPROVE / REJECT
+# =========================================================
+
+@dp.callback_query(F.data.startswith("approveticket:"))
+async def approve_ticket(callback: CallbackQuery):
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    _, user_id, level = callback.data.split(":")
+
+    user_id = int(user_id)
+
+    access_column = level.lower().replace("-", "_") + "_access"
+
+    db_execute(
+        f"""
+        UPDATE users
+        SET {access_column} = 1
+        WHERE user_id = %s
+        """,
+        (user_id,)
+    )
+
+    db_execute(
+        """
+        INSERT INTO vizu_requests (
+            user_id,
+            level,
+            status,
+            approved_by
+        )
+        VALUES (%s, %s, 'approved', %s)
+        """,
+        (
+            user_id,
+            level,
+            callback.from_user.id
+        )
+    )
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"🎟 Golden Ticket tasdiqlandi.\n\n"
+
+            f"🏅 {level} Mock Test ochildi."
+
+        )
+
+    except Exception:
+        pass
+
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
+
+    await callback.answer(
+        "✅ Golden Ticket tasdiqlandi"
+    )
+
+
+@dp.callback_query(F.data.startswith("rejectticket:"))
+async def reject_ticket(callback: CallbackQuery):
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    _, user_id, level = callback.data.split(":")
+
+    user_id = int(user_id)
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"❌ {level} uchun Golden Ticket so'rovi rad etildi."
+
+        )
+
+    except Exception:
+        pass
+
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
+
+    await callback.answer(
+        "❌ So'rov rad etildi"
+    )
+# =========================================================
+# START VIZU MOCK TEST
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("startvizu:")
+)
+async def start_vizu_test(
+    callback: CallbackQuery
+):
+
+    level = callback.data.split(":")[1]
+
+    await callback.message.answer(
+
+        f"🏅 {level} Mock Test\n\n"
+
+        f"🚧 Mock Test moduli ishlab chiqilmoqda.\n\n"
+
+        f"📚 Lesen\n"
+        f"🎧 Hören\n"
+        f"✍️ Schreiben\n"
+        f"🗣 Sprechen\n\n"
+
+        f"⏳ Tez orada ishga tushadi."
+
+    )
+
+    await callback.answer()
 # =========================
 # LESSONS HOME
 # =========================
