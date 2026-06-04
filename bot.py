@@ -328,7 +328,27 @@ def init_vizu_attempts_table():
             created_at TIMESTAMP DEFAULT NOW()
         )
     """)
+# =========================================================
+# VIZU LESEN RESULTS TABLE
+# =========================================================
 
+def init_vizu_lesen_results_table():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS vizu_lesen_results (
+
+            user_id BIGINT PRIMARY KEY,
+
+            score INTEGER DEFAULT 0,
+
+            completed_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+
+    logger.info(
+        "VIZU LESEN RESULTS READY ✅"
+    )
     # INDEXES
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
@@ -2239,6 +2259,30 @@ async def start_lesen(
 
     user_id = callback.from_user.id
 
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_lesen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    if row:
+
+        await callback.message.answer(
+
+            "❌ Siz Lesen testini allaqachon topshirgansiz.\n\n"
+
+            "Mock Test faqat 1 marta ishlanadi."
+
+        )
+
+        await callback.answer()
+
+        return
+
     vizu_lesen_progress[user_id] = {
         "index": 0,
         "score": 0
@@ -2276,7 +2320,6 @@ def get_lesen_image(task):
 
     else:
         return "VIZU-A1/Lesen-photo/lesen-teil3.2.png"
-
 # =========================================================
 # SEND LESEN QUESTION
 # =========================================================
@@ -2299,12 +2342,32 @@ async def send_lesen_question(
             len(vizu_lesen_questions)
         )
 
+        db_execute(
+            """
+            INSERT INTO vizu_lesen_results (
+                user_id,
+                score
+            )
+            VALUES (%s, %s)
+            ON CONFLICT (user_id)
+            DO UPDATE SET
+                score = EXCLUDED.score,
+                completed_at = NOW()
+            """,
+            (
+                user_id,
+                score
+            )
+        )
+
         await message.answer(
 
             f"📚 LESEN YAKUNLANDI\n\n"
 
-            f"✅ To'g'ri: {score}\n"
-            f"❌ Noto'g'ri: {len(vizu_lesen_questions) - score}\n\n"
+            f"✅ To'g'ri javoblar: {score}\n"
+
+            f"❌ Noto'g'ri javoblar: "
+            f"{len(vizu_lesen_questions) - score}\n\n"
 
             f"📊 Natija: {percent}%"
 
@@ -2325,7 +2388,10 @@ async def send_lesen_question(
 
     image_path = get_lesen_image(task)
 
-    # Teil 2
+    # =====================================
+    # TEIL 2
+    # =====================================
+
     if 6 <= int(task) <= 11:
 
         options = [
@@ -2351,6 +2417,10 @@ async def send_lesen_question(
             ]
         )
 
+    # =====================================
+    # TEIL 1 + TEIL 3
+    # =====================================
+
     else:
 
         keyboard = InlineKeyboardMarkup(
@@ -2368,17 +2438,27 @@ async def send_lesen_question(
             ]
         )
 
-    photo = FSInputFile(image_path)
+    photo = FSInputFile(
+        image_path
+    )
 
     await message.answer_photo(
+
         photo=photo,
+
         caption=(
+
+            f"📚 A1 Lesen\n\n"
+
             f"📝 Savol {task}/15\n\n"
+
             f"{question}"
+
         ),
+
         reply_markup=keyboard
+
     )
-    
 # =========================================================
 # LESEN ANSWER
 # =========================================================
@@ -4976,6 +5056,8 @@ async def main():
         init_certificate_table() # Sertifikat jadvali qo'shildi
         load_artikel()
         load_vizu_lesen()
+        init_vizu_attempts_table()
+        init_vizu_lesen_results_table()
         load_all_quizzes()
         reset_daily_scores()
         await bot.delete_webhook(drop_pending_updates=True)
