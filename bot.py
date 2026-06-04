@@ -2121,6 +2121,7 @@ async def process_golden_ticket(
     )
 
     await state.clear()
+
 # =========================================================
 # START VIZU MOCK TEST
 # =========================================================
@@ -2195,7 +2196,7 @@ async def start_vizu_test(
             [KeyboardButton(text="🎧 Hören")],
             [KeyboardButton(text="✍️ Schreiben")],
             [KeyboardButton(text="🗣 Sprechen")],
-            [KeyboardButton(text="📊 Natijam")],
+            [KeyboardButton(text="📊 Zertifikat")],
             [KeyboardButton(text="⬅️ Orqaga")]
         ],
         resize_keyboard=True
@@ -2212,7 +2213,63 @@ async def start_vizu_test(
     )
 
     await callback.answer()
+# =========================================================
+# VIZU A1 OPEN
+# =========================================================
 
+@dp.message(F.text == "🏅 VIZU-A1")
+async def open_vizu_a1(
+    message: Message
+):
+
+    row = db_execute(
+        """
+        SELECT vizu_a1_access
+        FROM users
+        WHERE user_id = %s
+        """,
+        (message.from_user.id,),
+        fetchone=True
+    )
+
+    if not row or row[0] != 1:
+
+        await message.answer(
+
+            "🔒 Sizda VIZU-A1 Mock Test uchun ruxsat yo'q.\n\n"
+
+            "💳 To'lov qiling yoki\n"
+            "🎟 Golden Ticket yuboring."
+
+        )
+
+        return
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Mock Testni Boshlash",
+                    callback_data="startvizu:VIZU-A1"
+                )
+            ]
+        ]
+    )
+
+    await message.answer(
+
+        "🏅 VIZU-A1 Mock Test\n\n"
+
+        "📚 Lesen\n"
+        "🎧 Hören\n"
+        "✍️ Schreiben\n"
+        "🗣 Sprechen\n\n"
+
+        "🚀 Boshlash uchun tugmani bosing.",
+
+        reply_markup=keyboard
+
+    )
 # =========================================================
 # OPEN LESEN
 # =========================================================
