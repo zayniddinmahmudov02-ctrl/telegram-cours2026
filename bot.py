@@ -392,8 +392,6 @@ video_menu = ReplyKeyboardMarkup(
 admin_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📊 Statistika")],
-        [KeyboardButton(text="👥 Foydalanuvchilar")],
-        [KeyboardButton(text="💳 Xaridorlar")],
         [KeyboardButton(text="📢 Reklama Yuborish")],
         [KeyboardButton(text="📨 Shaxsiy Xabar")],
         [KeyboardButton(text="⬅️ Admin Chiqish")]
@@ -3774,107 +3772,12 @@ async def admin_statistics(message: Message):
 
     await message.answer(text)
 
-
 # =========================================================
-# USERS LIST
-# =========================================================
-
-@dp.message(F.text == "👥 Foydalanuvchilar")
-async def users_list(message: Message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    users = db_execute(
-        """
-        SELECT
-            user_id,
-            full_name,
-            course
-        FROM users
-        ORDER BY id DESC
-        LIMIT 10000
-        """,
-        fetchall=True
-    )
-
-    if not users:
-
-        await message.answer(
-            "❌ Foydalanuvchilar topilmadi."
-        )
-
-        return
-
-    text = "👥 OXIRGI 100 FOYDALANUVCHI\n\n"
-
-    for user in users:
-
-        text += (
-            f"🆔 {user[0]}\n"
-            f"👤 {user[1] or '-'}\n"
-            f"📚 {user[2] or '-'}\n\n"
-        )
-
-    await message.answer(
-        text[:4000]
-    )
-
-
-# =========================================================
-# BUYERS LIST
+# BROADCAST SEND
 # =========================================================
 
-@dp.message(F.text == "💳 Xaridorlar")
-async def buyers_list(message: Message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    buyers = db_execute(
-        """
-        SELECT
-            user_id,
-            full_name,
-            phone,
-            course
-        FROM users
-        WHERE approved = 1
-        ORDER BY id DESC
-        """,
-        fetchall=True
-    )
-
-    if not buyers:
-
-        await message.answer(
-            "❌ Xaridorlar topilmadi."
-        )
-
-        return
-
-    text = "💳 TASDIQLANGAN XARIDORLAR\n\n"
-
-    for user in buyers:
-
-        text += (
-            f"🆔 {user[0]}\n"
-            f"👤 {user[1] or '-'}\n"
-            f"📱 {user[2] or '-'}\n"
-            f"📚 {user[3] or '-'}\n\n"
-        )
-
-    await message.answer(
-        text[:4000]
-    )
-
-
-# =========================================================
-# START BROADCAST
-# =========================================================
-
-@dp.message(F.text == "📢 Reklama Yuborish")
-async def broadcast_start(
+@dp.message(AdminStates.broadcast)
+async def process_broadcast(
     message: Message,
     state: FSMContext
 ):
@@ -3882,16 +3785,46 @@ async def broadcast_start(
     if message.from_user.id != ADMIN_ID:
         return
 
-    await state.set_state(
-        AdminStates.broadcast
+    users = db_execute(
+        """
+        SELECT user_id
+        FROM users
+        """,
+        fetchall=True
     )
+
+    success = 0
+    failed = 0
+
+    for user in users:
+
+        user_id = user[0]
+
+        try:
+
+            await bot.copy_message(
+                chat_id=user_id,
+                from_chat_id=message.chat.id,
+                message_id=message.message_id
+            )
+
+            success += 1
+
+        except Exception:
+
+            failed += 1
 
     await message.answer(
-        "📢 Reklama xabarini yuboring.\n\n"
-        "Matn, rasm, video yoki forward bo'lishi mumkin."
+
+        f"📢 Reklama yakunlandi\n\n"
+
+        f"✅ Yuborildi: {success}\n"
+
+        f"❌ Yuborilmadi: {failed}"
+
     )
 
-
+    await state.clear()
 # =========================================================
 # PERSONAL MESSAGE START
 # =========================================================
