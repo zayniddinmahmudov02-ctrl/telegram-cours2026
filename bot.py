@@ -291,7 +291,29 @@ def init_tables():
             PRIMARY KEY (user_id, level, block_number)
         )
     """)
+# =========================================================
+# VIZU ATTEMPTS TABLE
+# =========================================================
 
+def init_vizu_attempts_table():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS vizu_attempts (
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+
+            level TEXT NOT NULL,
+
+            attempted_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+
+    logger.info(
+        "VIZU ATTEMPTS TABLE READY ✅"
+    )
     # VIZU CERTIFICATE REQUESTS
     db_execute("""
         CREATE TABLE IF NOT EXISTS vizu_requests (
@@ -1158,39 +1180,66 @@ def load_artikel():
 # ARTIKEL TOPISH
 # =========================
 
-_MENU_BUTTONS = {
-    "🎮 So'z O'yini",
-    "🎥 Video Kurslar",
-    "🎓 Darslarni O'rganish",
-    "📚 Ma'lumotlar",
-    "⬅️ Orqaga"
-}
+artikel_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="❌ Artikel Tizimini Yopish")]
+    ],
+    resize_keyboard=True
+)
+
 
 @dp.message(F.text == "📚 Artikel Topish")
 async def artikel_start(message: Message):
+
     artikel_users[message.from_user.id] = True
+
     await message.answer(
+
         "🔍 Nemischa so'z yuboring.\n\n"
         "Masalan:\n"
         "Haus\n"
         "Auto\n"
-        "Mann"
+        "Mann\n\n"
+        "❌ Chiqish uchun pastdagi tugmani bosing.",
+
+        reply_markup=artikel_menu
+
     )
+
+
+# =========================
+# CLOSE ARTIKEL MODE
+# =========================
+
+@dp.message(F.text == "❌ Artikel Tizimini Yopish")
+async def close_artikel_mode(message: Message):
+
+    artikel_users.pop(
+        message.from_user.id,
+        None
+    )
+
+    await message.answer(
+
+        "✅ Artikel tizimi yopildi.",
+
+        reply_markup=main_menu
+
+    )
+
+
+# =========================
+# ARTIKEL HANDLER
+# =========================
 
 @dp.message(
     F.text,
     lambda message: message.from_user.id in artikel_users
 )
 async def artikel_handler(message: Message):
-    user_id = message.from_user.id
-
-    # MENU BOSILSA REJIMDAN CHIQISH VA NATIVE HANDLERLARGA YO'L BERISH
-    if message.text in _MENU_BUTTONS:
-        artikel_users.pop(user_id, None)
-        # aiogram handler zanjirini davom ettirishi uchun xabarni qayta yuborish mantiqi
-        return
 
     word = message.text.lower().strip()
+
     result = artikel.get(word)
 
     await message.answer(
@@ -1199,7 +1248,25 @@ async def artikel_handler(message: Message):
             "Boshqa so'z yuboring."
         )
     )
+# =========================
+# CLOSE ARTIKEL MODE
+# =========================
 
+@dp.message(F.text == "❌ Artikel Tizimini Yopish")
+async def close_artikel_mode(message: Message):
+
+    artikel_users.pop(
+        message.from_user.id,
+        None
+    )
+
+    await message.answer(
+
+        "✅ Artikel tizimi yopildi.",
+
+        reply_markup=main_menu
+
+    )
 # =========================================================
 # START COMMAND HANDLER
 # =========================================================
@@ -2043,18 +2110,80 @@ async def start_vizu_test(
 
     level = callback.data.split(":")[1]
 
+    row = db_execute(
+        """
+        SELECT attempted_at
+        FROM vizu_attempts
+        WHERE user_id = %s
+        AND level = %s
+        ORDER BY attempted_at DESC
+        LIMIT 1
+        """,
+        (
+            callback.from_user.id,
+            level
+        ),
+        fetchone=True
+    )
+
+    if row:
+
+        last_attempt = row[0]
+
+        if datetime.now() - last_attempt < timedelta(days=30):
+
+            next_date = (
+                last_attempt +
+                timedelta(days=30)
+            ).strftime("%d.%m.%Y")
+
+            await callback.message.answer(
+
+                f"❌ Siz {level} Mock Testni "
+                f"oxirgi 30 kun ichida topshirgansiz.\n\n"
+
+                f"📅 Keyingi urinish:\n"
+                f"{next_date}"
+
+            )
+
+            await callback.answer()
+
+            return
+
+    db_execute(
+        """
+        INSERT INTO vizu_attempts (
+            user_id,
+            level
+        )
+        VALUES (%s, %s)
+        """,
+        (
+            callback.from_user.id,
+            level
+        )
+    )
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📚 Lesen")],
+            [KeyboardButton(text="🎧 Hören")],
+            [KeyboardButton(text="✍️ Schreiben")],
+            [KeyboardButton(text="🗣 Sprechen")],
+            [KeyboardButton(text="📊 Natijam")],
+            [KeyboardButton(text="⬅️ Orqaga")]
+        ],
+        resize_keyboard=True
+    )
+
     await callback.message.answer(
 
         f"🏅 {level} Mock Test\n\n"
 
-        f"🚧 Mock Test moduli ishlab chiqilmoqda.\n\n"
+        f"📚 Kerakli bo'limni tanlang:",
 
-        f"📚 Lesen\n"
-        f"🎧 Hören\n"
-        f"✍️ Schreiben\n"
-        f"🗣 Sprechen\n\n"
-
-        f"⏳ Tez orada ishga tushadi."
+        reply_markup=keyboard
 
     )
 
