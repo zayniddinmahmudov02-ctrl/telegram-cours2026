@@ -369,6 +369,7 @@ class RegisterState(StatesGroup):
 
 class VizuCertificateState(StatesGroup):
     waiting_for_payment_check = State()
+    waiting_for_ticket_photo = State()
 
 class BroadcastState(StatesGroup):
     waiting_for_message = State()
@@ -1620,7 +1621,10 @@ async def vizu_certificate_level_handler(
 # =========================================================
 
 @dp.callback_query(F.data.startswith("vizupay:"))
-async def vizu_payment_start(callback: CallbackQuery, state: FSMContext):
+async def vizu_payment_start(
+    callback: CallbackQuery,
+    state: FSMContext
+):
 
     level = callback.data.split(":")[1]
 
@@ -1634,63 +1638,60 @@ async def vizu_payment_start(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.answer(
 
-        f"🏅 {level}\n\n"
+        f"🏅 {level} Mock Test\n\n"
 
         f"💰 To'lov summasi: 20 000 so'm\n\n"
 
-        f"📸 To'lov chekini yuboring."
+        f"💳 Karta raqami:\n"
+        f"`9860 3501 4490 7192`\n\n"
+
+        f"👤 Karta egasi:\n"
+        f"Zayniddinkhuja Makhmudov\n\n"
+
+        f"✅ To'lovni amalga oshirgach,\n"
+        f"to'lov chekini rasm ko'rinishida yuboring.\n\n"
+
+        f"⏳ Chek admin tomonidan tekshiriladi.",
+
+        parse_mode="Markdown"
 
     )
 
     await callback.answer()
-
 # =========================================================
 # VIZU GOLDEN TICKET
 # =========================================================
 
 @dp.callback_query(F.data.startswith("vizuticket:"))
-async def vizu_ticket_request(callback: CallbackQuery):
+async def vizu_ticket_request(
+    callback: CallbackQuery,
+    state: FSMContext
+):
 
     level = callback.data.split(":")[1]
 
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="✅ Golden Ticket Tasdiqlash",
-                    callback_data=f"approveticket:{callback.from_user.id}:{level}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Rad Etish",
-                    callback_data=f"rejectticket:{callback.from_user.id}:{level}"
-                )
-            ]
-        ]
+    await state.update_data(
+        certificate_level=level
     )
 
-    await bot.send_message(
-
-        ADMIN_ID,
-
-        f"🎟 GOLDEN TICKET SO'ROVI\n\n"
-
-        f"👤 {callback.from_user.full_name}\n"
-
-        f"🆔 {callback.from_user.id}\n\n"
-
-        f"🏅 Sertifikat: {level}",
-
-        reply_markup=keyboard
-
+    await state.set_state(
+        VizuCertificateState.waiting_for_ticket_photo
     )
 
     await callback.message.answer(
 
-        "✅ Golden Ticket so'rovi adminga yuborildi.\n\n"
+        "🎟 Golden Ticket\n\n"
 
-        "⏳ Tasdiqlanishini kuting."
+        "Golden Ticket faqat oldin VIZU Academy video kurslarini "
+        "xarid qilgan talabalarga admin tomonidan beriladi.\n\n"
+
+        "Agar sizda Golden Ticket mavjud bo'lsa,\n"
+        "uning rasmini yuboring.\n\n"
+
+        "Agar sizda Golden Ticket bo'lmasa:\n"
+        "@Mahmudow_Z bilan bog'laning.\n\n"
+
+        "📸 Golden Ticket rasmini yuboring."
 
     )
 
@@ -1960,6 +1961,75 @@ async def reject_ticket(callback: CallbackQuery):
     await callback.answer(
         "❌ So'rov rad etildi"
     )
+# =========================================================
+# GOLDEN TICKET PHOTO
+# =========================================================
+
+@dp.message(
+    VizuCertificateState.waiting_for_ticket_photo,
+    F.photo
+)
+async def process_golden_ticket(
+    message: Message,
+    state: FSMContext
+):
+
+    data = await state.get_data()
+
+    level = data.get(
+        "certificate_level"
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Golden Ticket Tasdiqlash",
+                    callback_data=f"approveticket:{message.from_user.id}:{level}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="❌ Rad Etish",
+                    callback_data=f"rejectticket:{message.from_user.id}:{level}"
+                )
+            ]
+        ]
+    )
+
+    await bot.send_photo(
+
+        ADMIN_ID,
+
+        photo=message.photo[-1].file_id,
+
+        caption=(
+
+            f"🎟 GOLDEN TICKET SO'ROVI\n\n"
+
+            f"👤 Ism: {message.from_user.full_name}\n"
+
+            f"🆔 ID: {message.from_user.id}\n\n"
+
+            f"🏅 Sertifikat: {level}\n\n"
+
+            f"📸 Foydalanuvchi Golden Ticket rasmini yubordi."
+
+        ),
+
+        reply_markup=keyboard
+
+    )
+
+    await message.answer(
+
+        "✅ Golden Ticket adminga yuborildi.\n\n"
+
+        "⏳ Tasdiqlanishini kuting."
+
+    )
+
+    await state.clear()
 # =========================================================
 # START VIZU MOCK TEST
 # =========================================================
