@@ -1336,20 +1336,6 @@ async def cmd_start(message: Message):
         (user_id, full_name)
     )
 
-    # 3. Adminga yangi foydalanuvchi haqida xabar yuborish
-    if user_id != ADMIN_ID:
-        try:
-            username_str = f"@{message.from_user.username}" if message.from_user.username else "Mavjud emas"
-            await bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f"🔔 <b>Yangi foydalanuvchi kirdi!</b>\n\n"
-                     f"👤 Ism: {full_name}\n"
-                     f"🆔 ID: <code>{user_id}</code>\n"
-                     f"🌐 Username: {username_str}"
-            )
-        except Exception as e:
-            logger.error(f"Adminga start notification yuborishda xatolik: {e}")
-
     # 4. Asosiy menyuni foydalanuvchiga taqdim etish (Eski klaviatura avtomat yangilanadi)
     await message.answer(
         f"🇩🇪 <b>Nemis Tili (Vizu Deutsch) Botiga Xush Kelibsiz!</b>\n\n"
@@ -1955,17 +1941,6 @@ async def reject_vizu_payment(callback: CallbackQuery):
         "❌ Rad etildi"
     )
 
-row = db_execute(
-    """
-    SELECT vizu_a1_access
-    FROM users
-    WHERE user_id = %s
-    """,
-    (user_id,),
-    fetchone=True
-)
-
-print("AFTER APPROVE:", row)
 # =========================================================
 # GOLDEN TICKET APPROVE / REJECT
 # =========================================================
