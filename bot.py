@@ -93,27 +93,27 @@ COURSE_INFO = {
     "🇩🇪 A1": {
         "lessons": 14,
         "old_price": "200.000 so'm",
-        "price": "50.000 so'm"
+        "price": "100.000 so'm"
     },
     "🇩🇪 A2": {
         "lessons": 14,
         "old_price": "300.000 so'm",
-        "price": "100.000 so'm"
+        "price": "150.000 so'm"
     },
     "🇩🇪 B1": {
         "lessons": 20,
         "old_price": "400.000 so'm",
-        "price": "150.000 so'm"
+        "price": "200.000 so'm"
     },
     "🔥 A1-B1": {
         "lessons": 48,
         "old_price": "600.000 so'm",
-        "price": "200.000 so'm"
+        "price": "300.000 so'm"
     },
     "🔥 A1-C1": {
         "lessons": 100,
         "old_price": "1.200.000 so'm",
-        "price": "400.000 so'm"
+        "price": "600.000 so'm"
     },
 }
 
@@ -1208,7 +1208,7 @@ async def cmd_start(message: Message):
     await message.answer(
         f"🇩🇪 <b>Nemis Tili (Vizu Deutsch) Botiga Xush Kelibsiz!</b>\n\n"
         f"Platformamiz orqali nemis tilini vizual darslar va tizimli testlar orqali o'rganishingiz mumkin.\n\n"
-        f"🎉 <b>Hozirda barcha video kurslarimiz 70% CHEGIRMADA!</b>",
+        f"🎉 <b>Hozirda barcha video kurslarimiz 50% CHEGIRMADA!</b>",
         reply_markup=main_menu
     )
 
@@ -1563,7 +1563,7 @@ async def send_course_info(message: Message, course: str):
         return
 
     text = (
-        f"🎉 Hozirda barcha kurslar 70% CHEGIRMADA!\n\n"
+        f"🎉 Hozirda barcha kurslar 50% CHEGIRMADA!\n\n"
         f"{course} Video Darslari\n\n"
         f"📚 {info['lessons']} dars\n\n"
         f"❌ Eski narx: {info['old_price']}\n"
