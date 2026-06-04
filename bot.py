@@ -665,14 +665,6 @@ def build_level_lessons_menu(level, unlocked, exam_passed=False):
     if current_row:
         keyboard.append(current_row)
 
-    if unlocked > total_lessons:
-        exam_text = "🎓 Yakuniy Imtihon"
-    else:
-        exam_text = "🔒 Yakuniy Imtihon"
-    
-    keyboard.append([KeyboardButton(text=exam_text)])
-    
-    # Navigatsiya
     keyboard.append([KeyboardButton(text="⬅️ Orqaga")])
 
     return ReplyKeyboardMarkup(
@@ -788,7 +780,7 @@ async def lesson_handler(
             "❌ Darsni ochishda xatolik."
         )
 # =========================================================
-# FINISH GRAMMATIK QUIZ (YAKUNIY)
+# FINISH GRAMMATIK QUIZ 
 # =========================================================
 async def finish_grammatik_quiz(message: Message, user_id: int):
     # Sessiyani olish
