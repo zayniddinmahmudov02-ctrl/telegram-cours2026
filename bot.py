@@ -1370,20 +1370,6 @@ async def check_sub_callback(callback: CallbackQuery):
             await callback.message.delete()
         except Exception:
             pass
-
-        if user_id != ADMIN_ID:
-            try:
-                username_str = f"@{callback.from_user.username}" if callback.from_user.username else "Mavjud emas"
-                await bot.send_message(
-                    chat_id=ADMIN_ID,
-                    text=f"🔔 <b>Yangi foydalanuvchi (Obunadan o'tdi):</b>\n\n"
-                         f"👤 Ism: {full_name}\n"
-                         f"🆔 ID: <code>{user_id}</code>\n"
-                         f"🌐 Username: {username_str}"
-                )
-            except Exception as e:
-                logger.error(f"Adminga sub notification yuborishda xatolik: {e}")
-
         await callback.message.answer(
             "✅ <b>Obuna muvaffaqiyatli tasdiqlandi!</b>\n\n"
             "🇩🇪 Nemis tili darslari botiga xush kelibsiz. Quyidagi menyudan kerakli bo'limni tanlang:",
