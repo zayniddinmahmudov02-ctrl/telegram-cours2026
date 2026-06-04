@@ -1828,21 +1828,34 @@ async def vizu_payment_check(
     )
 
     await state.clear()
+
 # =========================================================
 # VIZU APPROVE / REJECT
 # =========================================================
 
-@dp.callback_query(F.data.startswith("approvevizu:"))
-async def approve_vizu_payment(callback: CallbackQuery):
+@dp.callback_query(
+    F.data.startswith(("approvevizu:", "approveticket:"))
+)
+async def approve_handler(
+    callback: CallbackQuery
+):
 
     if callback.from_user.id != ADMIN_ID:
         return
 
-    _, user_id, level = callback.data.split(":")
+    action, user_id, level = callback.data.split(":")
 
     user_id = int(user_id)
 
-    access_column = level.lower().replace("-", "_") + "_access"
+    is_ticket = (
+        action == "approveticket"
+    )
+
+    access_column = (
+        level.lower()
+        .replace("-", "_")
+        + "_access"
+    )
 
     db_execute(
         f"""
@@ -1870,16 +1883,38 @@ async def approve_vizu_payment(callback: CallbackQuery):
         )
     )
 
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Mock Testni Boshlash",
+                    callback_data=f"startvizu:{level}"
+                )
+            ]
+        ]
+    )
+
+    if is_ticket:
+
+        text = (
+            "🎟 Golden Ticket tasdiqlandi.\n\n"
+            f"🏅 {level} Mock Test ochildi.\n\n"
+            "🚀 Endi testni boshlashingiz mumkin."
+        )
+
+    else:
+
+        text = (
+            f"🎉 {level} Mock Test tasdiqlandi.\n\n"
+            "✅ Endi siz imtihonni topshirishingiz mumkin."
+        )
+
     try:
 
         await bot.send_message(
-
             user_id,
-
-            f"🎉 {level} Mock Test tasdiqlandi.\n\n"
-
-            f"✅ Endi siz imtihonni topshirishingiz mumkin."
-
+            text,
+            reply_markup=keyboard
         )
 
     except Exception:
@@ -1894,26 +1929,44 @@ async def approve_vizu_payment(callback: CallbackQuery):
     )
 
 
-@dp.callback_query(F.data.startswith("rejectvizu:"))
-async def reject_vizu_payment(callback: CallbackQuery):
+@dp.callback_query(
+    F.data.startswith(("rejectvizu:", "rejectticket:"))
+)
+async def reject_handler(
+    callback: CallbackQuery
+):
 
     if callback.from_user.id != ADMIN_ID:
         return
 
-    _, user_id, level = callback.data.split(":")
+    action, user_id, level = callback.data.split(":")
 
     user_id = int(user_id)
+
+    is_ticket = (
+        action == "approveticket"
+    )
+
+    if is_ticket:
+
+        text = (
+            f"❌ {level} uchun Golden Ticket "
+            f"so'rovi rad etildi."
+        )
+
+    else:
+
+        text = (
+            f"❌ {level} uchun yuborilgan "
+            f"to'lov tasdiqlanmadi.\n\n"
+            f"Iltimos chekni qayta yuboring."
+        )
 
     try:
 
         await bot.send_message(
-
             user_id,
-
-            f"❌ {level} uchun yuborilgan to'lov tasdiqlanmadi.\n\n"
-
-            f"Iltimos chekni qayta yuboring."
-
+            text
         )
 
     except Exception:
@@ -1925,103 +1978,6 @@ async def reject_vizu_payment(callback: CallbackQuery):
 
     await callback.answer(
         "❌ Rad etildi"
-    )
-
-# =========================================================
-# GOLDEN TICKET APPROVE / REJECT
-# =========================================================
-
-@dp.callback_query(F.data.startswith("approveticket:"))
-async def approve_ticket(callback: CallbackQuery):
-
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    _, user_id, level = callback.data.split(":")
-
-    user_id = int(user_id)
-
-    access_column = level.lower().replace("-", "_") + "_access"
-
-    db_execute(
-        f"""
-        UPDATE users
-        SET {access_column} = 1
-        WHERE user_id = %s
-        """,
-        (user_id,)
-    )
-
-    db_execute(
-        """
-        INSERT INTO vizu_requests (
-            user_id,
-            level,
-            status,
-            approved_by
-        )
-        VALUES (%s, %s, 'approved', %s)
-        """,
-        (
-            user_id,
-            level,
-            callback.from_user.id
-        )
-    )
-
-    try:
-
-        await bot.send_message(
-
-            user_id,
-
-            f"🎟 Golden Ticket tasdiqlandi.\n\n"
-
-            f"🏅 {level} Mock Test ochildi."
-
-        )
-
-    except Exception:
-        pass
-
-    await callback.message.edit_reply_markup(
-        reply_markup=None
-    )
-
-    await callback.answer(
-        "✅ Golden Ticket tasdiqlandi"
-    )
-
-
-@dp.callback_query(F.data.startswith("rejectticket:"))
-async def reject_ticket(callback: CallbackQuery):
-
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    _, user_id, level = callback.data.split(":")
-
-    user_id = int(user_id)
-
-    try:
-
-        await bot.send_message(
-
-            user_id,
-
-            f"❌ {level} uchun Golden Ticket so'rovi rad etildi."
-
-        )
-
-    except Exception:
-        pass
-
-    await callback.message.edit_reply_markup(
-        reply_markup=None
-    )
-
-    await callback.answer(
-        "❌ So'rov rad etildi"
     )
 # =========================================================
 # GOLDEN TICKET PHOTO
