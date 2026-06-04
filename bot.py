@@ -3790,12 +3790,22 @@ async def process_broadcast(
         fetchall=True
     )
 
-    success = 0
-    failed = 0
+    if not users:
 
-    await message.answer(
+        await message.answer(
+            "❌ Foydalanuvchilar topilmadi."
+        )
+
+        await state.clear()
+
+        return
+
+    status_msg = await message.answer(
         "📤 Reklama yuborilmoqda..."
     )
+
+    success = 0
+    failed = 0
 
     for user in users:
 
@@ -3811,6 +3821,8 @@ async def process_broadcast(
 
             success += 1
 
+            await asyncio.sleep(0.05)
+
         except Exception as e:
 
             logger.error(
@@ -3819,9 +3831,11 @@ async def process_broadcast(
 
             failed += 1
 
-    await message.answer(
+    await status_msg.edit_text(
 
         f"📢 Reklama yakunlandi\n\n"
+
+        f"👥 Jami foydalanuvchilar: {len(users)}\n"
 
         f"✅ Yuborildi: {success}\n"
 
@@ -3925,7 +3939,31 @@ async def personal_message_send(
 
     await state.clear()
 
+# =========================================================
+# START BROADCAST
+# =========================================================
 
+@dp.message(F.text == "📢 Reklama Yuborish")
+async def broadcast_start(
+    message: Message,
+    state: FSMContext
+):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    await state.set_state(
+        BroadcastState.waiting_for_message
+    )
+
+    await message.answer(
+
+        "📢 Reklama rejimi yoqildi.\n\n"
+
+        "Matn, rasm, video yoki forward "
+        "xabar yuboring."
+
+    )
 # =========================================================
 # ADMIN EXIT
 # =========================================================
