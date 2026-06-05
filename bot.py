@@ -2170,30 +2170,6 @@ async def start_vizu_test(
     )
 
     await callback.answer()
-# =========================================================
-# START VIZU MOCK TEST
-# =========================================================
-
-@dp.callback_query(
-    F.data.startswith("startvizu:")
-)
-async def start_vizu_test(
-    callback: CallbackQuery
-):
-
-    level = callback.data.split(":")[1]
-
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📚 Lesen")],
-            [KeyboardButton(text="🎧 Hören")],
-            [KeyboardButton(text="✍️ Schreiben")],
-            [KeyboardButton(text="🗣 Sprechen")],
-            [KeyboardButton(text="🏅 Zertifikat")],
-            [KeyboardButton(text="⬅️ Orqaga")]
-        ],
-        resize_keyboard=True
-    )
 
     # =====================================
     # ADMIN UCHUN TO'LIQ BYPASS
