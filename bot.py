@@ -474,6 +474,10 @@ class PersonalMessageState(StatesGroup):
 class ProfileState(StatesGroup):
     change_name = State()
 
+class SchreibenRateState(
+    StatesGroup
+):
+    waiting_score = State()
 # =========================================================
 # KEYBOARDS (REPLY MARKUPS)
 # =========================================================
@@ -2914,14 +2918,12 @@ async def schreiben_teil1(
         ),
 
         caption=(
-
             "✍️ Schreiben Teil 2\n\n"
-
             "📤 Javobingizni yuboring."
-
         )
 
     )
+
 # =========================================================
 # SCHREIBEN TEIL 2
 # =========================================================
@@ -2933,20 +2935,6 @@ async def schreiben_teil2(
     message: Message,
     state: FSMContext
 ):
-
-    data = await state.get_data()
-
-    admin_text = (
-
-        f"✍️ SCHREIBEN\n\n"
-
-        f"👤 {message.from_user.full_name}\n"
-
-        f"🆔 {message.from_user.id}\n\n"
-
-        f"📌 Teil 1 va Teil 2 topshirildi."
-
-    )
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -2960,21 +2948,206 @@ async def schreiben_teil2(
         ]
     )
 
-    await bot.send_message(
+    try:
 
-        ADMIN_CHANNEL_ID,
+        await bot.send_message(
 
-        admin_text,
+            ADMIN_CHANNEL_ID,
 
-        reply_markup=keyboard
+            f"✍️ SCHREIBEN\n\n"
 
-    )
+            f"👤 {message.from_user.full_name}\n"
+
+            f"🆔 {message.from_user.id}\n\n"
+
+            f"📌 Teil 1 va Teil 2 topshirildi.",
+
+            reply_markup=keyboard
+
+        )
+
+        # Agar foydalanuvchi rasm yuborgan bo'lsa
+
+        if message.photo:
+
+            await bot.forward_message(
+
+                chat_id=ADMIN_CHANNEL_ID,
+
+                from_chat_id=message.chat.id,
+
+                message_id=message.message_id
+
+            )
+
+        # Agar document yuborgan bo'lsa
+
+        elif message.document:
+
+            await bot.forward_message(
+
+                chat_id=ADMIN_CHANNEL_ID,
+
+                from_chat_id=message.chat.id,
+
+                message_id=message.message_id
+
+            )
+
+        # Agar oddiy matn yuborgan bo'lsa
+
+        elif message.text:
+
+            await bot.send_message(
+
+                ADMIN_CHANNEL_ID,
+
+                f"📝 JAVOB:\n\n{message.text}"
+
+            )
+
+    except Exception as e:
+
+        logger.error(
+            f"SCHREIBEN SEND ERROR: {e}"
+        )
+
+        await message.answer(
+            "❌ Admin kanalga yuborishda xatolik."
+        )
+
+        return
 
     await message.answer(
 
         "✅ Schreiben topshirildi.\n\n"
 
         "⏳ Admin tekshirgandan so'ng natija chiqariladi."
+
+    )
+
+    await state.clear()
+
+
+# =========================================================
+# SCHREIBEN RATE BUTTON
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("schreiben_rate:")
+)
+async def schreiben_rate_button(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    user_id = int(
+        callback.data.split(":")[1]
+    )
+
+    await state.update_data(
+        schreiben_user=user_id
+    )
+
+    await state.set_state(
+        SchreibenRateState.waiting_score
+    )
+
+    await callback.message.answer(
+
+        "✍️ Schreiben ballini kiriting.\n\n"
+
+        "Masalan:\n"
+        "18"
+
+    )
+
+    await callback.answer()
+# =========================================================
+# SCHREIBEN SAVE SCORE
+# =========================================================
+
+@dp.message(
+    SchreibenRateState.waiting_score
+)
+async def schreiben_save_score(
+    message: Message,
+    state: FSMContext
+):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    try:
+
+        score = int(
+            message.text
+        )
+
+    except:
+
+        await message.answer(
+            "❌ Faqat son yuboring."
+        )
+
+        return
+
+    data = await state.get_data()
+
+    user_id = data["schreiben_user"]
+
+    db_execute(
+        """
+        INSERT INTO
+        vizu_schreiben_results
+        (
+            user_id,
+            score
+        )
+        VALUES
+        (
+            %s,
+            %s
+        )
+        ON CONFLICT (user_id)
+        DO UPDATE SET
+            score = EXCLUDED.score,
+            completed_at = NOW()
+        """,
+        (
+            user_id,
+            score
+        )
+    )
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"✍️ Schreiben baholandi.\n\n"
+
+            f"🏅 Ball: {score}/25"
+
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"SCHREIBEN RESULT ERROR: {e}"
+        )
+
+    await message.answer(
+
+        f"✅ Ball saqlandi.\n\n"
+
+        f"👤 User: {user_id}\n"
+
+        f"🏅 Ball: {score}/25"
 
     )
 
