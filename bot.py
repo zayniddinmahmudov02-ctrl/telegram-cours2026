@@ -4081,6 +4081,133 @@ async def sprechen_teil32(
     )
 
     await state.clear()
+# =========================================================
+# SPRECHEN RATE BUTTON
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("sprechen_rate:")
+)
+async def sprechen_rate_button(
+    callback: CallbackQuery
+):
+
+    if callback.message.chat.id != ADMIN_CHANNEL_ID:
+        return
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    user_id = callback.data.split(":")[1]
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=str(i),
+                    callback_data=
+                    f"sprechen_score:{user_id}:{i}"
+                )
+                for i in range(10, 18)
+            ],
+            [
+                InlineKeyboardButton(
+                    text=str(i),
+                    callback_data=
+                    f"sprechen_score:{user_id}:{i}"
+                )
+                for i in range(18, 26)
+            ]
+        ]
+    )
+
+    await callback.message.answer(
+
+        "🏅 Sprechen ballini tanlang:",
+
+        reply_markup=keyboard
+
+    )
+
+    await callback.answer()
+# =========================================================
+# SPRECHEN SAVE SCORE
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("sprechen_score:")
+)
+async def sprechen_save_score(
+    callback: CallbackQuery
+):
+
+    if callback.message.chat.id != ADMIN_CHANNEL_ID:
+        return
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    _, user_id, score = callback.data.split(":")
+
+    user_id = int(user_id)
+
+    score = int(score)
+
+    db_execute(
+        """
+        INSERT INTO
+        vizu_sprechen_results
+        (
+            user_id,
+            score
+        )
+        VALUES
+        (
+            %s,
+            %s
+        )
+        ON CONFLICT (user_id)
+        DO UPDATE SET
+            score = EXCLUDED.score,
+            completed_at = NOW()
+        """,
+        (
+            user_id,
+            score
+        )
+    )
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"🗣 Sprechen baholandi.\n\n"
+
+            f"🏅 Ball: {score}/25"
+
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"SPRECHEN RESULT ERROR: {e}"
+        )
+
+    await callback.message.answer(
+
+        f"✅ Ball saqlandi.\n\n"
+
+        f"👤 User: {user_id}\n"
+
+        f"🏅 Ball: {score}/25"
+
+    )
+
+    await callback.answer(
+        "✅ Ball saqlandi"
+    )
 # =========================
 # LESSONS HOME
 # =========================
