@@ -2580,7 +2580,6 @@ async def lesen_answer(
         callback.message,
         user_id
     )
-
 # =========================================================
 # OPEN HOREN
 # =========================================================
@@ -2612,6 +2611,7 @@ async def open_horen(message: Message):
         ),
         reply_markup=keyboard
     )
+
 # =========================================================
 # START HOREN
 # =========================================================
@@ -2668,6 +2668,7 @@ async def start_horen(
     )
 
     await callback.answer()
+
 # =========================================================
 # HOREN AUDIO
 # =========================================================
@@ -2677,13 +2678,13 @@ def get_horen_audio(task):
     task = int(task)
 
     if task <= 6:
-        return "VIZU-A1/Hören-audio/hören-teil1.m4a"
+        return "VIZU-A1/Hören-audio/hören-teil1.mp3"
 
     elif task <= 10:
-        return "VIZU-A1/Hören-audio/hören-teil2.m4a"
+        return "VIZU-A1/Hören-audio/hören-teil2.mp3"
 
     else:
-        return "VIZU-A1/Hören-audio/hören-teil3.m4a"
+        return "VIZU-A1/Hören-audio/hören-teil3.mp3"
 
 # =========================================================
 # HOREN IMAGE
@@ -2846,6 +2847,7 @@ async def send_horen_question(
         reply_markup=keyboard
 
     )
+
 # =========================================================
 # HOREN ANSWER
 # =========================================================
@@ -2891,6 +2893,7 @@ async def horen_answer(
         callback.message,
         user_id
     )
+
 # =========================================================
 # VIZU HOREN RESULTS
 # =========================================================
@@ -2912,7 +2915,6 @@ def init_vizu_horen_results_table():
     logger.info(
         "VIZU HOREN RESULTS READY ✅"
     )
-
 # =========================
 # LESSONS HOME
 # =========================
