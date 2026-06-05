@@ -1689,7 +1689,23 @@ async def vizu_certificate_level_handler(
         "🏅 ",
         ""
     )
+    # =====================================
+    # ONLY A1 AVAILABLE
+    # =====================================
 
+    if certificate != "VIZU-A1":
+
+        await message.answer(
+
+            f"🚧 {certificate}\n\n"
+
+            f"⏳ Tez orada ishga tushiriladi.\n\n"
+
+            f"📚 Hozircha faqat VIZU-A1 mavjud."
+
+        )
+
+        return
     # =====================================
     # ADMIN BYPASS
     # =====================================
