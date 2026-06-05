@@ -2252,17 +2252,9 @@ async def start_vizu_test(
     callback: CallbackQuery
 ):
 
+    user_id = callback.from_user.id
+
     level = callback.data.split(":")[1]
-
-    # =====================================
-    # START 80 MIN TIMER
-    # =====================================
-
-    vizu_mock_deadlines[
-        callback.from_user.id
-    ] = datetime.now() + timedelta(
-        minutes=80
-    )
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
@@ -2276,37 +2268,24 @@ async def start_vizu_test(
         resize_keyboard=True
     )
 
-    await callback.message.answer(
-
-        f"🏅 {level} Mock Test\n\n"
-
-        f"⏱ Umumiy vaqt: 80 daqiqa\n\n"
-
-        f"📚 Lesen — 25 daqiqa\n"
-        f"🎧 Hören — 20 daqiqa\n"
-        f"✍️ Schreiben — 20 daqiqa\n"
-        f"🗣 Sprechen — 15 daqiqa\n\n"
-
-        f"⚠️ 80 daqiqa tugagach test avtomatik yopiladi.\n\n"
-
-        f"📚 Kerakli bo'limni tanlang:",
-
-        reply_markup=keyboard
-
-    )
-
-    await callback.answer()
     # =====================================
-    # ADMIN UCHUN TO'LIQ BYPASS
+    # ADMIN BYPASS
     # =====================================
 
-    if callback.from_user.id == ADMIN_ID:
+    if user_id == ADMIN_ID:
+
+        vizu_mock_deadlines[user_id] = (
+            datetime.now() +
+            timedelta(minutes=80)
+        )
 
         await callback.message.answer(
 
             f"🏅 {level} Mock Test\n\n"
 
             f"👨‍💼 Admin rejimi\n\n"
+
+            f"⏱ Umumiy vaqt: 80 daqiqa\n\n"
 
             f"📚 Kerakli bo'limni tanlang:",
 
@@ -2319,7 +2298,7 @@ async def start_vizu_test(
         return
 
     # =====================================
-    # USER CHEKLOVI
+    # 30 DAY LIMIT CHECK
     # =====================================
 
     row = db_execute(
@@ -2332,7 +2311,7 @@ async def start_vizu_test(
         LIMIT 1
         """,
         (
-            callback.from_user.id,
+            user_id,
             level
         ),
         fetchone=True
@@ -2342,12 +2321,17 @@ async def start_vizu_test(
 
         last_attempt = row[0]
 
-        if datetime.now() - last_attempt < timedelta(days=30):
+        if (
+            datetime.now() -
+            last_attempt
+        ) < timedelta(days=30):
 
             next_date = (
                 last_attempt +
                 timedelta(days=30)
-            ).strftime("%d.%m.%Y")
+            ).strftime(
+                "%d.%m.%Y"
+            )
 
             await callback.message.answer(
 
@@ -2355,6 +2339,7 @@ async def start_vizu_test(
                 f"oxirgi 30 kun ichida topshirgansiz.\n\n"
 
                 f"📅 Keyingi urinish:\n"
+
                 f"{next_date}"
 
             )
@@ -2363,23 +2348,63 @@ async def start_vizu_test(
 
             return
 
+    # =====================================
+    # SAVE ATTEMPT
+    # =====================================
+
     db_execute(
         """
-        INSERT INTO vizu_attempts (
+        INSERT INTO
+        vizu_attempts
+        (
             user_id,
             level
         )
-        VALUES (%s, %s)
+        VALUES
+        (
+            %s,
+            %s
+        )
         """,
         (
-            callback.from_user.id,
+            user_id,
             level
         )
     )
 
+    # =====================================
+    # START 80 MIN TIMER
+    # =====================================
+
+    vizu_mock_deadlines[user_id] = (
+
+        datetime.now()
+
+        +
+
+        timedelta(
+            minutes=80
+        )
+
+    )
+
+    # =====================================
+    # OPEN MOCK MENU
+    # =====================================
+
     await callback.message.answer(
 
         f"🏅 {level} Mock Test\n\n"
+
+        f"⏱ Umumiy vaqt: 80 daqiqa\n\n"
+
+        f"📚 Lesen — 25 daqiqa\n"
+        f"🎧 Hören — 20 daqiqa\n"
+        f"✍️ Schreiben — 20 daqiqa\n"
+        f"🗣 Sprechen — 15 daqiqa\n\n"
+
+        f"⚠️ 80 daqiqa tugagach "
+        f"test avtomatik yopiladi.\n\n"
 
         f"📚 Kerakli bo'limni tanlang:",
 
@@ -2388,36 +2413,6 @@ async def start_vizu_test(
     )
 
     await callback.answer()
-# =========================================================
-# CHECK MOCK TIMER
-# =========================================================
-
-async def check_mock_timer(
-    message
-):
-
-    deadline = vizu_mock_deadlines.get(
-        message.chat.id
-    )
-
-    if not deadline:
-        return True
-
-    if datetime.now() > deadline:
-
-        await message.answer(
-
-            "⏰ Mock Test vaqti tugadi.\n\n"
-
-            "❌ Test yakunlandi.\n\n"
-
-            "🏅 Natijalar saqlanadi."
-
-        )
-
-        return False
-
-    return True
 # =========================================================
 # OPEN LESEN
 # =========================================================
@@ -2446,14 +2441,14 @@ async def open_lesen(message: Message):
         score = row[0]
 
         percent = round(
-            score * 100 / 15
+            score * 100 / 25
         )
 
         await message.answer(
 
             f"📚 LESEN NATIJASI\n\n"
 
-            f"🏅 Ball: {score}/15\n"
+            f"🏅 Ball: {score}/25\n"
 
             f"📊 Natija: {percent}%\n\n"
 
@@ -2494,6 +2489,38 @@ async def open_lesen(message: Message):
         ),
         reply_markup=keyboard
     )
+# =========================================================
+# CHECK MOCK TIMER
+# =========================================================
+
+async def check_mock_timer(
+    message
+):
+
+    user_id = message.from_user.id
+
+    deadline = vizu_mock_deadlines.get(
+        user_id
+    )
+
+    if not deadline:
+        return True
+
+    if datetime.now() > deadline:
+
+        await message.answer(
+
+            "⏰ Mock Test vaqti tugadi.\n\n"
+
+            "❌ Test yakunlandi.\n\n"
+
+            "🏅 Natijalar saqlanadi."
+
+        )
+
+        return False
+
+    return True
 # =========================================================
 # START LESEN
 # =========================================================
@@ -2814,14 +2841,14 @@ async def open_horen(message: Message):
         score = row[0]
 
         percent = round(
-            score * 100 / 15
+            score * 100 / 25
         )
 
         await message.answer(
 
             f"🎧 HÖREN NATIJASI\n\n"
 
-            f"🏅 Ball: {score}/15\n"
+            f"🏅 Ball: {score}/25\n"
 
             f"📊 Natija: {percent}%\n\n"
 
