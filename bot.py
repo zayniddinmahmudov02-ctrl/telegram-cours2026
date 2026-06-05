@@ -2903,9 +2903,34 @@ async def schreiben_teil1(
     state: FSMContext
 ):
 
-    await state.update_data(
-        teil1_message_id=message.message_id
+    # Teil 1 javobini admin kanalga yuborish
+
+    await bot.send_message(
+
+        ADMIN_CHANNEL_ID,
+
+        f"✍️ SCHREIBEN TEIL 1\n\n"
+
+        f"👤 {message.from_user.full_name}\n"
+
+        f"🆔 {message.from_user.id}"
+
     )
+
+    if message.photo or message.document:
+
+        await bot.forward_message(
+            chat_id=ADMIN_CHANNEL_ID,
+            from_chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+
+    elif message.text:
+
+        await bot.send_message(
+            ADMIN_CHANNEL_ID,
+            f"📝 TEIL 1 JAVOB:\n\n{message.text}"
+        )
 
     await state.set_state(
         VizuSchreibenState.teil2
@@ -2923,7 +2948,6 @@ async def schreiben_teil1(
         )
 
     )
-
 # =========================================================
 # SCHREIBEN TEIL 2
 # =========================================================
@@ -3027,8 +3051,6 @@ async def schreiben_teil2(
     )
 
     await state.clear()
-
-
 # =========================================================
 # SCHREIBEN RATE BUTTON
 # =========================================================
@@ -3037,67 +3059,61 @@ async def schreiben_teil2(
     F.data.startswith("schreiben_rate:")
 )
 async def schreiben_rate_button(
-    callback: CallbackQuery,
-    state: FSMContext
+    callback: CallbackQuery
 ):
 
     if callback.from_user.id != ADMIN_ID:
         return
 
-    user_id = int(
-        callback.data.split(":")[1]
-    )
+    user_id = callback.data.split(":")[1]
 
-    await state.update_data(
-        schreiben_user=user_id
-    )
-
-    await state.set_state(
-        SchreibenRateState.waiting_score
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=str(i),
+                    callback_data=f"schreiben_score:{user_id}:{i}"
+                )
+                for i in range(10, 18)
+            ],
+            [
+                InlineKeyboardButton(
+                    text=str(i),
+                    callback_data=f"schreiben_score:{user_id}:{i}"
+                )
+                for i in range(18, 26)
+            ]
+        ]
     )
 
     await callback.message.answer(
 
-        "✍️ Schreiben ballini kiriting.\n\n"
+        "🏅 Schreiben ballini tanlang:",
 
-        "Masalan:\n"
-        "18"
+        reply_markup=keyboard
 
     )
 
     await callback.answer()
+
 # =========================================================
 # SCHREIBEN SAVE SCORE
 # =========================================================
 
-@dp.message(
-    SchreibenRateState.waiting_score
+@dp.callback_query(
+    F.data.startswith("schreiben_score:")
 )
 async def schreiben_save_score(
-    message: Message,
-    state: FSMContext
+    callback: CallbackQuery
 ):
 
-    if message.from_user.id != ADMIN_ID:
+    if callback.from_user.id != ADMIN_ID:
         return
 
-    try:
+    _, user_id, score = callback.data.split(":")
 
-        score = int(
-            message.text
-        )
-
-    except:
-
-        await message.answer(
-            "❌ Faqat son yuboring."
-        )
-
-        return
-
-    data = await state.get_data()
-
-    user_id = data["schreiben_user"]
+    user_id = int(user_id)
+    score = int(score)
 
     db_execute(
         """
@@ -3141,7 +3157,7 @@ async def schreiben_save_score(
             f"SCHREIBEN RESULT ERROR: {e}"
         )
 
-    await message.answer(
+    await callback.message.answer(
 
         f"✅ Ball saqlandi.\n\n"
 
@@ -3151,8 +3167,9 @@ async def schreiben_save_score(
 
     )
 
-    await state.clear()
-
+    await callback.answer(
+        "✅ Ball saqlandi"
+    )
 # =========================
 # LESSONS HOME
 # =========================
