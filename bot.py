@@ -4667,6 +4667,50 @@ def generate_vizu_certificate(
         )
 
         return None
+    
+    # =====================================
+    # SEND TO ADMIN CHANNEL
+    # =====================================
+
+    try:
+
+        await bot.send_photo(
+
+            chat_id=ADMIN_CHANNEL_ID,
+
+            photo=FSInputFile(
+                certificate_path
+            ),
+
+            caption=(
+
+                "🏅 YANGI SERTIFIKAT\n\n"
+
+                f"👤 {message.from_user.full_name}\n"
+
+                f"🆔 {user_id}\n\n"
+
+                f"📚 Lesen: {lesen_score}/25\n"
+
+                f"🎧 Hören: {horen_score}/25\n"
+
+                f"✍️ Schreiben: {schreiben_score}/25\n"
+
+                f"🗣 Sprechen: {sprechen_score}/25\n\n"
+
+                f"🏆 Gesamt: {total_score}/100\n\n"
+
+                f"{status}"
+
+            )
+
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"CERTIFICATE ADMIN SEND ERROR: {e}"
+        )   
 # =========================
 # LESSONS HOME
 # =========================
