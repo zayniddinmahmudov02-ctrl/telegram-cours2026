@@ -2588,16 +2588,13 @@ async def open_horen(message: Message):
         ),
         reply_markup=keyboard
     )
-# =========================================================
-# START HOREN — TUZATILGAN
-# =========================================================
+
 # =========================================================
 # OPEN HOREN
 # =========================================================
 
 @dp.message(F.text == "🎧 Hören")
 async def open_horen(message: Message):
-
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -2609,9 +2606,7 @@ async def open_horen(message: Message):
         ]
     )
 
-    photo = FSInputFile(
-        "VIZU-A1/Hören-photo/hören-intro.png"
-    )
+    photo = FSInputFile("VIZU-A1/Hören-photo/hören-intro.png")
 
     await message.answer_photo(
         photo=photo,
@@ -2627,383 +2622,135 @@ async def open_horen(message: Message):
 # START HOREN
 # =========================================================
 
-@dp.callback_query(
-    F.data == "horen_start",
-    StateFilter("*")
-)
-async def start_horen(
-    callback: CallbackQuery,
-    state: FSMContext
-):
+@dp.callback_query(F.data == "horen_start", StateFilter("*"))
+async def start_horen(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
-    current_state = await state.get_state()
-
-    logger.info(
-        f"HOREN_START: user={user_id}, "
-        f"state={current_state}"
-    )
-
-    # Har qanday eski state'ni tozala
     await state.clear()
 
-    # ===================================================
-    # ADMIN — har doim qayta boshlash mumkin
-    # ===================================================
     if user_id == ADMIN_ID:
-        logger.info(f"HOREN ADMIN BYPASS: user={user_id}")
-
-        # Eski progressni tozala
-        vizu_horen_progress[user_id] = {
-            "index": 0,
-            "score": 0
-        }
-
+        vizu_horen_progress[user_id] = {"index": 0, "score": 0}
         await state.set_state(VizuHorenState.solving)
-
         await callback.answer()
-
-        await send_horen_question(
-            callback.message,
-            user_id
-        )
+        await send_horen_question(callback.message, user_id)
         return
 
-    # ===================================================
-    # USER — oldin topshirganmi tekshir
-    # ===================================================
     row = db_execute(
-        """
-        SELECT score
-        FROM vizu_horen_results
-        WHERE user_id = %s
-        """,
+        "SELECT score FROM vizu_horen_results WHERE user_id = %s",
         (user_id,),
         fetchone=True
     )
 
-    logger.info(
-        f"HOREN DB CHECK: user={user_id}, row={row}"
-    )
-
     if row:
-        await callback.answer(
-            "❌ Test allaqachon topshirilgan!",
-            show_alert=True
-        )
-        await callback.message.answer(
-            "❌ Siz Hören testini allaqachon topshirgansiz.\n\n"
-            "Mock Test faqat 1 marta ishlanadi."
-        )
+        await callback.answer("❌ Test allaqachon topshirilgan!", show_alert=True)
         return
 
-    # ===================================================
-    # YANGI TEST BOSHLASH
-    # ===================================================
-    vizu_horen_progress[user_id] = {
-        "index": 0,
-        "score": 0
-    }
-
+    vizu_horen_progress[user_id] = {"index": 0, "score": 0}
     await state.set_state(VizuHorenState.solving)
-
-    logger.info(
-        f"HOREN PROGRESS SET: user={user_id}, "
-        f"questions={len(vizu_horen_questions)}"
-    )
-
     await callback.answer()
-
-    await send_horen_question(
-        callback.message,
-        user_id
-    )
+    await send_horen_question(callback.message, user_id)
 
 # =========================================================
-# HOREN AUDIO
+# HOREN AUDIO & IMAGE HELPERS
 # =========================================================
 
 def get_horen_audio(task):
-
     task = int(task)
-
-    if task <= 6:
-        return "VIZU-A1/Hören-audio/hören-teil1.mp3"
-
-    elif task <= 10:
-        return "VIZU-A1/Hören-audio/hören-teil2.mp3"
-
-    else:
-        return "VIZU-A1/Hören-audio/hören-teil3.mp3"
-
-# =========================================================
-# HOREN IMAGE
-# =========================================================
+    if task <= 6: return "VIZU-A1/Hören-audio/hören-teil1.mp3"
+    elif task <= 10: return "VIZU-A1/Hören-audio/hören-teil2.mp3"
+    else: return "VIZU-A1/Hören-audio/hören-teil3.mp3"
 
 def get_horen_image(task):
-
     task = int(task)
-
-    if task <= 3:
-        return "VIZU-A1/Hören-photo/hören-teil1.png"
-
-    elif task <= 6:
-        return "VIZU-A1/Hören-photo/hören-teil1.2.png"
-
-    elif task <= 10:
-        return "VIZU-A1/Hören-photo/hören-teil2.png"
-
-    else:
-        return "VIZU-A1/Hören-photo/hören-teil3.png"
+    if task <= 3: return "VIZU-A1/Hören-photo/hören-teil1.png"
+    elif task <= 6: return "VIZU-A1/Hören-photo/hören-teil1.2.png"
+    elif task <= 10: return "VIZU-A1/Hören-photo/hören-teil2.png"
+    else: return "VIZU-A1/Hören-photo/hören-teil3.png"
 
 # =========================================================
 # SEND HOREN QUESTION
 # =========================================================
 
-async def send_horen_question(
-    message,
-    user_id
-):
-    # Progress tekshir
+async def send_horen_question(message, user_id):
     progress = vizu_horen_progress.get(user_id)
-
-    if not progress:
-        logger.error(
-            f"HOREN PROGRESS NOT FOUND: user={user_id}"
-        )
-        await message.answer(
-            "❌ Xatolik yuz berdi. Qaytadan boshlang."
-        )
-        return
+    if not progress: return
 
     index = progress["index"]
+    total_questions = len(vizu_horen_questions)
 
-    logger.info(
-        f"HOREN QUESTION: user={user_id}, "
-        f"index={index}, "
-        f"total={len(vizu_horen_questions)}"
-    )
-
-    # ===================================================
-    # TEST TUGADI
-    # ===================================================
-    if index >= len(vizu_horen_questions):
-
+    if index >= total_questions:
         score = progress["score"]
-        total = len(vizu_horen_questions)
-        percent = round(score * 100 / total) if total > 0 else 0
-
-        logger.info(
-            f"HOREN FINISHED: user={user_id}, "
-            f"score={score}/{total}"
-        )
-
+        percent = round(score * 100 / total_questions) if total_questions > 0 else 0
+        
         db_execute(
-            """
-            INSERT INTO vizu_horen_results (
-                user_id,
-                score
-            )
-            VALUES (%s, %s)
-            ON CONFLICT (user_id)
-            DO UPDATE SET
-                score = EXCLUDED.score,
-                completed_at = NOW()
-            """,
+            """INSERT INTO vizu_horen_results (user_id, score) VALUES (%s, %s)
+               ON CONFLICT (user_id) DO UPDATE SET score = EXCLUDED.score, completed_at = NOW()""",
             (user_id, score)
         )
 
         await message.answer(
-            f"🎧 HÖREN YAKUNLANDI\n\n"
-            f"✅ To'g'ri javoblar: {score}\n"
-            f"❌ Noto'g'ri javoblar: {total - score}\n\n"
-            f"📊 Natija: {percent}%"
+            f"🎧 HÖREN YAKUNLANDI\n\n✅ To'g'ri: {score}\n❌ Noto'g'ri: {total_questions - score}\n\n📊 Natija: {percent}%"
         )
-
         vizu_horen_progress.pop(user_id, None)
         return
 
-    # ===================================================
-    # SAVOL YUBORISH
-    # ===================================================
     row = vizu_horen_questions[index]
-
     task = row["task"]
     question = row["question"]
 
-    image_path = get_horen_image(task)
-    audio_path = get_horen_audio(task)
+    # Audio handling
+    try:
+        msg_id = 6 if int(task) <= 6 else (7 if int(task) <= 10 else 8)
+        await bot.copy_message(chat_id=message.chat.id, from_chat_id=-1003916093529, message_id=msg_id)
+    except Exception as e:
+        logger.error(f"Audio error: {e}")
 
-    logger.info(
-        f"HOREN SENDING: task={task}, "
-        f"audio={audio_path}, "
-        f"image={image_path}"
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Richtig", callback_data="horen:Richtig"), 
+         InlineKeyboardButton(text="❌ Falsch", callback_data="horen:Falsch")]
+    ]) if 7 <= int(task) <= 10 else InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="A", callback_data="horen:a")],
+        [InlineKeyboardButton(text="B", callback_data="horen:b")],
+        [InlineKeyboardButton(text="C", callback_data="horen:c")]
+    ])
+
+    await message.answer_photo(
+        photo=FSInputFile(get_horen_image(task)),
+        caption=f"🎧 A1 Hören\n\n📝 Savol {task}/{total_questions}\n\n{question}",
+        reply_markup=keyboard
     )
-
-    # Audio fayl mavjudligini tekshir
-    if not os.path.exists(audio_path):
-        logger.error(f"AUDIO NOT FOUND: {audio_path}")
-        await message.answer(
-            f"❌ Audio fayl topilmadi: {audio_path}"
-        )
-        return
-
-    # Rasm fayl mavjudligini tekshir
-    if not os.path.exists(image_path):
-        logger.error(f"IMAGE NOT FOUND: {image_path}")
-        await message.answer(
-            f"❌ Rasm fayl topilmadi: {image_path}"
-        )
-        return
-
-    # ===================================================
-    # TEIL 2 (task 7-10): RICHTIG / FALSCH
-    # ===================================================
-    if 7 <= int(task) <= 10:
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="✅ Richtig",
-                        callback_data="horen:Richtig"
-                    ),
-                    InlineKeyboardButton(
-                        text="❌ Falsch",
-                        callback_data="horen:Falsch"
-                    )
-                ]
-            ]
-        )
-
-    # ===================================================
-    # TEIL 1 + TEIL 3 (task 1-6, 11-15): A / B / C
-    # ===================================================
-    else:
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="A",
-                        callback_data="horen:a"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="B",
-                        callback_data="horen:b"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="C",
-                        callback_data="horen:c"
-                    )
-                ]
-            ]
-        )
-
-    # ===================================================
-    # AUDIO YUBORISH
-    # ===================================================
-    try:
-        await message.answer_document(
-            document=FSInputFile(audio_path),
-            caption="🎧 Audio"
-        )
-    except Exception as e:
-        logger.error(f"AUDIO SEND ERROR: {e}")
-
-    # ===================================================
-    # RASM + SAVOL YUBORISH
-    # ===================================================
-    try:
-        await message.answer_photo(
-            photo=FSInputFile(image_path),
-            caption=(
-                f"🎧 A1 Hören\n\n"
-                f"📝 Savol {task}/15\n\n"
-                f"{question}"
-            ),
-            reply_markup=keyboard
-        )
-    except Exception as e:
-        logger.error(f"PHOTO SEND ERROR: {e}")
-        await message.answer(
-            f"🎧 A1 Hören\n\n"
-            f"📝 Savol {task}/15\n\n"
-            f"{question}",
-            reply_markup=keyboard
-        )
 
 # =========================================================
 # HOREN ANSWER
 # =========================================================
 
-@dp.callback_query(
-    VizuHorenState.solving,
-    F.data.startswith("horen:")
-)
-async def horen_answer(
-    callback: CallbackQuery,
-    state: FSMContext
-):
+@dp.callback_query(VizuHorenState.solving, F.data.startswith("horen:"))
+async def horen_answer(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
-
     progress = vizu_horen_progress.get(user_id)
 
-    logger.info(
-        f"HOREN ANSWER: user={user_id}, "
-        f"data={callback.data}, "
-        f"progress={progress}"
-    )
-
-    if not progress:
-        logger.error(
-            f"HOREN PROGRESS MISSING: user={user_id}"
-        )
-        await callback.answer(
-            "❌ Test seansi topilmadi.",
-            show_alert=True
-        )
-        return
+    if not progress: return
 
     index = progress["index"]
     row = vizu_horen_questions[index]
-
+    
     user_answer = callback.data.split(":")[1]
-    correct_answer = row["correct"]
-
-    is_correct = (
-        user_answer.lower() == correct_answer.lower()
-    )
-
-    if is_correct:
+    if user_answer.lower() == row["correct"].lower():
         progress["score"] += 1
-        await callback.answer("✅ To'g'ri!")
+        await callback.answer("✅")
     else:
-        await callback.answer(
-            f"❌ Noto'g'ri! To'g'ri: {correct_answer.upper()}",
-            show_alert=True
-        )
+        await callback.answer(f"❌ {row['correct'].upper()}", show_alert=True)
 
     progress["index"] += 1
-
-    # Test tugagan bo'lsa state tozala
     if progress["index"] >= len(vizu_horen_questions):
         await state.clear()
 
-    await send_horen_question(
-        callback.message,
-        user_id
-    )
+    await send_horen_question(callback.message, user_id)
 
 # =========================================================
 # VIZU HOREN RESULTS TABLE
 # =========================================================
 
 def init_vizu_horen_results_table():
-
     db_execute("""
         CREATE TABLE IF NOT EXISTS vizu_horen_results (
             user_id BIGINT PRIMARY KEY,
@@ -3011,8 +2758,8 @@ def init_vizu_horen_results_table():
             completed_at TIMESTAMP DEFAULT NOW()
         )
     """)
-
     logger.info("VIZU HOREN RESULTS READY ✅")
+
 # =========================
 # LESSONS HOME
 # =========================
