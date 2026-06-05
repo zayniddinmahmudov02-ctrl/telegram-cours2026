@@ -385,7 +385,28 @@ def init_vizu_schreiben_results_table():
     logger.info(
         "VIZU SCHREIBEN RESULTS READY ✅"
     )
+# =========================================================
+# VIZU SPRECHEN RESULTS TABLE
+# =========================================================
 
+def init_vizu_sprechen_results_table():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS
+        vizu_sprechen_results (
+
+            user_id BIGINT PRIMARY KEY,
+
+            score INTEGER DEFAULT 0,
+
+            completed_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+
+    logger.info(
+        "VIZU SPRECHEN RESULTS READY ✅"
+    )
     # INDEXES
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
@@ -478,6 +499,23 @@ class SchreibenRateState(
     StatesGroup
 ):
     waiting_score = State()
+# =========================================================
+# VIZU SPRECHEN STATE
+# =========================================================
+
+class VizuSprechenState(
+    StatesGroup
+):
+
+    teil1 = State()
+
+    teil21 = State()
+
+    teil22 = State()
+
+    teil31 = State()
+
+    teil32 = State()
 # =========================================================
 # KEYBOARDS (REPLY MARKUPS)
 # =========================================================
@@ -2317,6 +2355,50 @@ async def start_vizu_test(
 @dp.message(F.text == "📚 Lesen")
 async def open_lesen(message: Message):
 
+    user_id = message.from_user.id
+
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_lesen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    # =====================================
+    # AGAR TOPSHIRILGAN BO'LSA
+    # =====================================
+
+    if row:
+
+        score = row[0]
+
+        percent = round(
+            score * 100 / 15
+        )
+
+        await message.answer(
+
+            f"📚 LESEN NATIJASI\n\n"
+
+            f"🏅 Ball: {score}/15\n"
+
+            f"📊 Natija: {percent}%\n\n"
+
+            f"✅ Lesen yakunlangan.\n"
+
+            f"❌ Qayta ishlash mumkin emas."
+
+        )
+
+        return
+
+    # =====================================
+    # AGAR TOPSHIRILMAGAN BO'LSA
+    # =====================================
+
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -2603,13 +2685,56 @@ async def lesen_answer(
         callback.message,
         user_id
     )
-
 # =========================================================
 # OPEN HOREN
 # =========================================================
 
 @dp.message(F.text == "🎧 Hören")
 async def open_horen(message: Message):
+
+    user_id = message.from_user.id
+
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_horen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    # =====================================
+    # AGAR TOPSHIRILGAN BO'LSA
+    # =====================================
+
+    if row:
+
+        score = row[0]
+
+        percent = round(
+            score * 100 / 15
+        )
+
+        await message.answer(
+
+            f"🎧 HÖREN NATIJASI\n\n"
+
+            f"🏅 Ball: {score}/15\n"
+
+            f"📊 Natija: {percent}%\n\n"
+
+            f"✅ Hören yakunlangan.\n"
+
+            f"❌ Qayta ishlash mumkin emas."
+
+        )
+
+        return
+
+    # =====================================
+    # AGAR TOPSHIRILMAGAN BO'LSA
+    # =====================================
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -2629,42 +2754,16 @@ async def open_horen(message: Message):
     await message.answer_photo(
         photo=photo,
         caption=(
+
             "🎧 A1 Hören\n\n"
+
             "⏱ Davomiyligi: 20 daqiqa\n\n"
+
             "🚀 Tayyor bo'lsangiz boshlang."
+
         ),
         reply_markup=keyboard
     )
-
-# =========================================================
-# OPEN HOREN
-# =========================================================
-
-@dp.message(F.text == "🎧 Hören")
-async def open_horen(message: Message):
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🚀 Testni Boshlash",
-                    callback_data="horen_start"
-                )
-            ]
-        ]
-    )
-
-    photo = FSInputFile("VIZU-A1/Hören-photo/hören-intro.png")
-
-    await message.answer_photo(
-        photo=photo,
-        caption=(
-            "🎧 A1 Hören\n\n"
-            "⏱ Davomiyligi: 20 daqiqa\n\n"
-            "🚀 Tayyor bo'lsangiz boshlang."
-        ),
-        reply_markup=keyboard
-    )
-
 # =========================================================
 # START HOREN
 # =========================================================
@@ -2792,7 +2891,6 @@ async def horen_answer(callback: CallbackQuery, state: FSMContext):
         await state.clear()
 
     await send_horen_question(callback.message, user_id)
-
 # =========================================================
 # OPEN SCHREIBEN
 # =========================================================
@@ -2803,6 +2901,44 @@ async def horen_answer(callback: CallbackQuery, state: FSMContext):
 async def open_schreiben(
     message: Message
 ):
+
+    user_id = message.from_user.id
+
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_schreiben_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    # =====================================
+    # AGAR TOPSHIRILGAN BO'LSA
+    # =====================================
+
+    if row:
+
+        score = row[0]
+
+        await message.answer(
+
+            f"✍️ SCHREIBEN NATIJASI\n\n"
+
+            f"🏅 Ball: {score}/25\n\n"
+
+            f"✅ Schreiben yakunlangan.\n"
+
+            f"❌ Qayta topshirish mumkin emas."
+
+        )
+
+        return
+
+    # =====================================
+    # AGAR TOPSHIRILMAGAN BO'LSA
+    # =====================================
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -3155,6 +3291,481 @@ async def schreiben_save_score(
 
         logger.error(
             f"SCHREIBEN RESULT ERROR: {e}"
+        )
+
+    await callback.message.answer(
+
+        f"✅ Ball saqlandi.\n\n"
+
+        f"👤 User: {user_id}\n"
+
+        f"🏅 Ball: {score}/25"
+
+    )
+
+    await callback.answer(
+        "✅ Ball saqlandi"
+    )
+
+# =========================================================
+# OPEN SPRECHEN
+# =========================================================
+
+@dp.message(
+    F.text == "🗣 Sprechen"
+)
+async def open_sprechen(
+    message: Message
+):
+
+    user_id = message.from_user.id
+
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_sprechen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    if row:
+
+        score = row[0]
+
+        await message.answer(
+
+            f"🗣 SPRECHEN NATIJASI\n\n"
+
+            f"🏅 Ball: {score}/25\n\n"
+
+            f"❌ Qayta topshirish mumkin emas."
+
+        )
+
+        return
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Boshlash",
+                    callback_data="sprechen_start"
+                )
+            ]
+        ]
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/sprechen-photo/sprechen-intro.png"
+        ),
+
+        caption=(
+
+            "🗣 A1 Sprechen\n\n"
+
+            "⏱ Davomiyligi: 15 daqiqa\n\n"
+
+            "📌 5 ta topshiriq mavjud."
+
+        ),
+
+        reply_markup=keyboard
+
+    )
+# =========================================================
+# START SPRECHEN
+# =========================================================
+
+@dp.callback_query(
+    F.data == "sprechen_start"
+)
+async def start_sprechen(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    await state.set_state(
+        VizuSprechenState.teil1
+    )
+
+    await callback.message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/sprechen-photo/sprechen-teil1.png"
+        ),
+
+        caption=(
+
+            "🗣 Sprechen Teil 1\n\n"
+
+            "🇩🇪 Stellen Sie sich vor.\n\n"
+
+            "📌 Name\n"
+            "📌 Alter\n"
+            "📌 Land\n"
+            "📌 Wohnort\n"
+            "📌 Sprachen\n"
+            "📌 Beruf\n"
+            "📌 Hobby\n\n"
+
+            "🎤 1 daqiqalik audio yuboring."
+
+        )
+
+    )
+
+    await callback.answer()
+# =========================================================
+# SPRECHEN TEIL 1
+# =========================================================
+
+@dp.message(
+    VizuSprechenState.teil1
+)
+async def sprechen_teil1(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        VizuSprechenState.teil21
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/sprechen-photo/sprechen-teil2.1.png"
+        ),
+
+        caption=(
+
+            "🗣 Sprechen Teil 2.1\n\n"
+
+            "🇩🇪 Bilden Sie Fragen mit den Wörtern.\n\n"
+
+            "📌 Rasmdagi so'zlar bilan savollar tuzing.\n\n"
+
+            "🎤 Barcha savollarni bitta audio qilib yuboring."
+
+        )
+
+    )
+
+# =========================================================
+# SPRECHEN TEIL 2.1
+# =========================================================
+
+@dp.message(
+    VizuSprechenState.teil21
+)
+async def sprechen_teil21(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        VizuSprechenState.teil22
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/sprechen-photo/sprechen-teil2.2.png"
+        ),
+
+        caption=(
+
+            "🗣 Sprechen Teil 2.2\n\n"
+
+            "🇩🇪 Beantworten Sie die Fragen.\n\n"
+
+            "📌 Berilgan savollarga javob bering.\n\n"
+
+            "🎤 Barcha javoblarni bitta audio qilib yuboring."
+
+        )
+
+    )
+# =========================================================
+# SPRECHEN TEIL 2.2
+# =========================================================
+
+@dp.message(
+    VizuSprechenState.teil22
+)
+async def sprechen_teil22(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        VizuSprechenState.teil31
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/sprechen-photo/sprechen-teil3.png"
+        ),
+
+        caption=(
+
+            "🗣 Sprechen Teil 3.1\n\n"
+
+            "🇩🇪 Bilden Sie Bitten.\n\n"
+
+            "📌 Rasmdagi so'zlar bilan iltimoslar tuzing.\n\n"
+
+            "💡 Misol:\n"
+            "Bitte können Sie mir Salz geben?\n\n"
+
+            "🎤 Bitta audio yuboring."
+
+        )
+
+    )
+# =========================================================
+# SPRECHEN TEIL 3.1
+# =========================================================
+
+@dp.message(
+    VizuSprechenState.teil31
+)
+async def sprechen_teil31(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        VizuSprechenState.teil32
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/sprechen-photo/sprechen-teil3.png"
+        ),
+
+        caption=(
+
+            "🗣 Sprechen Teil 3.2\n\n"
+
+            "🇩🇪 Reagieren Sie auf die Bitten.\n\n"
+
+            "📌 Berilgan iltimoslarga javob bering.\n\n"
+
+            "💡 Misollar:\n"
+            "Ja, gern.\n"
+            "Ja, natürlich.\n"
+            "Nein, leider nicht.\n"
+            "Tut mir leid.\n\n"
+
+            "🎤 Bitta audio yuboring."
+
+        )
+
+    )# =========================================================
+# SPRECHEN TEIL 3.2
+# =========================================================
+
+@dp.message(
+    VizuSprechenState.teil32
+)
+async def sprechen_teil32(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.update_data(
+        teil32_message_id=message.message_id
+    )
+
+    data = await state.get_data()
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📝 Ball Berish",
+                    callback_data=
+                    f"sprechen_rate:{message.from_user.id}"
+                )
+            ]
+        ]
+    )
+
+    try:
+
+        admin_msg = await bot.send_message(
+
+            ADMIN_CHANNEL_ID,
+
+            f"🗣 SPRECHEN\n\n"
+
+            f"👤 {message.from_user.full_name}\n"
+
+            f"🆔 {message.from_user.id}\n\n"
+
+            f"📌 Barcha Teil javoblari yuborildi.",
+
+            reply_markup=keyboard
+
+        )
+
+        for msg_id in [
+
+            data["teil1_message_id"],
+            data["teil21_message_id"],
+            data["teil22_message_id"],
+            data["teil31_message_id"],
+            data["teil32_message_id"]
+
+        ]:
+
+            await bot.forward_message(
+
+                chat_id=ADMIN_CHANNEL_ID,
+
+                from_chat_id=message.chat.id,
+
+                message_id=msg_id
+
+            )
+
+    except Exception as e:
+
+        logger.error(
+            f"SPRECHEN SEND ERROR: {e}"
+        )
+
+        await message.answer(
+            "❌ Admin kanalga yuborilmadi."
+        )
+
+        return
+
+    await message.answer(
+
+        "✅ Sprechen topshirildi.\n\n"
+
+        "📨 Barcha javoblaringiz adminga yuborildi.\n\n"
+
+        "⏳ Baholash kutilmoqda."
+
+    )
+
+    await state.clear()
+# =========================================================
+# SPRECHEN RATE BUTTON
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("sprechen_rate:")
+)
+async def sprechen_rate_button(
+    callback: CallbackQuery
+):
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    user_id = callback.data.split(":")[1]
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=str(i),
+                    callback_data=
+                    f"sprechen_score:{user_id}:{i}"
+                )
+                for i in range(10, 18)
+            ],
+            [
+                InlineKeyboardButton(
+                    text=str(i),
+                    callback_data=
+                    f"sprechen_score:{user_id}:{i}"
+                )
+                for i in range(18, 26)
+            ]
+        ]
+    )
+
+    await callback.message.answer(
+
+        "🏅 Sprechen ballini tanlang:",
+
+        reply_markup=keyboard
+
+    )
+
+    await callback.answer()
+
+# =========================================================
+# SPRECHEN SAVE SCORE
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("sprechen_score:")
+)
+async def sprechen_save_score(
+    callback: CallbackQuery
+):
+
+    if callback.from_user.id != ADMIN_ID:
+        return
+
+    _, user_id, score = callback.data.split(":")
+
+    user_id = int(user_id)
+
+    score = int(score)
+
+    db_execute(
+        """
+        INSERT INTO
+        vizu_sprechen_results
+        (
+            user_id,
+            score
+        )
+        VALUES
+        (
+            %s,
+            %s
+        )
+        ON CONFLICT (user_id)
+        DO UPDATE SET
+            score = EXCLUDED.score,
+            completed_at = NOW()
+        """,
+        (
+            user_id,
+            score
+        )
+    )
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"🗣 Sprechen baholandi.\n\n"
+
+            f"🏅 Ball: {score}/25"
+
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"SPRECHEN RESULT ERROR: {e}"
         )
 
     await callback.message.answer(
@@ -3891,7 +4502,7 @@ vizu_lesen_questions = []
 vizu_lesen_progress = {}
 vizu_horen_questions = []
 vizu_horen_progress = {}
-
+vizu_sprechen_progress = {}
 # =========================================================
 # LESSON QUIZ SYSTEM
 # =========================================================
@@ -5786,6 +6397,7 @@ async def main():
         init_vizu_lesen_results_table()
         init_vizu_horen_results_table()
         init_vizu_schreiben_results_table()
+        init_vizu_sprechen_results_table()
         load_all_quizzes()
         reset_daily_scores()
 
