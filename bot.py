@@ -56,7 +56,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
-ADMIN_CHANNEL_ID = int(os.getenv("ADMIN_CHANNEL", "0"))
+ADMIN_CHANNEL_ID = int(os.getenv("ADMIN_CHANNEL_ID", "0"))
 
 # Xavfsizlik tekshiruvi
 if not TOKEN:
