@@ -2612,20 +2612,22 @@ async def open_horen(message: Message):
         ),
         reply_markup=keyboard
     )
-
 # =========================================================
-# START HOREN
+# START HOREN — TUZATILGAN
 # =========================================================
 
 @dp.callback_query(
-    F.data == "horen_start"
+    F.data == "horen_start",
+    StateFilter("*")          # ← ASOSIY TUZATISH: har qanday state'da ishlaydi
 )
 async def start_horen(
     callback: CallbackQuery,
     state: FSMContext
 ):
-
     user_id = callback.from_user.id
+
+    # Oldingi state'ni tozalaymiz (lesen yoki boshqa qolgan bo'lsa)
+    await state.clear()
 
     row = db_execute(
         """
@@ -2638,14 +2640,11 @@ async def start_horen(
     )
 
     if row:
-
         await callback.message.answer(
             "❌ Siz Hören testini allaqachon topshirgansiz.\n\n"
             "Mock Test faqat 1 marta ishlanadi."
         )
-
         await callback.answer()
-
         return
 
     vizu_horen_progress[user_id] = {
@@ -2653,9 +2652,7 @@ async def start_horen(
         "score": 0
     }
 
-    await state.set_state(
-        VizuHorenState.solving
-    )
+    await state.set_state(VizuHorenState.solving)
 
     await send_horen_question(
         callback.message,
