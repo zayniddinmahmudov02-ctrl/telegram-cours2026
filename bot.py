@@ -2232,6 +2232,16 @@ async def start_vizu_test(
 
     level = callback.data.split(":")[1]
 
+    # =====================================
+    # START 80 MIN TIMER
+    # =====================================
+
+    vizu_mock_deadlines[
+        callback.from_user.id
+    ] = datetime.now() + timedelta(
+        minutes=80
+    )
+
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="📚 Lesen")],
@@ -2248,6 +2258,15 @@ async def start_vizu_test(
 
         f"🏅 {level} Mock Test\n\n"
 
+        f"⏱ Umumiy vaqt: 80 daqiqa\n\n"
+
+        f"📚 Lesen — 25 daqiqa\n"
+        f"🎧 Hören — 20 daqiqa\n"
+        f"✍️ Schreiben — 20 daqiqa\n"
+        f"🗣 Sprechen — 15 daqiqa\n\n"
+
+        f"⚠️ 80 daqiqa tugagach test avtomatik yopiladi.\n\n"
+
         f"📚 Kerakli bo'limni tanlang:",
 
         reply_markup=keyboard
@@ -2255,7 +2274,6 @@ async def start_vizu_test(
     )
 
     await callback.answer()
-
     # =====================================
     # ADMIN UCHUN TO'LIQ BYPASS
     # =====================================
@@ -2349,6 +2367,36 @@ async def start_vizu_test(
 
     await callback.answer()
 # =========================================================
+# CHECK MOCK TIMER
+# =========================================================
+
+async def check_mock_timer(
+    message
+):
+
+    deadline = vizu_mock_deadlines.get(
+        message.chat.id
+    )
+
+    if not deadline:
+        return True
+
+    if datetime.now() > deadline:
+
+        await message.answer(
+
+            "⏰ Mock Test vaqti tugadi.\n\n"
+
+            "❌ Test yakunlandi.\n\n"
+
+            "🏅 Natijalar saqlanadi."
+
+        )
+
+        return False
+
+    return True
+# =========================================================
 # OPEN LESEN
 # =========================================================
 
@@ -2436,6 +2484,16 @@ async def start_lesen(
     state: FSMContext
 ):
 
+    # =====================================
+    # MOCK TIMER CHECK
+    # =====================================
+
+    if not await check_mock_timer(
+        callback.message
+    ):
+        await callback.answer()
+        return
+
     user_id = callback.from_user.id
 
     row = db_execute(
@@ -2451,11 +2509,17 @@ async def start_lesen(
 
     if row:
 
+        score = row[1]
+
         await callback.message.answer(
 
-            "❌ Siz Lesen bo'limini allaqachon yakunlagansiz.\n\n"
+            f"📚 LESEN NATIJASI\n\n"
 
-            "Mock Test faqat 1 marta ishlanadi."
+            f"🏅 Ball: {score}/25\n\n"
+
+            f"✅ Lesen bo'limi yakunlangan.\n"
+
+            f"❌ Qayta topshirish mumkin emas."
 
         )
 
@@ -2783,33 +2847,110 @@ async def open_horen(message: Message):
 # START HOREN
 # =========================================================
 
-@dp.callback_query(F.data == "horen_start", StateFilter("*"))
-async def start_horen(callback: CallbackQuery, state: FSMContext):
-    user_id = callback.from_user.id
-    await state.clear()
+@dp.callback_query(
+    F.data == "horen_start",
+    StateFilter("*")
+)
+async def start_horen(
+    callback: CallbackQuery,
+    state: FSMContext
+):
 
-    if user_id == ADMIN_ID:
-        vizu_horen_progress[user_id] = {"index": 0, "score": 0}
-        await state.set_state(VizuHorenState.solving)
+    # =====================================
+    # MOCK TIMER CHECK
+    # =====================================
+
+    if not await check_mock_timer(
+        callback.message
+    ):
         await callback.answer()
-        await send_horen_question(callback.message, user_id)
         return
 
+    user_id = callback.from_user.id
+
+    await state.clear()
+
+    # =====================================
+    # ADMIN BYPASS
+    # =====================================
+
+    if user_id == ADMIN_ID:
+
+        vizu_horen_progress[user_id] = {
+
+            "index": 0,
+            "score": 0
+
+        }
+
+        await state.set_state(
+            VizuHorenState.solving
+        )
+
+        await callback.answer()
+
+        await send_horen_question(
+            callback.message,
+            user_id
+        )
+
+        return
+
+    # =====================================
+    # CHECK RESULT
+    # =====================================
+
     row = db_execute(
-        "SELECT score FROM vizu_horen_results WHERE user_id = %s",
+        """
+        SELECT score
+        FROM vizu_horen_results
+        WHERE user_id = %s
+        """,
         (user_id,),
         fetchone=True
     )
 
     if row:
-        await callback.answer("❌ Test allaqachon topshirilgan!", show_alert=True)
+
+        score = row[0]
+
+        await callback.message.answer(
+
+            f"🎧 HÖREN NATIJASI\n\n"
+
+            f"🏅 Ball: {score}/25\n\n"
+
+            f"✅ Hören bo'limi yakunlangan.\n"
+
+            f"❌ Qayta topshirish mumkin emas."
+
+        )
+
+        await callback.answer()
+
         return
 
-    vizu_horen_progress[user_id] = {"index": 0, "score": 0}
-    await state.set_state(VizuHorenState.solving)
-    await callback.answer()
-    await send_horen_question(callback.message, user_id)
+    # =====================================
+    # START TEST
+    # =====================================
 
+    vizu_horen_progress[user_id] = {
+
+        "index": 0,
+        "score": 0
+
+    }
+
+    await state.set_state(
+        VizuHorenState.solving
+    )
+
+    await callback.answer()
+
+    await send_horen_question(
+        callback.message,
+        user_id
+    )
 # =========================================================
 # HOREN AUDIO & IMAGE HELPERS
 # =========================================================
@@ -3118,6 +3259,7 @@ async def open_schreiben(
         reply_markup=keyboard
 
     )
+
 # =========================================================
 # START SCHREIBEN
 # =========================================================
@@ -3129,6 +3271,16 @@ async def start_schreiben(
     callback: CallbackQuery,
     state: FSMContext
 ):
+
+    # =====================================
+    # MOCK TIMER CHECK
+    # =====================================
+
+    if not await check_mock_timer(
+        callback.message
+    ):
+        await callback.answer()
+        return
 
     user_id = callback.from_user.id
 
@@ -3142,17 +3294,33 @@ async def start_schreiben(
         fetchone=True
     )
 
+    # =====================================
+    # ALREADY COMPLETED
+    # =====================================
+
     if row:
+
+        score = row[0]
 
         await callback.message.answer(
 
-            "❌ Siz Schreiben qismini allaqachon topshirgansiz."
+            f"✍️ SCHREIBEN NATIJASI\n\n"
+
+            f"🏅 Ball: {score}/25\n\n"
+
+            f"✅ Schreiben bo'limi yakunlangan.\n"
+
+            f"❌ Qayta topshirish mumkin emas."
 
         )
 
         await callback.answer()
 
         return
+
+    # =====================================
+    # START TEST
+    # =====================================
 
     await state.set_state(
         VizuSchreibenState.teil1
@@ -3536,6 +3704,56 @@ async def start_sprechen(
     state: FSMContext
 ):
 
+    # =====================================
+    # MOCK TIMER CHECK
+    # =====================================
+
+    if not await check_mock_timer(
+        callback.message
+    ):
+        await callback.answer()
+        return
+
+    user_id = callback.from_user.id
+
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_sprechen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    # =====================================
+    # ALREADY COMPLETED
+    # =====================================
+
+    if row:
+
+        score = row[0]
+
+        await callback.message.answer(
+
+            f"🗣 SPRECHEN NATIJASI\n\n"
+
+            f"🏅 Ball: {score}/25\n\n"
+
+            f"✅ Sprechen bo'limi yakunlangan.\n"
+
+            f"❌ Qayta topshirish mumkin emas."
+
+        )
+
+        await callback.answer()
+
+        return
+
+    # =====================================
+    # START TEST
+    # =====================================
+
     await state.set_state(
         VizuSprechenState.teil1
     )
@@ -3579,6 +3797,19 @@ async def sprechen_teil1(
     state: FSMContext
 ):
 
+    if not await check_mock_timer(message):
+        return
+
+    if not (
+        message.voice
+        or message.audio
+        or message.video_note
+    ):
+        await message.answer(
+            "🎤 Iltimos audio yuboring."
+        )
+        return
+
     await state.update_data(
         teil1_message_id=message.message_id
     )
@@ -3588,24 +3819,17 @@ async def sprechen_teil1(
     )
 
     await message.answer_photo(
-
         photo=FSInputFile(
             "VIZU-A1/sprechen-photo/sprechen-teil2.1.png"
         ),
-
         caption=(
-
             "🗣 Sprechen Teil 2.1\n\n"
-
             "🇩🇪 Bilden Sie Fragen mit den Wörtern.\n\n"
-
-            "📌 Rasmdagi so'zlar bilan savollar tuzing.\n\n"
-
             "🎤 Barcha savollarni bitta audio qilib yuboring."
-
         )
-
     )
+
+
 # =========================================================
 # SPRECHEN TEIL 2.1
 # =========================================================
@@ -3618,6 +3842,19 @@ async def sprechen_teil21(
     state: FSMContext
 ):
 
+    if not await check_mock_timer(message):
+        return
+
+    if not (
+        message.voice
+        or message.audio
+        or message.video_note
+    ):
+        await message.answer(
+            "🎤 Iltimos audio yuboring."
+        )
+        return
+
     await state.update_data(
         teil21_message_id=message.message_id
     )
@@ -3627,24 +3864,17 @@ async def sprechen_teil21(
     )
 
     await message.answer_photo(
-
         photo=FSInputFile(
             "VIZU-A1/sprechen-photo/sprechen-teil2.2.png"
         ),
-
         caption=(
-
             "🗣 Sprechen Teil 2.2\n\n"
-
             "🇩🇪 Beantworten Sie die Fragen.\n\n"
-
-            "📌 Berilgan savollarga javob bering.\n\n"
-
             "🎤 Barcha javoblarni bitta audio qilib yuboring."
-
         )
-
     )
+
+
 # =========================================================
 # SPRECHEN TEIL 2.2
 # =========================================================
@@ -3657,6 +3887,19 @@ async def sprechen_teil22(
     state: FSMContext
 ):
 
+    if not await check_mock_timer(message):
+        return
+
+    if not (
+        message.voice
+        or message.audio
+        or message.video_note
+    ):
+        await message.answer(
+            "🎤 Iltimos audio yuboring."
+        )
+        return
+
     await state.update_data(
         teil22_message_id=message.message_id
     )
@@ -3666,27 +3909,18 @@ async def sprechen_teil22(
     )
 
     await message.answer_photo(
-
         photo=FSInputFile(
-            "VIZU-A1/sprechen-photo/sprechen-teil3.png"
+            "VIZU-A1/sprechen-photo/sprechen-teil3.1.png"
         ),
-
         caption=(
-
             "🗣 Sprechen Teil 3.1\n\n"
-
             "🇩🇪 Bilden Sie Bitten.\n\n"
-
-            "📌 Rasmdagi so'zlar bilan iltimoslar tuzing.\n\n"
-
-            "💡 Misol:\n"
-            "Bitte können Sie mir Salz geben?\n\n"
-
+            "💡 Bitte können Sie mir Salz geben?\n\n"
             "🎤 Bitta audio yuboring."
-
         )
-
     )
+
+
 # =========================================================
 # SPRECHEN TEIL 3.1
 # =========================================================
@@ -3699,6 +3933,19 @@ async def sprechen_teil31(
     state: FSMContext
 ):
 
+    if not await check_mock_timer(message):
+        return
+
+    if not (
+        message.voice
+        or message.audio
+        or message.video_note
+    ):
+        await message.answer(
+            "🎤 Iltimos audio yuboring."
+        )
+        return
+
     await state.update_data(
         teil31_message_id=message.message_id
     )
@@ -3708,29 +3955,16 @@ async def sprechen_teil31(
     )
 
     await message.answer_photo(
-
         photo=FSInputFile(
-            "VIZU-A1/sprechen-photo/sprechen-teil3.png"
+            "VIZU-A1/sprechen-photo/sprechen-teil3.2.png"
         ),
-
         caption=(
-
             "🗣 Sprechen Teil 3.2\n\n"
-
             "🇩🇪 Reagieren Sie auf die Bitten.\n\n"
-
-            "📌 Berilgan iltimoslarga javob bering.\n\n"
-
-            "💡 Misollar:\n"
-            "Ja, gern.\n"
-            "Ja, natürlich.\n"
-            "Nein, leider nicht.\n"
-            "Tut mir leid.\n\n"
-
+            "💡 Ja, gern.\n"
+            "💡 Nein, leider nicht.\n\n"
             "🎤 Bitta audio yuboring."
-
         )
-
     )
 # =========================================================
 # SPRECHEN TEIL 3.2
@@ -3743,6 +3977,21 @@ async def sprechen_teil32(
     message: Message,
     state: FSMContext
 ):
+
+    if not await check_mock_timer(
+        message
+    ):
+        return
+
+    if not (
+        message.voice
+        or message.audio
+        or message.video_note
+    ):
+        await message.answer(
+            "🎤 Iltimos audio yuboring."
+        )
+        return
 
     await state.update_data(
         teil32_message_id=message.message_id
@@ -3810,7 +4059,11 @@ async def sprechen_teil32(
         )
 
         await message.answer(
-            "❌ Admin kanalga yuborilmadi."
+
+            "❌ Admin kanalga yuborilmadi.\n\n"
+
+            f"Xatolik: {e}"
+
         )
 
         return
@@ -3828,128 +4081,6 @@ async def sprechen_teil32(
     )
 
     await state.clear()
-# =========================================================
-# SPRECHEN RATE BUTTON
-# =========================================================
-
-@dp.callback_query(
-    F.data.startswith("sprechen_rate:")
-)
-async def sprechen_rate_button(
-    callback: CallbackQuery
-):
-
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    user_id = callback.data.split(":")[1]
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=str(i),
-                    callback_data=
-                    f"sprechen_score:{user_id}:{i}"
-                )
-                for i in range(10, 18)
-            ],
-            [
-                InlineKeyboardButton(
-                    text=str(i),
-                    callback_data=
-                    f"sprechen_score:{user_id}:{i}"
-                )
-                for i in range(18, 26)
-            ]
-        ]
-    )
-
-    await callback.message.answer(
-
-        "🏅 Sprechen ballini tanlang:",
-
-        reply_markup=keyboard
-
-    )
-
-    await callback.answer()
-
-# =========================================================
-# SPRECHEN SAVE SCORE
-# =========================================================
-
-@dp.callback_query(
-    F.data.startswith("sprechen_score:")
-)
-async def sprechen_save_score(
-    callback: CallbackQuery
-):
-
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    _, user_id, score = callback.data.split(":")
-
-    user_id = int(user_id)
-
-    score = int(score)
-
-    db_execute(
-        """
-        INSERT INTO
-        vizu_sprechen_results
-        (
-            user_id,
-            score
-        )
-        VALUES
-        (
-            %s,
-            %s
-        )
-        ON CONFLICT (user_id)
-        DO UPDATE SET
-            score = EXCLUDED.score,
-            completed_at = NOW()
-        """,
-        (
-            user_id,
-            score
-        )
-    )
-
-    try:
-
-        await bot.send_message(
-
-            user_id,
-
-            f"🗣 Sprechen baholandi.\n\n"
-
-            f"🏅 Ball: {score}/25"
-
-        )
-
-    except Exception as e:
-
-        logger.error(
-            f"SPRECHEN RESULT ERROR: {e}"
-        )
-
-    await callback.message.answer(
-
-        f"✅ Ball saqlandi.\n\n"
-
-        f"👤 User: {user_id}\n"
-
-        f"🏅 Ball: {score}/25"
-
-    )
-
-    await callback.answer(
-        "✅ Ball saqlandi"
-    )
 # =========================
 # LESSONS HOME
 # =========================
@@ -4672,6 +4803,7 @@ vizu_lesen_progress = {}
 vizu_horen_questions = []
 vizu_horen_progress = {}
 vizu_sprechen_progress = {}
+vizu_mock_deadlines = {}
 # =========================================================
 # LESSON QUIZ SYSTEM
 # =========================================================
