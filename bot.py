@@ -4387,6 +4387,27 @@ async def get_certificate(
 
     )
 # =========================================================
+# CERTIFICATE GRADE
+# =========================================================
+
+def get_certificate_grade(score):
+
+    if score >= 22:
+        return "Sehr gut"
+
+    elif score >= 19:
+        return "Gut"
+
+    elif score >= 16:
+        return "Befriedigend"
+
+    elif score >= 10:
+        return "Ausreichend"
+
+    return "Nicht bestanden"
+
+
+# =========================================================
 # GENERATE VIZU CERTIFICATE
 # =========================================================
 
@@ -4408,14 +4429,28 @@ def generate_vizu_certificate(
             sprechen
         )
 
-        status = (
-            "BESTANDEN"
-            if total >= 60
-            else "NICHT BESTANDEN"
-        )
-
         certificate_id = (
             f"VIZU-A1-{user_id}"
+        )
+
+        horen_grade = get_certificate_grade(
+            horen
+        )
+
+        lesen_grade = get_certificate_grade(
+            lesen
+        )
+
+        schreiben_grade = get_certificate_grade(
+            schreiben
+        )
+
+        sprechen_grade = get_certificate_grade(
+            sprechen
+        )
+
+        total_grade = get_certificate_grade(
+            round(total / 4)
         )
 
         os.makedirs(
@@ -4447,32 +4482,24 @@ def generate_vizu_certificate(
             image
         )
 
-        # =====================================
-        # FONTS
-        # =====================================
-
         try:
 
             name_font = ImageFont.truetype(
-                "DejaVuSans.ttf",
+                "DejaVuSans-Bold.ttf",
                 40
             )
 
             text_font = ImageFont.truetype(
                 "DejaVuSans.ttf",
-                26
+                24
             )
 
             score_font = ImageFont.truetype(
-                "DejaVuSans.ttf",
-                30
+                "DejaVuSans-Bold.ttf",
+                28
             )
 
         except Exception:
-
-            logger.warning(
-                "Font not found. Using default font."
-            )
 
             name_font = ImageFont.load_default()
             text_font = ImageFont.load_default()
@@ -4483,64 +4510,100 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (420, 515),
+            (350, 455),
             str(full_name),
             fill="black",
             font=name_font
         )
 
         # =====================================
-        # SCORES
+        # HOREN
         # =====================================
 
         draw.text(
-            (710, 680),
-            f"{horen}/25",
+            (655, 635),
+            str(horen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (710, 740),
-            f"{lesen}/25",
+            (815, 635),
+            horen_grade,
+            fill="black",
+            font=text_font
+        )
+
+        # =====================================
+        # LESEN
+        # =====================================
+
+        draw.text(
+            (655, 705),
+            str(lesen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (710, 800),
-            f"{schreiben}/25",
+            (815, 705),
+            lesen_grade,
+            fill="black",
+            font=text_font
+        )
+
+        # =====================================
+        # SCHREIBEN
+        # =====================================
+
+        draw.text(
+            (655, 775),
+            str(schreiben),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (710, 860),
-            f"{sprechen}/25",
+            (815, 775),
+            schreiben_grade,
+            fill="black",
+            font=text_font
+        )
+
+        # =====================================
+        # SPRECHEN
+        # =====================================
+
+        draw.text(
+            (655, 845),
+            str(sprechen),
             fill="black",
             font=score_font
         )
 
+        draw.text(
+            (815, 845),
+            sprechen_grade,
+            fill="black",
+            font=text_font
+        )
+
         # =====================================
-        # TOTAL
+        # TOTAL SCORE
         # =====================================
 
         draw.text(
-            (650, 980),
-            f"{total}/100",
+            (620, 960),
+            str(total),
             fill="black",
             font=score_font
         )
 
-        # =====================================
-        # STATUS
-        # =====================================
-
         draw.text(
-            (860, 980),
-            status,
+            (820, 960),
+            total_grade,
             fill="black",
-            font=score_font
+            font=text_font
         )
 
         # =====================================
@@ -4548,7 +4611,7 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (820, 1110),
+            (835, 1115),
             certificate_id,
             fill="black",
             font=text_font
@@ -4559,26 +4622,11 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (820, 1170),
+            (770, 1265),
             datetime.now().strftime(
                 "%d.%m.%Y"
             ),
             fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # DISCLAIMER
-        # =====================================
-
-        draw.text(
-            (120, 1320),
-            (
-                "Dieses Zertifikat basiert auf einem "
-                "VIZU Academy Mock-Test und besitzt "
-                "keine offizielle staatliche Anerkennung."
-            ),
-            fill="gray",
             font=text_font
         )
 
