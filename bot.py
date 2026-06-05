@@ -4464,7 +4464,6 @@ def get_certificate_grade(score):
         return "Ausreichend"
 
     return "Nicht bestanden"
-
 # =========================================================
 # GENERATE VIZU CERTIFICATE
 # =========================================================
@@ -4588,7 +4587,7 @@ def generate_vizu_certificate(
         ) // 2
 
         draw.text(
-            (x, 470),
+            (x, 370),
             str(full_name),
             fill="black",
             font=name_font
@@ -4599,14 +4598,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (635, 620),
+            (630, 520),
             str(horen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (790, 620),
+            (795, 520),
             horen_grade,
             fill="black",
             font=text_font
@@ -4617,14 +4616,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (635, 690),
+            (630, 588),
             str(lesen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (790, 690),
+            (795, 588),
             lesen_grade,
             fill="black",
             font=text_font
@@ -4635,14 +4634,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (635, 760),
+            (630, 655),
             str(schreiben),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (790, 760),
+            (795, 655),
             schreiben_grade,
             fill="black",
             font=text_font
@@ -4653,14 +4652,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (635, 830),
+            (630, 723),
             str(sprechen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (790, 830),
+            (795, 723),
             sprechen_grade,
             fill="black",
             font=text_font
@@ -4671,14 +4670,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (600, 940),
+            (630, 805),
             str(total),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (790, 940),
+            (795, 805),
             total_grade,
             fill="black",
             font=text_font
@@ -4689,7 +4688,7 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (720, 1058),
+            (720, 935),
             certificate_id,
             fill="black",
             font=text_font
@@ -4700,10 +4699,8 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (750, 1178),
-            datetime.now().strftime(
-                "%d.%m.%Y"
-            ),
+            (720, 1018),
+            datetime.now().strftime("%d.%m.%Y"),
             fill="black",
             font=text_font
         )
