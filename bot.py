@@ -350,6 +350,42 @@ def init_vizu_lesen_results_table():
         "VIZU LESEN RESULTS READY ✅"
     )
 
+# =========================================================
+# VIZU HOREN RESULTS TABLE
+# =========================================================
+
+def init_vizu_horen_results_table():
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS vizu_horen_results (
+            user_id BIGINT PRIMARY KEY,
+            score INTEGER DEFAULT 0,
+            completed_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+    logger.info("VIZU HOREN RESULTS READY ✅")
+# =========================================================
+# VIZU SCHREIBEN RESULTS TABLE
+# =========================================================
+
+def init_vizu_schreiben_results_table():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS
+        vizu_schreiben_results (
+
+            user_id BIGINT PRIMARY KEY,
+
+            score INTEGER DEFAULT 0,
+
+            completed_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+
+    logger.info(
+        "VIZU SCHREIBEN RESULTS READY ✅"
+    )
+
     # INDEXES
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
@@ -407,6 +443,13 @@ dp = Dispatcher(storage=storage)
 # STATES GROUP
 # =========================================================
 
+class VizuSchreibenState(
+    StatesGroup
+):
+
+    teil1 = State()
+
+    teil2 = State()
 class VizuHorenState(StatesGroup):
     solving = State()
 
@@ -2747,18 +2790,195 @@ async def horen_answer(callback: CallbackQuery, state: FSMContext):
     await send_horen_question(callback.message, user_id)
 
 # =========================================================
-# VIZU HOREN RESULTS TABLE
+# OPEN SCHREIBEN
 # =========================================================
 
-def init_vizu_horen_results_table():
-    db_execute("""
-        CREATE TABLE IF NOT EXISTS vizu_horen_results (
-            user_id BIGINT PRIMARY KEY,
-            score INTEGER DEFAULT 0,
-            completed_at TIMESTAMP DEFAULT NOW()
+@dp.message(
+    F.text == "✍️ Schreiben"
+)
+async def open_schreiben(
+    message: Message
+):
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚀 Boshlash",
+                    callback_data="schreiben_start"
+                )
+            ]
+        ]
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/schreiben-photo/schreiben-intro.png"
+        ),
+
+        caption=(
+
+            "✍️ A1 Schreiben\n\n"
+
+            "⏱ Davomiyligi: 20 daqiqa\n\n"
+
+            "📝 2 ta vazifa mavjud."
+
+        ),
+
+        reply_markup=keyboard
+
+    )
+# =========================================================
+# START SCHREIBEN
+# =========================================================
+
+@dp.callback_query(
+    F.data == "schreiben_start"
+)
+async def start_schreiben(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    user_id = callback.from_user.id
+
+    row = db_execute(
+        """
+        SELECT score
+        FROM vizu_schreiben_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    if row:
+
+        await callback.message.answer(
+
+            "❌ Siz Schreiben qismini allaqachon topshirgansiz."
+
         )
-    """)
-    logger.info("VIZU HOREN RESULTS READY ✅")
+
+        await callback.answer()
+
+        return
+
+    await state.set_state(
+        VizuSchreibenState.teil1
+    )
+
+    await callback.message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/schreiben-photo/schreiben-teil1.png"
+        ),
+
+        caption=(
+
+            "✍️ Schreiben Teil 1\n\n"
+
+            "📤 Javobingizni yuboring."
+
+        )
+
+    )
+
+    await callback.answer()
+# =========================================================
+# SCHREIBEN TEIL 1
+# =========================================================
+
+@dp.message(
+    VizuSchreibenState.teil1
+)
+async def schreiben_teil1(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.update_data(
+        teil1_message_id=message.message_id
+    )
+
+    await state.set_state(
+        VizuSchreibenState.teil2
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            "VIZU-A1/schreiben-photo/schreiben-teil2.png"
+        ),
+
+        caption=(
+
+            "✍️ Schreiben Teil 2\n\n"
+
+            "📤 Javobingizni yuboring."
+
+        )
+
+    )
+# =========================================================
+# SCHREIBEN TEIL 2
+# =========================================================
+
+@dp.message(
+    VizuSchreibenState.teil2
+)
+async def schreiben_teil2(
+    message: Message,
+    state: FSMContext
+):
+
+    data = await state.get_data()
+
+    admin_text = (
+
+        f"✍️ SCHREIBEN\n\n"
+
+        f"👤 {message.from_user.full_name}\n"
+
+        f"🆔 {message.from_user.id}\n\n"
+
+        f"📌 Teil 1 va Teil 2 topshirildi."
+
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📝 Ball Berish",
+                    callback_data=
+                    f"schreiben_rate:{message.from_user.id}"
+                )
+            ]
+        ]
+    )
+
+    await bot.send_message(
+
+        ADMIN_CHANNEL_ID,
+
+        admin_text,
+
+        reply_markup=keyboard
+
+    )
+
+    await message.answer(
+
+        "✅ Schreiben topshirildi.\n\n"
+
+        "⏳ Admin tekshirgandan so'ng natija chiqariladi."
+
+    )
+
+    await state.clear()
 
 # =========================
 # LESSONS HOME
@@ -5375,6 +5595,7 @@ async def main():
         init_vizu_attempts_table()
         init_vizu_lesen_results_table()
         init_vizu_horen_results_table()
+        init_vizu_schreiben_results_table()
         load_all_quizzes()
         reset_daily_scores()
 
