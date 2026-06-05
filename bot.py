@@ -407,6 +407,28 @@ def init_vizu_sprechen_results_table():
     logger.info(
         "VIZU SPRECHEN RESULTS READY ✅"
     )
+# =========================================================
+# CERTIFICATES TABLE
+# =========================================================
+
+def init_certificate_table():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS
+        certificates (
+
+            user_id BIGINT PRIMARY KEY,
+
+            total_score INTEGER,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+
+    logger.info(
+        "CERTIFICATES TABLE READY ✅"
+    )
     # INDEXES
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
@@ -4208,6 +4230,352 @@ async def sprechen_save_score(
     await callback.answer(
         "✅ Ball saqlandi"
     )
+# =========================================================
+# ZERTIFIKAT
+# =========================================================
+
+@dp.message(
+    F.text == "🏅 Zertifikat"
+)
+async def get_certificate(
+    message: Message
+):
+
+    user_id = message.from_user.id
+
+    lesen = db_execute(
+        """
+        SELECT score
+        FROM vizu_lesen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    horen = db_execute(
+        """
+        SELECT score
+        FROM vizu_horen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    schreiben = db_execute(
+        """
+        SELECT score
+        FROM vizu_schreiben_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    sprechen = db_execute(
+        """
+        SELECT score
+        FROM vizu_sprechen_results
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True
+    )
+
+    if not all([
+        lesen,
+        horen,
+        schreiben,
+        sprechen
+    ]):
+
+        await message.answer(
+
+            "❌ Sertifikat olish uchun barcha bo'limlarni yakunlang.\n\n"
+
+            "📚 Lesen\n"
+            "🎧 Hören\n"
+            "✍️ Schreiben\n"
+            "🗣 Sprechen"
+
+        )
+
+        return
+
+    lesen_score = int(lesen[0])
+    horen_score = int(horen[0])
+    schreiben_score = int(schreiben[0])
+    sprechen_score = int(sprechen[0])
+
+    total_score = (
+        lesen_score +
+        horen_score +
+        schreiben_score +
+        sprechen_score
+    )
+
+    certificate_path = generate_vizu_certificate(
+
+        user_id=user_id,
+
+        full_name=message.from_user.full_name,
+
+        lesen=lesen_score,
+
+        horen=horen_score,
+
+        schreiben=schreiben_score,
+
+        sprechen=sprechen_score
+
+    )
+
+    status = (
+        "✅ BESTANDEN"
+        if total_score >= 60
+        else "❌ NICHT BESTANDEN"
+    )
+
+    await message.answer_photo(
+
+        photo=FSInputFile(
+            certificate_path
+        ),
+
+        caption=(
+
+            "🏅 VIZU A1 MOCK TEST\n\n"
+
+            f"📚 Lesen: {lesen_score}/25\n"
+            f"🎧 Hören: {horen_score}/25\n"
+            f"✍️ Schreiben: {schreiben_score}/25\n"
+            f"🗣 Sprechen: {sprechen_score}/25\n\n"
+
+            f"🏆 Gesamt: {total_score}/100\n\n"
+
+            f"{status}"
+
+        )
+
+    )
+# =========================================================
+# GENERATE VIZU CERTIFICATE
+# =========================================================
+
+def generate_vizu_certificate(
+    user_id,
+    full_name,
+    lesen,
+    horen,
+    schreiben,
+    sprechen
+):
+
+    try:
+
+        total = (
+            lesen +
+            horen +
+            schreiben +
+            sprechen
+        )
+
+        status = (
+            "BESTANDEN"
+            if total >= 60
+            else "NICHT BESTANDEN"
+        )
+
+        certificate_id = (
+            f"VIZU-A1-{user_id}"
+        )
+
+        os.makedirs(
+            "certificates",
+            exist_ok=True
+        )
+
+        template_path = (
+            "VIZU-A1/certificate-template.png"
+        )
+
+        if not os.path.exists(
+            template_path
+        ):
+
+            logger.error(
+                f"Certificate template not found: {template_path}"
+            )
+
+            return None
+
+        image = Image.open(
+            template_path
+        ).convert(
+            "RGB"
+        )
+
+        draw = ImageDraw.Draw(
+            image
+        )
+
+        # =====================================
+        # FONTS
+        # =====================================
+
+        try:
+
+            name_font = ImageFont.truetype(
+                "DejaVuSans.ttf",
+                40
+            )
+
+            text_font = ImageFont.truetype(
+                "DejaVuSans.ttf",
+                26
+            )
+
+            score_font = ImageFont.truetype(
+                "DejaVuSans.ttf",
+                30
+            )
+
+        except Exception:
+
+            logger.warning(
+                "Font not found. Using default font."
+            )
+
+            name_font = ImageFont.load_default()
+            text_font = ImageFont.load_default()
+            score_font = ImageFont.load_default()
+
+        # =====================================
+        # NAME
+        # =====================================
+
+        draw.text(
+            (420, 515),
+            str(full_name),
+            fill="black",
+            font=name_font
+        )
+
+        # =====================================
+        # SCORES
+        # =====================================
+
+        draw.text(
+            (710, 680),
+            f"{horen}/25",
+            fill="black",
+            font=score_font
+        )
+
+        draw.text(
+            (710, 740),
+            f"{lesen}/25",
+            fill="black",
+            font=score_font
+        )
+
+        draw.text(
+            (710, 800),
+            f"{schreiben}/25",
+            fill="black",
+            font=score_font
+        )
+
+        draw.text(
+            (710, 860),
+            f"{sprechen}/25",
+            fill="black",
+            font=score_font
+        )
+
+        # =====================================
+        # TOTAL
+        # =====================================
+
+        draw.text(
+            (650, 980),
+            f"{total}/100",
+            fill="black",
+            font=score_font
+        )
+
+        # =====================================
+        # STATUS
+        # =====================================
+
+        draw.text(
+            (860, 980),
+            status,
+            fill="black",
+            font=score_font
+        )
+
+        # =====================================
+        # CERTIFICATE ID
+        # =====================================
+
+        draw.text(
+            (820, 1110),
+            certificate_id,
+            fill="black",
+            font=text_font
+        )
+
+        # =====================================
+        # DATE
+        # =====================================
+
+        draw.text(
+            (820, 1170),
+            datetime.now().strftime(
+                "%d.%m.%Y"
+            ),
+            fill="black",
+            font=text_font
+        )
+
+        # =====================================
+        # DISCLAIMER
+        # =====================================
+
+        draw.text(
+            (120, 1320),
+            (
+                "Dieses Zertifikat basiert auf einem "
+                "VIZU Academy Mock-Test und besitzt "
+                "keine offizielle staatliche Anerkennung."
+            ),
+            fill="gray",
+            font=text_font
+        )
+
+        output_file = (
+            f"certificates/{user_id}.png"
+        )
+
+        image.save(
+            output_file
+        )
+
+        logger.info(
+            f"Certificate created: {output_file}"
+        )
+
+        return output_file
+
+    except Exception as e:
+
+        logger.error(
+            f"CERTIFICATE GENERATION ERROR: {e}"
+        )
+
+        return None
 # =========================
 # LESSONS HOME
 # =========================
