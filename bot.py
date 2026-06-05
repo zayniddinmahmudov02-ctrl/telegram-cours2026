@@ -2516,22 +2516,36 @@ async def send_lesen_question(
 
     index = progress["index"]
 
-    if index >= len(vizu_lesen_questions):
+    total_questions = len(
+        vizu_lesen_questions
+    )
+
+    # =====================================
+    # FINISH TEST
+    # =====================================
+
+    if index >= total_questions:
 
         score = progress["score"]
 
-        percent = round(
-            score * 100 /
-            len(vizu_lesen_questions)
-        )
+        final_score = round(
+            score * 25 /
+            total_questions
+        ) if total_questions > 0 else 0
 
         db_execute(
             """
-            INSERT INTO vizu_lesen_results (
+            INSERT INTO
+            vizu_lesen_results
+            (
                 user_id,
                 score
             )
-            VALUES (%s, %s)
+            VALUES
+            (
+                %s,
+                %s
+            )
             ON CONFLICT (user_id)
             DO UPDATE SET
                 score = EXCLUDED.score,
@@ -2539,7 +2553,7 @@ async def send_lesen_question(
             """,
             (
                 user_id,
-                score
+                final_score
             )
         )
 
@@ -2547,12 +2561,13 @@ async def send_lesen_question(
 
             f"📚 LESEN YAKUNLANDI\n\n"
 
-            f"✅ To'g'ri javoblar: {score}\n"
+            f"✅ To'g'ri javoblar: "
+            f"{score}/{total_questions}\n"
 
             f"❌ Noto'g'ri javoblar: "
-            f"{len(vizu_lesen_questions) - score}\n\n"
+            f"{total_questions - score}\n\n"
 
-            f"📊 Natija: {percent}%"
+            f"🏅 Ball: {final_score}/25"
 
         )
 
@@ -2586,7 +2601,9 @@ async def send_lesen_question(
             "11"
         ]
 
-        random.shuffle(options)
+        random.shuffle(
+            options
+        )
 
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
@@ -2621,19 +2638,17 @@ async def send_lesen_question(
             ]
         )
 
-    photo = FSInputFile(
-        image_path
-    )
-
     await message.answer_photo(
 
-        photo=photo,
+        photo=FSInputFile(
+            image_path
+        ),
 
         caption=(
 
             f"📚 A1 Lesen\n\n"
 
-            f"📝 Savol {task}/15\n\n"
+            f"📝 Savol {task}/{total_questions}\n\n"
 
             f"{question}"
 
@@ -2811,60 +2826,193 @@ def get_horen_image(task):
     elif task <= 6: return "VIZU-A1/Hören-photo/hören-teil1.2.png"
     elif task <= 10: return "VIZU-A1/Hören-photo/hören-teil2.png"
     else: return "VIZU-A1/Hören-photo/hören-teil3.png"
-
 # =========================================================
 # SEND HOREN QUESTION
 # =========================================================
 
-async def send_horen_question(message, user_id):
-    progress = vizu_horen_progress.get(user_id)
-    if not progress: return
+async def send_horen_question(
+    message,
+    user_id
+):
+
+    progress = vizu_horen_progress.get(
+        user_id
+    )
+
+    if not progress:
+        return
 
     index = progress["index"]
-    total_questions = len(vizu_horen_questions)
+
+    total_questions = len(
+        vizu_horen_questions
+    )
+
+    # =====================================
+    # FINISH TEST
+    # =====================================
 
     if index >= total_questions:
-        score = progress["score"]
-        percent = round(score * 100 / total_questions) if total_questions > 0 else 0
-        
+
+        correct_answers = progress["score"]
+
+        final_score = round(
+            correct_answers * 25 /
+            total_questions
+        ) if total_questions > 0 else 0
+
         db_execute(
-            """INSERT INTO vizu_horen_results (user_id, score) VALUES (%s, %s)
-               ON CONFLICT (user_id) DO UPDATE SET score = EXCLUDED.score, completed_at = NOW()""",
-            (user_id, score)
+            """
+            INSERT INTO
+            vizu_horen_results
+            (
+                user_id,
+                score
+            )
+            VALUES
+            (
+                %s,
+                %s
+            )
+            ON CONFLICT (user_id)
+            DO UPDATE SET
+                score = EXCLUDED.score,
+                completed_at = NOW()
+            """,
+            (
+                user_id,
+                final_score
+            )
         )
 
         await message.answer(
-            f"🎧 HÖREN YAKUNLANDI\n\n✅ To'g'ri: {score}\n❌ Noto'g'ri: {total_questions - score}\n\n📊 Natija: {percent}%"
+
+            f"🎧 HÖREN YAKUNLANDI\n\n"
+
+            f"✅ To'g'ri javoblar: "
+            f"{correct_answers}/{total_questions}\n"
+
+            f"❌ Noto'g'ri javoblar: "
+            f"{total_questions - correct_answers}\n\n"
+
+            f"🏅 Ball: {final_score}/25"
+
         )
-        vizu_horen_progress.pop(user_id, None)
+
+        vizu_horen_progress.pop(
+            user_id,
+            None
+        )
+
         return
 
     row = vizu_horen_questions[index]
+
     task = row["task"]
+
     question = row["question"]
 
-    # Audio handling
-    try:
-        msg_id = 6 if int(task) <= 6 else (7 if int(task) <= 10 else 8)
-        await bot.copy_message(chat_id=message.chat.id, from_chat_id=-1003916093529, message_id=msg_id)
-    except Exception as e:
-        logger.error(f"Audio error: {e}")
+    # =====================================
+    # AUDIO FROM CHANNEL
+    # =====================================
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Richtig", callback_data="horen:Richtig"), 
-         InlineKeyboardButton(text="❌ Falsch", callback_data="horen:Falsch")]
-    ]) if 7 <= int(task) <= 10 else InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="A", callback_data="horen:a")],
-        [InlineKeyboardButton(text="B", callback_data="horen:b")],
-        [InlineKeyboardButton(text="C", callback_data="horen:c")]
-    ])
+    try:
+
+        if int(task) <= 6:
+
+            await bot.copy_message(
+                chat_id=message.chat.id,
+                from_chat_id=-1003916093529,
+                message_id=6
+            )
+
+        elif int(task) <= 10:
+
+            await bot.copy_message(
+                chat_id=message.chat.id,
+                from_chat_id=-1003916093529,
+                message_id=7
+            )
+
+        else:
+
+            await bot.copy_message(
+                chat_id=message.chat.id,
+                from_chat_id=-1003916093529,
+                message_id=8
+            )
+
+    except Exception as e:
+
+        logger.error(
+            f"HOREN AUDIO ERROR: {e}"
+        )
+
+    # =====================================
+    # KEYBOARD
+    # =====================================
+
+    if 7 <= int(task) <= 10:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="✅ Richtig",
+                        callback_data="horen:Richtig"
+                    ),
+                    InlineKeyboardButton(
+                        text="❌ Falsch",
+                        callback_data="horen:Falsch"
+                    )
+                ]
+            ]
+        )
+
+    else:
+
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="A",
+                        callback_data="horen:a"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="B",
+                        callback_data="horen:b"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="C",
+                        callback_data="horen:c"
+                    )
+                ]
+            ]
+        )
 
     await message.answer_photo(
-        photo=FSInputFile(get_horen_image(task)),
-        caption=f"🎧 A1 Hören\n\n📝 Savol {task}/{total_questions}\n\n{question}",
-        reply_markup=keyboard
-    )
 
+        photo=FSInputFile(
+            get_horen_image(task)
+        ),
+
+        caption=(
+
+            f"🎧 A1 Hören\n\n"
+
+            f"📝 Savol {task}/{total_questions}\n\n"
+
+            f"{question}"
+
+        ),
+
+        reply_markup=keyboard
+
+    )
 # =========================================================
 # HOREN ANSWER
 # =========================================================
@@ -3431,6 +3579,10 @@ async def sprechen_teil1(
     state: FSMContext
 ):
 
+    await state.update_data(
+        teil1_message_id=message.message_id
+    )
+
     await state.set_state(
         VizuSprechenState.teil21
     )
@@ -3454,7 +3606,6 @@ async def sprechen_teil1(
         )
 
     )
-
 # =========================================================
 # SPRECHEN TEIL 2.1
 # =========================================================
@@ -3466,6 +3617,10 @@ async def sprechen_teil21(
     message: Message,
     state: FSMContext
 ):
+
+    await state.update_data(
+        teil21_message_id=message.message_id
+    )
 
     await state.set_state(
         VizuSprechenState.teil22
@@ -3501,6 +3656,10 @@ async def sprechen_teil22(
     message: Message,
     state: FSMContext
 ):
+
+    await state.update_data(
+        teil22_message_id=message.message_id
+    )
 
     await state.set_state(
         VizuSprechenState.teil31
@@ -3540,6 +3699,10 @@ async def sprechen_teil31(
     state: FSMContext
 ):
 
+    await state.update_data(
+        teil31_message_id=message.message_id
+    )
+
     await state.set_state(
         VizuSprechenState.teil32
     )
@@ -3568,7 +3731,8 @@ async def sprechen_teil31(
 
         )
 
-    )# =========================================================
+    )
+# =========================================================
 # SPRECHEN TEIL 3.2
 # =========================================================
 
@@ -3600,7 +3764,7 @@ async def sprechen_teil32(
 
     try:
 
-        admin_msg = await bot.send_message(
+        await bot.send_message(
 
             ADMIN_CHANNEL_ID,
 
@@ -3618,13 +3782,16 @@ async def sprechen_teil32(
 
         for msg_id in [
 
-            data["teil1_message_id"],
-            data["teil21_message_id"],
-            data["teil22_message_id"],
-            data["teil31_message_id"],
-            data["teil32_message_id"]
+            data.get("teil1_message_id"),
+            data.get("teil21_message_id"),
+            data.get("teil22_message_id"),
+            data.get("teil31_message_id"),
+            data.get("teil32_message_id")
 
         ]:
+
+            if not msg_id:
+                continue
 
             await bot.forward_message(
 
@@ -3654,7 +3821,9 @@ async def sprechen_teil32(
 
         "📨 Barcha javoblaringiz adminga yuborildi.\n\n"
 
-        "⏳ Baholash kutilmoqda."
+        "⏳ Baholash kutilmoqda.\n\n"
+
+        "🏅 Ball qo'yilgandan so'ng sizga xabar yuboriladi."
 
     )
 
