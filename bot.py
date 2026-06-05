@@ -2580,6 +2580,7 @@ async def lesen_answer(
         callback.message,
         user_id
     )
+
 # =========================================================
 # OPEN HOREN
 # =========================================================
@@ -2639,11 +2640,8 @@ async def start_horen(
     if row:
 
         await callback.message.answer(
-
             "❌ Siz Hören testini allaqachon topshirgansiz.\n\n"
-
             "Mock Test faqat 1 marta ishlanadi."
-
         )
 
         await callback.answer()
@@ -2651,11 +2649,8 @@ async def start_horen(
         return
 
     vizu_horen_progress[user_id] = {
-
         "index": 0,
-
         "score": 0
-
     }
 
     await state.set_state(
@@ -2740,29 +2735,18 @@ async def send_horen_question(
                 score = EXCLUDED.score,
                 completed_at = NOW()
             """,
-            (
-                user_id,
-                score
-            )
+            (user_id, score)
         )
 
         await message.answer(
-
             f"🎧 HÖREN YAKUNLANDI\n\n"
-
             f"✅ To'g'ri javoblar: {score}\n"
-
             f"❌ Noto'g'ri javoblar: "
-            f"{len(vizu_horen_questions)-score}\n\n"
-
+            f"{len(vizu_horen_questions) - score}\n\n"
             f"📊 Natija: {percent}%"
-
         )
 
-        vizu_horen_progress.pop(
-            user_id,
-            None
-        )
+        vizu_horen_progress.pop(user_id, None)
 
         return
 
@@ -2826,26 +2810,23 @@ async def send_horen_question(
             ]
         )
 
-    await message.answer_audio(
-        audio=FSInputFile(audio_path)
+    # =====================================
+    # AUDIO + RASM YUBORISH (BARCHA TEILLAR)
+    # =====================================
+
+    await message.answer_document(
+        document=FSInputFile(audio_path),
+        caption="🎧 Audio"
     )
 
     await message.answer_photo(
-
         photo=FSInputFile(image_path),
-
         caption=(
-
             f"🎧 A1 Hören\n\n"
-
             f"📝 Savol {task}/15\n\n"
-
             f"{question}"
-
         ),
-
         reply_markup=keyboard
-
     )
 
 # =========================================================
@@ -2863,9 +2844,7 @@ async def horen_answer(
 
     user_id = callback.from_user.id
 
-    progress = vizu_horen_progress.get(
-        user_id
-    )
+    progress = vizu_horen_progress.get(user_id)
 
     if not progress:
 
@@ -2888,6 +2867,11 @@ async def horen_answer(
     progress["index"] += 1
 
     await callback.answer()
+
+    # Test tugagan bo'lsa state tozalanadi
+    if progress["index"] >= len(vizu_horen_questions):
+
+        await state.clear()
 
     await send_horen_question(
         callback.message,
