@@ -3772,31 +3772,44 @@ def load_vizu_lesen():
 # =========================================================
 # LOAD VIZU HOREN
 # =========================================================
-
 def load_vizu_horen():
-
+    global vizu_horen_questions
+    
     csv_path = "VIZU-A1/A1-Hörenmock.csv"
-
-    if not os.path.exists(csv_path):
-        logger.warning("Hören csv topilmadi")
+    
+    # FAYL YO'LINI TEKSHIRISH
+    logger.info(f"HÖREN CSV PATH: {os.path.abspath(csv_path)}")
+    logger.info(f"HÖREN CSV EXISTS: {os.path.exists(csv_path)}")
+    
+    # PAPKA ICHINI KO'RSATISH
+    folder = "VIZU-A1"
+    if os.path.exists(folder):
+        files = os.listdir(folder)
+        logger.info(f"VIZU-A1 FOLDER FILES: {files}")
+    else:
+        logger.error(f"VIZU-A1 PAPKASI TOPILMADI!")
         return
 
-    with open(
-        csv_path,
-        "r",
-        encoding="utf-8"
-    ) as f:
+    if not os.path.exists(csv_path):
+        logger.error(f"HÖREN CSV TOPILMADI: {csv_path}")
+        return
 
-        reader = csv.DictReader(f)
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            vizu_horen_questions = list(reader)
 
-        for row in reader:
-            vizu_horen_questions.append(row)
+        logger.info(
+            f"VIZU Hören loaded: {len(vizu_horen_questions)} questions ✅"
+        )
+        
+        # Birinchi qatorni tekshirish
+        if vizu_horen_questions:
+            logger.info(f"HÖREN FIRST ROW KEYS: {list(vizu_horen_questions[0].keys())}")
+            logger.info(f"HÖREN FIRST ROW: {vizu_horen_questions[0]}")
 
-    logger.info(
-        f"VIZU Hören loaded: "
-        f"{len(vizu_horen_questions)} questions"
-    )
-
+    except Exception as e:
+        logger.error(f"VIZU Hören load error: {e}")
 # =========================================================
 # DAILY RESET
 # =========================================================
@@ -5446,27 +5459,50 @@ async def admin_exit(message: Message):
 # =========================================================
 # MAIN INITIALIZATION & RUN
 # =========================================================
-
 async def main():
     try:
         init_db_pool()
         init_tables()
-        init_certificate_table() # Sertifikat jadvali qo'shildi
+        init_certificate_table()
         load_artikel()
         load_vizu_lesen()
         load_vizu_horen()
+
+        # =====================================================
+        # DEBUG: CSV YUKLANGANINI TEKSHIRISH
+        # =====================================================
+        logger.info(f"HÖREN QUESTIONS COUNT: {len(vizu_horen_questions)}")
+        logger.info(f"LESEN QUESTIONS COUNT: {len(vizu_lesen_questions)}")
+
+        # =====================================================
+        # DEBUG: VIZU-A1 PAPKASI ICHINI KO'RISH
+        # =====================================================
+        folder = "VIZU-A1"
+        if os.path.exists(folder):
+            files = os.listdir(folder)
+            logger.info(f"VIZU-A1 FILES: {files}")
+        else:
+            logger.error("VIZU-A1 PAPKASI YO'Q!")
+
         init_vizu_attempts_table()
         init_vizu_lesen_results_table()
         init_vizu_horen_results_table()
         load_all_quizzes()
         reset_daily_scores()
+
+        # =====================================================
+        # CONFLICT OLDINI OLISH
+        # =====================================================
         await bot.delete_webhook(drop_pending_updates=True)
-        
-        # Flask thread
+        await asyncio.sleep(2)
+
         Thread(target=run_web, daemon=True).start()
-        
+
         logger.info("BOT ISHGA TUSHDI ✅")
-        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+        await dp.start_polling(
+            bot,
+            allowed_updates=dp.resolve_used_update_types()
+        )
     except Exception as e:
         logger.error(f"CRITICAL MAIN ERROR: {e}")
 
