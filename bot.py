@@ -4559,7 +4559,7 @@ def generate_vizu_certificate(
 
         elements.append(
 
-            Image(
+            RLImage(
 
                 "VIZU-A1/top_header.png",
 
@@ -4735,7 +4735,7 @@ def generate_vizu_certificate(
 
         elements.append(
 
-            Image(
+            RLImage(
 
                 "VIZU-A1/bottom_footer.png",
 
