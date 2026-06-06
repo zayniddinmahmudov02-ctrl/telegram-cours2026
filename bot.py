@@ -2366,64 +2366,6 @@ async def start_vizu_test(
 
         return
     # =====================================
-    # 30 DAY LIMIT CHECK
-    # =====================================
-
-    row = db_execute(
-
-        """
-        SELECT attempted_at
-        FROM vizu_attempts
-        WHERE user_id = %s
-        AND level = %s
-        ORDER BY attempted_at DESC
-        LIMIT 1
-        """,
-
-        (
-            user_id,
-            level
-        ),
-
-        fetchone=True
-
-    )
-
-    if row:
-
-        last_attempt = row[0]
-
-        if (
-            datetime.now() -
-            last_attempt
-        ) < timedelta(days=30):
-
-            next_date = (
-                last_attempt +
-                timedelta(days=30)
-            ).strftime(
-                "%d.%m.%Y"
-            )
-
-            await callback.message.answer(
-
-                f"🏅 Siz {level} Mock Testni "
-                f"oxirgi 30 kun ichida topshirgansiz.\n\n"
-
-                f"📄 Sertifikatni quyidagi bo'limdan olishingiz mumkin:\n\n"
-
-                f"👤 Mening Profilim\n"
-                f"🏅 Mening Sertifikatlarim\n\n"
-
-                f"📅 Keyingi urinish:\n"
-                f"{next_date}"
-
-            )
-
-            await callback.answer()
-
-            return
-    # =====================================
     # CERTIFICATE CHECK
     # =====================================
 
