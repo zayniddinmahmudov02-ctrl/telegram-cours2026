@@ -4492,6 +4492,7 @@ def generate_vizu_certificate(
     schreiben,
     sprechen
 ):
+
     try:
 
         total = (
@@ -4535,23 +4536,25 @@ def generate_vizu_certificate(
             template_path
         ).convert("RGB")
 
-        draw = ImageDraw.Draw(image)
+        draw = ImageDraw.Draw(
+            image
+        )
 
         try:
 
             name_font = ImageFont.truetype(
                 "DejaVuSans-Bold.ttf",
-                34
+                42
             )
 
             score_font = ImageFont.truetype(
                 "DejaVuSans-Bold.ttf",
-                22
+                26
             )
 
             text_font = ImageFont.truetype(
                 "DejaVuSans.ttf",
-                18
+                15
             )
 
         except Exception:
@@ -4559,6 +4562,7 @@ def generate_vizu_certificate(
             name_font = ImageFont.load_default()
             score_font = ImageFont.load_default()
             text_font = ImageFont.load_default()
+
         # =====================================
         # NAME
         # =====================================
@@ -4569,14 +4573,16 @@ def generate_vizu_certificate(
             font=name_font
         )
 
-        text_width = bbox[2] - bbox[0]
+        text_width = (
+            bbox[2] - bbox[0]
+        )
 
         x = (
             image.width - text_width
         ) // 2
 
         draw.text(
-            (x, 450),
+            (x, 500),
             str(full_name),
             fill="black",
             font=name_font
@@ -4587,14 +4593,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 635),
+            (640, 670),
             str(horen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (805, 635),
+            (860, 670),
             horen_grade,
             fill="black",
             font=text_font
@@ -4605,14 +4611,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 700),
+            (640, 735),
             str(lesen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (805, 700),
+            (860, 735),
             lesen_grade,
             fill="black",
             font=text_font
@@ -4623,14 +4629,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 765),
+            (640, 800),
             str(schreiben),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (805, 765),
+            (860, 800),
             schreiben_grade,
             fill="black",
             font=text_font
@@ -4641,14 +4647,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 830),
+            (640, 865),
             str(sprechen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (805, 830),
+            (860, 865),
             sprechen_grade,
             fill="black",
             font=text_font
@@ -4659,14 +4665,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (610, 945),
+            (640, 1010),
             str(total),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (805, 945),
+            (860, 1010),
             total_grade,
             fill="black",
             font=text_font
@@ -4677,7 +4683,7 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (720, 1100),
+            (760, 1115),
             certificate_id,
             fill="black",
             font=text_font
@@ -4688,7 +4694,7 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (720, 1185),
+            (760, 1230),
             datetime.now().strftime(
                 "%d.%m.%Y"
             ),
