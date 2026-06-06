@@ -4495,12 +4495,7 @@ def generate_vizu_certificate(
 
     try:
 
-        total = (
-            lesen +
-            horen +
-            schreiben +
-            sprechen
-        )
+        total = lesen + horen + schreiben + sprechen
 
         certificate_id = (
             f"VIZU-A1-{str(user_id)[-6:]}"
@@ -4536,28 +4531,42 @@ def generate_vizu_certificate(
             template_path
         ).convert("RGB")
 
-        draw = ImageDraw.Draw(
-            image
-        )
-        name_font = ImageFont.truetype(
+        draw = ImageDraw.Draw(image)
+
+        try:
+
+            name_font = ImageFont.truetype(
                 "DejaVuSans-Bold.ttf",
-                42
+                44
             )
 
-        score_font = ImageFont.truetype(
+            score_font = ImageFont.truetype(
                 "DejaVuSans-Bold.ttf",
-                30
+                28
             )
 
-        text_font = ImageFont.truetype(
+            text_font = ImageFont.truetype(
                 "DejaVuSans.ttf",
                 20
-            ) 
-    except Exception:
+            )
 
-        name_font = ImageFont.load_default()
-        score_font = ImageFont.load_default()
-        text_font = ImageFont.load_default()
+            id_font = ImageFont.truetype(
+                "DejaVuSans.ttf",
+                22
+            )
+
+            date_font = ImageFont.truetype(
+                "DejaVuSans.ttf",
+                22
+            )
+
+        except Exception:
+
+            name_font = ImageFont.load_default()
+            score_font = ImageFont.load_default()
+            text_font = ImageFont.load_default()
+            id_font = ImageFont.load_default()
+            date_font = ImageFont.load_default()
 
         # =====================================
         # NAME
@@ -4583,19 +4592,20 @@ def generate_vizu_certificate(
             fill="black",
             font=name_font
         )
+
         # =====================================
         # HOREN
         # =====================================
 
         draw.text(
-            (615, 690),
+            (645, 688),
             str(horen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (865, 690),
+            (860, 688),
             horen_grade,
             fill="black",
             font=text_font
@@ -4606,14 +4616,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (615, 755),
+            (645, 754),
             str(lesen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (865, 755),
+            (860, 754),
             lesen_grade,
             fill="black",
             font=text_font
@@ -4624,14 +4634,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (615, 820),
+            (645, 820),
             str(schreiben),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (865, 820),
+            (860, 820),
             schreiben_grade,
             fill="black",
             font=text_font
@@ -4642,14 +4652,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (615, 885),
+            (645, 886),
             str(sprechen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (865, 885),
+            (860, 886),
             sprechen_grade,
             fill="black",
             font=text_font
@@ -4660,14 +4670,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (615, 1035),
+            (645, 1032),
             str(total),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (865, 1035),
+            (860, 1032),
             total_grade,
             fill="black",
             font=text_font
@@ -4677,13 +4687,8 @@ def generate_vizu_certificate(
         # CERTIFICATE ID
         # =====================================
 
-        id_font = ImageFont.truetype(
-            "DejaVuSans.ttf",
-            20
-        )
-
         draw.text(
-            (755, 1145),
+            (770, 1148),
             certificate_id,
             fill="black",
             font=id_font
@@ -4693,13 +4698,8 @@ def generate_vizu_certificate(
         # DATE
         # =====================================
 
-        date_font = ImageFont.truetype(
-            "DejaVuSans.ttf",
-            22
-        )
-
         draw.text(
-            (760, 1260),
+            (770, 1262),
             datetime.now().strftime(
                 "%d.%m.%Y"
             ),
@@ -4720,9 +4720,7 @@ def generate_vizu_certificate(
         )
 
         c.drawImage(
-            ImageReader(
-                png_path
-            ),
+            ImageReader(png_path),
             0,
             0,
             width=image.width,
