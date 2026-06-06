@@ -20,6 +20,8 @@ from reportlab.platypus import (
 
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 # =========================================================
 # THIRD-PARTY IMPORTS
 # =========================================================
@@ -4396,7 +4398,6 @@ async def get_certificate(
         if total_score >= 60
         else "❌ NICHT BESTANDEN"
     )
-
     # =====================================
     # SEND PDF TO USER
     # =====================================
@@ -4423,7 +4424,6 @@ async def get_certificate(
         )
 
     )
-
     # =====================================
     # SEND PDF TO ADMIN CHANNEL
     # =====================================
@@ -4512,21 +4512,10 @@ def generate_vizu_certificate(
             f"VIZU-A1-{str(user_id)[-6:]}"
         )
 
-        horen_grade = get_certificate_grade(
-            horen
-        )
-
-        lesen_grade = get_certificate_grade(
-            lesen
-        )
-
-        schreiben_grade = get_certificate_grade(
-            schreiben
-        )
-
-        sprechen_grade = get_certificate_grade(
-            sprechen
-        )
+        horen_grade = get_certificate_grade(horen)
+        lesen_grade = get_certificate_grade(lesen)
+        schreiben_grade = get_certificate_grade(schreiben)
+        sprechen_grade = get_certificate_grade(sprechen)
 
         total_grade = get_certificate_grade(
             round(total / 4)
@@ -4541,200 +4530,161 @@ def generate_vizu_certificate(
             f"certificates/{user_id}.pdf"
         )
 
-        doc = SimpleDocTemplate(
-            pdf_path
+        template_path = (
+            "VIZU-A1/certificate-template.png"
         )
 
-        styles = getSampleStyleSheet()
-
-        content = []
-
-        # =====================================
-        # TITLE
-        # =====================================
-
-        title = Paragraph(
-            "<b>VIZU ACADEMY</b>",
-            styles["Title"]
+        c = canvas.Canvas(
+            pdf_path,
+            pagesize=(1086, 1448)
         )
 
-        content.append(title)
-        content.append(Spacer(1, 12))
-
-        subtitle = Paragraph(
-            "<b>DEUTSCH-ZERTIFIKAT</b>",
-            styles["Heading2"]
+        c.drawImage(
+            ImageReader(template_path),
+            0,
+            0,
+            width=1086,
+            height=1448
         )
 
-        content.append(subtitle)
-        content.append(Spacer(1, 20))
-
         # =====================================
-        # INFO
+        # NAME
         # =====================================
 
-        content.append(
+        c.setFont(
+            "Helvetica-Bold",
+            28
+        )
 
-            Paragraph(
-                f"<b>Name:</b> {full_name}",
-                styles["Normal"]
+        c.drawCentredString(
+            543,
+            1010,
+            str(full_name)
+        )
+
+        # =====================================
+        # HOREN
+        # =====================================
+
+        c.setFont(
+            "Helvetica-Bold",
+            18
+        )
+
+        c.drawString(
+            660,
+            825,
+            str(horen)
+        )
+
+        c.drawString(
+            810,
+            825,
+            horen_grade
+        )
+
+        # =====================================
+        # LESEN
+        # =====================================
+
+        c.drawString(
+            660,
+            760,
+            str(lesen)
+        )
+
+        c.drawString(
+            810,
+            760,
+            lesen_grade
+        )
+
+        # =====================================
+        # SCHREIBEN
+        # =====================================
+
+        c.drawString(
+            660,
+            695,
+            str(schreiben)
+        )
+
+        c.drawString(
+            810,
+            695,
+            schreiben_grade
+        )
+
+        # =====================================
+        # SPRECHEN
+        # =====================================
+
+        c.drawString(
+            660,
+            630,
+            str(sprechen)
+        )
+
+        c.drawString(
+            810,
+            630,
+            sprechen_grade
+        )
+
+        # =====================================
+        # TOTAL
+        # =====================================
+
+        c.setFont(
+            "Helvetica-Bold",
+            20
+        )
+
+        c.drawString(
+            610,
+            545,
+            str(total)
+        )
+
+        c.setFont(
+            "Helvetica",
+            16
+        )
+
+        c.drawString(
+            810,
+            545,
+            total_grade
+        )
+
+        # =====================================
+        # CERTIFICATE ID
+        # =====================================
+
+        c.setFont(
+            "Helvetica",
+            15
+        )
+
+        c.drawString(
+            720,
+            335,
+            certificate_id
+        )
+
+        # =====================================
+        # DATE
+        # =====================================
+
+        c.drawString(
+            720,
+            215,
+            datetime.now().strftime(
+                "%d.%m.%Y"
             )
-
         )
 
-        content.append(
-
-            Paragraph(
-                f"<b>Zertifikat-ID:</b> {certificate_id}",
-                styles["Normal"]
-            )
-
-        )
-
-        content.append(
-
-            Paragraph(
-                f"<b>Datum:</b> {datetime.now().strftime('%d.%m.%Y')}",
-                styles["Normal"]
-            )
-
-        )
-
-        content.append(
-            Spacer(1, 20)
-        )
-
-        # =====================================
-        # TABLE
-        # =====================================
-
-        table_data = [
-
-            [
-                "Teil",
-                "Punkte",
-                "Bewertung"
-            ],
-
-            [
-                "Hören",
-                f"{horen}/25",
-                horen_grade
-            ],
-
-            [
-                "Lesen",
-                f"{lesen}/25",
-                lesen_grade
-            ],
-
-            [
-                "Schreiben",
-                f"{schreiben}/25",
-                schreiben_grade
-            ],
-
-            [
-                "Sprechen",
-                f"{sprechen}/25",
-                sprechen_grade
-            ],
-
-            [
-                "Gesamt",
-                f"{total}/100",
-                total_grade
-            ]
-
-        ]
-
-        table = Table(
-            table_data,
-            colWidths=[120, 120, 180]
-        )
-
-        table.setStyle(
-
-            TableStyle([
-
-                (
-                    "GRID",
-                    (0, 0),
-                    (-1, -1),
-                    1,
-                    colors.black
-                ),
-
-                (
-                    "BACKGROUND",
-                    (0, 0),
-                    (-1, 0),
-                    colors.lightgrey
-                ),
-
-                (
-                    "FONTNAME",
-                    (0, 0),
-                    (-1, 0),
-                    "Helvetica-Bold"
-                )
-
-            ])
-
-        )
-
-        content.append(table)
-
-        content.append(
-            Spacer(1, 25)
-        )
-
-        # =====================================
-        # RESULT
-        # =====================================
-
-        if total >= 60:
-
-            result = "BESTANDEN"
-
-        else:
-
-            result = "NICHT BESTANDEN"
-
-        content.append(
-
-            Paragraph(
-                f"<b>Status:</b> {result}",
-                styles["Heading3"]
-            )
-
-        )
-
-        content.append(
-            Spacer(1, 30)
-        )
-
-        # =====================================
-        # DISCLAIMER
-        # =====================================
-
-        content.append(
-
-            Paragraph(
-
-                "Hinweis: Dieses Zertifikat basiert auf einem "
-                "Einstufungs- und Mock-Test der VIZU Academy. "
-                "Es handelt sich nicht um ein offizielles Goethe-, "
-                "ÖSD- oder telc-Zertifikat und wird von staatlichen "
-                "Institutionen nicht anerkannt.",
-
-                styles["Italic"]
-
-            )
-
-        )
-
-        doc.build(content)
+        c.save()
 
         logger.info(
             f"Certificate PDF created: {pdf_path}"
