@@ -10,18 +10,7 @@ from datetime import datetime, timedelta, date
 from contextlib import contextmanager
 from threading import Thread
 from typing import Optional
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
-    TableStyle
-)
 
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 # =========================================================
 # THIRD-PARTY IMPORTS
 # =========================================================
@@ -49,7 +38,12 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 # Logging sozlamalari
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -4487,7 +4481,7 @@ def get_certificate_grade(score):
 
     return "Nicht bestanden"
 # =========================================================
-# GENERATE VIZU PDF CERTIFICATE
+# GENERATE VIZU CERTIFICATE
 # =========================================================
 
 def generate_vizu_certificate(
@@ -4498,7 +4492,6 @@ def generate_vizu_certificate(
     schreiben,
     sprechen
 ):
-
     try:
 
         total = (
@@ -4526,168 +4519,209 @@ def generate_vizu_certificate(
             exist_ok=True
         )
 
-        pdf_path = (
-            f"certificates/{user_id}.pdf"
-        )
-
         template_path = (
             "VIZU-A1/certificate-template.png"
         )
 
-        c = canvas.Canvas(
-            pdf_path,
-            pagesize=(1086, 1448)
+        png_path = (
+            f"certificates/{user_id}.png"
         )
 
-        c.drawImage(
-            ImageReader(template_path),
-            0,
-            0,
-            width=1086,
-            height=1448
+        pdf_path = (
+            f"certificates/{user_id}.pdf"
         )
 
+        image = Image.open(
+            template_path
+        ).convert("RGB")
+
+        draw = ImageDraw.Draw(image)
+
+        try:
+
+            name_font = ImageFont.truetype(
+                "DejaVuSans-Bold.ttf",
+                34
+            )
+
+            score_font = ImageFont.truetype(
+                "DejaVuSans-Bold.ttf",
+                22
+            )
+
+            text_font = ImageFont.truetype(
+                "DejaVuSans.ttf",
+                18
+            )
+
+        except Exception:
+
+            name_font = ImageFont.load_default()
+            score_font = ImageFont.load_default()
+            text_font = ImageFont.load_default()
         # =====================================
         # NAME
         # =====================================
 
-        c.setFont(
-            "Helvetica-Bold",
-            28
+        bbox = draw.textbbox(
+            (0, 0),
+            str(full_name),
+            font=name_font
         )
 
-        c.drawCentredString(
-            543,
-            1010,
-            str(full_name)
+        text_width = bbox[2] - bbox[0]
+
+        x = (
+            image.width - text_width
+        ) // 2
+
+        draw.text(
+            (x, 450),
+            str(full_name),
+            fill="black",
+            font=name_font
         )
 
         # =====================================
         # HOREN
         # =====================================
 
-        c.setFont(
-            "Helvetica-Bold",
-            18
+        draw.text(
+            (640, 635),
+            str(horen),
+            fill="black",
+            font=score_font
         )
 
-        c.drawString(
-            660,
-            825,
-            str(horen)
-        )
-
-        c.drawString(
-            810,
-            825,
-            horen_grade
+        draw.text(
+            (805, 635),
+            horen_grade,
+            fill="black",
+            font=text_font
         )
 
         # =====================================
         # LESEN
         # =====================================
 
-        c.drawString(
-            660,
-            760,
-            str(lesen)
+        draw.text(
+            (640, 700),
+            str(lesen),
+            fill="black",
+            font=score_font
         )
 
-        c.drawString(
-            810,
-            760,
-            lesen_grade
+        draw.text(
+            (805, 700),
+            lesen_grade,
+            fill="black",
+            font=text_font
         )
 
         # =====================================
         # SCHREIBEN
         # =====================================
 
-        c.drawString(
-            660,
-            695,
-            str(schreiben)
+        draw.text(
+            (640, 765),
+            str(schreiben),
+            fill="black",
+            font=score_font
         )
 
-        c.drawString(
-            810,
-            695,
-            schreiben_grade
+        draw.text(
+            (805, 765),
+            schreiben_grade,
+            fill="black",
+            font=text_font
         )
 
         # =====================================
         # SPRECHEN
         # =====================================
 
-        c.drawString(
-            660,
-            630,
-            str(sprechen)
+        draw.text(
+            (640, 830),
+            str(sprechen),
+            fill="black",
+            font=score_font
         )
 
-        c.drawString(
-            810,
-            630,
-            sprechen_grade
+        draw.text(
+            (805, 830),
+            sprechen_grade,
+            fill="black",
+            font=text_font
         )
 
         # =====================================
         # TOTAL
         # =====================================
 
-        c.setFont(
-            "Helvetica-Bold",
-            20
+        draw.text(
+            (610, 945),
+            str(total),
+            fill="black",
+            font=score_font
         )
 
-        c.drawString(
-            610,
-            545,
-            str(total)
-        )
-
-        c.setFont(
-            "Helvetica",
-            16
-        )
-
-        c.drawString(
-            810,
-            545,
-            total_grade
+        draw.text(
+            (805, 945),
+            total_grade,
+            fill="black",
+            font=text_font
         )
 
         # =====================================
         # CERTIFICATE ID
         # =====================================
 
-        c.setFont(
-            "Helvetica",
-            15
-        )
-
-        c.drawString(
-            720,
-            335,
-            certificate_id
+        draw.text(
+            (720, 1100),
+            certificate_id,
+            fill="black",
+            font=text_font
         )
 
         # =====================================
         # DATE
         # =====================================
 
-        c.drawString(
-            720,
-            215,
+        draw.text(
+            (720, 1185),
             datetime.now().strftime(
                 "%d.%m.%Y"
+            ),
+            fill="black",
+            font=text_font
+        )
+
+        image.save(
+            png_path
+        )
+
+        c = canvas.Canvas(
+            pdf_path,
+            pagesize=(
+                image.width,
+                image.height
             )
+        )
+
+        c.drawImage(
+            ImageReader(
+                png_path
+            ),
+            0,
+            0,
+            width=image.width,
+            height=image.height
         )
 
         c.save()
 
         logger.info(
-            f"Certificate PDF created: {pdf_path}"
+            f"Certificate created: {pdf_path}"
         )
 
         return pdf_path
@@ -4695,7 +4729,7 @@ def generate_vizu_certificate(
     except Exception as e:
 
         logger.error(
-            f"CERTIFICATE PDF ERROR: {e}"
+            f"CERTIFICATE ERROR: {e}"
         )
 
         return None
