@@ -617,6 +617,7 @@ lessons_menu = ReplyKeyboardMarkup(
 def profile_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
+            [KeyboardButton(text="🏅 Mening Sertifikatlarim")],
             [KeyboardButton(text="✏️ Ism Familiyani o'zgartirish")],
             [KeyboardButton(text="🔥 XP Reytingi")],
             [KeyboardButton(text="⬅️ Orqaga")]
@@ -1601,7 +1602,48 @@ async def my_profile(message: Message):
         f"🔓 Daraja: {user[5] or 'A1'}",
         reply_markup=profile_keyboard()
     )
+# =========================================================
+# MY CERTIFICATES
+# =========================================================
 
+@dp.message(
+    F.text == "🏅 Mening Sertifikatlarim"
+)
+async def my_certificates(
+    message: Message
+):
+
+    pdf_path = (
+        f"certificates/{message.from_user.id}.pdf"
+    )
+
+    if not os.path.exists(
+        pdf_path
+    ):
+
+        await message.answer(
+
+            "❌ Sizda hali sertifikat mavjud emas."
+
+        )
+
+        return
+
+    await message.answer_document(
+
+        document=FSInputFile(
+            pdf_path
+        ),
+
+        caption=(
+
+            "🏅 VIZU Academy Sertifikati\n\n"
+
+            "📄 Sertifikatingiz qayta yuklandi."
+
+        )
+
+    )
 # =========================================================
 # CHANGE NAME START
 # =========================================================
@@ -2323,12 +2365,12 @@ async def start_vizu_test(
         await callback.answer()
 
         return
-
     # =====================================
     # 30 DAY LIMIT CHECK
     # =====================================
 
     row = db_execute(
+
         """
         SELECT attempted_at
         FROM vizu_attempts
@@ -2337,11 +2379,14 @@ async def start_vizu_test(
         ORDER BY attempted_at DESC
         LIMIT 1
         """,
+
         (
             user_id,
             level
         ),
+
         fetchone=True
+
     )
 
     if row:
@@ -2362,11 +2407,15 @@ async def start_vizu_test(
 
             await callback.message.answer(
 
-                f"❌ Siz {level} Mock Testni "
+                f"🏅 Siz {level} Mock Testni "
                 f"oxirgi 30 kun ichida topshirgansiz.\n\n"
 
-                f"📅 Keyingi urinish:\n"
+                f"📄 Sertifikatni quyidagi bo'limdan olishingiz mumkin:\n\n"
 
+                f"👤 Mening Profilim\n"
+                f"🏅 Mening Sertifikatlarim\n\n"
+
+                f"📅 Keyingi urinish:\n"
                 f"{next_date}"
 
             )
@@ -2374,15 +2423,51 @@ async def start_vizu_test(
             await callback.answer()
 
             return
+    # =====================================
+    # CERTIFICATE CHECK
+    # =====================================
+
+    certificate = db_execute(
+
+        """
+        SELECT created_at
+        FROM certificates
+        WHERE user_id = %s
+        """,
+
+        (
+            user_id,
+        ),
+
+        fetchone=True
+
+    )
+
+    if certificate:
+
+        await callback.message.answer(
+
+            "🏅 Siz ushbu Mock Testni allaqachon topshirgansiz.\n\n"
+
+            "📄 Sertifikatni quyidagi bo'limdan olishingiz mumkin:\n\n"
+
+            "👤 Mening Profilim\n"
+            "🏅 Mening Sertifikatlarim"
+
+        )
+
+        await callback.answer()
+
+        return
 
     # =====================================
     # SAVE ATTEMPT
     # =====================================
 
     db_execute(
+
         """
-        INSERT INTO
-        vizu_attempts
+        INSERT INTO vizu_attempts
         (
             user_id,
             level
@@ -2393,12 +2478,32 @@ async def start_vizu_test(
             %s
         )
         """,
+
         (
             user_id,
             level
         )
+
     )
 
+    vizu_mock_deadlines[user_id] = (
+        datetime.now() +
+        timedelta(minutes=80)
+    )
+
+    await callback.message.answer(
+
+        f"🏅 {level} Mock Test\n\n"
+
+        f"⏱ Umumiy vaqt: 80 daqiqa\n\n"
+
+        f"📚 Kerakli bo'limni tanlang:",
+
+        reply_markup=keyboard
+
+    )
+
+    await callback.answer()
     # =====================================
     # START 80 MIN TIMER
     # =====================================
@@ -4425,6 +4530,39 @@ async def get_certificate(
 
     )
     # =====================================
+    # SAVE CERTIFICATE
+    # =====================================
+
+    db_execute(
+
+        """
+        INSERT INTO certificates
+        (
+            user_id,
+            total_score
+        )
+        VALUES
+        (
+            %s,
+            %s
+        )
+
+        ON CONFLICT (user_id)
+
+        DO UPDATE SET
+
+            total_score = EXCLUDED.total_score,
+
+            created_at = NOW()
+        """,
+
+        (
+            user_id,
+            total_score
+        )
+
+    )
+    # =====================================
     # SEND PDF TO ADMIN CHANNEL
     # =====================================
 
@@ -4467,6 +4605,13 @@ async def get_certificate(
         logger.error(
             f"CERTIFICATE ADMIN SEND ERROR: {e}"
         )
+        await message.answer(
+
+        "🏠 Asosiy menyuga qaytdingiz.",
+
+        reply_markup=main_menu
+
+    )
 # =========================================================
 # CERTIFICATE GRADE
 # =========================================================
