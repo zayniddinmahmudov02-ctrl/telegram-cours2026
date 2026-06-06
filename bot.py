@@ -4383,15 +4383,27 @@ async def get_certificate(
 
     )
 
+    if not certificate_path:
+
+        await message.answer(
+            "❌ Sertifikat yaratishda xatolik yuz berdi."
+        )
+
+        return
+
     status = (
         "✅ BESTANDEN"
         if total_score >= 60
         else "❌ NICHT BESTANDEN"
     )
 
-    await message.answer_photo(
+    # =====================================
+    # SEND PDF TO USER
+    # =====================================
 
-        photo=FSInputFile(
+    await message.answer_document(
+
+        document=FSInputFile(
             certificate_path
         ),
 
@@ -4411,17 +4423,18 @@ async def get_certificate(
         )
 
     )
+
     # =====================================
-    # SEND TO ADMIN CHANNEL
+    # SEND PDF TO ADMIN CHANNEL
     # =====================================
 
     try:
 
-        await bot.send_photo(
+        await bot.send_document(
 
             chat_id=ADMIN_CHANNEL_ID,
 
-            photo=FSInputFile(
+            document=FSInputFile(
                 certificate_path
             ),
 
