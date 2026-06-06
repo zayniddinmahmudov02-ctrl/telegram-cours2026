@@ -16,9 +16,8 @@ from reportlab.platypus import (
     Spacer,
     Table,
     TableStyle,
-    Image
+    Image as RLImage
 )
-
 from reportlab.lib import colors
 
 from reportlab.lib.styles import (
