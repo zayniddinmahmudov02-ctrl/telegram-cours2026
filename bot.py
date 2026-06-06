@@ -4539,29 +4539,25 @@ def generate_vizu_certificate(
         draw = ImageDraw.Draw(
             image
         )
-
-        try:
-
-            name_font = ImageFont.truetype(
+        name_font = ImageFont.truetype(
                 "DejaVuSans-Bold.ttf",
                 42
             )
 
-            score_font = ImageFont.truetype(
+        score_font = ImageFont.truetype(
                 "DejaVuSans-Bold.ttf",
-                26
+                30
             )
 
-            text_font = ImageFont.truetype(
+        text_font = ImageFont.truetype(
                 "DejaVuSans.ttf",
-                15
-            )
+                20
+            ) 
+    except Exception:
 
-        except Exception:
-
-            name_font = ImageFont.load_default()
-            score_font = ImageFont.load_default()
-            text_font = ImageFont.load_default()
+        name_font = ImageFont.load_default()
+        score_font = ImageFont.load_default()
+        text_font = ImageFont.load_default()
 
         # =====================================
         # NAME
@@ -4587,20 +4583,19 @@ def generate_vizu_certificate(
             fill="black",
             font=name_font
         )
-
         # =====================================
         # HOREN
         # =====================================
 
         draw.text(
-            (640, 670),
+            (615, 690),
             str(horen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (860, 670),
+            (865, 690),
             horen_grade,
             fill="black",
             font=text_font
@@ -4611,14 +4606,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 735),
+            (615, 755),
             str(lesen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (860, 735),
+            (865, 755),
             lesen_grade,
             fill="black",
             font=text_font
@@ -4629,14 +4624,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 800),
+            (615, 820),
             str(schreiben),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (860, 800),
+            (865, 820),
             schreiben_grade,
             fill="black",
             font=text_font
@@ -4647,14 +4642,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 865),
+            (615, 885),
             str(sprechen),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (860, 865),
+            (865, 885),
             sprechen_grade,
             fill="black",
             font=text_font
@@ -4665,14 +4660,14 @@ def generate_vizu_certificate(
         # =====================================
 
         draw.text(
-            (640, 1010),
+            (615, 1035),
             str(total),
             fill="black",
             font=score_font
         )
 
         draw.text(
-            (860, 1010),
+            (865, 1035),
             total_grade,
             fill="black",
             font=text_font
@@ -4682,24 +4677,34 @@ def generate_vizu_certificate(
         # CERTIFICATE ID
         # =====================================
 
+        id_font = ImageFont.truetype(
+            "DejaVuSans.ttf",
+            20
+        )
+
         draw.text(
-            (760, 1115),
+            (755, 1145),
             certificate_id,
             fill="black",
-            font=text_font
+            font=id_font
         )
 
         # =====================================
         # DATE
         # =====================================
 
+        date_font = ImageFont.truetype(
+            "DejaVuSans.ttf",
+            22
+        )
+
         draw.text(
-            (760, 1230),
+            (760, 1260),
             datetime.now().strftime(
                 "%d.%m.%Y"
             ),
             fill="black",
-            font=text_font
+            font=date_font
         )
 
         image.save(
