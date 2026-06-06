@@ -10,7 +10,16 @@ from datetime import datetime, timedelta, date
 from contextlib import contextmanager
 from threading import Thread
 from typing import Optional
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle
+)
 
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 # =========================================================
 # THIRD-PARTY IMPORTS
 # =========================================================
@@ -4465,7 +4474,7 @@ def get_certificate_grade(score):
 
     return "Nicht bestanden"
 # =========================================================
-# GENERATE VIZU CERTIFICATE
+# GENERATE VIZU PDF CERTIFICATE
 # =========================================================
 
 def generate_vizu_certificate(
@@ -4515,214 +4524,215 @@ def generate_vizu_certificate(
             exist_ok=True
         )
 
-        template_path = (
-            "VIZU-A1/certificate-template.png"
+        pdf_path = (
+            f"certificates/{user_id}.pdf"
         )
 
-        if not os.path.exists(
-            template_path
-        ):
+        doc = SimpleDocTemplate(
+            pdf_path
+        )
 
-            logger.error(
-                f"Certificate template not found: {template_path}"
+        styles = getSampleStyleSheet()
+
+        content = []
+
+        # =====================================
+        # TITLE
+        # =====================================
+
+        title = Paragraph(
+            "<b>VIZU ACADEMY</b>",
+            styles["Title"]
+        )
+
+        content.append(title)
+        content.append(Spacer(1, 12))
+
+        subtitle = Paragraph(
+            "<b>DEUTSCH-ZERTIFIKAT</b>",
+            styles["Heading2"]
+        )
+
+        content.append(subtitle)
+        content.append(Spacer(1, 20))
+
+        # =====================================
+        # INFO
+        # =====================================
+
+        content.append(
+
+            Paragraph(
+                f"<b>Name:</b> {full_name}",
+                styles["Normal"]
             )
 
-            return None
-
-        image = Image.open(
-            template_path
-        ).convert(
-            "RGB"
         )
 
-        draw = ImageDraw.Draw(
-            image
-        )
+        content.append(
 
-        # =====================================
-        # FONTS
-        # =====================================
-
-        try:
-
-            name_font = ImageFont.truetype(
-                "DejaVuSans-Bold.ttf",
-                34
+            Paragraph(
+                f"<b>Zertifikat-ID:</b> {certificate_id}",
+                styles["Normal"]
             )
 
-            text_font = ImageFont.truetype(
-                "DejaVuSans.ttf",
-                18
+        )
+
+        content.append(
+
+            Paragraph(
+                f"<b>Datum:</b> {datetime.now().strftime('%d.%m.%Y')}",
+                styles["Normal"]
             )
 
-            score_font = ImageFont.truetype(
-                "DejaVuSans-Bold.ttf",
-                22
+        )
+
+        content.append(
+            Spacer(1, 20)
+        )
+
+        # =====================================
+        # TABLE
+        # =====================================
+
+        table_data = [
+
+            [
+                "Teil",
+                "Punkte",
+                "Bewertung"
+            ],
+
+            [
+                "Hören",
+                f"{horen}/25",
+                horen_grade
+            ],
+
+            [
+                "Lesen",
+                f"{lesen}/25",
+                lesen_grade
+            ],
+
+            [
+                "Schreiben",
+                f"{schreiben}/25",
+                schreiben_grade
+            ],
+
+            [
+                "Sprechen",
+                f"{sprechen}/25",
+                sprechen_grade
+            ],
+
+            [
+                "Gesamt",
+                f"{total}/100",
+                total_grade
+            ]
+
+        ]
+
+        table = Table(
+            table_data,
+            colWidths=[120, 120, 180]
+        )
+
+        table.setStyle(
+
+            TableStyle([
+
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    1,
+                    colors.black
+                ),
+
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.lightgrey
+                ),
+
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold"
+                )
+
+            ])
+
+        )
+
+        content.append(table)
+
+        content.append(
+            Spacer(1, 25)
+        )
+
+        # =====================================
+        # RESULT
+        # =====================================
+
+        if total >= 60:
+
+            result = "BESTANDEN"
+
+        else:
+
+            result = "NICHT BESTANDEN"
+
+        content.append(
+
+            Paragraph(
+                f"<b>Status:</b> {result}",
+                styles["Heading3"]
             )
 
-        except Exception:
-
-            name_font = ImageFont.load_default()
-
-            text_font = ImageFont.load_default()
-
-            score_font = ImageFont.load_default()
-
-        # =====================================
-        # NAME (AUTO CENTER)
-        # =====================================
-
-        bbox = draw.textbbox(
-            (0, 0),
-            str(full_name),
-            font=name_font
         )
 
-        text_width = (
-            bbox[2] - bbox[0]
-        )
-
-        x = (
-            image.width - text_width
-        ) // 2
-
-        draw.text(
-            (x, 370),
-            str(full_name),
-            fill="black",
-            font=name_font
+        content.append(
+            Spacer(1, 30)
         )
 
         # =====================================
-        # HOREN
+        # DISCLAIMER
         # =====================================
 
-        draw.text(
-            (630, 520),
-            str(horen),
-            fill="black",
-            font=score_font
+        content.append(
+
+            Paragraph(
+
+                "Hinweis: Dieses Zertifikat basiert auf einem "
+                "Einstufungs- und Mock-Test der VIZU Academy. "
+                "Es handelt sich nicht um ein offizielles Goethe-, "
+                "ÖSD- oder telc-Zertifikat und wird von staatlichen "
+                "Institutionen nicht anerkannt.",
+
+                styles["Italic"]
+
+            )
+
         )
 
-        draw.text(
-            (795, 520),
-            horen_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # LESEN
-        # =====================================
-
-        draw.text(
-            (630, 588),
-            str(lesen),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (795, 588),
-            lesen_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # SCHREIBEN
-        # =====================================
-
-        draw.text(
-            (630, 655),
-            str(schreiben),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (795, 655),
-            schreiben_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # SPRECHEN
-        # =====================================
-
-        draw.text(
-            (630, 723),
-            str(sprechen),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (795, 723),
-            sprechen_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # TOTAL SCORE
-        # =====================================
-
-        draw.text(
-            (630, 805),
-            str(total),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (795, 805),
-            total_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # CERTIFICATE ID
-        # =====================================
-
-        draw.text(
-            (720, 935),
-            certificate_id,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # DATE
-        # =====================================
-
-        draw.text(
-            (720, 1018),
-            datetime.now().strftime("%d.%m.%Y"),
-            fill="black",
-            font=text_font
-        )
-
-        output_file = (
-            f"certificates/{user_id}.png"
-        )
-
-        image.save(
-            output_file
-        )
+        doc.build(content)
 
         logger.info(
-            f"Certificate created: {output_file}"
+            f"Certificate PDF created: {pdf_path}"
         )
 
-        return output_file
+        return pdf_path
 
     except Exception as e:
 
         logger.error(
-            f"CERTIFICATE GENERATION ERROR: {e}"
+            f"CERTIFICATE PDF ERROR: {e}"
         )
 
         return None
