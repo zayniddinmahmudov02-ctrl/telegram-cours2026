@@ -10,7 +10,20 @@ from datetime import datetime, timedelta, date
 from contextlib import contextmanager
 from threading import Thread
 from typing import Optional
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image
+)
 
+from reportlab.lib import colors
+
+from reportlab.lib.styles import (
+    getSampleStyleSheet
+)
 # =========================================================
 # THIRD-PARTY IMPORTS
 # =========================================================
@@ -38,12 +51,6 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
-
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 # Logging sozlamalari
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -4495,16 +4502,32 @@ def generate_vizu_certificate(
 
     try:
 
-        total = lesen + horen + schreiben + sprechen
+        total = (
+            lesen +
+            horen +
+            schreiben +
+            sprechen
+        )
 
         certificate_id = (
             f"VIZU-A1-{str(user_id)[-6:]}"
         )
 
-        horen_grade = get_certificate_grade(horen)
-        lesen_grade = get_certificate_grade(lesen)
-        schreiben_grade = get_certificate_grade(schreiben)
-        sprechen_grade = get_certificate_grade(sprechen)
+        horen_grade = get_certificate_grade(
+            horen
+        )
+
+        lesen_grade = get_certificate_grade(
+            lesen
+        )
+
+        schreiben_grade = get_certificate_grade(
+            schreiben
+        )
+
+        sprechen_grade = get_certificate_grade(
+            sprechen
+        )
 
         total_grade = get_certificate_grade(
             round(total / 4)
@@ -4515,219 +4538,219 @@ def generate_vizu_certificate(
             exist_ok=True
         )
 
-        template_path = (
-            "VIZU-A1/certificate-template.png"
-        )
-
-        png_path = (
-            f"certificates/{user_id}.png"
-        )
-
         pdf_path = (
             f"certificates/{user_id}.pdf"
         )
 
-        image = Image.open(
-            template_path
-        ).convert("RGB")
+        doc = SimpleDocTemplate(
+            pdf_path,
+            topMargin=0,
+            bottomMargin=0,
+            leftMargin=40,
+            rightMargin=40
+        )
 
-        draw = ImageDraw.Draw(image)
+        styles = getSampleStyleSheet()
 
-        try:
+        elements = []
 
-            name_font = ImageFont.truetype(
-                "DejaVuSans-Bold.ttf",
-                44
+        # =====================================
+        # HEADER
+        # =====================================
+
+        elements.append(
+
+            Image(
+
+                "VIZU-A1/top_header.png",
+
+                width=520,
+
+                height=250
+
             )
 
-            score_font = ImageFont.truetype(
-                "DejaVuSans-Bold.ttf",
-                28
-            )
+        )
 
-            text_font = ImageFont.truetype(
-                "DejaVuSans.ttf",
-                20
-            )
-
-            id_font = ImageFont.truetype(
-                "DejaVuSans.ttf",
-                22
-            )
-
-            date_font = ImageFont.truetype(
-                "DejaVuSans.ttf",
-                22
-            )
-
-        except Exception:
-
-            name_font = ImageFont.load_default()
-            score_font = ImageFont.load_default()
-            text_font = ImageFont.load_default()
-            id_font = ImageFont.load_default()
-            date_font = ImageFont.load_default()
+        elements.append(
+            Spacer(1, 20)
+        )
 
         # =====================================
         # NAME
         # =====================================
 
-        bbox = draw.textbbox(
-            (0, 0),
-            str(full_name),
-            font=name_font
-        )
+        elements.append(
 
-        text_width = (
-            bbox[2] - bbox[0]
-        )
+            Paragraph(
 
-        x = (
-            image.width - text_width
-        ) // 2
+                f"<para align='center'><b>{full_name}</b></para>",
 
-        draw.text(
-            (x, 500),
-            str(full_name),
-            fill="black",
-            font=name_font
-        )
+                styles["Title"]
 
-        # =====================================
-        # HOREN
-        # =====================================
-
-        draw.text(
-            (645, 688),
-            str(horen),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (860, 688),
-            horen_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # LESEN
-        # =====================================
-
-        draw.text(
-            (645, 754),
-            str(lesen),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (860, 754),
-            lesen_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # SCHREIBEN
-        # =====================================
-
-        draw.text(
-            (645, 820),
-            str(schreiben),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (860, 820),
-            schreiben_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # SPRECHEN
-        # =====================================
-
-        draw.text(
-            (645, 886),
-            str(sprechen),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (860, 886),
-            sprechen_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # TOTAL
-        # =====================================
-
-        draw.text(
-            (645, 1032),
-            str(total),
-            fill="black",
-            font=score_font
-        )
-
-        draw.text(
-            (860, 1032),
-            total_grade,
-            fill="black",
-            font=text_font
-        )
-
-        # =====================================
-        # CERTIFICATE ID
-        # =====================================
-
-        draw.text(
-            (770, 1148),
-            certificate_id,
-            fill="black",
-            font=id_font
-        )
-
-        # =====================================
-        # DATE
-        # =====================================
-
-        draw.text(
-            (770, 1262),
-            datetime.now().strftime(
-                "%d.%m.%Y"
-            ),
-            fill="black",
-            font=date_font
-        )
-
-        image.save(
-            png_path
-        )
-
-        c = canvas.Canvas(
-            pdf_path,
-            pagesize=(
-                image.width,
-                image.height
             )
+
         )
 
-        c.drawImage(
-            ImageReader(png_path),
-            0,
-            0,
-            width=image.width,
-            height=image.height
+        elements.append(
+            Spacer(1, 20)
         )
 
-        c.save()
+        # =====================================
+        # TABLE
+        # =====================================
+
+        table_data = [
+
+            [
+                "Teil",
+                "Punkte",
+                "Bewertung"
+            ],
+
+            [
+                "Hören",
+                f"{horen}/25",
+                horen_grade
+            ],
+
+            [
+                "Lesen",
+                f"{lesen}/25",
+                lesen_grade
+            ],
+
+            [
+                "Schreiben",
+                f"{schreiben}/25",
+                schreiben_grade
+            ],
+
+            [
+                "Sprechen",
+                f"{sprechen}/25",
+                sprechen_grade
+            ],
+
+            [
+                "Gesamt",
+                f"{total}/100",
+                total_grade
+            ]
+
+        ]
+
+        table = Table(
+
+            table_data,
+
+            colWidths=[
+                130,
+                120,
+                180
+            ]
+
+        )
+
+        table.setStyle(
+
+            TableStyle([
+
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    1,
+                    colors.black
+                ),
+
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.lightgrey
+                ),
+
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold"
+                ),
+
+                (
+                    "ALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "CENTER"
+                )
+
+            ])
+
+        )
+
+        elements.append(
+            table
+        )
+
+        elements.append(
+            Spacer(1, 20)
+        )
+
+        # =====================================
+        # CERTIFICATE INFO
+        # =====================================
+
+        elements.append(
+
+            Paragraph(
+
+                f"<b>Zertifikat-ID:</b> {certificate_id}",
+
+                styles["Normal"]
+
+            )
+
+        )
+
+        elements.append(
+
+            Paragraph(
+
+                f"<b>Datum:</b> "
+                f"{datetime.now().strftime('%d.%m.%Y')}",
+
+                styles["Normal"]
+
+            )
+
+        )
+
+        elements.append(
+            Spacer(1, 20)
+        )
+
+        # =====================================
+        # FOOTER
+        # =====================================
+
+        elements.append(
+
+            Image(
+
+                "VIZU-A1/bottom_footer.png",
+
+                width=520,
+
+                height=260
+
+            )
+
+        )
+
+        doc.build(
+            elements
+        )
 
         logger.info(
             f"Certificate created: {pdf_path}"
