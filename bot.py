@@ -1,15 +1,28 @@
 # =========================================================
-# STANDARD LIBRARY IMPORTS
+# STANDARD LIBRARY & DEPENDENCY IMPORTS
 # =========================================================
 import os
 import csv
 import random
 import logging
 import asyncio
+import uuid
+import qrcode
 from datetime import datetime, timedelta, date
 from contextlib import contextmanager
 from threading import Thread
 from typing import Optional
+
+# Aiogram
+from aiogram import F
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile
+
+# ReportLab
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.pdfgen import canvas
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -18,21 +31,6 @@ from reportlab.platypus import (
     TableStyle,
     Image as RLImage
 )
-from reportlab.lib import colors
-
-from reportlab.lib.styles import (
-    getSampleStyleSheet
-)
-import uuid
-import os
-import qrcode
-from datetime import datetime
-from aiogram import F
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
-
 # =========================================================
 # THIRD-PARTY IMPORTS
 # =========================================================
@@ -5889,27 +5887,10 @@ async def build_level_menu(user_id):
         keyboard=rows,
         resize_keyboard=True
     )
-import uuid
-import os
-from datetime import datetime
-from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, Message
-from aiogram import F
 
 # =========================================================
 # 1. CONFIGURATION & HELPERS
 # =========================================================
-LEVEL_CONFIG = {
-    "A1": {"blocks": 5},
-    "A2": {"blocks": 5},
-    "B1": {"blocks": 6},
-    "B2": {"blocks": 6},
-    "C1": {"blocks": 6}
-}
 
 GOLD_COLOR = colors.HexColor("#D4AF37")
 SILVER_COLOR = colors.HexColor("#C0C0C0")
