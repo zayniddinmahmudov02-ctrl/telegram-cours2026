@@ -23,6 +23,16 @@ from reportlab.lib import colors
 from reportlab.lib.styles import (
     getSampleStyleSheet
 )
+import uuid
+import os
+import qrcode
+from datetime import datetime
+from aiogram import F
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
+
 # =========================================================
 # THIRD-PARTY IMPORTS
 # =========================================================
@@ -5868,7 +5878,7 @@ async def build_level_menu(user_id):
     # =====================================================
     # CERTIFICATE
     # =====================================================
-    rows.append([KeyboardButton(text="🏅 Sertifikat")])
+    rows.append([KeyboardButton(text="🏅 Zertifikat")])
 
     # =====================================================
     # BACK
@@ -5879,6 +5889,148 @@ async def build_level_menu(user_id):
         keyboard=rows,
         resize_keyboard=True
     )
+
+# =========================================================
+# 1. DATABASE & CONFIGURATION
+# =========================================================
+def init_certificate_table():
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS certificates (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT,
+            level TEXT,
+            rank TEXT,
+            certificate_id TEXT UNIQUE,
+            percent REAL,
+            score INTEGER,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(user_id, level)
+        )
+    """)
+
+# =========================================================
+# 2. LOGIC HELPERS
+# =========================================================
+def generate_certificate_id(level):
+    return f"VIZU-{level}-{uuid.uuid4().hex[:8].upper()}"
+
+def get_existing_certificate(user_id, level):
+    return db_execute("SELECT certificate_id FROM certificates WHERE user_id = %s AND level = %s", 
+                      (user_id, level), fetchone=True)
+
+def save_certificate(user_id, level, rank, cert_id, percent, score):
+    db_execute("""INSERT INTO certificates (user_id, level, rank, certificate_id, percent, score) 
+                  VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (user_id, level) DO NOTHING""",
+               (user_id, level, rank, cert_id, percent, score))
+
+def is_level_completed(user_id, level):
+    config = LEVEL_CONFIG.get(level)
+    if not config: return False
+    for block in range(1, config["blocks"] + 1):
+        row = db_execute("SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = %s AND block_number = %s",
+                         (user_id, level, block), fetchone=True)
+        if not row or (row[0] or 0) < 60: return False
+    return True
+
+def get_level_percent(user_id, level):
+    result = db_execute("SELECT COALESCE(SUM(best_score), 0) FROM quiz_progress WHERE user_id = %s AND level = %s",
+                        (user_id, level), fetchone=True)
+    total_score = result[0] if result else 0
+    config = LEVEL_CONFIG.get(level)
+    if not config: return 0, 0
+    percent = round((total_score / (config["blocks"] * 100)) * 100, 1)
+    return percent, total_score
+
+def get_certificate_rank(percent):
+    if percent >= 90: return "GOLD"
+    if percent >= 80: return "SILVER"
+    if percent >= 70: return "BRONZE"
+    return None
+
+# =========================================================
+# 3. PDF GENERATOR (ReportLab)
+# =========================================================
+async def create_pdf_certificate(user_id, full_name, level, rank, percent, score, cert_id):
+    os.makedirs("generated", exist_ok=True)
+    pdf_path = f"generated/{cert_id}.pdf"
+    qr_path = f"generated/qr_{cert_id}.png"
+    
+    qrcode.make(cert_id).save(qr_path)
+    
+    # Papka tuzilmasi bo'yicha rasm yo'llarini aniqlash
+    level_folder = f"{level.lower()}-level"
+    header_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-header.png"
+    footer_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-footer.png"
+    
+    pdf = canvas.Canvas(pdf_path, pagesize=A4)
+    w, h = A4
+    
+    # Rasmlarni yuklash
+    if os.path.exists(header_img): pdf.drawImage(ImageReader(header_img), 0, h - 220, w, 220, mask="auto")
+    if os.path.exists(footer_img): pdf.drawImage(ImageReader(footer_img), 0, 0, w, 180, mask="auto")
+        
+    # Ma'lumotlarni joylash
+    pdf.setFont("Helvetica-Bold", 32)
+    pdf.drawCentredString(w/2, 550, "ZERTIFIKAT")
+    pdf.setFont("Helvetica-Bold", 26)
+    pdf.drawCentredString(w/2, 480, full_name)
+    pdf.setFont("Helvetica", 18)
+    pdf.drawCentredString(w/2, 440, f"{level} darajasini muvaffaqiyatli yakunladi.")
+    
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawCentredString(w/2, 380, f"Natija: {percent}%")
+    pdf.drawCentredString(w/2, 350, f"Rang: {rank}")
+    
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(50, 250, f"ID: {cert_id}")
+    pdf.drawString(50, 230, f"Sana: {datetime.now().strftime('%d.%m.%Y')}")
+    pdf.drawImage(ImageReader(qr_path), w - 120, 200, 80, 80)
+    
+    pdf.save()
+    return pdf_path
+
+# =========================================================
+# 4. TELEGRAM HANDLERS
+# =========================================================
+@dp.message(F.text == "🏅 Zertifikat")
+async def certificate_menu(message: Message):
+    kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="🏅 A1 Zertifikat")],
+        [KeyboardButton(text="🏅 A2 Zertifikat")],
+        [KeyboardButton(text="🏅 B1 Zertifikat")],
+        [KeyboardButton(text="🏅 B2 Zertifikat")],
+        [KeyboardButton(text="🏅 C1 Zertifikat")],
+        [KeyboardButton(text="⬅️ Orqaga")]
+    ], resize_keyboard=True)
+    await message.answer("🏅 Sertifikat darajasini tanlang:", reply_markup=kb)
+
+@dp.message(F.text.in_([
+    "🏅 A1 Zertifikat", "🏅 A2 Zertifikat", "🏅 B1 Zertifikat", 
+    "🏅 B2 Zertifikat", "🏅 C1 Zertifikat"
+]))
+async def generate_certificate(message: Message):
+    level = message.text.replace("🏅 ", "").replace(" Zertifikat", "")
+    uid = message.from_user.id
+    
+    if not is_level_completed(uid, level):
+        return await message.answer(f"❌ {level} darajasi hali yakunlanmagan.")
+
+    percent, score = get_level_percent(uid, level)
+    rank = get_certificate_rank(percent)
+    if not rank: return await message.answer("❌ Sertifikat uchun 70%+ ball kerak.")
+    
+    if get_existing_certificate(uid, level): 
+        return await message.answer(f"✅ {level} sertifikati allaqachon mavjud.")
+
+    user_data = db_execute("SELECT full_name FROM users WHERE user_id = %s", (uid,), fetchone=True)
+    name = user_data[0] if user_data else message.from_user.full_name
+    cert_id = generate_certificate_id(level)
+    
+    save_certificate(uid, level, rank, cert_id, percent, score)
+    path = await create_pdf_certificate(uid, name, level, rank, percent, score, cert_id)
+    
+    await message.answer_document(FSInputFile(path), caption=
+        f"🏅 {level} Zertifikat\n🏆 Rank: {rank}\n📊 Natija: {percent}%\n🎫 ID: {cert_id}")
 # =========================================================
 # BLOCK MENU
 # =========================================================
@@ -7029,127 +7181,6 @@ async def daily_reset_scheduler():
         reset_daily_scores()
         logger.info("Daily scores reset ✅")
 
-# =========================================================
-# CERTIFICATE SYSTEM
-# =========================================================
-
-def init_certificate_table():
-    db_execute("""
-        CREATE TABLE IF NOT EXISTS certificates (
-            id SERIAL PRIMARY KEY,
-            user_id BIGINT,
-            rank TEXT,
-            certificate_id TEXT UNIQUE,
-            percent REAL,
-            score INTEGER,
-            created_at TIMESTAMP DEFAULT NOW(),
-            UNIQUE(user_id, rank)
-        )
-    """)
-
-def save_certificate(user_id, cert_id, rank, percent, score):
-    db_execute("""
-        INSERT INTO certificates (user_id, rank, certificate_id, percent, score)
-        VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (user_id, rank) DO NOTHING
-    """, (user_id, rank, cert_id, percent, score))
-# =========================================================
-# GENERATE QR & DRAWING
-# =========================================================
-
-def generate_qr(data, path):
-    qr_img = qrcode.make(data)
-    qr_img.save(path)
-
-def draw_center_text(draw, text, font, y, image_width, fill):
-    bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = bbox[2] - bbox[0]
-    x = (image_width - text_width) // 2
-    draw.text((x, y), text, font=font, fill=fill)
-
-# =========================================================
-# CREATE CERTIFICATE
-# =========================================================
-
-async def create_certificate(user_id, full_name, percent, score, rank, cert_id):
-    os.makedirs(GENERATED_DIR, exist_ok=True)
-    
-    templates = {
-        "GOLD": (f"{CERTIFICATE_DIR}/gold_template.png", (255, 215, 0)),
-        "SILVER": (f"{CERTIFICATE_DIR}/silver_template.png", (40, 40, 40)),
-        "BRONZE": (f"{CERTIFICATE_DIR}/bronze_template.png", (90, 40, 20))
-    }
-    
-    template_path, text_color = templates.get(rank, templates["BRONZE"])
-    
-    if not os.path.exists(template_path):
-        raise FileNotFoundError(f"Template topilmadi: {template_path}")
-
-    with Image.open(template_path).convert("RGBA") as image:
-        draw = ImageDraw.Draw(image)
-        width, height = image.size
-        
-        # Fontlarni yuklash
-        name_font = ImageFont.truetype("fonts/GreatVibes-Regular.ttf", 90)
-        title_font = ImageFont.truetype("fonts/Montserrat-Bold.ttf", 42)
-        small_font = ImageFont.truetype("fonts/Montserrat-Regular.ttf", 28)
-        
-        date = datetime.now().strftime("%d.%m.%Y")
-        
-        draw_center_text(draw, full_name, name_font, 470, width, text_color)
-        draw.text((1320, 355), f"{percent}%", font=title_font, fill=text_color)
-        draw.text((1320, 505), f"{score}/5555", font=title_font, fill=text_color)
-        draw.text((1320, 655), cert_id, font=small_font, fill=text_color)
-        draw.text((1320, 805), date, font=small_font, fill=text_color)
-        
-        qr_path = os.path.join(GENERATED_DIR, f"qr_{user_id}.png")
-        generate_qr(cert_id, qr_path)
-        
-        with Image.open(qr_path) as qr:
-            image.paste(qr.resize((180, 180)), (1450, 850))
-            
-        output_path = os.path.join(GENERATED_DIR, f"{cert_id}.png")
-        image.save(output_path)
-        return output_path
-
-# =========================================================
-# CERTIFICATE COMMAND
-# =========================================================
-
-@dp.message(F.text == "🏅 Sertifikat")
-async def certificate_system(message: Message):
-    user_id = message.from_user.id
-    
-    # Blokni tekshirish
-    result = db_execute("SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = 'C1' AND block_number = 11", (user_id,), fetchone=True)
-    if not result:
-        return await message.answer("🔒 Sertifikat yopiq. C1 oxirgi blokni tugating.")
-
-    user_data = db_execute("SELECT full_name FROM users WHERE user_id = %s", (user_id,), fetchone=True)
-    full_name = user_data[0] if user_data else message.from_user.full_name
-    
-    total = db_execute("SELECT COALESCE(SUM(best_score), 0) FROM quiz_progress WHERE user_id = %s", (user_id,), fetchone=True)
-    total_score = total[0] if total else 0
-    percent = round((total_score / TOTAL_WORDS) * 100, 1)
-
-    if percent < 60:
-        return await message.answer(f"❌ Minimum 60% kerak. Natija: {percent}%")
-
-    rank = "GOLD" if percent >= 85 else "SILVER" if percent >= 70 else "BRONZE"
-    
-    if get_existing_certificate(user_id, rank):
-        return await message.answer(f"🏅 Siz allaqachon {rank} sertifikatini olgansiz.")
-
-    cert_id = generate_certificate_id()
-    save_certificate(user_id, cert_id, rank, percent, total_score)
-
-    try:
-        path = await create_certificate(user_id, full_name, percent, total_score, rank, cert_id)
-        await send_admin_photo_log(path, f"🏅 Yangi Sertifikat\n👤 {full_name}\n🏆 {rank}\n📊 {percent}%\n🎫 {cert_id}")
-        await message.answer_photo(FSInputFile(path), caption=f"🏅 {rank} Zertifikat\n📊 {percent}%\n📚 {total_score}/5555\n🎫 {cert_id}")
-    except Exception as e:
-        logger.error(f"Certificate error: {e}")
-        await message.answer("❌ Sertifikat yaratishda xato.")
 # =========================================================
 # ADMIN STATES
 # =========================================================
