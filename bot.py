@@ -5878,7 +5878,7 @@ async def build_level_menu(user_id):
     # =====================================================
     # CERTIFICATE
     # =====================================================
-    rows.append([KeyboardButton(text="🏅 Zertifikat")])
+    rows.append([KeyboardButton(text="🏅 W-Zertifikat")])
 
     # =====================================================
     # BACK
@@ -5971,7 +5971,7 @@ async def create_pdf_certificate(user_id, full_name, level, rank, percent, score
         
     # Ma'lumotlarni joylash
     pdf.setFont("Helvetica-Bold", 32)
-    pdf.drawCentredString(w/2, 550, "ZERTIFIKAT")
+    pdf.drawCentredString(w/2, 550, "W-ZERTIFIKAT")
     pdf.setFont("Helvetica-Bold", 26)
     pdf.drawCentredString(w/2, 480, full_name)
     pdf.setFont("Helvetica", 18)
@@ -5992,24 +5992,24 @@ async def create_pdf_certificate(user_id, full_name, level, rank, percent, score
 # =========================================================
 # 4. TELEGRAM HANDLERS
 # =========================================================
-@dp.message(F.text == "🏅 Zertifikat")
+@dp.message(F.text == "🏅 W-Zertifikat")
 async def certificate_menu(message: Message):
     kb = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="🏅 A1 Zertifikat")],
-        [KeyboardButton(text="🏅 A2 Zertifikat")],
-        [KeyboardButton(text="🏅 B1 Zertifikat")],
-        [KeyboardButton(text="🏅 B2 Zertifikat")],
-        [KeyboardButton(text="🏅 C1 Zertifikat")],
+        [KeyboardButton(text="🏅 A1 W-Zertifikat")],
+        [KeyboardButton(text="🏅 A2 W-Zertifikat")],
+        [KeyboardButton(text="🏅 B1 W-Zertifikat")],
+        [KeyboardButton(text="🏅 B2 W-Zertifikat")],
+        [KeyboardButton(text="🏅 C1 W-Zertifikat")],
         [KeyboardButton(text="⬅️ Orqaga")]
     ], resize_keyboard=True)
     await message.answer("🏅 Sertifikat darajasini tanlang:", reply_markup=kb)
 
 @dp.message(F.text.in_([
-    "🏅 A1 Zertifikat", "🏅 A2 Zertifikat", "🏅 B1 Zertifikat", 
-    "🏅 B2 Zertifikat", "🏅 C1 Zertifikat"
+    "🏅 A1 W-Zertifikat", "🏅 A2 W-Zertifikat", "🏅 B1 W-Zertifikat", 
+    "🏅 B2 W-Zertifikat", "🏅 C1 W-Zertifikat"
 ]))
 async def generate_certificate(message: Message):
-    level = message.text.replace("🏅 ", "").replace(" Zertifikat", "")
+    level = message.text.replace("🏅 ", "").replace(" W-Zertifikat", "")
     uid = message.from_user.id
     
     if not is_level_completed(uid, level):
@@ -6030,7 +6030,7 @@ async def generate_certificate(message: Message):
     path = await create_pdf_certificate(uid, name, level, rank, percent, score, cert_id)
     
     await message.answer_document(FSInputFile(path), caption=
-        f"🏅 {level} Zertifikat\n🏆 Rank: {rank}\n📊 Natija: {percent}%\n🎫 ID: {cert_id}")
+        f"🏅 {level} W-Zertifikat\n🏆 Rank: {rank}\n📊 Natija: {percent}%\n🎫 ID: {cert_id}")
 # =========================================================
 # BLOCK MENU
 # =========================================================
