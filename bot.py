@@ -5895,79 +5895,7 @@ GOLD_COLOR = colors.HexColor("#D4AF37")
 SILVER_COLOR = colors.HexColor("#C0C0C0")
 BRONZE_COLOR = colors.HexColor("#CD7F32")
 # =========================================================
-# W-ZERTIFIKAT GENERATOR (Optimallashtirilgan)
-# =========================================================
-
-async def create_pdf_certificate(user_id, full_name, level, rank, percent, score, cert_id):
-    os.makedirs("generated", exist_ok=True)
-    pdf_path = f"generated/{cert_id}.pdf"
-    
-    level_folder = f"{level.lower()}-level"
-    header_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-header.png"
-    footer_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-footer.png"
-    
-    pdf = canvas.Canvas(pdf_path, pagesize=A4)
-    width, height = A4
-    
-    # Rasmlarni sahifa kengligining 90% qismiga moslash funksiyasi
-    def draw_responsive_image(img_path, y_pos, target_width_ratio=0.9):
-        if os.path.exists(img_path):
-            img = Image.open(img_path)
-            img_w, img_h = img.size
-            scale = (width * target_width_ratio) / img_w
-            new_w, new_h = img_w * scale, img_h * scale
-            pdf.drawImage(
-                ImageReader(img_path),
-                (width - new_w) / 2, y_pos,
-                width=new_w, height=new_h,
-                preserveAspectRatio=True, mask="auto"
-            )
-            return new_h
-        return 0
-
-    # Header va Footer chizish
-    header_h = draw_responsive_image(header_img, height - 200)
-    draw_responsive_image(footer_img, 20)
-
-    # Matnlarni chizish
-    pdf.setFillColor(colors.black)
-    pdf.setFont("Helvetica-Bold", 24)
-    pdf.drawCentredString(width / 2, 550, full_name)
-    
-    pdf.setFont("Helvetica", 14)
-    pdf.drawCentredString(width / 2, 510, f"hat das Niveau {level}")
-    pdf.drawCentredString(width / 2, 485, "erfolgreich abgeschlossen.")
-
-    # Jadval rangini tanlash
-    rank_colors = {"GOLD": GOLD_COLOR, "SILVER": SILVER_COLOR}
-    main_color = rank_colors.get(rank.upper(), BRONZE_COLOR)
-
-    # Jadval
-    data = [
-        ["ID", cert_id],
-        ["Datum", datetime.now().strftime("%d.%m.%Y")],
-        ["Ergebnis", f"{percent}%"],
-        ["Rang", rank]
-    ]
-
-    table = Table(data, colWidths=[120, 250])
-    table.setStyle(TableStyle([
-        ("GRID", (0, 0), (-1, -1), 1, colors.black),
-        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 14),
-        ("TEXTCOLOR", (0, 0), (0, -1), main_color),
-        ("TEXTCOLOR", (1, 0), (1, -1), colors.black),
-        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE")
-    ]))
-
-    table.wrapOn(pdf, width, height)
-    table.drawOn(pdf, width / 2 - 185, 350)
-    
-    pdf.save()
-    return pdf_path
-# =========================================================
-# 1. YORDAMCHI FUNKSIYALAR (Handlerdan yuqorida bo'lishi shart!)
+# 1. YORDAMCHI FUNKSIYALAR
 # =========================================================
 
 def is_level_completed(user_id: int, level: str) -> bool:
@@ -5998,9 +5926,80 @@ def save_certificate(user_id, level, rank, cert_id, percent, score):
     db_execute("INSERT INTO w_certificates (user_id, level, rank, cert_id, percent, score) VALUES (%s, %s, %s, %s, %s, %s)", 
                (user_id, level, rank, cert_id, percent, score))
 
+# =========================================================
+# 2. W-ZERTIFIKAT GENERATOR (A4 VERTICAL)
+# =========================================================
+
+async def create_pdf_certificate(user_id, full_name, level, rank, percent, score, cert_id):
+    os.makedirs("generated", exist_ok=True)
+    pdf_path = f"generated/{cert_id}.pdf"
+    
+    level_folder = f"{level.lower()}-level"
+    header_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-header.png"
+    footer_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-footer.png"
+    
+    # A4 VERTICAL (Portrait)
+    pdf = canvas.Canvas(pdf_path, pagesize=A4)
+    width, height = A4
+    
+    def draw_responsive_image(img_path, y_pos, target_width_ratio=0.9):
+        if os.path.exists(img_path):
+            img = Image.open(img_path)
+            img_w, img_h = img.size
+            scale = (width * target_width_ratio) / img_w
+            new_w, new_h = img_w * scale, img_h * scale
+            pdf.drawImage(
+                ImageReader(img_path),
+                (width - new_w) / 2, y_pos,
+                width=new_w, height=new_h,
+                preserveAspectRatio=True, mask="auto"
+            )
+            return new_h
+        return 0
+
+    # Header va Footer chizish
+    header_h = draw_responsive_image(header_img, height - 250)
+    draw_responsive_image(footer_img, 50)
+
+    # Matnlarni chizish
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 24)
+    pdf.drawCentredString(width / 2, 550, full_name)
+    
+    pdf.setFont("Helvetica", 14)
+    pdf.drawCentredString(width / 2, 510, f"hat das Niveau {level}")
+    pdf.drawCentredString(width / 2, 485, "erfolgreich abgeschlossen.")
+
+    # Jadval rangini tanlash
+    rank_colors = {"GOLD": GOLD_COLOR, "SILVER": SILVER_COLOR}
+    main_color = rank_colors.get(rank.upper(), BRONZE_COLOR)
+
+    data = [
+        ["ID", cert_id],
+        ["Datum", datetime.now().strftime("%d.%m.%Y")],
+        ["Ergebnis", f"{percent}%"],
+        ["Rang", rank]
+    ]
+
+    table = Table(data, colWidths=[120, 250])
+    table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 14),
+        ("TEXTCOLOR", (0, 0), (0, -1), main_color),
+        ("TEXTCOLOR", (1, 0), (1, -1), colors.black),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE")
+    ]))
+
+    table.wrapOn(pdf, width, height)
+    table.drawOn(pdf, width / 2 - 185, 350)
+    
+    pdf.save()
+    return pdf_path
 
 # =========================================================
-# TELEGRAM HANDLERS (Optimallashtirilgan)
+# 3. TELEGRAM HANDLERS
 # =========================================================
 
 @dp.message(F.text == "🏅 W-Zertifikat")
@@ -6015,48 +6014,37 @@ async def certificate_menu(message: Message):
 
 @dp.message(F.text.contains("W-Zertifikat"))
 async def generate_certificate(message: Message):
-    if message.text == "🏅 W-Zertifikat": 
-        return
+    if message.text == "🏅 W-Zertifikat": return
     
-    # Darajani ajratib olish
     level = message.text.replace("🏅 ", "").replace(" W-Zertifikat", "")
     uid = message.from_user.id
     
-    # 1. Daraja tugatilganligini tekshirish
     if not is_level_completed(uid, level):
         return await message.answer(f"❌ {level} darajasi hali to'liq yakunlanmagan.")
     
-    # 2. Sertifikat mavjudligini tekshirish
     if get_existing_certificate(uid, level): 
         return await message.answer(f"✅ Siz allaqachon {level} sertifikatini olgansiz.")
 
-    # 3. Ma'lumotlarni yig'ish (get_level_percent (percent, score) qaytaradi)
     percent, score = get_level_percent(uid, level)
     
-    # 4. Minimal natija tekshiruvi (70% dan kam bo'lsa sertifikat bermaymiz)
     if percent < 70:
         return await message.answer(f"❌ Uzr, sertifikat olish uchun kamida 70% natija kerak. Sizning natijangiz: {percent}%")
     
     rank = get_certificate_rank(percent)
-    
-    # Foydalanuvchi ma'lumotlarini olish
     user_data = db_execute("SELECT full_name FROM users WHERE user_id = %s", (uid,), fetchone=True)
     full_name = user_data[0] if user_data else message.from_user.full_name
     cert_id = generate_certificate_id(level)
     
-    # 5. Sertifikatni saqlash va yaratish
     try:
         save_certificate(uid, level, rank, cert_id, percent, score)
         pdf_path = await create_pdf_certificate(uid, full_name, level, rank, percent, score, cert_id)
-        
-        # 6. Yuborish
         await message.answer_document(
             FSInputFile(pdf_path), 
             caption=f"🏅 {level} W-Zertifikat\n🏆 Rank: {rank}\n📊 Natija: {percent}%\n🎫 ID: {cert_id}"
         )
     except Exception as e:
         logger.error(f"Sertifikat yaratishda xatolik: {e}")
-        await message.answer("⚠️ Sertifikat yaratishda xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring.")
+        await message.answer("⚠️ Sertifikat yaratishda xatolik yuz berdi.")
 # =========================================================
 # BLOCK MENU
 # =========================================================
