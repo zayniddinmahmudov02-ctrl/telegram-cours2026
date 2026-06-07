@@ -5889,15 +5889,119 @@ async def build_level_menu(user_id):
         keyboard=rows,
         resize_keyboard=True
     )
+import uuid
+import os
+from datetime import datetime
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, Message
+from aiogram import F
+
+# =========================================================
+# 1. CONFIGURATION & HELPERS
+# =========================================================
+LEVEL_CONFIG = {
+    "A1": {"blocks": 5},
+    "A2": {"blocks": 5},
+    "B1": {"blocks": 6},
+    "B2": {"blocks": 6},
+    "C1": {"blocks": 6}
+}
+
+GOLD_COLOR = colors.HexColor("#D4AF37")
+SILVER_COLOR = colors.HexColor("#C0C0C0")
+BRONZE_COLOR = colors.HexColor("#CD7F32")
+
+def generate_certificate_id(level):
+    return f"VIZU-{level}-{uuid.uuid4().hex[:8].upper()}"
+
+def get_certificate_rank(percent):
+    if percent >= 90: return "GOLD"
+    if percent >= 80: return "SILVER"
+    if percent >= 70: return "BRONZE"
+    return None
+
+def is_level_completed(user_id, level):
+    config = LEVEL_CONFIG.get(level)
+    if not config: return False
+    for block in range(1, config["blocks"] + 1):
+        row = db_execute("SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = %s AND block_number = %s",
+                         (user_id, level, block), fetchone=True)
+        if not row or (row[0] or 0) < 60: return False
+    return True
+
+def get_level_percent(user_id, level):
+    result = db_execute("SELECT COALESCE(SUM(best_score), 0) FROM quiz_progress WHERE user_id = %s AND level = %s",
+                        (user_id, level), fetchone=True)
+    total_score = result[0] if result else 0
+    config = LEVEL_CONFIG.get(level)
+    if not config: return 0, 0
+    max_score = config["blocks"] * 100
+    percent = round((total_score / max_score) * 100, 1) if max_score > 0 else 0
+    return percent, total_score
+
+def save_certificate(user_id, level, rank, cert_id, percent, score):
+    db_execute("""INSERT INTO certificates (user_id, level, rank, certificate_id, percent, score) 
+                  VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (user_id, level) DO NOTHING""",
+               (user_id, level, rank, cert_id, percent, score))
+
+# =========================================================
+# 2. PDF CERTIFICATE GENERATOR
+# =========================================================
+async def create_pdf_certificate(user_id, full_name, level, rank, percent, score, cert_id):
+    os.makedirs("generated", exist_ok=True)
+    pdf_path = f"generated/{cert_id}.pdf"
+    
+    level_folder = f"{level.lower()}-level"
+    header_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-header.png"
+    footer_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-footer.png"
+    
+    main_color = GOLD_COLOR if rank == "GOLD" else (SILVER_COLOR if rank == "SILVER" else BRONZE_COLOR)
+    
+    pdf = canvas.Canvas(pdf_path, pagesize=A4)
+    w, h = A4
+    
+    if os.path.exists(header_img): pdf.drawImage(ImageReader(header_img), 0, h - 220, width=w, height=220, mask="auto")
+    if os.path.exists(footer_img): pdf.drawImage(ImageReader(footer_img), 0, 0, width=w, height=180, mask="auto")
+    
+    pdf.setFillColor(main_color)
+    pdf.setFont("Helvetica-Bold", 32)
+    pdf.drawCentredString(w/2, 550, "W-ZERTIFIKAT")
+    
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 26)
+    pdf.drawCentredString(w/2, 490, full_name)
+    
+    pdf.setFont("Helvetica", 16)
+    pdf.drawCentredString(w/2, 440, f"hat das Niveau {level}")
+    pdf.drawCentredString(w/2, 415, "erfolgreich abgeschlossen.")
+    
+    data = [["ID", cert_id], ["Datum", datetime.now().strftime("%d.%m.%Y")], ["Ergebnis", f"{percent}%"], ["Rang", rank]]
+    table = Table(data, colWidths=[120, 220])
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 14),
+        ('TEXTCOLOR', (0, 0), (0, -1), main_color),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    
+    table.wrapOn(pdf, w, h)
+    table.drawOn(pdf, 140, 260)
+    pdf.save()
+    return pdf_path
+
+# =========================================================
+# 3. TELEGRAM HANDLERS
+# =========================================================
 @dp.message(F.text == "🏅 W-Zertifikat")
 async def certificate_menu(message: Message):
     kb = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="🏅 A1 W-Zertifikat")],
-        [KeyboardButton(text="🏅 A2 W-Zertifikat")],
-        [KeyboardButton(text="🏅 B1 W-Zertifikat")],
-        [KeyboardButton(text="🏅 B2 W-Zertifikat")],
-        [KeyboardButton(text="🏅 C1 W-Zertifikat")],
-        [KeyboardButton(text="⬅️ Orqaga")]
+        [KeyboardButton(text="🏅 A1 W-Zertifikat")], [KeyboardButton(text="🏅 A2 W-Zertifikat")],
+        [KeyboardButton(text="🏅 B1 W-Zertifikat")], [KeyboardButton(text="🏅 B2 W-Zertifikat")],
+        [KeyboardButton(text="🏅 C1 W-Zertifikat")], [KeyboardButton(text="⬅️ Orqaga")]
     ], resize_keyboard=True)
     await message.answer("🏅 Sertifikat darajasini tanlang:", reply_markup=kb)
 
@@ -5919,7 +6023,6 @@ async def generate_certificate(message: Message):
     if get_existing_certificate(uid, level): 
         return await message.answer(f"✅ Siz allaqachon {level} sertifikatini olgansiz.")
 
-    # Ma'lumotlarni bazadan olish va PDF yaratish
     user_data = db_execute("SELECT full_name FROM users WHERE user_id = %s", (uid,), fetchone=True)
     full_name = user_data[0] if user_data else message.from_user.full_name
     cert_id = generate_certificate_id(level)
@@ -5929,103 +6032,6 @@ async def generate_certificate(message: Message):
     
     await message.answer_document(FSInputFile(pdf_path), caption=
         f"🏅 {level} W-Zertifikat\n🏆 Rank: {rank}\n📊 Natija: {percent}%\n🎫 ID: {cert_id}")
-
-# Ranglar
-GOLD = colors.HexColor("#D4AF37")
-BLACK = colors.black
-
-async def create_pdf_certificate(user_id, full_name, level, rank, percent, score, cert_id):
-    os.makedirs("generated", exist_ok=True)
-    pdf_path = f"generated/{cert_id}.pdf"
-    
-    level_folder = f"{level.lower()}-level"
-    header_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-header.png"
-    footer_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-footer.png"
-    
-    pdf = canvas.Canvas(pdf_path, pagesize=A4)
-    w, h = A4
-    
-    # Rasmlar (Asl o'lchamda)
-    if os.path.exists(header_img): 
-        pdf.drawImage(ImageReader(header_img), 0, h - 220, width=w, height=220, mask="auto")
-    if os.path.exists(footer_img): 
-        pdf.drawImage(ImageReader(footer_img), 0, 0, width=w, height=180, mask="auto")
-        
-    # Sarlavha (Gold)
-    pdf.setFont("Helvetica-Bold", 36)
-    pdf.setFillColor(GOLD)
-    pdf.drawCentredString(w/2, 550, "W-ZERTIFIKAT")
-    
-    # Ism (Qora)
-    pdf.setFont("Helvetica-Bold", 28)
-    pdf.setFillColor(BLACK)
-    pdf.drawCentredString(w/2, 480, full_name)
-    
-    # Nemischa matn
-    pdf.setFont("Helvetica", 18)
-    pdf.drawCentredString(w/2, 430, f"hat das Niveau {level} mit Erfolg abgeschlossen.")
-    pdf.drawCentredString(w/2, 405, "und verfügt über die entsprechenden Wortschatz-Kenntnisse.")
-
-    # Jadval (Gold sarlavhalar, Qora ma'lumotlar)
-    data = [
-        ["ID:", cert_id],
-        ["Datum:", datetime.now().strftime('%d.%m.%Y')],
-        ["Ergebnis:", f"{percent}%"],
-        ["Stufe:", rank]
-    ]
-    
-    table = Table(data, colWidths=[120, 200])
-    table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 16),
-        ('TEXTCOLOR', (0, 0), (0, -1), GOLD),
-        ('TEXTCOLOR', (1, 0), (1, -1), BLACK),
-        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
-        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-    ]))
-    
-    table.wrapOn(pdf, w, h)
-    table.drawOn(pdf, w/2 - 160, 260)
-    
-    pdf.save()
-    return pdf_path
-# =========================================================
-# CERTIFICATE HELPER FUNCTIONS
-# =========================================================
-
-def is_level_completed(user_id, level):
-    # Eslatma: LEVEL_CONFIG global o'zgaruvchi sifatida e'lon qilingan bo'lishi kerak
-    config = LEVEL_CONFIG.get(level)
-    if not config: return False
-    for block in range(1, config["blocks"] + 1):
-        row = db_execute("SELECT best_score FROM quiz_progress WHERE user_id = %s AND level = %s AND block_number = %s",
-                         (user_id, level, block), fetchone=True)
-        if not row or (row[0] or 0) < 60: return False
-    return True
-
-def get_level_percent(user_id, level):
-    result = db_execute("SELECT COALESCE(SUM(best_score), 0) FROM quiz_progress WHERE user_id = %s AND level = %s",
-                        (user_id, level), fetchone=True)
-    total_score = result[0] if result else 0
-    config = LEVEL_CONFIG.get(level)
-    if not config: return 0, 0
-    # config["blocks"] * 100 - bu jami ballar yig'indisi
-    max_score = config["blocks"] * 100
-    percent = round((total_score / max_score) * 100, 1) if max_score > 0 else 0
-    return percent, total_score
-
-def get_certificate_rank(percent):
-    if percent >= 90: return "GOLD"
-    if percent >= 80: return "SILVER"
-    if percent >= 70: return "BRONZE"
-    return None
-
-def save_certificate(user_id, level, rank, cert_id, percent, score):
-    db_execute("""INSERT INTO certificates (user_id, level, rank, certificate_id, percent, score) 
-                  VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (user_id, level) DO NOTHING""",
-               (user_id, level, rank, cert_id, percent, score))
-
 # =========================================================
 # BLOCK MENU
 # =========================================================
