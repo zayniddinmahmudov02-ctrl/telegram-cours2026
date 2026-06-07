@@ -233,6 +233,26 @@ def init_tables():
             vizu_c1_access INTEGER DEFAULT 0
         )
     """)
+# =========================================================
+# W CERTIFICATES TABLE
+# =========================================================
+
+def init_w_certificates_table():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS w_certificates (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            level TEXT NOT NULL,
+            rank TEXT NOT NULL,
+            cert_id TEXT UNIQUE NOT NULL,
+            percent REAL NOT NULL,
+            score INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE (user_id, level)
+        )
+        """
+    )
 
     # LESSON PROGRESS
     db_execute("""
@@ -5898,33 +5918,90 @@ BRONZE_COLOR = colors.HexColor("#CD7F32")
 # 1. YORDAMCHI FUNKSIYALAR
 # =========================================================
 
-def is_level_completed(user_id: int, level: str) -> bool:
-    query = "SELECT COUNT(*) FROM lesson_progress WHERE user_id = %s AND level = %s AND completed = TRUE"
-    result = db_execute(query, (user_id, level), fetchone=True)
-    total_lessons = COURSE_INFO.get(level, {}).get("lessons", 0)
-    return result[0] >= total_lessons if result else False
+def is_level_completed(user_id, level):
+    config = LEVEL_CONFIG.get(level)
+    if not config:
+        return False
 
-def get_level_percent(user_id: int, level: str):
-    query = "SELECT COUNT(*) FROM lesson_progress WHERE user_id = %s AND level = %s AND completed = TRUE"
-    completed = db_execute(query, (user_id, level), fetchone=True)
-    count = completed[0] if completed else 0
-    total = COURSE_INFO.get(level, {}).get("lessons", 1)
-    return int((count / total) * 100), count
+    total_blocks = config["blocks"]
+    for block in range(1, total_blocks + 1):
+        row = db_execute(
+            """
+            SELECT best_score
+            FROM quiz_progress
+            WHERE user_id = %s
+            AND level = %s
+            AND block_number = %s
+            """,
+            (user_id, level, block),
+            fetchone=True
+        )
+        if not row:
+            return False
+        if (row[0] or 0) < 60:
+            return False
+    return True
 
-def get_certificate_rank(percent: int) -> str:
-    if percent >= 90: return "GOLD"
-    if percent >= 80: return "SILVER"
-    return "BRONZE"
 
-def get_existing_certificate(user_id: int, level: str):
-    return db_execute("SELECT cert_id FROM w_certificates WHERE user_id = %s AND level = %s", (user_id, level), fetchone=True)
+def get_level_percent(user_id, level):
+    result = db_execute(
+        """
+        SELECT COALESCE(SUM(best_score), 0)
+        FROM quiz_progress
+        WHERE user_id = %s
+        AND level = %s
+        """,
+        (user_id, level),
+        fetchone=True
+    )
+    
+    total_score = result[0] if result else 0
+    config = LEVEL_CONFIG.get(level)
+    
+    if not config:
+        return 0, 0
+    
+    max_score = config["blocks"] * 100
+    percent = round((total_score / max_score) * 100, 1)
+    
+    return (percent, total_score)
 
-def generate_certificate_id(level: str) -> str:
-    return f"{level}-{uuid.uuid4().hex[:8].upper()}"
+
+def get_certificate_rank(percent):
+    if percent >= 90:
+        return "GOLD"
+    if percent >= 80:
+        return "SILVER"
+    if percent >= 70:
+        return "BRONZE"
+    return None
+
+
+def get_existing_certificate(user_id, level):
+    return db_execute(
+        """
+        SELECT cert_id
+        FROM w_certificates
+        WHERE user_id = %s
+        AND level = %s
+        """,
+        (user_id, level),
+        fetchone=True
+    )
+
+
+def generate_certificate_id(level):
+    return f"VIZU-{level}-{uuid.uuid4().hex[:8].upper()}"
+
 
 def save_certificate(user_id, level, rank, cert_id, percent, score):
-    db_execute("INSERT INTO w_certificates (user_id, level, rank, cert_id, percent, score) VALUES (%s, %s, %s, %s, %s, %s)", 
-               (user_id, level, rank, cert_id, percent, score))
+    db_execute(
+        """
+        INSERT INTO w_certificates (user_id, level, rank, cert_id, percent, score)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (user_id, level, rank, cert_id, percent, score)
+    )
 
 # =========================================================
 # 2. W-ZERTIFIKAT GENERATOR (A4 VERTICAL)
@@ -7492,6 +7569,7 @@ async def main():
         load_artikel()
         load_vizu_lesen()
         load_vizu_horen()
+        init_w_certificates_table()
 
         # =====================================================
         # DEBUG: CSV YUKLANGANINI TEKSHIRISH
