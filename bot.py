@@ -5928,283 +5928,91 @@ def save_certificate(user_id, level, rank, cert_id, percent, score):
     db_execute("""INSERT INTO certificates (user_id, level, rank, certificate_id, percent, score) 
                   VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (user_id, level) DO NOTHING""",
                (user_id, level, rank, cert_id, percent, score))
-# =========================================================
-# PDF CERTIFICATE GENERATOR
-# =========================================================
-
-async def create_pdf_certificate(
-    user_id,
-    full_name,
-    level,
-    rank,
-    percent,
-    score,
-    cert_id
-):
-
-    from PIL import Image
-
-    os.makedirs(
-        "generated",
-        exist_ok=True
-    )
-
-    pdf_path = (
-        f"generated/{cert_id}.pdf"
-    )
-
-    level_folder = (
-        f"{level.lower()}-level"
-    )
-
-    header_img = (
-        f"certificates/{level_folder}/"
-        f"{level.lower()}-{rank.lower()}-header.png"
-    )
-
-    footer_img = (
-        f"certificates/{level_folder}/"
-        f"{level.lower()}-{rank.lower()}-footer.png"
-    )
-
-    if rank == "GOLD":
-        main_color = GOLD_COLOR
-
-    elif rank == "SILVER":
-        main_color = SILVER_COLOR
-
-    else:
-        main_color = BRONZE_COLOR
-
-    pdf = canvas.Canvas(
-        pdf_path,
-        pagesize=A4
-    )
-
+async def create_pdf_certificate(user_id, full_name, level, rank, percent, score, cert_id):
+    os.makedirs("generated", exist_ok=True)
+    pdf_path = f"generated/{cert_id}.pdf"
+    
+    level_folder = f"{level.lower()}-level"
+    header_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-header.png"
+    footer_img = f"certificates/{level_folder}/{level.lower()}-{rank.lower()}-footer.png"
+    
+    pdf = canvas.Canvas(pdf_path, pagesize=A4)
     width, height = A4
-
-    header_height = 0
-    footer_height = 0
+    
+    HEADER_HEIGHT = 250
+    FOOTER_HEIGHT = 180
 
     # =====================================================
     # HEADER
     # =====================================================
-
     if os.path.exists(header_img):
-
-        img = Image.open(header_img)
-
-        img_w, img_h = img.size
-
-        scale = width / img_w
-
-        header_height = (
-            img_h * scale
-        )
-
         pdf.drawImage(
             ImageReader(header_img),
-            0,
-            height - header_height,
-            width=width,
-            height=header_height,
-            mask="auto"
+            0, height - HEADER_HEIGHT,
+            width=width, height=HEADER_HEIGHT,
+            preserveAspectRatio=True, mask="auto"
         )
 
     # =====================================================
     # FOOTER
     # =====================================================
-
     if os.path.exists(footer_img):
-
-        img = Image.open(footer_img)
-
-        img_w, img_h = img.size
-
-        scale = width / img_w
-
-        footer_height = (
-            img_h * scale
-        )
-
         pdf.drawImage(
             ImageReader(footer_img),
-            0,
-            0,
-            width=width,
-            height=footer_height,
-            mask="auto"
+            0, 0,
+            width=width, height=FOOTER_HEIGHT,
+            preserveAspectRatio=True, mask="auto"
         )
-
-    # =====================================================
-    # CONTENT POSITIONS
-    # =====================================================
-
-    top_y = (
-        height
-        - header_height
-        - 60
-    )
-
-    # =====================================================
-    # TITLE
-    # =====================================================
-
-    pdf.setFillColor(
-        main_color
-    )
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        30
-    )
-
-    pdf.drawCentredString(
-        width / 2,
-        top_y,
-        "W-ZERTIFIKAT"
-    )
 
     # =====================================================
     # NAME
     # =====================================================
-
-    pdf.setFillColor(
-        colors.black
-    )
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        24
-    )
-
-    pdf.drawCentredString(
-        width / 2,
-        top_y - 70,
-        full_name
-    )
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 24)
+    pdf.drawCentredString(width / 2, 400, full_name)
 
     # =====================================================
-    # TEXT
+    # DESCRIPTION
     # =====================================================
-
-    pdf.setFont(
-        "Helvetica",
-        15
-    )
-
-    pdf.drawCentredString(
-        width / 2,
-        top_y - 120,
-        f"hat das Niveau {level}"
-    )
-
-    pdf.drawCentredString(
-        width / 2,
-        top_y - 145,
-        "erfolgreich abgeschlossen."
-    )
+    pdf.setFont("Helvetica", 14)
+    pdf.drawCentredString(width / 2, 350, f"hat das Niveau {level}")
+    pdf.drawCentredString(width / 2, 325, "erfolgreich abgeschlossen.")
 
     # =====================================================
     # TABLE
     # =====================================================
+    if rank == "GOLD":
+        main_color = GOLD_COLOR
+    elif rank == "SILVER":
+        main_color = SILVER_COLOR
+    else:
+        main_color = BRONZE_COLOR
 
     data = [
         ["ID", cert_id],
-        [
-            "Datum",
-            datetime.now().strftime(
-                "%d.%m.%Y"
-            )
-        ],
-        [
-            "Ergebnis",
-            f"{percent}%"
-        ],
-        [
-            "Rang",
-            rank
-        ]
+        ["Datum", datetime.now().strftime("%d.%m.%Y")],
+        ["Ergebnis", f"{percent}%"],
+        ["Rang", rank]
     ]
 
-    table = Table(
-        data,
-        colWidths=[
-            120,
-            250
-        ]
-    )
+    table = Table(data, colWidths=[120, 250])
+    table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 14),
+        ("TEXTCOLOR", (0, 0), (0, -1), main_color),
+        ("TEXTCOLOR", (1, 0), (1, -1), colors.black),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER")
+    ]))
 
-    table.setStyle(
-        TableStyle([
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                1,
-                colors.black
-            ),
-            (
-                "FONTNAME",
-                (0, 0),
-                (-1, -1),
-                "Helvetica-Bold"
-            ),
-            (
-                "FONTSIZE",
-                (0, 0),
-                (-1, -1),
-                14
-            ),
-            (
-                "TEXTCOLOR",
-                (0, 0),
-                (0, -1),
-                main_color
-            ),
-            (
-                "TEXTCOLOR",
-                (1, 0),
-                (1, -1),
-                colors.black
-            ),
-            (
-                "ALIGN",
-                (0, 0),
-                (-1, -1),
-                "CENTER"
-            )
-        ])
-    )
-
-    table.wrapOn(
-        pdf,
-        width,
-        height
-    )
-
-    table_y = (
-        footer_height
-        + 120
-    )
-
-    table.drawOn(
-        pdf,
-        width / 2 - 185,
-        table_y
-    )
+    table.wrapOn(pdf, width, height)
+    table.drawOn(pdf, width / 2 - 185, 220)
 
     # =====================================================
     # SAVE
     # =====================================================
-
     pdf.save()
-
     return pdf_path
-
-# =========================================================
-# END PDF CERTIFICATE GENERATOR
-# =========================================================
 # =========================================================
 # 3. TELEGRAM HANDLERS
 # =========================================================
