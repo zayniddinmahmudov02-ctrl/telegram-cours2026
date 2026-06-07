@@ -447,25 +447,6 @@ def init_certificate_table():
     logger.info(
         "CERTIFICATES TABLE READY ✅"
     )
-# =========================================================
-# W-CERTIFICATES TABLE (Yangilangan)
-# =========================================================
-
-def init_certificate_table():
-    db_execute("""
-        CREATE TABLE IF NOT EXISTS w_certificates (
-            id SERIAL PRIMARY KEY,
-            user_id BIGINT NOT NULL,
-            level TEXT NOT NULL,
-            rank TEXT,
-            percent INTEGER,
-            score INTEGER,
-            cert_id TEXT UNIQUE,
-            created_at TIMESTAMP DEFAULT NOW(),
-            UNIQUE (user_id, level)
-        )
-    """)
-    logger.info("W-CERTIFICATES TABLE READY ✅")
     # INDEXES
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
     db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
