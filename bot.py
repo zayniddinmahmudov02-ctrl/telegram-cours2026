@@ -581,18 +581,15 @@ class VizuSprechenState(
 # =========================================================
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="🎥 Video Kurslar")],
-
-        [KeyboardButton(text="🎓 Darslarni O'rganish")],
-
-        [KeyboardButton(text="🏅 VIZU-Zertifikat")],
-
-        [KeyboardButton(text="📚 Ma'lumotlar")],
-
         [
             KeyboardButton(text="📚 Artikel Topish"),
             KeyboardButton(text="🎮 So'z O'yini")
         ],
+        [KeyboardButton(text="🎥 Video Kurslar"),
+         KeyboardButton(text="🎓 Darslarni O'rganish")],
+
+        [KeyboardButton(text="🏅 VIZU-Zertifikat"),
+         KeyboardButton(text="📚 Ma'lumotlar")],
 
         [KeyboardButton(text="👤 Mening Profilim")]
     ],
@@ -600,11 +597,12 @@ main_menu = ReplyKeyboardMarkup(
 )
 video_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="🇩🇪 A1"), KeyboardButton(text="🇩🇪 A2")],
+        [KeyboardButton(text="🎬 Namuna Dars")],
+        [KeyboardButton(text="🇩🇪 A1")],
+        [KeyboardButton(text="🇩🇪 A2")],
         [KeyboardButton(text="🇩🇪 B1")],
         [KeyboardButton(text="🔥 A1-B1")],
         [KeyboardButton(text="🔥 A1-C1")],
-        [KeyboardButton(text="🎬 Namuna Dars")],
         [KeyboardButton(text="⬅️ Orqaga")]
     ],
     resize_keyboard=True
@@ -646,7 +644,6 @@ def profile_keyboard():
         keyboard=[
             [KeyboardButton(text="🏅 Mening Sertifikatlarim")],
             [KeyboardButton(text="✏️ Ism Familiyani o'zgartirish")],
-            [KeyboardButton(text="🔥 XP Reytingi")],
             [KeyboardButton(text="⬅️ Orqaga")]
         ],
         resize_keyboard=True
