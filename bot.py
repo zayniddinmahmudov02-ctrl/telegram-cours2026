@@ -111,27 +111,27 @@ COURSE_INFO = {
     "🇩🇪 A1": {
         "lessons": 14,
         "old_price": "200.000 so'm",
-        "price": "100.000 so'm"
+        "price": "50.000 so'm"
     },
     "🇩🇪 A2": {
         "lessons": 14,
         "old_price": "300.000 so'm",
-        "price": "150.000 so'm"
+        "price": "100.000 so'm"
     },
     "🇩🇪 B1": {
         "lessons": 20,
         "old_price": "400.000 so'm",
-        "price": "200.000 so'm"
+        "price": "100.000 so'm"
     },
     "🔥 A1-B1": {
         "lessons": 48,
         "old_price": "600.000 so'm",
-        "price": "300.000 so'm"
+        "price": "200.000 so'm"
     },
     "🔥 A1-C1": {
         "lessons": 100,
         "old_price": "1.200.000 so'm",
-        "price": "600.000 so'm"
+        "price": "400.000 so'm"
     },
 }
 
@@ -1474,14 +1474,20 @@ async def cmd_start(message: Message):
         """,
         (user_id, full_name)
     )
-
-    # 4. Asosiy menyuni foydalanuvchiga taqdim etish (Eski klaviatura avtomat yangilanadi)
     await message.answer(
-        f"🇩🇪 <b>Nemis Tili (Vizu Deutsch) Botiga Xush Kelibsiz!</b>\n\n"
-        f"Platformamiz orqali nemis tilini vizual darslar va tizimli testlar orqali o'rganishingiz mumkin.\n\n"
-        f"🎉 <b>Hozirda barcha video kurslarimiz 50% CHEGIRMADA!</b>",
-        reply_markup=main_menu
-    )
+    "🇩🇪 Nemis Tili o'rganish uchun @vizu_academy_bot ga xush kelibsiz!\n\n"
+    "Platformamiz orqali nemis tilini zamonaviy va qulay usulda o'rganing:\n\n"
+    "📚 Video darslar orqali bosqichma-bosqich ta'lim\n"
+    "📝 So`zlar artikelini oson toping\n"
+    "🎯 Mock Test va imtihon tayyorgarligi\n"
+    "🎮 So'z o'yinlari orqali lug'at boyligini oshirish\n"
+    "📊 Natijalaringizni kuzatish imkoniyati\n"
+    "🏆 A1 → C1 gacha tizimli o'quv dasturi\n\n"
+    "🔥 Hozirda barcha video kurslar uchun Katta chegirmalar!\n\n"
+    "💰 Atigi 50.000 so'm bilan bugunoq o'rganishni boshlang.\n\n"
+    "👇 Kerakli bo'limni tanlang:",
+    reply_markup=main_menu
+)
 
 # =========================================================
 # CHECK SUBSCRIPTION BUTTON
