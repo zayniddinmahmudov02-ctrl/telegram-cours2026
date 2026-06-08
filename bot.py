@@ -5914,16 +5914,23 @@ async def build_level_menu(user_id):
 GOLD_COLOR = colors.HexColor("#D4AF37")
 SILVER_COLOR = colors.HexColor("#C0C0C0")
 BRONZE_COLOR = colors.HexColor("#CD7F32")
+
 # =========================================================
-# 1. YORDAMCHI FUNKSIYALAR
+# CERTIFICATE HELPERS
 # =========================================================
 
 def is_level_completed(user_id, level):
+    """
+    Sertifikat uchun faqat tanlangan daraja tekshiriladi.
+    Oldingi yoki keyingi darajalar hisobga olinmaydi.
+    """
     config = LEVEL_CONFIG.get(level)
+
     if not config:
         return False
 
     total_blocks = config["blocks"]
+
     for block in range(1, total_blocks + 1):
         row = db_execute(
             """
@@ -5936,14 +5943,22 @@ def is_level_completed(user_id, level):
             (user_id, level, block),
             fetchone=True
         )
+
+        # blok ishlanmagan
         if not row:
             return False
+
+        # blokdan kamida 60 ball
         if (row[0] or 0) < 60:
             return False
+
     return True
 
 
 def get_level_percent(user_id, level):
+    """
+    Tanlangan darajaning umumiy foizini hisoblaydi.
+    """
     result = db_execute(
         """
         SELECT COALESCE(SUM(best_score), 0)
@@ -5954,30 +5969,36 @@ def get_level_percent(user_id, level):
         (user_id, level),
         fetchone=True
     )
-    
+
     total_score = result[0] if result else 0
     config = LEVEL_CONFIG.get(level)
-    
+
     if not config:
         return 0, 0
-    
+
     max_score = config["blocks"] * 100
     percent = round((total_score / max_score) * 100, 1)
-    
-    return (percent, total_score)
+
+    return percent, total_score
 
 
 def get_certificate_rank(percent):
-    if percent >= 90:
+    """
+    Sertifikat darajasi
+    """
+    if percent >= 85:
         return "GOLD"
-    if percent >= 80:
-        return "SILVER"
     if percent >= 70:
+        return "SILVER"
+    if percent >= 60:
         return "BRONZE"
     return None
 
 
 def get_existing_certificate(user_id, level):
+    """
+    Shu daraja uchun avval sertifikat olinganmi
+    """
     return db_execute(
         """
         SELECT cert_id
@@ -5991,18 +6012,25 @@ def get_existing_certificate(user_id, level):
 
 
 def generate_certificate_id(level):
+    """
+    Sertifikat ID
+    """
     return f"VIZU-{level}-{uuid.uuid4().hex[:8].upper()}"
 
 
 def save_certificate(user_id, level, rank, cert_id, percent, score):
+    """
+    Sertifikat saqlash
+    """
     db_execute(
         """
-        INSERT INTO w_certificates (user_id, level, rank, cert_id, percent, score)
+        INSERT INTO w_certificates
+        (user_id, level, rank, cert_id, percent, score)
         VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT DO NOTHING
         """,
         (user_id, level, rank, cert_id, percent, score)
     )
-
 # =========================================================
 # 2. W-ZERTIFIKAT GENERATOR (A4 VERTICAL)
 # =========================================================
@@ -6104,8 +6132,8 @@ async def generate_certificate(message: Message):
 
     percent, score = get_level_percent(uid, level)
     
-    if percent < 70:
-        return await message.answer(f"❌ Uzr, sertifikat olish uchun kamida 70% natija kerak. Sizning natijangiz: {percent}%")
+    if percent < 60:
+        return await message.answer(f"❌ Uzr, sertifikat olish uchun kamida 60% natija kerak. Sizning natijangiz: {percent}%")
     
     rank = get_certificate_rank(percent)
     user_data = db_execute("SELECT full_name FROM users WHERE user_id = %s", (uid,), fetchone=True)
@@ -6429,10 +6457,9 @@ async def start_quiz_block(
             return
 
     # Bu joydan boshlab test generatoringiz va savollar zanjiri davom etadi...
-
 # =====================================================
-# USER LEVEL SECURITY
-# =====================================================
+    # USER LEVEL SECURITY
+    # =====================================================
 
     user_data = db_execute(
         "SELECT unlocked_level FROM users WHERE user_id = %s",
@@ -6441,14 +6468,16 @@ async def start_quiz_block(
     )
     current_unlocked = user_data[0] if user_data else "A1"
 
+    # Level va current_unlocked ro'yxatda borligini tekshirish
     if level not in LEVEL_ORDER or current_unlocked not in LEVEL_ORDER:
         await message.answer("❌ Xatolik yuz berdi.")
         return
 
-    if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
-        await message.answer("🔒 Bu daraja hali ochilmagan.")
-        return
-
+    # Agar 1-blokdan boshqa blok tanlansa, level ochilganligini tekshirish
+    if block != 1:
+        if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
+            await message.answer("🔒 Bu daraja hali ochilmagan.")
+            return
 # =====================================================
 # BLOCK SECURITY
 # =====================================================
@@ -6535,14 +6564,41 @@ async def start_block(message: Message):
         return
 
     level = match.group(1)
+    block = int(match.group(2))
+    user_id = message.from_user.id
 
-    block = int(
-        match.group(2)
+    # =====================================================
+    # 1-BLOK HAMMA LEVELDA OCHIQ
+    # =====================================================
+
+    if block == 1:
+        await start_quiz_block(
+            message,
+            level,
+            block
+        )
+        return
+
+    # =====================================================
+    # LEVEL SECURITY
+    # =====================================================
+
+    user_data = db_execute(
+        "SELECT unlocked_level FROM users WHERE user_id = %s",
+        (user_id,),
+        fetchone=True
     )
 
-    user_id = (
-        message.from_user.id
+    current_unlocked = (
+        user_data[0]
+        if user_data else "A1"
     )
+
+    if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
+        await message.answer(
+            "🔒 Bu daraja hali ochilmagan."
+        )
+        return
 
     # =====================================================
     # CHECK PREVIOUS RESULT
