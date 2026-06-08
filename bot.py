@@ -5653,7 +5653,6 @@ LEVEL_CONFIG = {
         "blocks": 11,
         "size": 100,
         "required": 600,
-        "last_block_size": 55
     }
 }
 
@@ -6038,20 +6037,40 @@ def generate_certificate_id(level):
     Sertifikat ID
     """
     return f"VIZU-{level}-{uuid.uuid4().hex[:8].upper()}"
-
-
 def save_certificate(user_id, level, rank, cert_id, percent, score):
-    """
-    Sertifikat saqlash
-    """
     db_execute(
         """
         INSERT INTO w_certificates
-        (user_id, level, rank, cert_id, percent, score)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        ON CONFLICT DO NOTHING
+        (
+            user_id,
+            level,
+            rank,
+            cert_id,
+            percent,
+            score
+        )
+        VALUES
+        (
+            %s, %s, %s, %s, %s, %s
+        )
+
+        ON CONFLICT (user_id, level)
+
+        DO UPDATE SET
+            rank = EXCLUDED.rank,
+            cert_id = EXCLUDED.cert_id,
+            percent = EXCLUDED.percent,
+            score = EXCLUDED.score,
+            created_at = NOW()
         """,
-        (user_id, level, rank, cert_id, percent, score)
+        (
+            user_id,
+            level,
+            rank,
+            cert_id,
+            percent,
+            score
+        )
     )
 # =========================================================
 # 2. W-ZERTIFIKAT GENERATOR (A4 VERTICAL)
@@ -6149,9 +6168,6 @@ async def generate_certificate(message: Message):
     if not is_level_completed(uid, level):
         return await message.answer(f"❌ {level} darajasi hali to'liq yakunlanmagan.")
     
-    if get_existing_certificate(uid, level): 
-        return await message.answer(f"✅ Siz allaqachon {level} sertifikatini olgansiz.")
-
     percent, score = get_level_percent(uid, level)
     
     if percent < 60:
@@ -6172,6 +6188,7 @@ async def generate_certificate(message: Message):
     except Exception as e:
         logger.error(f"Sertifikat yaratishda xatolik: {e}")
         await message.answer("⚠️ Sertifikat yaratishda xatolik yuz berdi.")
+
 # =========================================================
 # BLOCK MENU
 # =========================================================
@@ -6219,10 +6236,6 @@ def build_block_keyboard(level, user_id):
 
             # Blokdagi real savollar soni
             block_size = config["size"]
-
-            # C1 ning oxirgi bloki 55 ta
-            if level == "C1" and i == 11:
-                block_size = 55
 
             percent = round(
                 (score / block_size) * 100
@@ -6541,7 +6554,7 @@ async def start_quiz_block(
 
     questions = QUIZ_DATA.get(level, [])
     start_index = (block - 1) * 100
-    end_index = 1055 if (level == "C1" and block == 11) else (start_index + 100)
+    end_index = 1100 if (level == "C1" and block == 11) else (start_index + 100)
 
     block_questions = questions[start_index:end_index]
     if not block_questions:
