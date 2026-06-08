@@ -6395,17 +6395,7 @@ async def save_full_name(message: Message, state: FSMContext):
         reply_markup=menu
     )
 
-# =========================================================
-# LOCKED LEVEL
-# =========================================================
 
-@dp.message(F.text.regexp(r"🔒 (A1|A2|B1|B2|C1)"))
-async def locked_level_handler(message: Message):
-    await message.answer(
-        "🔒 Bu daraja hali ochilmagan.\n\n"
-        "Keyingi darajani ochish uchun:\n"
-        "• barcha bloklardan kamida 60% natija ko'rsating."
-    )
 # =========================================================
 # OPEN LEVEL
 # =========================================================
@@ -6519,11 +6509,6 @@ async def start_quiz_block(
         await message.answer("❌ Xatolik yuz berdi.")
         return
 
-    # Agar 1-blokdan boshqa blok tanlansa, level ochilganligini tekshirish
-    if block != 1:
-        if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
-            await message.answer("🔒 Bu daraja hali ochilmagan.")
-            return
 # =====================================================
 # BLOCK SECURITY
 # =====================================================
@@ -6639,12 +6624,6 @@ async def start_block(message: Message):
         user_data[0]
         if user_data else "A1"
     )
-
-    if LEVEL_ORDER.index(level) > LEVEL_ORDER.index(current_unlocked):
-        await message.answer(
-            "🔒 Bu daraja hali ochilmagan."
-        )
-        return
 
     # =====================================================
     # CHECK PREVIOUS RESULT
