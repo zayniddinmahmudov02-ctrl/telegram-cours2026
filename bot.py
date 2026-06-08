@@ -597,7 +597,7 @@ main_menu = ReplyKeyboardMarkup(
 )
 video_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="🎬 Namuna Dars")],
+        [KeyboardButton(text="🎬 Bepul Namuna Darslar")],
         [KeyboardButton(text="🇩🇪 A1")],
         [KeyboardButton(text="🇩🇪 A2")],
         [KeyboardButton(text="🇩🇪 B1")],
@@ -4966,10 +4966,10 @@ async def ai_teacher_menu(message: Message):
 # SAMPLE LESSON
 # =========================
 
-@dp.message(F.text == "🎬 Namuna Dars")
+@dp.message(F.text == "🎬 Bepul Namuna Darslar")
 async def sample_lesson(message: Message):
     await message.answer(
-        "🎬 Namuna Dars:\n"
+        "🎬 Bepul Namuna Dars:\n"
         "https://t.me/+yUxu7EOWyd82ODhi"
     )
 
