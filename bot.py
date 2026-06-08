@@ -5623,13 +5623,38 @@ class RegisterStates(StatesGroup):
 # =========================================================
 # LEVEL CONFIG
 # =========================================================
-
 LEVEL_CONFIG = {
-    "A1": {"file": "A1-words.csv", "blocks": 10, "size": 100, "required": 600},
-    "A2": {"file": "A2-words.csv", "blocks": 10, "size": 100, "required": 600},
-    "B1": {"file": "B1-words.csv", "blocks": 10, "size": 100, "required": 600},
-    "B2": {"file": "B2-words.csv", "blocks": 15, "size": 100, "required": 900},
-    "C1": {"file": "C1-words.csv", "blocks": 11, "size": 100, "required": 600}
+    "A1": {
+        "file": "A1-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600
+    },
+    "A2": {
+        "file": "A2-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600
+    },
+    "B1": {
+        "file": "B1-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600
+    },
+    "B2": {
+        "file": "B2-words.csv",
+        "blocks": 15,
+        "size": 100,
+        "required": 900
+    },
+    "C1": {
+        "file": "C1-words.csv",
+        "blocks": 11,
+        "size": 100,
+        "required": 600,
+        "last_block_size": 55
+    }
 }
 
 LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1"]
@@ -6192,7 +6217,18 @@ def build_block_keyboard(level, user_id):
 
             score = progress[0] or 0
 
-            if score >= 100:
+            # Blokdagi real savollar soni
+            block_size = config["size"]
+
+            # C1 ning oxirgi bloki 55 ta
+            if level == "C1" and i == 11:
+                block_size = 55
+
+            percent = round(
+                (score / block_size) * 100
+            ) if block_size > 0 else 0
+
+            if percent >= 100:
 
                 text = (
                     f"🏆 "
@@ -6205,7 +6241,7 @@ def build_block_keyboard(level, user_id):
                 text = (
                     f"✅ "
                     f"{level}-{i}-Blok "
-                    f"({score}%)"
+                    f"({percent}%)"
                 )
 
         else:
