@@ -5864,26 +5864,21 @@ async def build_level_menu(user_id):
 
     rows = []
     current = []
-
-    # =====================================================
+# =====================================================
     # LEVELS
     # =====================================================
-    for i, level in enumerate(LEVEL_ORDER):
-        # OPEN
-        if i <= unlocked_index:
-            text = f"🎯 {level}"
-        # LOCKED
-        else:
-            text = f"🔒 {level}"
+    rows = []
+    current = []
 
-        current.append(KeyboardButton(text=text))
+    for level in LEVEL_ORDER:
+        current.append(KeyboardButton(text=f"🎯 {level}"))
 
-        # 2 BUTTONS
+        # 2 ta tugmadan keyin qatorni yangilash
         if len(current) == 2:
             rows.append(current)
             current = []
 
-    # LAST ROW
+    # Qolgan tugmalarni qo'shish
     if current:
         rows.append(current)
 
@@ -5906,7 +5901,6 @@ async def build_level_menu(user_id):
         keyboard=rows,
         resize_keyboard=True
     )
-
 # =========================================================
 # 1. CONFIGURATION & HELPERS
 # =========================================================
