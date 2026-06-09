@@ -1,0 +1,489 @@
+level,lesson,teil,task_id,type,question,correct,wrong1,wrong2
+A1,1,1,1,test,Nemis alifbosida nechta harf bor?,30,26,29
+A1,1,1,2,test,Nemis tilida nechta umlaut mavjud?,3,2,4
+A1,1,1,3,test,Quyidagilardan qaysi biri umlaut hisoblanadi?,Ä,ß,Q
+A1,1,1,4,test,Nemis tilida nechta asosiy unli harf bor?,5,4,6
+A1,1,1,5,test,Nemis tilida nechta undosh harf bor?,21,20,22
+A1,1,1,6,test,W harfi qanday o'qiladi?,v,w,f
+A1,1,1,7,test,Z harfi qanday o'qiladi?,ts,z,s
+A1,1,1,8,test,ß harfi qanday o'qiladi?,ss,sh,b
+A1,1,1,9,test,Q harfi qanday o'qiladi?,kv,k,ku
+A1,1,1,10,test,C harfi e yoki i dan oldin qanday o'qiladi?,ts,k,s
+A1,1,1,11,test,sch birikmasi qanday o'qiladi?,sh,ch,sch
+A1,1,1,12,test,sp birikmasi qanday o'qiladi?,shp,sp,sht
+A1,1,1,13,test,st birikmasi qanday o'qiladi?,sht,st,sh
+A1,1,1,14,test,ei birikmasi qanday o'qiladi?,ay,oy,ii
+A1,1,1,15,test,eu birikmasi qanday o'qiladi?,oy,ay,au
+A1,1,1,16,test,au birikmasi qanday o'qiladi?,au,oy,ay
+A1,1,1,17,test,ie birikmasi qanday o'qiladi?,ii,ie,ay
+A1,1,1,18,test,V harfi ko'pincha qanday o'qiladi?,f,v,w
+A1,1,1,19,test,J harfi nemischa so'zlarda qanday o'qiladi?,y,j,g
+A1,1,1,20,test,Quyidagilardan qaysi biri umlaut emas?,Q,Ä,Ü
+A1,2,1,1,test,Du ____ Deutsch.,lernst,lerne,lernt
+A1,2,1,2,test,Er ____ die Tür.,öffnet,öffnen,öffnest
+A1,2,1,3,test,Ihr ____ am Montag.,arbeitet,arbeitest,arbeite
+A1,2,1,4,test,Ich ____ ein Buch.,lese,liest,lesen
+A1,2,1,5,test,Du ____ nach Hause.,fährst,fährt,fahren
+A1,2,1,6,test,Er ____ lange.,schläft,schläfst,schlafen
+A1,2,1,7,test,Wir ____ jetzt.,fangen an,fängst an,fangt an
+A1,2,1,8,test,Du ____ das Buch.,liest,lesen,ließt
+A1,2,1,9,test,Sie ____ gern Fußball.,spielt,spielst,spielen
+A1,2,1,10,test,Ich ____ dich.,sehe,sieht,siehst
+A1,2,1,11,test,Du ____ die Straße.,überquerst,überquert,überquere
+A1,2,1,12,test,Er ____ die Hausaufgaben.,macht,machst,machen
+A1,2,1,13,test,Ihr ____ Musik.,hört,hören,hörst
+A1,2,1,14,test,Wir ____ nach Deutschland.,fahren,fährt,fahrst
+A1,2,1,15,test,Du ____ den Film.,siehst,sieht,sehen
+A1,2,1,16,test,Ich ____ die Aufgabe.,mache,machst,macht
+A1,2,1,17,test,Du ____ mir.,hilfst,hilft,helfen
+A1,2,1,18,test,Er ____ den Tisch.,deckt,deckst,decke
+A1,2,1,19,test,Wir ____ die Fenster.,öffnen,öffnest,öffnet
+A1,2,1,20,test,Ihr ____ am Samstag.,tanzt,tanztet,tanze
+A1,3,1,1,test,Ich ___ ein Buch.,habe,bin,hast
+A1,3,1,2,test,Du ___ müde.,bist,hast,ist
+A1,3,1,3,test,Er ___ Hunger.,hat,ist,hast
+A1,3,1,4,test,Wir ___ zu Hause.,sind,haben,seid
+A1,3,1,5,test,Ihr ___ viele Freunde.,habt,seid,hat
+A1,3,1,6,test,Sie ___ Lehrer.,sind,haben,seid
+A1,3,1,7,test,Ich ___ eine Katze.,habe,bin,hast
+A1,3,1,8,test,Du ___ pünktlich.,bist,hast,seid
+A1,3,1,9,test,Sie ___ ein Haus.,hat,ist,haben
+A1,3,1,10,test,Wir ___ glücklich.,sind,haben,seid
+A1,3,1,11,test,Er ___ krank.,ist,hat,bist
+A1,3,1,12,test,Ihr ___ ein Fahrrad.,habt,seid,hat
+A1,3,1,13,test,Sie ___ viele Bücher.,haben,sind,habt
+A1,3,1,14,test,Ich ___ Zeit.,habe,bin,hat
+A1,3,1,15,test,Du ___ laut.,bist,hast,ist
+A1,3,1,16,test,Es ___ klein.,ist,hat,sind
+A1,3,1,17,test,Wir ___ Schüler.,sind,haben,seid
+A1,3,1,18,test,Ihr ___ Spaß.,habt,seid,hat
+A1,3,1,19,test,Er ___ einen Bruder.,hat,ist,hast
+A1,3,1,20,test,Sie ___ freundlich.,ist,hat,sind
+A1,3,1,21,test,Ich ___ Hunger.,habe,bin,hast
+A1,3,1,22,test,Du ___ eine Katze.,hast,bist,hat
+A1,3,1,23,test,Er ___ zu Hause.,ist,hat,sind
+A1,3,1,24,test,Wir ___ viele Bücher.,haben,sind,habt
+A1,3,1,25,test,Ihr ___ müde.,seid,habt,sind
+A1,3,1,26,test,Sie ___ ein Auto.,hat,ist,haben
+A1,3,1,27,test,Ich ___ glücklich.,bin,habe,bist
+A1,3,1,28,test,Du ___ freundlich.,bist,hast,ist
+A1,3,1,29,test,Es ___ klein.,ist,hat,sind
+A1,3,1,30,test,Wir ___ Lehrer.,sind,haben,seid
+A1,3,2,1,test,___ Mann liest ein Buch.,Der,Die,Das
+A1,3,2,2,test,Ich sehe ___ Frau im Garten.,Die,Der,Das
+A1,3,2,3,test,___ Kind spielt im Park.,Das,Der,Die
+A1,3,2,4,test,Ich gebe ___ Mann ein Geschenk.,Dem,Der,Den
+A1,3,2,5,test,Das Buch ___ Kindes ist interessant.,Des,Der,Dem
+A1,3,2,6,test,Ich sehe ___ Kinder auf der Straße.,Die,Den,Das
+A1,3,2,7,test,Ich gebe ___ Frau einen Apfel.,Der,Die,Dem
+A1,3,2,8,test,___ Vater arbeitet in einer Firma.,Der,Die,Das
+A1,3,2,9,test,Ich sehe ___ Kind im Garten.,Das,Den,Die
+A1,3,2,10,test,___ Spielsachen der Kinder sind neu.,Die,Der,Des
+A1,3,2,11,test,___ Mann arbeitet in einer Firma.,Ein,Eine,Einer
+A1,3,2,12,test,Ich sehe ___ Frau im Garten.,Eine,Ein,Einer
+A1,3,2,13,test,___ Kind spielt im Park.,Ein,Eine,Einer
+A1,3,2,14,test,Ich gebe ___ Mann ein Geschenk.,Einem,Ein,Einen
+A1,3,2,15,test,Ich gebe ___ Frau einen Apfel.,Einer,Eine,Ein
+A1,3,2,16,test,___ Mann liest die Zeitung.,Ein,Eine,Einer
+A1,3,2,17,test,Ich sehe ___ Kind im Garten.,Ein,Eine,Einem
+A1,3,2,18,test,Ich sehe ___ Frau im Park.,Eine,Ein,Einer
+A1,3,2,19,test,Ich gebe ___ Kind ein Spielzeug.,Einem,Ein,Eine
+A1,3,2,20,test,___ Kind spielt im Park.,Ein,Eine,Einer
+A1,4,1,1,test,Ich habe ein Buch. Das ist ___ Buch.,mein,dein,sein
+A1,4,1,2,test,Du hast eine Katze. Das ist ___ Katze.,deine,meine,seine
+A1,4,1,3,test,Er hat ein Auto. Das ist ___ Auto.,sein,ihr,mein
+A1,4,1,4,test,Sie hat einen Hund. Das ist ___ Hund.,ihr,sein,dein
+A1,4,1,5,test,Wir haben ein Haus. Das ist ___ Haus.,unser,euer,ihr
+A1,4,1,6,test,Ihr habt Fahrräder. Das sind ___ Fahrräder.,eure,unsere,ihre
+A1,4,1,7,test,Ich liebe ___ Familie.,meine,deine,seine
+A1,4,1,8,test,Du suchst ___ Schlüssel.,deinen,seinen,meinen
+A1,4,1,9,test,Er besucht ___ Großeltern.,seine,ihre,unsere
+A1,4,1,10,test,Sie verkauft ___ Auto.,ihr,sein,mein
+A1,4,1,11,test,Wir machen ___ Hausaufgaben.,unsere,eure,ihre
+A1,4,1,12,test,Ihr lernt mit ___ Lehrer.,eurem,unserem,ihrem
+A1,4,1,13,test,Das ist ___ Zimmer (ich).,mein,dein,sein
+A1,4,1,14,test,Das ist ___ Tasche (du).,deine,meine,seine
+A1,4,1,15,test,Das ist ___ Bruder (er).,sein,ihr,mein
+A1,4,1,16,test,Das ist ___ Schwester (sie).,ihre,seine,deine
+A1,4,1,17,test,Das ist ___ Schule (wir).,unsere,eure,ihre
+A1,4,1,18,test,Das ist ___ Klassenzimmer (ihr).,euer,unser,ihr
+A1,4,1,19,test,Sind das ___ Bücher? (wir),unsere,eure,ihre
+A1,4,1,20,test,Ist das ___ Handy? (du),dein,mein,sein
+A1,4,2,1,test,Er sieht ___. (ich),mich,dich,mir
+A1,4,2,2,test,Ich sehe ___. (du),dich,dir,mich
+A1,4,2,3,test,Kannst du ___ helfen? (ich),mir,mich,dir
+A1,4,2,4,test,Ich gebe ___ das Buch. (du),dir,dich,mir
+A1,4,2,5,test,Wir kennen ___. (er),ihn,ihm,sie
+A1,4,2,6,test,Ich helfe ___. (er),ihm,ihn,ihr
+A1,4,2,7,test,Ich sehe ___. (sie),sie,ihr,ihn
+A1,4,2,8,test,Ich gebe ___ einen Apfel. (sie),ihr,sie,ihm
+A1,4,2,9,test,Der Lehrer fragt ___. (wir),uns,unser,euch
+A1,4,2,10,test,Der Lehrer erklärt ___ die Regel. (wir),uns,euch,ihnen
+A1,4,2,11,test,Ich sehe ___. (ihr),euch,ihr,uns
+A1,4,2,12,test,Ich gebe ___ Hausaufgaben. (ihr),euch,ihr,uns
+A1,4,2,13,test,Peter besucht ___. (sie Pl.),sie,ihnen,ihr
+A1,4,2,14,test,Peter hilft ___. (sie Pl.),ihnen,sie,ihr
+A1,4,2,15,test,Sie ruft ___ an. (ich),mich,mir,dich
+A1,4,2,16,test,Kannst du ___ helfen? (er),ihm,ihn,sie
+A1,4,2,17,test,Ich lade ___ ein. (du),dich,dir,mich
+A1,4,2,18,test,Wir danken ___. (ihr),euch,ihr,uns
+A1,4,2,19,test,Der Arzt untersucht ___. (ich),mich,mir,dich
+A1,4,2,20,test,Der Arzt gibt ___ ein Medikament. (ich),mir,mich,dir
+A1,4,2,21,test,Ich mag ___. (er),ihn,ihm,sie
+A1,4,2,22,test,Ich schreibe ___. (er),ihm,ihn,ihr
+A1,4,2,23,test,Sie besucht ___. (wir),uns,euch,ihnen
+A1,4,2,24,test,Sie hilft ___. (wir),uns,euch,ihnen
+A1,4,2,25,test,Ich sehe ___. (ihr),sie,ihr,ihnen
+A1,4,2,26,test,Ich gebe ___ ein Geschenk. (ihr),ihr,sie,ihm
+A1,4,2,27,test,Der Lehrer kennt ___. (ihr),euch,ihr,uns
+A1,4,2,28,test,Der Lehrer erklärt ___ alles. (ihr),euch,ihr,uns
+A1,4,2,29,test,Wir besuchen ___. (sie Pl.),sie,ihnen,ihr
+A1,4,2,30,test,Wir helfen ___. (sie Pl.),ihnen,sie,ihr
+A1,5,1,1,test,___ heißt du?,Wie,Wo,Wer
+A1,5,1,2,test,___ kommst du?,Woher,Wann,Warum
+A1,5,1,3,test,___ wohnst du?,Wo,Wie,Wer
+A1,5,1,4,test,___ alt bist du?,Wie,Wo,Was
+A1,5,1,5,test,___ ist dein Lehrer?,Wer,Wo,Wann
+A1,5,1,6,test,___ lernst du Deutsch?,Warum,Wo,Wer
+A1,5,1,7,test,___ Uhr ist es?,Wie viel,Woher,Warum
+A1,5,1,8,test,___ machst du am Wochenende?,Was,Wer,Wo
+A1,5,1,9,test,___ gehst du zur Schule?,Wann,Wo,Wie
+A1,5,1,10,test,___ kostet das Buch?,Wie viel,Warum,Wo
+A1,5,1,11,test,___ du Student?,Bist,Hast,Wohnst
+A1,5,1,12,test,___ ihr Deutsch?,Lernt,Seid,Kommt
+A1,5,1,13,test,___ er in Deutschland?,Wohnt,Heißt,Lernt
+A1,5,1,14,test,___ sie eine Katze?,Hat,Ist,Wohnt
+A1,5,1,15,test,___ du heute Zeit?,Hast,Bist,Kommst
+A1,5,1,16,test,___ wir morgen Unterricht?,Haben,Sind,Lernen
+A1,5,1,17,test,___ ihr aus Berlin?,Kommt,Habt,Lernt
+A1,5,1,18,test,___ das dein Buch?,Ist,Hat,Wohnt
+A1,5,1,19,test,___ sie Fußball?,Spielt,Lernt,Wohnt
+A1,5,1,20,test,___ du Kaffee?,Magst,Hast,Bist
+A1,5,2,1,test,Wie spät ist es? 08:00,Es ist acht Uhr.,Es ist neun Uhr.,Es ist sieben Uhr.
+A1,5,2,2,test,Wie spät ist es? 10:00,Es ist zehn Uhr.,Es ist elf Uhr.,Es ist neun Uhr.
+A1,5,2,3,test,Wie spät ist es? 14:00,Es ist vierzehn Uhr.,Es ist zwölf Uhr.,Es ist fünfzehn Uhr.
+A1,5,2,4,test,Wie spät ist es? 06:00,Es ist sechs Uhr.,Es ist fünf Uhr.,Es ist sieben Uhr.
+A1,5,2,5,test,Wie spät ist es? 20:00,Es ist zwanzig Uhr.,Es ist acht Uhr.,Es ist neunzehn Uhr.
+A1,5,2,6,test,08:15 ist ...,Viertel nach acht.,Viertel vor acht.,Halb neun.
+A1,5,2,7,test,09:15 ist ...,Viertel nach neun.,Viertel vor neun.,Halb zehn.
+A1,5,2,8,test,07:30 ist ...,Halb acht.,Halb sieben.,Viertel nach sieben.
+A1,5,2,9,test,10:30 ist ...,Halb elf.,Halb zehn.,Viertel vor elf.
+A1,5,2,10,test,05:30 ist ...,Halb sechs.,Halb fünf.,Viertel nach fünf.
+A1,5,2,11,test,08:45 ist ...,Viertel vor neun.,Viertel nach acht.,Halb neun.
+A1,5,2,12,test,11:45 ist ...,Viertel vor zwölf.,Viertel nach elf.,Halb zwölf.
+A1,5,2,13,test,16:45 ist ...,Viertel vor fünf.,Viertel nach vier.,Halb fünf.
+A1,5,2,14,test,Um wie viel Uhr beginnt der Unterricht? 08:00,Um acht Uhr.,Um neun Uhr.,Um sieben Uhr.
+A1,5,2,15,test,Um wie viel Uhr isst du zu Mittag? 12:00,Um zwölf Uhr.,Um zehn Uhr.,Um vierzehn Uhr.
+A1,5,2,16,test,Welches Wort bedeutet 'soat'?,Uhr,Minute,Tag
+A1,5,2,17,test,Welches Wort bedeutet 'minut'?,Minute,Uhr,Sekunde
+A1,5,2,18,test,Wie fragt man nach der Uhrzeit?,Wie spät ist es?,Wie heißt du?,Wo wohnst du?
+A1,5,2,19,test,13:00 ist ...,Es ist dreizehn Uhr.,Es ist drei Uhr.,Es ist zwölf Uhr.
+A1,5,2,20,test,22:00 ist ...,Es ist zweiundzwanzig Uhr.,Es ist zwanzig Uhr.,Es ist zwölf Uhr.
+A1,6,1,1,test,Ich ___ Deutsch sprechen.,kann,muss,will
+A1,6,1,2,test,Du ___ Hausaufgaben machen.,musst,kannst,willst
+A1,6,1,3,test,Er ___ ein Buch lesen.,will,kann,mag
+A1,6,1,4,test,Wir ___ Filme sehen.,mögen,wollen,müssen
+A1,6,1,5,test,Ihr ___ jetzt kommen.,dürft,könnt,müsst
+A1,6,1,6,test,Sie ___ mir helfen.,soll,sollt,musst
+A1,6,1,7,test,Ich ___ Kaffee trinken.,mag,muss,will
+A1,6,1,8,test,Du ___ eine Frage stellen.,darfst,kannst,musst
+A1,6,1,9,test,Er ___ Auto fahren.,kann,darf,muss
+A1,6,1,10,test,Wir ___ zu Hause bleiben.,wollen,mögen,müssen
+A1,6,1,11,test,Ihr ___ schnell laufen.,könnt,dürft,müsst
+A1,6,1,12,test,Sie ___ Ruhe haben.,mögen,wollen,können
+A1,6,1,13,test,Ich ___ arbeiten.,muss,will,mag
+A1,6,1,14,test,Du ___ schlafen.,willst,musst,darfst
+A1,6,1,15,test,Er ___ essen.,darf,kann,muss
+A1,6,1,16,test,Wir ___ lernen.,sollen,müssen,wollen
+A1,6,1,17,test,Ihr ___ Fragen beantworten.,müsst,könnt,dürft
+A1,6,1,18,test,Sie ___ Deutsch sprechen.,können,müssen,wollen
+A1,6,1,19,test,Ich ___ Fußball spielen.,kann,will,muss
+A1,6,1,20,test,Du ___ zum Arzt gehen.,musst,darfst,willst
+A1,6,1,21,test,Er ___ mir helfen.,soll,kann,mag
+A1,6,1,22,test,Wir ___ warten.,dürfen,sollen,müssen
+A1,6,1,23,test,Ihr ___ Musik hören.,mögt,wollt,müsst
+A1,6,1,24,test,Sie ___ zu Hause bleiben.,wollen,mögen,können
+A1,6,1,25,test,Ich ___ ein Buch lesen.,mag,will,muss
+A1,6,1,26,test,Du ___ gehen.,darfst,musst,kannst
+A1,6,1,27,test,Er ___ eine Frage stellen.,kann,darf,muss
+A1,6,1,28,test,Wir ___ antworten.,sollen,wollen,können
+A1,6,1,29,test,Ihr ___ essen.,dürft,könnt,müsst
+A1,6,1,30,test,Sie ___ lernen.,müssen,wollen,können
+A1,6,2,1,test,Ich habe ___ Auto.,kein,nicht,keinen
+A1,6,2,2,test,Du hast ___ Katze.,keine,kein,nicht
+A1,6,2,3,test,Er hat ___ Hund.,keinen,kein,nicht
+A1,6,2,4,test,Wir haben ___ Zeit.,keine,nicht,kein
+A1,6,2,5,test,Ihr habt ___ Bücher.,keine,kein,nicht
+A1,6,2,6,test,Sie hat ___ Haus.,kein,keine,nicht
+A1,6,2,7,test,Ich bin ___ müde.,nicht,kein,keine
+A1,6,2,8,test,Du kommst ___ heute.,nicht,kein,keine
+A1,6,2,9,test,Er lernt ___ Deutsch.,nicht,kein,keine
+A1,6,2,10,test,Wir wohnen ___ in Berlin.,nicht,kein,keine
+A1,6,2,11,test,Ich habe ___ Bruder.,keinen,kein,nicht
+A1,6,2,12,test,Du hast ___ Schwester.,keine,kein,nicht
+A1,6,2,13,test,Er hat ___ Fahrrad.,kein,keinen,nicht
+A1,6,2,14,test,Wir haben ___ Hund.,keinen,kein,nicht
+A1,6,2,15,test,Ihr habt ___ Schule heute.,keine,kein,nicht
+A1,6,2,16,test,Sie trinkt ___ Kaffee.,keinen,kein,nicht
+A1,6,2,17,test,Ich esse ___ Fleisch.,kein,nicht,keine
+A1,6,2,18,test,Du spielst ___ Fußball.,nicht,kein,keine
+A1,6,2,19,test,Er arbeitet ___ am Sonntag.,nicht,kein,keine
+A1,6,2,20,test,Wir sprechen ___ Englisch.,nicht,kein,keine
+A1,6,2,21,test,Ich habe ___ Freunde in Berlin.,keine,kein,nicht
+A1,6,2,22,test,Du hast ___ Problem.,kein,keinen,nicht
+A1,6,2,23,test,Er kauft ___ Apfel.,keinen,kein,nicht
+A1,6,2,24,test,Wir haben ___ Auto.,kein,keinen,nicht
+A1,6,2,25,test,Ihr habt ___ Fragen.,keine,kein,nicht
+A1,6,2,26,test,Sie liest ___ Buch.,kein,keinen,nicht
+A1,6,2,27,test,Ich bin ___ Lehrer.,kein,nicht,keinen
+A1,6,2,28,test,Du bist ___ krank.,nicht,kein,keine
+A1,6,2,29,test,Er ist ___ Student.,kein,nicht,keinen
+A1,6,2,30,test,Wir sind ___ zu Hause.,nicht,kein,keine
+A1,7,1,1,test,Ich ___ gestern krank.,war,hatte,bin
+A1,7,1,2,test,Du ___ viel Zeit.,hattest,hast,warst
+A1,7,1,3,test,Er ___ zu Hause.,war,ist,hatte
+A1,7,1,4,test,Wir ___ viele Bücher.,hatten,haben,waren
+A1,7,1,5,test,Ihr ___ gestern müde.,wart,seid,hattet
+A1,7,1,6,test,Sie ___ im Urlaub.,waren,sind,hatten
+A1,7,1,7,test,Ich ___ einen Hund.,hatte,habe,war
+A1,7,1,8,test,Du ___ gestern in Berlin.,warst,bist,hattest
+A1,7,1,9,test,Er ___ keine Hausaufgaben.,hatte,hat,war
+A1,7,1,10,test,Wir ___ sehr glücklich.,waren,sind,hatten
+A1,7,1,11,test,Ihr ___ ein neues Auto.,hattet,habt,wart
+A1,7,1,12,test,Sie ___ gestern zu Hause.,waren,sind,hatten
+A1,7,1,13,test,Ich ___ keine Zeit.,hatte,habe,war
+A1,7,1,14,test,Du ___ sehr freundlich.,warst,bist,hattest
+A1,7,1,15,test,Er ___ viele Freunde.,hatte,hat,war
+A1,7,1,16,test,Wir ___ in der Schule.,waren,sind,hatten
+A1,7,1,17,test,Ihr ___ gestern krank.,wart,seid,hattet
+A1,7,1,18,test,Sie ___ ein großes Haus.,hatten,haben,waren
+A1,7,1,19,test,Ich ___ im Kino.,war,bin,hatte
+A1,7,1,20,test,Du ___ viele Fragen.,hattest,hast,warst
+A1,7,1,21,test,Er ___ gestern müde.,war,ist,hatte
+A1,7,1,22,test,Wir ___ keine Probleme.,hatten,haben,waren
+A1,7,1,23,test,Ihr ___ im Garten.,wart,seid,hattet
+A1,7,1,24,test,Sie ___ viel Arbeit.,hatten,haben,waren
+A1,7,1,25,test,Ich ___ gestern zu Hause.,war,bin,hatte
+A1,7,1,26,test,Du ___ einen Bruder.,hattest,hast,warst
+A1,7,1,27,test,Er ___ in Deutschland.,war,ist,hatte
+A1,7,1,28,test,Wir ___ keine Katze.,hatten,haben,waren
+A1,7,1,29,test,Ihr ___ sehr nett.,wart,seid,hattet
+A1,7,1,30,test,Sie ___ gestern hier.,waren,sind,hatten
+A1,8,1,1,test,Ich habe Deutsch ___.,gelernt,lernen,lernte
+A1,8,1,2,test,Du hast im Büro ___.,gearbeitet,arbeiten,arbeitet
+A1,8,1,3,test,Wir haben oft im Park ___.,gespielt,spielen,spielte
+A1,8,1,4,test,Er hat heute Abend Pizza ___.,gekocht,kochen,kochte
+A1,8,1,5,test,Ihr habt gerne Musik ___.,getanzt,tanzen,tanzte
+A1,8,1,6,test,Sie hat auf den Bus ___.,gewartet,warten,wartete
+A1,8,1,7,test,Ich habe immer auf Fragen ___.,geantwortet,antworten,antwortete
+A1,8,1,8,test,Du hast viele Fragen ___.,gefragt,fragen,fragte
+A1,8,1,9,test,Wir haben unsere Freunde ___.,besucht,besuchen,besuchte
+A1,8,1,10,test,Er hat Radio ___.,gehört,hören,hörte
+A1,8,1,11,test,Ihr habt miteinander ___.,gesprochen,sprechen,sprach
+A1,8,1,12,test,Ich habe Brot im Supermarkt ___.,gekauft,kaufen,kaufte
+A1,8,1,13,test,Du hast jeden Tag Klavier ___.,geübt,üben,übte
+A1,8,1,14,test,Wir haben lange im Garten ___.,gearbeitet,arbeiten,arbeitete
+A1,8,1,15,test,Sie hat viel für die Schule ___.,gelernt,lernen,lernte
+A1,8,1,16,test,Ich habe jeden Morgen Sport ___.,gemacht,machen,machte
+A1,8,1,17,test,Er hat gern Fußball ___.,gespielt,spielen,spielte
+A1,8,1,18,test,Ihr habt oft am Wochenende ___.,getanzt,tanzen,tanzte
+A1,8,1,19,test,Du hast für das Abendessen ___.,gekocht,kochen,kochte
+A1,8,1,20,test,Wir haben auf den Zug ___.,gewartet,warten,wartete
+A1,8,2,1,test,Ich habe viel ___.,gesehen,sehen,sah
+A1,8,2,2,test,Du bist nach Berlin ___.,gefahren,fahren,fuhr
+A1,8,2,3,test,Wir haben das Buch ___.,gelesen,lesen,las
+A1,8,2,4,test,Er ist gestern ins Kino ___.,gegangen,gehen,ging
+A1,8,2,5,test,Ihr seid hoch in den Himmel ___.,geflogen,fliegen,flog
+A1,8,2,6,test,Sie hat den Ball ___.,genommen,nehmen,nahm
+A1,8,2,7,test,Ich habe den Hund ___.,gefunden,finden,fand
+A1,8,2,8,test,Du bist spät nach Hause ___.,gekommen,kommen,kam
+A1,8,2,9,test,Wir haben das Geschenk ___.,gegeben,geben,gab
+A1,8,2,10,test,Er hat die Aufgabe ___.,vergessen,vergisst,vergaß
+A1,8,2,11,test,Ihr seid im Garten ___.,gelaufen,laufen,lief
+A1,8,2,12,test,Sie hat die Stadt ___.,gesehen,sehen,sah
+A1,8,2,13,test,Ich habe meine Schlüssel ___.,verloren,verlieren,verlor
+A1,8,2,14,test,Du hast gestern Abend Pizza ___.,gegessen,essen,aß
+A1,8,2,15,test,Wir sind viel im Urlaub ___.,gefahren,fahren,fuhr
+A1,8,2,16,test,Er ist nach Hause ___.,gegangen,gehen,ging
+A1,8,2,17,test,Ich habe das Bild ___.,gesehen,sehen,sah
+A1,8,2,18,test,Ihr habt den Ball ___.,geworfen,werfen,warf
+A1,8,2,19,test,Sie ist auf die Idee ___.,gekommen,kommen,kam
+A1,8,2,20,test,Du hast das Lied ___.,gesungen,singen,sang
+A1,8,3,1,test,Ich habe im Supermarkt ___.,eingekauft,einkaufen,kaufte ein
+A1,8,3,2,test,Du hast dein Zimmer ___.,aufgeräumt,aufräumen,räumte auf
+A1,8,3,3,test,Wir haben die Tür ___.,zugemacht,zumachen,machte zu
+A1,8,3,4,test,Er hat das Geschenk ___.,mitgebracht,mitbringen,brachte mit
+A1,8,3,5,test,Ihr seid früh am Morgen ___.,aufgestanden,aufstehen,stand auf
+A1,8,3,6,test,Sie hat mich gestern ___.,angerufen,anrufen,rief an
+A1,8,3,7,test,Ich habe die Wohnung ___. ,aufgeräumt,aufräumen,räumte auf
+A1,8,3,8,test,Du hast Lebensmittel ___.,eingekauft,einkaufen,kaufte ein
+A1,8,3,9,test,Wir haben zusammen im Projekt ___.,mitgemacht,mitmachen,machte mit
+A1,8,3,10,test,Er hat aufmerksam ___. ,zugehört,zuhören,hörte zu
+A1,8,3,11,test,Ich habe die Aufgabe ___. ,verstanden,verstehen,verstand
+A1,8,3,12,test,Du hast das Restaurant ___. ,empfohlen,empfehlen,empfahl
+A1,8,3,13,test,Wir haben unsere Freunde ___. ,besucht,besuchen,besuchte
+A1,8,3,14,test,Er hat die Rechnung ___. ,bezahlt,bezahlen,bezahlte
+A1,8,3,15,test,Ihr habt den Plan ___. ,erklärt,erklären,erklärte
+A1,8,3,16,test,Sie hat die Regeln ___. ,gehört,hören,hörte
+A1,8,3,17,test,Ich habe ein Paket ___. ,bekommen,bekommen,bekam
+A1,8,3,18,test,Du hast den Schlüssel ___. ,verloren,verlieren,verlor
+A1,8,3,19,test,Wir haben eine tolle Erfahrung ___. ,erlebt,erleben,erlebte
+A1,8,3,20,test,Er hat ein neues Museum ___. ,entdeckt,entdecken,entdeckte
+A1,9,1,1,test,Ich bin ___ Schule.,in der,in die,zur
+A1,9,1,2,test,Ich gehe ___ Schule.,zur,in der,bei der
+A1,9,1,3,test,Er arbeitet ___ Arbeit.,bei der,in der,zur
+A1,9,1,4,test,Wir gehen ___ Arbeit.,zur,bei der,in der
+A1,9,1,5,test,Sie lebt ___ Deutschland.,in,nach,zu
+A1,9,1,6,test,Er fährt ___ Deutschland.,nach,in,zu
+A1,9,1,7,test,Das Buch liegt ___ Tisch.,auf dem,auf den,in dem
+A1,9,1,8,test,Ich lege das Buch ___ Tisch.,auf den,auf dem,in den
+A1,9,1,9,test,Die Kinder sind ___ Park.,in dem,in den,zu dem
+A1,9,1,10,test,Die Kinder gehen ___ Park.,in den,in dem,zu dem
+A1,9,1,11,test,Meine Mutter ist ___ Küche.,in der,in die,zur
+A1,9,1,12,test,Meine Mutter geht ___ Küche.,in die,in der,zu der
+A1,9,1,13,test,Wir sind ___ Markt.,auf dem,auf den,in den
+A1,9,1,14,test,Wir gehen ___ Markt.,auf den,auf dem,bei dem
+A1,9,1,15,test,Er ist ___ Arzt.,beim,zum,bei den
+A1,9,1,16,test,Er geht ___ Arzt.,zum,beim,bei dem
+A1,9,1,17,test,Sie sind ___ Party.,auf der,auf die,zur
+A1,9,1,18,test,Sie gehen ___ Party.,auf die,auf der,zur
+A1,9,1,19,test,Ich bin ___ Hause.,zu,nach,in
+A1,9,1,20,test,Ich gehe ___ Hause.,nach,zu,in
+A1,9,1,21,test,Das Bild hängt ___ Wand.,an der,an die,auf der
+A1,9,1,22,test,Ich hänge das Bild ___ Wand.,an die,an der,auf die
+A1,9,1,23,test,Wir sind ___ Schweiz.,in der,in die,nach
+A1,9,1,24,test,Wir fahren ___ Schweiz.,in die,nach,in der
+A1,9,1,25,test,Er ist ___ Meer.,am,an das,im
+A1,9,1,26,test,Wir fahren ___ Meer.,ans,am,an das
+A1,9,1,27,test,Sie arbeitet ___ Hause aus.,von zu,von dem,bei
+A1,9,1,28,test,Er sitzt ___ Fenster.,am,an dem,bei dem
+A1,9,1,29,test,Ich gehe ___ Kino.,ins,im,in dem
+A1,9,1,30,test,Wir sind ___ Kino.,im,ins,zum
+A1,10,1,1,test,Der gut__ Mann arbeitet im Büro.,-e,-er,-en
+A1,10,1,2,test,Die schön__ Frau wohnt in Berlin.,-e,-er,-en
+A1,10,1,3,test,Das klein__ Kind schläft jetzt.,-e,-es,-en
+A1,10,1,4,test,Ich sehe den alt__ Mann im Park.,-en,-er,-e
+A1,10,1,5,test,Ich helfe dem gut__ Freund heute.,-en,-em,-er
+A1,10,1,6,test,Das Dach der neu__ Schule ist groß.,-en,-e,-er
+A1,10,1,7,test,Die jung__ Leute lernen Deutsch.,-en,-e,-er
+A1,10,1,8,test,Ich spreche mit den gut__ Kindern.,-en,-e,-er
+A1,10,1,9,test,Das groß__ Haus steht am See.,-e,-es,-en
+A1,10,1,10,test,Die alt__ Bücher liegen auf dem Tisch.,-en,-e,-er
+A1,10,1,11,test,Ein gut__ Mann hilft mir.,-er,-e,-en
+A1,10,1,12,test,Eine schön__ Stadt gefällt mir.,-e,-er,-en
+A1,10,1,13,test,Ein klein__ Kind spielt draußen.,-es,-e,-en
+A1,10,1,14,test,Das Auto eines alt__ Mannes ist blau.,-en,-er,-em
+A1,10,1,15,test,Ich danke einem gut__ Freund.,-en,-em,-er
+A1,10,1,16,test,Ich kenne einen jung__ Lehrer.,-en,-e,-er
+A1,10,1,17,test,Ich spreche mit meiner gut__ Mutter.,-en,-e,-er
+A1,10,1,18,test,Mein neu__ Auto ist schnell.,-es,-e,-en
+A1,10,1,19,test,Meine alt__ Tasche ist kaputt.,-e,-er,-en
+A1,10,1,20,test,Ich besuche meinen klein__ Bruder.,-en,-e,-er
+A1,10,1,21,test,Gut__ Mann arbeitet viel.,-er,-e,-en
+A1,10,1,22,test,Schön__ Frau kommt heute.,-e,-er,-en
+A1,10,1,23,test,Klein__ Kind lacht laut.,-es,-e,-en
+A1,10,1,24,test,Das ist das Haus eines gut__ Mannes.,-en,-er,-em
+A1,10,1,25,test,Ich helfe einem gut__ Freund.,-en,-em,-er
+A1,10,1,26,test,Alt__ Haus steht im Dorf.,-es,-e,-en
+A1,10,1,27,test,Jung__ Leute reisen viel.,-e,-er,-en
+A1,10,1,28,test,Ich spreche mit gut__ Kindern.,-en,-e,-er
+A1,10,1,29,test,Neu__ Bücher sind interessant.,-e,-er,-en
+A1,10,1,30,test,Groß__ Stadt liegt am Fluss.,-e,-er,-en
+A1,11,1,1,test,Mein Bruder ist ___ als ich.,größer,groß,größte
+A1,11,1,2,test,Der Mount Everest ist der ___ Berg der Welt.,höchste,hoch,höher
+A1,11,1,3,test,Deutsch ist ___ als Englisch.,schwieriger,schwierig,schwierigste
+A1,11,1,4,test,Heute ist der ___ Tag der Woche.,wärmste,warm,wärmer
+A1,11,1,5,test,Ein Zug ist ___ als ein Auto.,schneller,schnell,schnellste
+A1,11,1,6,test,Das ist das ___ Haus im Dorf.,größte,groß,größer
+A1,11,1,7,test,Mein Hund ist ___ als deine Katze.,stärker,stark,stärkste
+A1,11,1,8,test,Das ist der ___ Film, den ich kenne.,interessanteste,interessant,interessanter
+A1,11,1,9,test,Ein Flugzeug ist ___ als ein Bus.,teurer,teuer,teuerste
+A1,11,1,10,test,Der Nil ist einer der ___ Flüsse Afrikas.,längsten,lang,länger
+A1,11,1,11,test,Meine Schwester ist ___ als ich.,jünger,jung,jüngste
+A1,11,1,12,test,Das ist die ___ Stadt Deutschlands.,größte,groß,größer
+A1,11,1,13,test,Der Sommer ist ___ als der Frühling.,wärmer,warm,wärmste
+A1,11,1,14,test,Das ist das ___ Buch im Regal.,dickste,dick,dicker
+A1,11,1,15,test,Heute bin ich ___ als gestern.,müder,müde,müdeste
+A1,11,1,16,test,Er ist der ___ Schüler in der Klasse.,beste,gut,besser
+A1,11,1,17,test,Ein Motorrad ist ___ als ein Fahrrad.,schneller,schnell,schnellste
+A1,11,1,18,test,Das ist der ___ Tag meines Lebens.,schönste,schön,schöner
+A1,11,1,19,test,Russland ist ___ als Deutschland.,größer,groß,größte
+A1,11,1,20,test,Der Januar ist oft der ___ Monat.,kälteste,kalt,kälter
+A1,11,1,21,test,Mathe ist für mich ___ als Sport.,schwieriger,schwierig,schwierigste
+A1,11,1,22,test,Das ist das ___ Auto hier.,teuerste,teuer,teurer
+A1,11,1,23,test,Mein Vater arbeitet ___ als mein Bruder.,mehr,viel,meiste
+A1,11,1,24,test,Das ist der ___ Weg nach Hause.,kürzeste,kurz,kürzer
+A1,11,1,25,test,Ein Elefant ist ___ als ein Pferd.,schwerer,schwer,schwerste
+A1,11,1,26,test,Sie ist die ___ Person im Büro.,freundlichste,freundlich,freundlicher
+A1,11,1,27,test,Heute komme ich ___ als gestern.,früher,früh,früheste
+A1,11,1,28,test,Das ist der ___ Fluss Europas.,längste,lang,länger
+A1,11,1,29,test,Mein Zimmer ist ___ als dein Zimmer.,kleiner,klein,kleinste
+A1,11,1,30,test,Das war der ___ Urlaub meines Lebens.,beste,gut,besser
+A1,12,1,1,test,Im Sommer habe ich zwei Wochen Urlaub, ___ ich reise gern.,denn,aber,oder
+A1,12,1,2,test,Ich fahre ans Meer ___ in die Berge.,oder,und,denn
+A1,12,1,3,test,Das Wetter ist heiß, ___ ich trinke viel Wasser.,deshalb,aber,oder
+A1,12,1,4,test,Ich wohne in einem kleinen Hotel, ___ es ist sehr sauber.,und,aber,oder
+A1,12,1,5,test,Am Vormittag schwimme ich im Meer, ___ liege ich am Strand.,dann,aber,denn
+A1,12,1,6,test,Der Urlaub ist kurz, ___ er macht mich sehr glücklich.,aber,und,oder
+A1,12,1,7,test,Im Winter mache ich selten Urlaub, ___ ich arbeite viel.,denn,aber,und
+A1,12,1,8,test,Es ist kalt draußen, ___ ich bleibe oft zu Hause.,deshalb,denn,oder
+A1,12,1,9,test,Ich trinke heißen Tee ___ höre Musik.,und,aber,oder
+A1,12,1,10,test,Manchmal gehe ich spazieren, ___ ich ziehe einen Mantel an.,dann,aber,denn
+A1,12,1,11,test,Ich sehe einen Film, ___ lese ich ein Buch.,dann,aber,denn
+A1,12,1,12,test,Der Winter ist dunkel, ___ ich mag die ruhigen Abende.,trotzdem,denn,oder
+A1,12,1,13,test,Im Herbst habe ich ein paar freie Tage, ___ ich fahre in eine Stadt.,deshalb,aber,oder
+A1,12,1,14,test,Ich besuche Berlin ___ Hamburg.,oder,aber,denn
+A1,12,1,15,test,Das Wetter ist kühl, ___ sehr angenehm.,aber,denn,oder
+A1,12,1,16,test,Ich mache viele Fotos, ___ die Farben sind schön.,denn,aber,oder
+A1,12,1,17,test,Am Nachmittag trinke ich Kaffee, ___ esse ich Kuchen.,dann,aber,denn
+A1,12,1,18,test,Der Herbst ist ruhig, ___ er gefällt mir sehr.,und,aber,oder
+A1,13,1,1,test,Ich ___ gestern nicht kommen.,konnte,konntest,konnten
+A1,13,1,2,test,Du ___ lange arbeiten.,musstest,musste,mussten
+A1,13,1,3,test,Er ___ ein neues Fahrrad kaufen.,wollte,wolltest,wollten
+A1,13,1,4,test,Wir ___ im Park spielen.,durften,durfte,durftest
+A1,13,1,5,test,Ihr ___ mehr lernen.,solltet,sollte,sollten
+A1,13,1,6,test,Sie ___ Pizza essen.,mochte,mochtest,mochten
+A1,13,1,7,test,Ich ___ gut Deutsch sprechen.,konnte,konntest,konnten
+A1,13,1,8,test,Du ___ früh aufstehen.,musstest,musste,mussten
+A1,13,1,9,test,Er ___ nach Berlin fahren.,wollte,wolltest,wollten
+A1,13,1,10,test,Wir ___ bis 22 Uhr bleiben.,durften,durfte,durftest
+A1,13,1,11,test,Ihr ___ eure Hausaufgaben machen.,solltet,sollte,sollten
+A1,13,1,12,test,Sie ___ Schokolade sehr gern.,mochten,mochte,mochtest
+A1,13,1,13,test,Ich ___ die Antwort nicht finden.,konnte,konntest,konnten
+A1,13,1,14,test,Du ___ zum Arzt gehen.,musstest,musste,mussten
+A1,13,1,15,test,Er ___ ein Eis essen.,wollte,wolltest,wollten
+A1,13,1,16,test,Wir ___ heute frei spielen.,durften,durfte,durftest
+A1,13,1,17,test,Ihr ___ dem Lehrer helfen.,solltet,sollte,sollten
+A1,13,1,18,test,Sie ___ Musik hören.,mochten,mochte,mochtest
+A1,13,1,19,test,Ich ___ schnell laufen.,konnte,konntest,konnten
+A1,13,1,20,test,Du ___ den ganzen Tag lernen.,musstest,musste,mussten
+A1,13,1,21,test,Er ___ Fußball spielen.,wollte,wolltest,wollten
+A1,13,1,22,test,Wir ___ länger warten.,durften,durfte,durftest
+A1,13,1,23,test,Ihr ___ pünktlich kommen.,solltet,sollte,sollten
+A1,13,1,24,test,Sie ___ keinen Kaffee trinken.,mochten,mochte,mochtest
+A1,13,1,25,test,Ich ___ das Auto fahren.,konnte,konntest,konnten
+A1,13,1,26,test,Du ___ viel Wasser trinken.,musstest,musste,mussten
+A1,13,1,27,test,Er ___ ein neues Handy haben.,wollte,wolltest,wollten
+A1,13,1,28,test,Wir ___ ins Kino gehen.,durften,durfte,durftest
+A1,13,1,29,test,Ihr ___ die Regeln beachten.,solltet,sollte,sollten
+A1,13,1,30,test,Sie ___ früher oft reisen.,mochten,mochte,mochtest
+A1,14,1,1,test,Ich ___ morgen Deutsch lernen.,werde,wirst,wird
+A1,14,1,2,test,Du ___ ein neues Auto kaufen.,wirst,werde,werden
+A1,14,1,3,test,Er ___ heute Abend einen Film sehen.,wird,werde,werdet
+A1,14,1,4,test,Wir ___ nächstes Jahr nach Deutschland reisen.,werden,wird,werdet
+A1,14,1,5,test,Ihr ___ am Wochenende Fußball spielen.,werdet,werden,wirst
+A1,14,1,6,test,Sie ___ morgen ihre Großeltern besuchen.,wird,werde,werden
+A1,14,1,7,test,Ich ___ später Kaffee trinken.,werde,wirst,wird
+A1,14,1,8,test,Du ___ die Hausaufgaben machen.,wirst,werde,werden
+A1,14,1,9,test,Er ___ bald ein Handy kaufen.,wird,werde,werden
+A1,14,1,10,test,Wir ___ heute Abend Pizza essen.,werden,wird,werdet
+A1,14,1,11,test,Ihr ___ im Sommer ans Meer fahren.,werdet,wirst,werden
+A1,14,1,12,test,Sie ___ morgen früh aufstehen.,werden,wird,werdet
+A1,14,1,13,test,Ich ___ einen Brief schreiben.,werde,wirst,wird
+A1,14,1,14,test,Du ___ viel Deutsch sprechen.,wirst,werde,werden
+A1,14,1,15,test,Er ___ seine Freunde treffen.,wird,werde,werdet
+A1,14,1,16,test,Wir ___ ein Hotel buchen.,werden,wird,werdet
+A1,14,1,17,test,Ihr ___ die Stadt besichtigen.,werdet,wirst,werden
+A1,14,1,18,test,Sie ___ ein Geschenk bekommen.,werden,wird,werdet
+A1,14,1,19,test,Ich ___ morgen länger arbeiten.,werde,wirst,wird
+A1,14,1,20,test,Du ___ im Urlaub viele Fotos machen.,wirst,werde,werden
