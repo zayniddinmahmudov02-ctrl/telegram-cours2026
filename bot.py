@@ -582,16 +582,17 @@ class VizuSprechenState(
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text="📚 Artikel Topish"),
-            KeyboardButton(text="🎮 So'z O'yini")
-        ],
+         KeyboardButton(text="📚 Artikel Topish"),
+         KeyboardButton(text="🎮 So'z O'yini")],
+
         [KeyboardButton(text="🎥 Video Kurslar"),
          KeyboardButton(text="🎓 Darslarni O'rganish")],
 
-        [KeyboardButton(text="🏅 VIZU-Zertifikat"),
-         KeyboardButton(text="📚 Ma'lumotlar")],
-
-        [KeyboardButton(text="👤 Mening Profilim")]
+        [KeyboardButton(text="🎬 Medien"),
+         KeyboardButton(text="🏅 VIZU-Zertifikat")],
+         
+        [KeyboardButton(text="📚 Ma'lumotlar"),
+         KeyboardButton(text="👤 Mening Profilim")]
     ],
     resize_keyboard=True
 )
@@ -648,6 +649,16 @@ def profile_keyboard():
         ],
         resize_keyboard=True
     )
+medien_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="📚 De-Bücher")],
+        [KeyboardButton(text="🎵 De-Musik")],
+        [KeyboardButton(text="🎬 De-Filme")],
+        [KeyboardButton(text="📺 De-Videos")],
+        [KeyboardButton(text="⬅️ Orqaga")]
+    ],
+    resize_keyboard=True
+)
 # =========================================================
 # VIZU CERTIFICATE MENU
 # =========================================================
@@ -680,6 +691,269 @@ async def open_vizu_certificate_menu(
 
         reply_markup=vizu_certificate_menu_keyboard
 
+    )
+
+# =========================================================
+# Medien Handler
+# =========================================================
+
+@dp.message(F.text == "🎬 Medien")
+async def open_medien(message: Message):
+
+    await message.answer(
+        "🎬 Medien bo'limi",
+        reply_markup=medien_menu
+    )
+# =========================================================
+# MEDIEN
+# =========================================================
+
+MUSIC_CHANNEL_ID = -1003763602068
+
+music_tracks = {}
+
+try:
+    with open(
+        "Musik.csv",
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            music_tracks[
+                int(row["track_number"])
+            ] = int(
+                row["message_id"]
+            )
+
+except Exception as e:
+    logger.error(
+        f"MUSIK CSV ERROR: {e}"
+    )
+
+TOTAL_TRACKS = len(
+    music_tracks
+)
+
+# =========================================================
+# MUSIC KEYBOARD
+# =========================================================
+
+def build_music_keyboard(
+    page=1
+):
+
+    builder = InlineKeyboardBuilder()
+
+    start = (
+        (page - 1) * 5
+    ) + 1
+
+    end = min(
+        start + 4,
+        TOTAL_TRACKS
+    )
+
+    for track in range(
+        start,
+        end + 1
+    ):
+
+        builder.row(
+            InlineKeyboardButton(
+                text=f"🎵 {track}",
+                callback_data=f"music_{track}"
+            )
+        )
+
+    navigation = []
+
+    if page > 1:
+        navigation.append(
+            InlineKeyboardButton(
+                text="⬅️",
+                callback_data=f"music_page_{page-1}"
+            )
+        )
+
+    if end < TOTAL_TRACKS:
+        navigation.append(
+            InlineKeyboardButton(
+                text="➡️",
+                callback_data=f"music_page_{page+1}"
+            )
+        )
+
+    if navigation:
+        builder.row(*navigation)
+
+    return builder.as_markup()
+
+# =========================================================
+# DE-MUSIK
+# =========================================================
+
+@dp.message(
+    F.text == "🎵 De-Musik"
+)
+async def open_music(
+    message: Message
+):
+
+    if not music_tracks:
+
+        await message.answer(
+            "❌ Musik.csv topilmadi."
+        )
+
+        return
+
+    await message.answer(
+        f"🎵 Deutsche Musik\n\n"
+        f"🎼 Jami qo'shiqlar: {TOTAL_TRACKS}\n\n"
+        f"Kerakli qo'shiqni tanlang:",
+        reply_markup=build_music_keyboard(1)
+    )
+
+# =========================================================
+# MUSIC PAGE
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "music_page_"
+    )
+)
+async def music_page_handler(
+    callback: CallbackQuery
+):
+
+    page = int(
+        callback.data.split("_")[-1]
+    )
+
+    await callback.message.edit_reply_markup(
+        reply_markup=
+        build_music_keyboard(page)
+    )
+
+    await callback.answer()
+
+# =========================================================
+# SEND MUSIC
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "music_"
+    )
+)
+async def send_music(
+    callback: CallbackQuery
+):
+
+    if callback.data.startswith(
+        "music_page_"
+    ):
+        return
+
+    track_number = int(
+        callback.data.split("_")[1]
+    )
+
+    message_id = music_tracks.get(
+        track_number
+    )
+
+    if not message_id:
+
+        await callback.answer(
+            "❌ Qo'shiq topilmadi",
+            show_alert=True
+        )
+
+        return
+
+    try:
+
+        await bot.copy_message(
+            chat_id=
+            callback.from_user.id,
+
+            from_chat_id=
+            MUSIC_CHANNEL_ID,
+
+            message_id=
+            message_id
+        )
+
+        await callback.answer(
+            f"🎵 Track #{track_number}"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"MUSIC ERROR: {e}"
+        )
+
+        await callback.answer(
+            "❌ Audio yuborishda xatolik",
+            show_alert=True
+        )
+# =========================================================
+# DE-BUCHER
+# =========================================================
+
+@dp.message(F.text == "📚 De-Bücher")
+async def open_books(message: Message):
+
+    await message.answer(
+
+        "📚 Nemis kitoblari bo'limi\n\n"
+        "🚧 Tez orada ishga tushiriladi."
+
+    )
+# =========================================================
+# DE-FILME
+# =========================================================
+
+@dp.message(F.text == "🎬 De-Filme")
+async def open_films(message: Message):
+
+    await message.answer(
+
+        "🎬 Nemis filmlari bo'limi\n\n"
+        "🚧 Tez orada ishga tushiriladi."
+
+    )
+# =========================================================
+# DE-VIDEOS
+# =========================================================
+
+@dp.message(F.text == "📺 De-Videos")
+async def open_videos(message: Message):
+
+    await message.answer(
+
+        "📺 Nemis videolari bo'limi\n\n"
+        "🚧 Tez orada ishga tushiriladi."
+
+    )
+# =========================================================
+# BACK FROM MEDIEN
+# =========================================================
+
+@dp.message(F.text == "⬅️ Orqaga")
+async def back_to_main_menu(
+    message: Message
+):
+
+    await message.answer(
+        "🏠 Asosiy menyu",
+        reply_markup=main_menu
     )
 # =========================================================
 # GLOBAL CONSTANTS
