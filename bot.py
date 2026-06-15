@@ -197,6 +197,52 @@ COURSE_INFO = {
 }
 
 # =========================================================
+# GLOBALS
+# =========================================================
+
+QUIZ_DATA = {}
+quiz_running = set()
+quiz_sessions = {}
+active_questions = {}
+active_lessons = {}
+answered_users = {}
+approved_users = set()
+artikel_data = {}
+admin_sessions = {}
+last_daily_reset = None
+vizu_lesen_questions = []
+vizu_lesen_progress = {}
+vizu_horen_questions = []
+vizu_horen_progress = {}
+vizu_sprechen_progress = {}
+vizu_mock_deadlines = {}
+# =========================================================
+# ACTIVE LEVELS
+# =========================================================
+
+selected_levels = {}
+# =========================================================
+# GRAMMATIK PROGRESS
+# =========================================================
+
+grammatik_progress = {}
+# =========================================================
+# LESEN PROGRESS
+# =========================================================
+
+lesen_progress = {}
+# =========================================================
+# HOREN PROGRESS
+# =========================================================
+
+horen_progress = {}
+
+LESSON_QUIZ_DATA = {}
+lesson_quiz_sessions = {}
+lesson_active_questions = {}
+lesson_answered_users = {}
+
+# =========================================================
 # DATABASE POOL MANAGEMENT
 # =========================================================
 db_pool = None
@@ -1795,7 +1841,6 @@ async def start_lesen(
 
         "score": 0
     }
-
     # =====================================================
     # START BUTTON
     # =====================================================
@@ -1803,10 +1848,20 @@ async def start_lesen(
     builder = InlineKeyboardBuilder()
 
     builder.button(
-    text="▶️ Testni Boshlash",
-    callback_data="begin_lesen")
+        text="▶️ Testni Boshlash",
+        callback_data="begin_lesen"
+    )
 
     builder.adjust(1)
+
+    logger.info(
+        f"LESEN READY | USER={user_id}"
+    )
+
+    logger.info(
+        f"LESEN USERS: "
+        f"{list(lesen_progress.keys())}"
+    )
 
     await callback.message.answer(
 
@@ -1818,7 +1873,6 @@ async def start_lesen(
     )
 
     await callback.answer()
-
 # =========================================================
 # BEGIN LESEN
 # =========================================================
@@ -1832,16 +1886,51 @@ async def begin_lesen(
 
     user_id = callback.from_user.id
 
+    logger.info(
+        f"BEGIN LESEN CLICKED | USER={user_id}"
+    )
+
+    logger.info(
+        f"CURRENT LESEN USERS: "
+        f"{list(lesen_progress.keys())}"
+    )
+
     if user_id not in lesen_progress:
 
-        await callback.answer()
+        logger.error(
+            f"LESEN PROGRESS NOT FOUND | USER={user_id}"
+        )
+
+        await callback.answer(
+            "❌ Lesen sessiyasi topilmadi.",
+            show_alert=True
+        )
 
         return
 
-    await send_lesen_question(
-        callback.message,
-        user_id
-    )
+    try:
+
+        await send_lesen_question(
+            callback.message,
+            user_id
+        )
+
+        logger.info(
+            f"FIRST LESEN QUESTION SENT | USER={user_id}"
+        )
+
+    except Exception as e:
+
+        logger.exception(
+            f"BEGIN LESEN ERROR: {e}"
+        )
+
+        await callback.answer(
+            "❌ Testni boshlashda xatolik.",
+            show_alert=True
+        )
+
+        return
 
     await callback.answer()
 # =========================================================
@@ -7283,53 +7372,6 @@ async def ai_teacher_menu(message: Message):
         "🤖 AI Teacher\n\n"
         "🚧 Tez orada ishga tushadi."
     )
-
-# =========================================================
-# GLOBALS
-# =========================================================
-
-QUIZ_DATA = {}
-quiz_running = set()
-quiz_sessions = {}
-active_questions = {}
-active_lessons = {}
-answered_users = {}
-approved_users = set()
-artikel_data = {}
-admin_sessions = {}
-last_daily_reset = None
-vizu_lesen_questions = []
-vizu_lesen_progress = {}
-vizu_horen_questions = []
-vizu_horen_progress = {}
-vizu_sprechen_progress = {}
-vizu_mock_deadlines = {}
-# =========================================================
-# ACTIVE LEVELS
-# =========================================================
-
-selected_levels = {}
-# =========================================================
-# GRAMMATIK PROGRESS
-# =========================================================
-
-grammatik_progress = {}
-# =========================================================
-# LESEN PROGRESS
-# =========================================================
-
-lesen_progress = {}
-# =========================================================
-# HOREN PROGRESS
-# =========================================================
-
-horen_progress = {}
-
-LESSON_QUIZ_DATA = {}
-lesson_quiz_sessions = {}
-lesson_active_questions = {}
-lesson_answered_users = {}
-
 # =========================================================
 # REGISTER STATES
 # =========================================================
