@@ -237,7 +237,7 @@ lesen_progress = {}
 # HOREN PROGRESS
 # =========================================================
 
-horen_progress = {}
+hören_progress = {}
 
 LESSON_QUIZ_DATA = {}
 lesson_quiz_sessions = {}
@@ -1647,7 +1647,7 @@ async def repeat_task(callback: CallbackQuery):
     tasks_map = {
         "Grammatik": (load_grammatik, grammatik_progress, send_grammatik_question),
         "Lesen": (load_lesen, lesen_progress, send_lesson_lesen_question),
-        "Horen": (load_horen, horen_progress, send_lesson_horen_question),
+        "ören": (load_hören, hören_progress, send_lesson_hören_question),
     }
 
     if task_name not in tasks_map:
@@ -2111,26 +2111,26 @@ async def lesen_answer(
 # HOREN FILE HELPERS
 # =========================================================
 
-def get_lesson_horen_audio(
+def get_lesson_hören_audio(
     level,
     lesson
 ):
 
     return os.path.join(
         "A1-C1-Level",
-        "horen_audio",
+        "hören_audio",
         f"{level}-{lesson}.mp3"
     )
 
 
-def get_horen_photo(
+def get_hören_photo(
     level,
     lesson
 ):
 
     return os.path.join(
         "A1-C1-Level",
-        "horen_photo",
+        "hören_photo",
         f"{level}-{lesson}.png"
     )
 
@@ -2161,7 +2161,7 @@ def verify_answer_token(user_id: int, index: int, correct: str, token: str) -> b
 
 
 # =========================================================
-# START HOREN
+# START HÖREN
 # =========================================================
 @dp.callback_query(
     F.data.startswith("start_Hören_")
@@ -2169,8 +2169,8 @@ def verify_answer_token(user_id: int, index: int, correct: str, token: str) -> b
 async def start_hören(callback: CallbackQuery):
 
     # log callback info here (callback is only defined inside handler)
-    logger.warning(f"[HOREN] CLICKED: {callback.data}")
-    logger.warning(f"[HOREN] USER: {callback.from_user.id}")
+    logger.warning(f"[HÖREN] CLICKED: {callback.data}")
+    logger.warning(f"[HÖREN] USER: {callback.from_user.id}")
 
     user_id = callback.from_user.id
 
@@ -2212,13 +2212,13 @@ async def start_hören(callback: CallbackQuery):
         return
 
     # --- Savollarni yuklash ---
-    tasks = load_horen(level, lesson)
+    tasks = load_hören(level, lesson)
     if not tasks:
         await callback.answer("Horen topilmadi.", show_alert=True)
         return
 
     # --- Progressni saqlash ---
-    horen_progress[user_id] = {
+    hören_progress[user_id] = {
         "level":  level,
         "lesson": lesson,
         "tasks":  tasks,
@@ -2227,18 +2227,18 @@ async def start_hören(callback: CallbackQuery):
     }
 
     # --- Audio yuborish ---
-    audio_path = get_horen_audio(level, lesson)
+    audio_path = get_hören_audio(level, lesson)
     if os.path.exists(audio_path):
         await callback.message.answer_audio(
             audio=FSInputFile(audio_path),
             caption=(
-                f"🎧 Horen\n\n"
+                f"🎧 Hören\n\n"
                 f"🇩🇪 {level} | Unterricht {lesson}"
             )
         )
 
     # --- Rasm yuborish ---
-    photo_path = get_horen_photo(level, lesson)
+    photo_path = get_hören_photo(level, lesson)
     if os.path.exists(photo_path):
         await callback.message.answer_photo(FSInputFile(photo_path))
 
@@ -2259,13 +2259,13 @@ async def start_hören(callback: CallbackQuery):
 # SAVOL YUBORISH (ichki funksiya)
 # =========================================================
 
-async def send_lesson_horen_question(message, user_id: int):
+async def send_lesson_hören_question(message, user_id: int):
     """
     Joriy savolni shuffled variantlar bilan yuboradi.
-    Har bir tugma callback_data = "horen:{token}:{option}" ko'rinishida.
+    Har bir tugma callback_data = "hören:{token}:{option}" ko'rinishida.
     Token serverda tekshiriladi — foydalanuvchi soxta javob yubora olmaydi.
     """
-    progress = horen_progress.get(user_id)
+    progress = hören_progress.get(user_id)
     if not progress:
         await message.answer("❌ Sessiya topilmadi. Qaytadan boshlang.")
         return
@@ -2274,9 +2274,9 @@ async def send_lesson_horen_question(message, user_id: int):
 
     # Chegaradan chiqib ketishdan himoya
     if index >= len(progress["tasks"]):
-        logger.warning(f"[HOREN] user={user_id} index={index} out of range")
+        logger.warning(f"[HÖREN] user={user_id} index={index} out of range")
         await message.answer("❌ Ichki xatolik. Qaytadan boshlang.")
-        horen_progress.pop(user_id, None)
+        hören_progress.pop(user_id, None)
         return
 
     task = progress["tasks"][index]
@@ -2292,7 +2292,7 @@ async def send_lesson_horen_question(message, user_id: int):
     for option in options:
         builder.button(
             text=option,
-            callback_data=f"horen:{token}:{option}"
+            callback_data=f"hören:{token}:{option}"
         )
     builder.adjust(1)
 
@@ -2307,12 +2307,12 @@ async def send_lesson_horen_question(message, user_id: int):
 # JAVOB QABUL QILISH
 # =========================================================
 
-@dp.callback_query(F.data.startswith("horen:"))
-async def horen_answer(callback: CallbackQuery):
+@dp.callback_query(F.data.startswith("hören:"))
+async def hören_answer(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    progress = horen_progress.get(user_id)
+    progress = hören_progress.get(user_id)
     if not progress:
         await callback.answer("❌ Sessiya topilmadi.", show_alert=True)
         return
@@ -2338,11 +2338,11 @@ async def horen_answer(callback: CallbackQuery):
     # --- Token tekshiruvi (soxtalashtirish oldini olish) ---
     if not verify_answer_token(user_id, index, correct, received_token):
         logger.warning(
-            f"[HOREN] Invalid token: user={user_id} "
+            f"[HÖREN] Invalid token: user={user_id} "
             f"index={index} option={chosen_option!r}"
         )
         await callback.answer("❌ Token xatosi. Qaytadan boshlang.", show_alert=True)
-        horen_progress.pop(user_id, None)
+        hören_progress.pop(user_id, None)
         return
 
     # --- Javobni baholash ---
@@ -2373,10 +2373,10 @@ async def horen_answer(callback: CallbackQuery):
                 ON CONFLICT (user_id, level, lesson, task_name)
                 DO UPDATE SET completed = TRUE
                 """,
-                (user_id, level, lesson, "Horen")
+                (user_id, level, lesson, "Hören")
             )
         except Exception as e:
-            logger.exception(f"[HOREN] DB write error: {e}")
+            logger.exception(f"[HÖREN] DB write error: {e}")
 
         await callback.message.answer(
             f"🏁 Hören yakunlandi!\n\n"
@@ -2384,37 +2384,37 @@ async def horen_answer(callback: CallbackQuery):
         )
 
         # Sessiyani tozalash
-        horen_progress.pop(user_id, None)
+        hören_progress.pop(user_id, None)
         return
 
     # --- Keyingi savol ---
-    await send_lesson_horen_question(callback.message, user_id)
+    await send_lesson_hören_question(callback.message, user_id)
 
 
 # =========================================================
 # BOSHLASH TUGMASI
 # =========================================================
 
-@dp.callback_query(F.data == "begin_horen")
-async def begin_horen(callback: CallbackQuery):
+@dp.callback_query(F.data == "begin_hören")
+async def begin_hören(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    if user_id not in horen_progress:
+    if user_id not in hören_progress:
         await callback.answer(
-            "❌ Horen sessiyasi topilmadi. Qaytadan boshlang.",
+            "❌ Hören sessiyasi topilmadi. Qaytadan boshlang.",
             show_alert=True
         )
         return
 
     try:
-        await send_lesson_horen_question(callback.message, user_id)
+        await send_lesson_hören_question(callback.message, user_id)
     except Exception as e:
-        logger.exception(f"[HOREN] begin_horen error: {e}")
+        logger.exception(f"[HÖREN] begin_hören error: {e}")
         await callback.message.answer(
             "❌ Xatolik yuz berdi. Qaytadan urinib ko'ring."
         )
-        horen_progress.pop(user_id, None)
+        hören_progress.pop(user_id, None)
         return
 
     await callback.answer()
@@ -2980,7 +2980,7 @@ async def rate_task(
 
         "Lesen",
 
-        "Horen",
+        "Hören",
 
         "Schreiben",
 
@@ -3095,7 +3095,7 @@ def check_lesson_completed(
 
         "Lesen",
 
-        "Horen",
+        "Hören",
 
         "Schreiben",
 
@@ -5252,20 +5252,20 @@ async def start_horen(
 # HOREN AUDIO & IMAGE HELPERS
 # =========================================================
 
-def get_horen_audio(task):
+def get_hören_audio(task):
     task = int(task)
     if task <= 6: return "VIZU-A1/Hören-audio/hören-teil1.mp3"
     elif task <= 10: return "VIZU-A1/Hören-audio/hören-teil2.mp3"
     else: return "VIZU-A1/Hören-audio/hören-teil3.mp3"
 
-def get_horen_image(task):
+def get_hören_image(task):
     task = int(task)
     if task <= 3: return "VIZU-A1/Hören-photo/hören-teil1.png"
     elif task <= 6: return "VIZU-A1/Hören-photo/hören-teil1.2.png"
     elif task <= 10: return "VIZU-A1/Hören-photo/hören-teil2.png"
     else: return "VIZU-A1/Hören-photo/hören-teil3.png"
 # =========================================================
-# SEND HOREN QUESTION
+# SEND HÖREN QUESTION
 # =========================================================
 
 async def send_horen_question(
@@ -5435,7 +5435,7 @@ async def send_horen_question(
     await message.answer_photo(
 
         photo=FSInputFile(
-            get_horen_image(task)
+            get_hören_image(task)
         ),
 
         caption=(
@@ -7790,7 +7790,7 @@ def get_lesen_image(
 # HÖREN LOADER
 # =========================================================
 
-def load_horen(
+def load_hören(
     level,
     lesson,
     teil=None
