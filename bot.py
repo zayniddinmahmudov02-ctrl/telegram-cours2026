@@ -2220,7 +2220,22 @@ async def start_horen(
         )
 
         return
+    # =====================================================
+    # SAVE PROGRESS
+    # =====================================================
 
+    horen_progress[user_id] = {
+
+        "level": level,
+
+        "lesson": lesson,
+
+        "tasks": tasks,
+
+        "index": 0,
+
+        "score": 0
+    }
     # =====================================================
     # SEND AUDIO
     # =====================================================
@@ -2261,24 +2276,6 @@ async def start_horen(
                 photo_path
             )
         )
-
-    # =====================================================
-    # SAVE PROGRESS
-    # =====================================================
-
-    horen_progress[user_id] = {
-
-        "level": level,
-
-        "lesson": lesson,
-
-        "tasks": tasks,
-
-        "index": 0,
-
-        "score": 0
-    }
-
     # =====================================================
     # START BUTTON
     # =====================================================
@@ -2304,6 +2301,162 @@ async def start_horen(
 
     await callback.answer()
 # =========================================================
+# Send horen question
+# =========================================================
+async def send_lesson_horen_question(
+    message,
+    user_id
+):
+
+    progress = horen_progress[user_id]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    options = [
+
+        task["correct"],
+
+        task["wrong1"],
+
+        task["wrong2"]
+
+    ]
+
+    random.shuffle(
+        options
+    )
+
+    builder = InlineKeyboardBuilder()
+
+    for option in options:
+
+        builder.button(
+
+            text=option,
+
+            callback_data=
+            f"horen:{option}"
+        )
+
+    builder.adjust(1)
+
+    await message.answer(
+
+        f"🎧 Frage "
+        f"{progress['index'] + 1}"
+        f"/{len(progress['tasks'])}\n\n"
+
+        f"{task['question']}",
+
+        reply_markup=
+        builder.as_markup()
+    )
+
+# =========================================================
+# Save horen answer
+# =========================================================
+@dp.callback_query(
+    F.data.startswith(
+        "horen:"
+    )
+)
+async def horen_answer(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in horen_progress:
+        return
+
+    progress = horen_progress[
+        user_id
+    ]
+
+    answer = callback.data.split(
+        ":",
+        1
+    )[1]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    if answer == task["correct"]:
+
+        progress["score"] += 1
+
+        await callback.answer(
+            "✅ Richtig"
+        )
+
+    else:
+
+        await callback.answer(
+            f"❌ {task['correct']}"
+        )
+
+    progress["index"] += 1
+
+    if progress["index"] >= len(
+        progress["tasks"]
+    ):
+
+        db_execute(
+            """
+            INSERT INTO
+            lesson_task_progress
+            (
+                user_id,
+                level,
+                lesson,
+                task_name,
+                completed
+            )
+            VALUES
+            (
+                %s,%s,%s,%s,TRUE
+            )
+            ON CONFLICT
+            (
+                user_id,
+                level,
+                lesson,
+                task_name
+            )
+            DO UPDATE SET
+            completed = TRUE
+            """,
+            (
+                user_id,
+                progress["level"],
+                progress["lesson"],
+                "Horen"
+            )
+        )
+
+        await callback.message.answer(
+
+            f"🏁 Hören yakunlandi!\n\n"
+
+            f"Natija: "
+            f"{progress['score']}"
+            f"/{len(progress['tasks'])}"
+        )
+
+        del horen_progress[
+            user_id
+        ]
+
+        return
+
+    await send_lesson_horen_question(
+        callback.message,
+        user_id
+    )
+# =========================================================
 # BEGIN HOREN
 # =========================================================
 
@@ -2318,14 +2471,31 @@ async def begin_horen(
 
     if user_id not in horen_progress:
 
-        await callback.answer()
+        await callback.answer(
+            "❌ Hören sessiyasi topilmadi.",
+            show_alert=True
+        )
 
         return
 
-    await send_lesson_horen_question(
-        callback.message,
-        user_id
-    )
+    try:
+
+        await send_lesson_horen_question(
+            callback.message,
+            user_id
+        )
+
+    except Exception as e:
+
+        logger.exception(
+            f"HOREN ERROR: {e}"
+        )
+
+        await callback.message.answer(
+            f"ERROR: {e}"
+        )
+
+        return
 
     await callback.answer()
 # =========================================================
@@ -7715,162 +7885,6 @@ def load_horen(
         teil
     )
 
-# =========================================================
-# Send horen question
-# =========================================================
-async def send_lesson_horen_question(
-    message,
-    user_id
-):
-
-    progress = horen_progress[user_id]
-
-    task = progress["tasks"][
-        progress["index"]
-    ]
-
-    options = [
-
-        task["correct"],
-
-        task["wrong1"],
-
-        task["wrong2"]
-
-    ]
-
-    random.shuffle(
-        options
-    )
-
-    builder = InlineKeyboardBuilder()
-
-    for option in options:
-
-        builder.button(
-
-            text=option,
-
-            callback_data=
-            f"horen:{option}"
-        )
-
-    builder.adjust(1)
-
-    await message.answer(
-
-        f"🎧 Frage "
-        f"{progress['index'] + 1}"
-        f"/{len(progress['tasks'])}\n\n"
-
-        f"{task['question']}",
-
-        reply_markup=
-        builder.as_markup()
-    )
-
-# =========================================================
-# Save horen answer
-# =========================================================
-@dp.callback_query(
-    F.data.startswith(
-        "horen:"
-    )
-)
-async def horen_answer(
-    callback: CallbackQuery
-):
-
-    user_id = callback.from_user.id
-
-    if user_id not in horen_progress:
-        return
-
-    progress = horen_progress[
-        user_id
-    ]
-
-    answer = callback.data.split(
-        ":",
-        1
-    )[1]
-
-    task = progress["tasks"][
-        progress["index"]
-    ]
-
-    if answer == task["correct"]:
-
-        progress["score"] += 1
-
-        await callback.answer(
-            "✅ Richtig"
-        )
-
-    else:
-
-        await callback.answer(
-            f"❌ {task['correct']}"
-        )
-
-    progress["index"] += 1
-
-    if progress["index"] >= len(
-        progress["tasks"]
-    ):
-
-        db_execute(
-            """
-            INSERT INTO
-            lesson_task_progress
-            (
-                user_id,
-                level,
-                lesson,
-                task_name,
-                completed
-            )
-            VALUES
-            (
-                %s,%s,%s,%s,TRUE
-            )
-            ON CONFLICT
-            (
-                user_id,
-                level,
-                lesson,
-                task_name
-            )
-            DO UPDATE SET
-            completed = TRUE
-            """,
-            (
-                user_id,
-                progress["level"],
-                progress["lesson"],
-                "Horen"
-            )
-        )
-
-        await callback.message.answer(
-
-            f"🏁 Hören yakunlandi!\n\n"
-
-            f"Natija: "
-            f"{progress['score']}"
-            f"/{len(progress['tasks'])}"
-        )
-
-        del horen_progress[
-            user_id
-        ]
-
-        return
-
-    await send_horen_question(
-        callback.message,
-        user_id
-    )
 # =========================================================
 # LOAD VIZU LESEN
 # =========================================================
