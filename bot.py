@@ -1112,7 +1112,7 @@ async def back_to_main_menu(
 # =========================================================
 # GLOBAL CONSTANTS
 # =========================================================
-LESSON_TASKS = ["Grammatik", "Lesen", "Hören", "Schreiben", "Sprechen"]
+LESSON_TASKS = ["Grammatik", "Lesen", "Horen", "Schreiben", "Sprechen"]
 
 # Har bir daraja uchun darslar nomini dinamik hosil qilish uchun 
 # bazaviy raqamlarni saqlaymiz
