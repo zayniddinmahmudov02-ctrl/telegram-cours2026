@@ -7,12 +7,9 @@ import uuid
 import random
 import logging
 import asyncio
-import qrcode
-import os
 import random
 import hashlib
 import hmac
-import logging
 
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta, date
@@ -23,7 +20,6 @@ from typing import (
     Callable,
     Dict,
     Any,
-    Awaitable
 )
 
 # =========================================================
@@ -1118,7 +1114,7 @@ async def back_to_main_menu(
 # =========================================================
 # GLOBAL CONSTANTS
 # =========================================================
-LESSON_TASKS = ["Grammatik", "Lesen", "Horen", "Schreiben", "Sprechen"]
+LESSON_TASKS = ["Grammatik", "Lesen", "Hören", "Schreiben", "Sprechen"]
 
 # Har bir daraja uchun darslar nomini dinamik hosil qilish uchun 
 # bazaviy raqamlarni saqlaymiz
@@ -2167,11 +2163,14 @@ def verify_answer_token(user_id: int, index: int, correct: str, token: str) -> b
 # =========================================================
 # START HOREN
 # =========================================================
-
 @dp.callback_query(
-    F.data.startswith("start_Horen_")
+    F.data.startswith("start_Hören_")
 )
-async def start_horen(callback: CallbackQuery):
+async def start_hören(callback: CallbackQuery):
+
+    # log callback info here (callback is only defined inside handler)
+    logger.warning(f"[HOREN] CLICKED: {callback.data}")
+    logger.warning(f"[HOREN] USER: {callback.from_user.id}")
 
     user_id = callback.from_user.id
 
