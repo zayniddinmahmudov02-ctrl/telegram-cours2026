@@ -7600,9 +7600,6 @@ def load_all_quizzes():
 
 # =========================================================
 # UNIVERSAL CSV LOADER
-# Grammatik.csv
-# Lesen.csv
-# Hören.csv
 # =========================================================
 
 def load_tasks(
@@ -7799,7 +7796,7 @@ def load_horen(
     teil=None
 ):
     return load_tasks(
-        "Horen.csv",
+        "Hören.csv",
         level,
         lesson,
         teil
