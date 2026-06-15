@@ -1644,8 +1644,8 @@ async def repeat_task(callback: CallbackQuery):
     # 1. Ma'lumotlarni yuklash va funksiyalar xaritasi
     tasks_map = {
         "Grammatik": (load_grammatik, grammatik_progress, send_grammatik_question),
-        "Lesen": (load_lesen, lesen_progress, send_lesen_question),
-        "Horen": (load_horen, horen_progress, send_horen_question),
+        "Lesen": (load_lesen, lesen_progress, send_lesson_lesen_question),
+        "Horen": (load_horen, horen_progress, send_lesson_horen_question),
     }
 
     if task_name not in tasks_map:
@@ -1910,7 +1910,7 @@ async def begin_lesen(
 
     try:
 
-        await send_lesen_question(
+        await send_lesson_lesen_question(
             callback.message,
             user_id
         )
@@ -1937,12 +1937,30 @@ async def begin_lesen(
 # SEND LESEN QUESTION
 # =========================================================
 
-async def send_lesen_question(
+async def send_lesson_lesen_question(
     message,
     user_id
 ):
 
+    if user_id not in lesen_progress:
+
+        logger.error(
+            f"LESEN PROGRESS NOT FOUND: {user_id}"
+        )
+
+        return
+
     progress = lesen_progress[user_id]
+
+    if progress["index"] >= len(
+        progress["tasks"]
+    ):
+
+        logger.error(
+            f"LESEN INDEX ERROR: {user_id}"
+        )
+
+        return
 
     task = progress["tasks"][
         progress["index"]
@@ -1950,11 +1968,16 @@ async def send_lesen_question(
 
     options = [
 
-        task["correct"],
+        task.get("correct", ""),
 
-        task["wrong1"],
+        task.get("wrong1", ""),
 
-        task["wrong2"]
+        task.get("wrong2", "")
+    ]
+
+    options = [
+        x for x in options
+        if x
     ]
 
     random.shuffle(
@@ -1978,7 +2001,7 @@ async def send_lesen_question(
         f"{progress['index'] + 1}"
         f"/{len(progress['tasks'])}\n\n"
 
-        f"{task['question']}",
+        f"{task.get('question', 'Frage fehlt')}",
 
         reply_markup=
         builder.as_markup()
@@ -2078,7 +2101,7 @@ async def lesen_answer(
 
         return
 
-    await send_lesen_question(
+    await send_lesson_lesen_question(
         callback.message,
         user_id
     )
@@ -2299,7 +2322,7 @@ async def begin_horen(
 
         return
 
-    await send_horen_question(
+    await send_lesson_horen_question(
         callback.message,
         user_id
     )
@@ -7695,7 +7718,7 @@ def load_horen(
 # =========================================================
 # Send horen question
 # =========================================================
-async def send_horen_question(
+async def send_lesson_horen_question(
     message,
     user_id
 ):
