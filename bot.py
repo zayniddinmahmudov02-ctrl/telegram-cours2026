@@ -1355,6 +1355,59 @@ def build_task_menu(
 
     return builder.as_markup()
 # =========================================================
+# LOCKED TASK
+# =========================================================
+
+@dp.callback_query(
+    F.data == "locked_task"
+)
+async def locked_task(
+    callback: CallbackQuery
+):
+
+    await callback.answer(
+        "🔒 Avval oldingi bo'limni yakunlang.",
+        show_alert=True
+    )
+# =========================================================
+# BACK TO LEVEL
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "level_"
+    )
+)
+async def back_to_level(
+    callback: CallbackQuery
+):
+
+    level = callback.data.replace(
+        "level_",
+        ""
+    )
+
+    user_id = callback.from_user.id
+
+    lesson = active_lessons[user_id]["lesson"]
+
+    await callback.message.edit_reply_markup()
+
+    await callback.message.answer(
+
+        f"🇩🇪 {level}\n"
+        f"📖 Unterricht {lesson}",
+
+        reply_markup=
+        build_task_menu(
+            user_id,
+            level,
+            lesson
+        )
+    )
+
+    await callback.answer()
+# =========================================================
 # UNTERRICHT HANDLER
 # =========================================================
 
