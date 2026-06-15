@@ -2216,7 +2216,7 @@ async def start_horen(
     if not tasks:
 
         await callback.answer(
-            "Hören topilmadi."
+            "Horen topilmadi."
         )
 
         return
@@ -2254,7 +2254,7 @@ async def start_horen(
                 audio_path
             ),
             caption=
-            f"🎧 Hören\n\n"
+            f"🎧 Horen\n\n"
             f"🇩🇪 {level} | Unterricht {lesson}"
         )
 
@@ -2472,7 +2472,7 @@ async def begin_horen(
     if user_id not in horen_progress:
 
         await callback.answer(
-            "❌ Hören sessiyasi topilmadi.",
+            "❌ Horen sessiyasi topilmadi.",
             show_alert=True
         )
 
