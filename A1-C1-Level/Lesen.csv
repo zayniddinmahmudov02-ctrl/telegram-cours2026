@@ -1,10 +1,51 @@
 level,lesson,task_id,type,question,correct,wrong1,wrong2
-A1,1,1,test,Tomning ismi nima?,Tom,Anna,Ali
-A1,1,2,test,Tom necha yoshda?,10,9,11
-A1,1,3,test,Tom nimani yaxshi ko'radi?,Fußball,Musik,Malen
-A1,1,4,test,Annaning ismi nima?,Anna,Tom,Maria
-A1,1,5,test,Anna necha yoshda?,9,10,8
-A1,1,6,test,Anna nimani yaxshi ko'radi?,Malen und Musik,Fußball,Deutsch
-A1,1,7,test,Tom va Anna qayerdan?,Usbekistan,Deutschland,Österreich
-A1,1,8,test,Tom va Anna qayerda yashaydi?,Taschkent,Berlin,Hamburg
-A1,1,9,test,Tom va Anna qaysi tilni o'rganadi?,Deutsch,Englisch,Russisch
+A1,1,1,test,Wie heißt der Junge?,Tom,Ali,Max
+A1,1,2,test,Wie alt ist Tom?,10,9,11
+A1,1,3,test,Woher kommt Tom?,Aus Usbekistan,Aus Deutschland,Aus Österreich
+A1,1,4,test,Wo wohnt Tom?,In Taschkent,In Berlin,In Hamburg
+A1,1,5,test,Welche Sprache lernt Tom?,Deutsch,Englisch,Russisch
+A1,1,6,test,Was mag Tom?,Fußball,Musik,Malen
+A1,1,7,test,Wie heißt das Mädchen?,Anna,Maria,Lisa
+A1,1,8,test,Wie alt ist Anna?,9,10,8
+A1,1,9,test,Was mag Anna?,Malen und Musik,Fußball,Tennis
+A1,1,10,test,Gehen Tom und Anna zur Schule?,Ja,Nein,Manchmal
+A1,2,1,test,Wie heißt der Bruder von Anna?,Tom,Ali,Paul
+A1,2,2,test,Wie alt ist Tom?,14,12,16
+A1,2,3,test,Was spielt Tom gern?,Fußball,Tennis,Volleyball
+A1,2,4,test,Welche Musik hört Tom gern?,Popmusik,Rockmusik,Klassik
+A1,2,5,test,Welches Fach mag Tom?,Englisch,Chemie,Physik
+A1,2,6,test,Wer ist Anna?,Die Schwester von Tom,Die Mutter von Tom,Die Tante von Tom
+A1,2,7,test,Was macht Anna gern?,Märchen lesen,Fußball spielen,Schwimmen
+A1,2,8,test,Wem hilft Anna?,Ihrer Mutter,Ihrem Vater,Ihrem Bruder
+A1,2,9,test,Wem hilft Tom oft?,Seinem Vater,Seiner Mutter,Anna
+A1,2,10,test,Wie viele Kinder gibt es in der Familie Müller?,Zwei,Eins,Drei
+A1,3,1,test,Wo arbeitet Tom?,In einem Restaurant,In einer Schule,In einem Krankenhaus
+A1,3,2,test,Was ist Tom von Beruf?,Koch,Arzt,Lehrer
+A1,3,3,test,Was macht Tom gern?,Kochen,Schlafen,Lesen
+A1,3,4,test,Wer ist heute im Restaurant?,Viele Gäste,Viele Lehrer,Viele Ärzte
+A1,3,5,test,Was hat Tom vorbereitet?,Gemüse und Fleisch,Milch und Brot,Käse und Obst
+A1,3,6,test,Wo arbeitet Anna?,Im Restaurant,Im Hotel,In der Universität
+A1,3,7,test,Was ist Anna von Beruf?,Kellnerin,Lehrerin,Ärztin
+A1,3,8,test,Was bringt Anna den Gästen?,Das Essen,Die Bücher,Die Briefe
+A1,3,9,test,Wie ist Anna?,Freundlich,Faul,Langsam
+A1,3,10,test,Wie fühlt sich Anna am Ende des Tages?,Zufrieden,Traurig,Wütend
+A1,4,1,test,Wem gehört das erste Zimmer?,Niko,Maria,Albert
+A1,4,2,test,Wie ist Nikos Zimmer?,Klein und gemütlich,Groß und modern,Dunkel und alt
+A1,4,3,test,Was liegt auf Nikos Tisch?,Bücher und Heft,Computer und Handy,Teller und Glas
+A1,4,4,test,Wer ist Maria?,Die Schwester von Niko,Die Mutter von Niko,Die Tante von Niko
+A1,4,5,test,Was gibt es in Marias Zimmer?,Bett Tisch und Schrank,Sofa Fernseher und Küche,Fahrrad Lampe und Auto
+A1,4,6,test,Was macht Maria gern?,Lesen,Fußball spielen,Kochen
+A1,4,7,test,Wer ist Albert?,Der Bruder von Niko,Der Vater von Niko,Der Onkel von Niko
+A1,4,8,test,Wie ist Alberts Zimmer?,Groß und modern,Klein und dunkel,Alt und eng
+A1,4,9,test,Was gibt es in Alberts Zimmer?,Einen Computer,Einen Fernseher,Ein Klavier
+A1,4,10,test,Wo macht Albert seine Hausaufgaben?,In seinem Zimmer,Im Garten,In der Küche
+A1,5,1,test,Wo studiert Tom?,An der Universität,In der Schule,Im Krankenhaus
+A1,5,2,test,Um wie viel Uhr steht Tom auf?,06:45 Uhr,07:15 Uhr,08:00 Uhr
+A1,5,3,test,Was macht Tom um 07:15 Uhr?,Er frühstückt,Er schläft,Er arbeitet
+A1,5,4,test,Wo lernt Tom um 13:00 Uhr?,In der Bibliothek,Im Restaurant,Im Park
+A1,5,5,test,Welche Sportart spielt Tom?,Tennis,Fußball,Basketball
+A1,5,6,test,Wo arbeitet Anna?,In einem Café,In einem Hotel,In einer Schule
+A1,5,7,test,Um wie viel Uhr steht Anna auf?,07:00 Uhr,06:00 Uhr,08:00 Uhr
+A1,5,8,test,Was macht Anna um 12:30 Uhr?,Sie isst zu Mittag,Sie lernt Deutsch,Sie trinkt Kaffee
+A1,5,9,test,Was macht Anna nach der Arbeit?,Sie geht einkaufen oder trifft Freunde,Sie sieht fern,Sie schläft
+A1,5,10,test,Um wie viel Uhr isst Anna zu Abend?,18:30 Uhr,19:30 Uhr,21:00 Uhr

@@ -1231,65 +1231,53 @@ async def lesson_handler(
 # =========================================================
 # START GRAMMATIK
 # =========================================================
-
-@dp.callback_query(
-    F.data.startswith("start_Grammatik_")
-)
-async def start_grammatik(
-    callback: CallbackQuery
-):
-
+async def start_task_logic(callback: CallbackQuery, task_name: str, 
+                           load_func, progress_dict, send_func):
     user_id = callback.from_user.id
-
+    
     if user_id not in active_lessons:
-
-        await callback.answer(
-            "Dars topilmadi."
-        )
-
+        await callback.answer("Dars topilmadi.")
         return
 
     level = active_lessons[user_id]["level"]
-
     lesson = active_lessons[user_id]["lesson"]
 
-    tasks = load_grammatik(
-        level,
-        lesson
+    # Bazadan tekshirish
+    row = db_execute(
+        "SELECT completed FROM lesson_task_progress WHERE user_id = %s AND level = %s AND lesson = %s AND task_name = %s",
+        (user_id, level, lesson, task_name),
+        fetchone=True
     )
 
-    if not tasks:
-
-        await callback.answer(
-            "Grammatik topilmadi."
-        )
-
+    if row and row[0]:
+        builder = InlineKeyboardBuilder()
+        builder.button(text="🔄 Qayta ishlash", callback_data=f"repeat_task:{task_name}")
+        builder.button(text="❌ Bekor qilish", callback_data="close_menu")
+        builder.adjust(1)
+        await callback.message.answer(f"✅ Siz {task_name} bo'limini oldin yakunlagansiz. Qayta ishlamoqchimisiz?", reply_markup=builder.as_markup())
+        await callback.answer()
         return
 
-    grammatik_progress[user_id] = {
+    tasks = load_func(level, lesson)
+    if not tasks:
+        await callback.answer(f"{task_name} topilmadi.")
+        return
 
-        "level": level,
-
-        "lesson": lesson,
-
-        "tasks": tasks,
-
-        "index": 0,
-
-        "score": 0
+    # Progressni belgilash
+    progress_dict[user_id] = {
+        "level": level, "lesson": lesson, "tasks": tasks, "index": 0, "score": 0
     }
+    if task_name == "Grammatik":
+        progress_dict[user_id]["teil"] = 1
 
-    await callback.message.answer(
-        f"📚 Grammatik\n\n"
-        f"Jami savollar: {len(tasks)}"
-    )
-
-    await send_grammatik_question(
-        callback.message,
-        user_id
-    )
-
+    await callback.message.answer(f"📚 {task_name}\nJami savollar: {len(tasks)}")
+    await send_func(callback.message, user_id)
     await callback.answer()
+
+# Misol uchun Grammatik uchun handler
+@dp.callback_query(F.data.startswith("start_Grammatik_"))
+async def start_grammatik(callback: CallbackQuery):
+    await start_task_logic(callback, "Grammatik", load_grammatik, grammatik_progress, send_grammatik_question)
 # =========================================================
 # SEND GRAMMATIK QUESTION
 # =========================================================
@@ -1442,7 +1430,289 @@ async def grammatik_answer(
         callback.message,
         user_id
     )
-    # =========================================================
+@dp.callback_query(F.data.startswith("repeat_task:"))
+async def repeat_task(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    if user_id not in active_lessons:
+        return
+
+    task_name = callback.data.split(":", 1)[1]
+    level = active_lessons[user_id]["level"]
+    lesson = active_lessons[user_id]["lesson"]
+
+    # 1. Ma'lumotlarni yuklash va funksiyalar xaritasi
+    tasks_map = {
+        "Grammatik": (load_grammatik, grammatik_progress, send_grammatik_question),
+        "Lesen": (load_lesen, lesen_progress, send_lesen_question),
+        "Horen": (load_horen, horen_progress, send_horen_question),
+    }
+
+    if task_name not in tasks_map:
+        await callback.answer("Noto'g'ri topshiriq turi!")
+        return
+
+    load_func, progress_dict, send_func = tasks_map[task_name]
+    tasks = load_func(level, lesson)
+
+    if not tasks:
+        await callback.answer(f"{task_name} topilmadi.")
+        return
+
+    # 2. Progressni yangilash
+    progress_data = {
+        "level": level,
+        "lesson": lesson,
+        "tasks": tasks,
+        "index": 0,
+        "score": 0
+    }
+    
+    # Grammatik uchun maxsus qo'shimcha
+    if task_name == "Grammatik":
+        progress_data["teil"] = 1
+
+    progress_dict[user_id] = progress_data
+
+    # 3. Javob qaytarish va keyingi qadam
+    await callback.message.answer(f"🔄 {task_name} qayta boshlandi.")
+    await send_func(callback.message, user_id)
+    await callback.answer()
+# =========================================================
+# CLOSE MENU
+# =========================================================
+
+@dp.callback_query(
+    F.data == "close_menu"
+)
+async def close_menu(
+    callback: CallbackQuery
+):
+
+    await callback.message.delete()
+
+    await callback.answer()
+# =========================================================
+# START LESEN
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "start_Lesen_"
+    )
+)
+async def start_lesen(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in active_lessons:
+        return
+
+    level = active_lessons[user_id]["level"]
+
+    lesson = active_lessons[user_id]["lesson"]
+
+    image_path = get_lesen_image(
+        level,
+        lesson
+    )
+
+    if image_path:
+
+        await callback.message.answer_photo(
+            FSInputFile(image_path),
+            caption=f"📖 Lesen\n\n🇩🇪 {level} | Unterricht {lesson}"
+        )
+
+    tasks = load_lesen(
+        level,
+        lesson
+    )
+
+    if not tasks:
+
+        await callback.answer(
+            "Lesen topilmadi."
+        )
+
+        return
+
+    lesen_progress[user_id] = {
+
+        "level": level,
+
+        "lesson": lesson,
+
+        "tasks": tasks,
+
+        "index": 0,
+
+        "score": 0
+    }
+
+    await callback.message.answer(
+        f"📖 Lesen Test\n\n"
+        f"Jami savollar: {len(tasks)}"
+    )
+
+    await send_lesen_question(
+        callback.message,
+        user_id
+    )
+
+    await callback.answer()
+# =========================================================
+# SEND LESEN QUESTION
+# =========================================================
+
+async def send_lesen_question(
+    message,
+    user_id
+):
+
+    progress = lesen_progress[user_id]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    options = [
+
+        task["correct"],
+
+        task["wrong1"],
+
+        task["wrong2"]
+    ]
+
+    random.shuffle(
+        options
+    )
+
+    builder = InlineKeyboardBuilder()
+
+    for option in options:
+
+        builder.button(
+            text=option,
+            callback_data=f"lesen:{option}"
+        )
+
+    builder.adjust(1)
+
+    await message.answer(
+
+        f"📖 Frage "
+        f"{progress['index'] + 1}"
+        f"/{len(progress['tasks'])}\n\n"
+
+        f"{task['question']}",
+
+        reply_markup=
+        builder.as_markup()
+    )
+# =========================================================
+# LESEN ANSWER
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "lesen:"
+    )
+)
+async def lesen_answer(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in lesen_progress:
+        return
+
+    progress = lesen_progress[user_id]
+
+    answer = callback.data.split(
+        ":",
+        1
+    )[1]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    if answer == task["correct"]:
+
+        progress["score"] += 1
+
+        await callback.answer(
+            "✅ Richtig"
+        )
+
+    else:
+
+        await callback.answer(
+            "❌ Falsch"
+        )
+
+    progress["index"] += 1
+
+    if progress["index"] >= len(
+        progress["tasks"]
+    ):
+
+        db_execute(
+            """
+            INSERT INTO
+            lesson_task_progress
+            (
+                user_id,
+                level,
+                lesson,
+                task_name,
+                completed
+            )
+            VALUES
+            (
+                %s,%s,%s,%s,TRUE
+            )
+            ON CONFLICT
+            (
+                user_id,
+                level,
+                lesson,
+                task_name
+            )
+            DO UPDATE SET
+            completed = TRUE
+            """,
+            (
+                user_id,
+                progress["level"],
+                progress["lesson"],
+                "Lesen"
+            )
+        )
+
+        await callback.message.answer(
+
+            f"🏁 Lesen yakunlandi\n\n"
+
+            f"Natija: "
+            f"{progress['score']}"
+            f"/{len(progress['tasks'])}"
+        )
+
+        del lesen_progress[user_id]
+
+        return
+
+    await send_lesen_question(
+        callback.message,
+        user_id
+    )
+
+# =========================================================
 # CHECK SUBSCRIPTION
 # =========================================================
 
@@ -5800,8 +6070,15 @@ selected_levels = {}
 
 grammatik_progress = {}
 # =========================================================
-# LESSON QUIZ SYSTEM
+# LESEN PROGRESS
 # =========================================================
+
+lesen_progress = {}
+# =========================================================
+# HOREN PROGRESS
+# =========================================================
+
+horen_progress = {}
 
 LESSON_QUIZ_DATA = {}
 lesson_quiz_sessions = {}
@@ -6076,7 +6353,41 @@ def load_lesen(
         lesson,
         teil
     )
+# =========================================================
+# GET LESEN IMAGE
+# =========================================================
 
+def get_lesen_image(
+    level,
+    lesson
+):
+
+    folder = os.path.join(
+        BASE_DIR,
+        "A1-C1-Level",
+        "lesen_photo"
+    )
+
+    candidates = [
+
+        f"{level}-{lesson}-lesen.png",
+
+        f"{level}-{lesson}.1-lesen.png"
+    ]
+
+    for filename in candidates:
+
+        filepath = os.path.join(
+            folder,
+            filename
+        )
+
+        if os.path.exists(
+            filepath
+        ):
+            return filepath
+
+    return None
 
 # =========================================================
 # HÖREN LOADER
