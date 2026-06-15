@@ -1,0 +1,61 @@
+level,lesson,teil,task_id,type,question,correct,wrong1,wrong2
+A1,1,1,1,test,Wohin gehen Tom und Anna?,In den Park,In die Schule,Ins Kino
+A1,1,1,2,test,Wie ist das Wetter?,Sonnig und warm,Regnerisch,Kalt
+A1,1,1,3,test,Was spielt Tom?,Fußball,Tennis,Basketball
+A1,1,1,4,test,Was liest Anna?,Ein Buch,Eine Zeitung,Eine E-Mail
+A1,1,1,5,test,Welches Tier kommt zu ihnen?,Ein Hund,Eine Katze,Ein Vogel
+A1,1,1,6,test,Was machen sie mit dem Hund?,Sie spielen,Sie schlafen,Sie essen
+A1,1,1,7,test,Wie lange bleiben sie im Park?,Zwei Stunden,Drei Stunden,Eine Stunde
+A1,1,1,8,test,Wohin gehen sie danach?,Nach Hause,Zur Schule,Zum Markt
+A1,1,1,9,test,Wie fühlen sie sich?,Müde aber glücklich,Traurig,Krank
+A1,1,1,10,test,Welcher Tag ist es?,Samstag,Montag,Freitag
+A1,2,1,1,test,Wie heißt die Person?,Anna,Maria,Sabine
+A1,2,1,2,test,Wie alt ist Anna?,12 Jahre,10 Jahre,14 Jahre
+A1,2,1,3,test,Wo wohnt sie?,In Berlin,In Hamburg,In Bonn
+A1,2,1,4,test,Wen stellt sie zuerst vor?,Ihren Vater,Ihre Schwester,Ihren Bruder
+A1,2,1,5,test,Wie heißt ihr Vater?,Peter,Tom,Max
+A1,2,1,6,test,Was ist sein Beruf?,Ingenieur,Arzt,Lehrer
+A1,2,1,7,test,Wie heißt ihre Mutter?,Maria,Anna,Julia
+A1,2,1,8,test,Was ist ihre Mutter?,Lehrerin,Ärztin,Verkäuferin
+A1,2,1,9,test,Wie heißt ihr Bruder?,Tom,Peter,Alex
+A1,2,1,10,test,Wie heißt ihre Schwester?,Anna,Lisa,Maria
+A1,3,1,1,test,Wo spielt die Geschichte?,Im Restaurant,Im Hotel,Im Park
+A1,3,1,2,test,Für wie viele Personen ist der Tisch?,Zwei Personen,Drei Personen,Vier Personen
+A1,3,1,3,test,Was bestellt Gast 1 zu trinken?,Wasser,Kaffee,Tee
+A1,3,1,4,test,Was bestellt Gast 2 zu trinken?,Apfelsaft,Cola,Milch
+A1,3,1,5,test,Was bestellt Gast 1 zum Essen?,Schnitzel mit Pommes,Pizza,Salat
+A1,3,1,6,test,Was bestellt Gast 2?,Pizza Margherita,Burger,Suppe
+A1,3,1,7,test,Haben die Gäste Allergien?,Nein,Ja,Nur Gast 1
+A1,3,1,8,test,Wie war das Essen?,Sehr lecker,Nicht gut,Kalt
+A1,3,1,9,test,Möchten sie noch Dessert?,Nein danke,Ja gern,Nur Kaffee
+A1,3,1,10,test,Was bringt der Kellner am Ende?,Die Rechnung,Die Speisekarte,Den Salat
+A1,4,1,1,test,Wie heißt die Person?,Alex,Tom,Max
+A1,4,1,2,test,Wie alt ist Alex?,21 Jahre,20 Jahre,19 Jahre
+A1,4,1,3,test,Wie ist sein Zimmer?,Schön sauber und hell,Klein und dunkel,Alt und schmutzig
+A1,4,1,4,test,Was steht auf dem Tisch?,Ein Computer,Eine Lampe,Ein Fernseher
+A1,4,1,5,test,Was hat Alex im Zimmer?,Einen Schrank,Ein Koffer,Ein Fahrrad
+A1,4,1,6,test,Was gibt es im Zimmer?,Ein großes Fenster,Einen Balkon,Zwei Türen
+A1,4,1,7,test,Was hängt an der Wand?,Bilder,Uhren,Spiegel
+A1,4,1,8,test,Was macht Alex oft im Zimmer?,Er lernt,Er kocht,Er schläft
+A1,4,1,9,test,Was macht Alex manchmal?,Bücher lesen oder Musik hören,Fußball spielen,Einkaufen gehen
+A1,4,1,10,test,Warum mag Alex sein Zimmer?,Es ist sein Lieblingsplatz zu Hause,Es ist sehr groß,Es hat einen Fernseher
+A1,5,1,1,test,Wann steht Tom am Samstag auf?,08:00 Uhr,07:00 Uhr,09:00 Uhr
+A1,5,1,2,test,Wann frühstückt Tom?,08:30 Uhr,09:00 Uhr,07:30 Uhr
+A1,5,1,3,test,Wann trifft Tom seine Freunde?,10:00 Uhr,12:00 Uhr,08:00 Uhr
+A1,5,1,4,test,Was macht Tom im Park?,Fußball spielen,Schwimmen,Arbeiten
+A1,5,1,5,test,Wann isst Tom zu Mittag?,13:00 Uhr,11:00 Uhr,15:00 Uhr
+A1,5,1,6,test,Wann geht Tom einkaufen?,17:00 Uhr,14:00 Uhr,20:00 Uhr
+A1,5,1,7,test,Wann geht Tom ins Bett?,22:00 Uhr,21:00 Uhr,23:00 Uhr
+A1,5,1,8,test,Wann steht Tom am Sonntag auf?,09:00 Uhr,07:00 Uhr,06:00 Uhr
+A1,5,1,9,test,Wohin geht Tom mit seiner Familie?,Ins Café,In die Schule,Ins Büro
+A1,5,1,10,test,Was macht Tom am Abend?,Hausaufgaben und lesen,Fernsehen arbeiten,Fußball spielen
+A1,6,1,1,test,Was isst man am Morgen?,Brot,Käse,Fisch
+A1,6,1,2,test,Was streicht man auf das Brot?,Butter,Reis,Suppe
+A1,6,1,3,test,Was isst man gern zum Frühstück?,Käse,Fisch,Salat
+A1,6,1,4,test,Was isst man manchmal?,Wurst,Kaffee,Wasser
+A1,6,1,5,test,Was isst man zum Mittagessen?,Reis,Butter,Kuchen
+A1,6,1,6,test,Was kocht man mit Gemüse?,Suppe,Kaffee,Saft
+A1,6,1,7,test,Was isst man oft gesund?,Salat,Schokolade,Kuchen
+A1,6,1,8,test,Was kauft man frisch?,Obst,Wasser,Kaffee
+A1,6,1,9,test,Was trinkt man?,Wasser,Brot,Käse
+A1,6,1,10,test,Was trinken viele zum Frühstück?,Kaffee,Saft,Suppe

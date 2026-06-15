@@ -131,7 +131,13 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 ADMIN_CHANNEL_ID = int(os.getenv("ADMIN_CHANNEL_ID", "0"))
 
 CHANNEL_USERNAME = "@vizu_deutsch"
+# =========================================================
+# RATING CHANNELS
+# =========================================================
 
+SPRECHEN_CHANNEL_ID = -1003858674950
+
+SCHREIBEN_CHANNEL_ID = -1003895627242
 # =========================================================
 # SECURITY CHECK
 # =========================================================
@@ -345,45 +351,73 @@ def init_w_certificates_table():
             UNIQUE (user_id, level, lesson, task_name)
         )
     """)
+# =========================================================
+# LESSON SCORES
+# =========================================================
 
-    # LEVEL EXAMS
-    db_execute("""
-        CREATE TABLE IF NOT EXISTS level_exams (
-            id SERIAL PRIMARY KEY,
-            user_id BIGINT NOT NULL,
-            level TEXT NOT NULL,
-            score INTEGER DEFAULT 0,
-            final_exam_passed BOOLEAN DEFAULT FALSE,
-            passed_at TIMESTAMP DEFAULT NOW(),
-            UNIQUE (user_id, level)
-        )
-    """)
+db_execute("""
+    CREATE TABLE IF NOT EXISTS lesson_scores (
+        id SERIAL PRIMARY KEY,
 
-    # LESSON ANSWERS
-    db_execute("""
-        CREATE TABLE IF NOT EXISTS lesson_answers (
-            id SERIAL PRIMARY KEY,
-            user_id BIGINT NOT NULL,
-            level TEXT NOT NULL,
-            lesson INTEGER NOT NULL,
-            task_type TEXT,
-            answer_text TEXT,
-            answer_file TEXT,
-            checked BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT NOW()
-        )
-    """)
+        user_id BIGINT NOT NULL,
 
-    # QUIZ PROGRESS
-    db_execute("""
-        CREATE TABLE IF NOT EXISTS quiz_progress (
-            user_id BIGINT NOT NULL,
-            level TEXT NOT NULL,
-            block_number INTEGER NOT NULL,
-            best_score INTEGER DEFAULT 0,
-            PRIMARY KEY (user_id, level, block_number)
+        level TEXT NOT NULL,
+
+        lesson INTEGER NOT NULL,
+
+        task_name TEXT NOT NULL,
+
+        score INTEGER DEFAULT 0,
+
+        rated_by BIGINT,
+
+        rated_at TIMESTAMP DEFAULT NOW(),
+
+        UNIQUE (
+            user_id,
+            level,
+            lesson,
+            task_name
         )
-    """)
+    )
+""")
+# LEVEL EXAMS
+db_execute("""
+    CREATE TABLE IF NOT EXISTS level_exams (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        level TEXT NOT NULL,
+        score INTEGER DEFAULT 0,
+        final_exam_passed BOOLEAN DEFAULT FALSE,
+        passed_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE (user_id, level)
+    )
+""")
+# LESSON ANSWERS
+db_execute("""
+    CREATE TABLE IF NOT EXISTS lesson_answers (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        level TEXT NOT NULL,
+        lesson INTEGER NOT NULL,
+        task_type TEXT,
+        answer_text TEXT,
+        answer_file TEXT,
+        checked BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+""")
+
+# QUIZ PROGRESS
+db_execute("""
+    CREATE TABLE IF NOT EXISTS quiz_progress (
+        user_id BIGINT NOT NULL,
+        level TEXT NOT NULL,
+        block_number INTEGER NOT NULL,
+        best_score INTEGER DEFAULT 0,
+        PRIMARY KEY (user_id, level, block_number)
+    )
+""")
 # =========================================================
 # VIZU ATTEMPTS TABLE
 # =========================================================
@@ -613,6 +647,26 @@ class SchreibenRateState(
     StatesGroup
 ):
     waiting_score = State()
+# =========================================================
+# SCHREIBEN STATE
+# =========================================================
+
+class SchreibenState(
+    StatesGroup
+):
+
+    waiting_file = State()
+
+
+# =========================================================
+# SPRECHEN STATE
+# =========================================================
+
+class SprechenState(
+    StatesGroup
+):
+
+    waiting_voice = State()
 # =========================================================
 # VIZU SPRECHEN STATE
 # =========================================================
@@ -1113,60 +1167,161 @@ def is_final_exam_passed(user_id: int, level: str) -> bool:
     )
     return bool(row[0]) if row else False
 # =========================================================
-# LEVEL LESSONS MENU (OPTIMALLASHTIRILGAN VARIANT)
+# LEVEL LESSONS MENU
 # =========================================================
 
-def build_level_lessons_menu(level, unlocked, exam_passed=False):
-    total_lessons = LESSON_COUNTS.get(level, 10) # Xatolik bermasligi uchun default 10
+def build_level_lessons_menu(
+    level,
+    unlocked,
+    exam_passed=False
+):
+
+    total_lessons = LESSON_COUNTS.get(
+        level,
+        10
+    )
+
     keyboard = []
+
     current_row = []
 
-    for lesson in range(1, total_lessons + 1):
-        if lesson <= unlocked:
-            text = f"📖 Unterricht {lesson}"  
-        else:
-            text = f"🔒 Unterricht {lesson}"  
+    for lesson in range(
+        1,
+        total_lessons + 1
+    ):
 
-        current_row.append(KeyboardButton(text=text))
+        if lesson < unlocked:
+
+            text = (
+                f"✅ Unterricht {lesson}"
+            )
+
+        elif lesson == unlocked:
+
+            text = (
+                f"📖 Unterricht {lesson}"
+            )
+
+        else:
+
+            text = (
+                f"🔒 Unterricht {lesson}"
+            )
+
+        current_row.append(
+            KeyboardButton(
+                text=text
+            )
+        )
 
         if len(current_row) == 4:
-            keyboard.append(current_row)
+
+            keyboard.append(
+                current_row
+            )
+
             current_row = []
 
     if current_row:
-        keyboard.append(current_row)
 
-    keyboard.append([KeyboardButton(text="⬅️ Orqaga")])
+        keyboard.append(
+            current_row
+        )
+
+    keyboard.append(
+        [
+            KeyboardButton(
+                text="⬅️ Orqaga"
+            )
+        ]
+    )
 
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
         resize_keyboard=True,
-        input_field_placeholder=f"🇩🇪 {level} darslaridan birini tanlang..."
+        input_field_placeholder=
+        f"🇩🇪 {level} darslaridan birini tanlang..."
     )
 # =========================================================
-# BUILD TASK MENU (OPTIMALLASHTIRILGAN)
+# BUILD TASK MENU
 # =========================================================
-def build_task_menu(user_id, level, lesson):
+
+def build_task_menu(
+    user_id,
+    level,
+    lesson
+):
+
     builder = InlineKeyboardBuilder()
-    next_task = get_next_task(user_id, level, lesson)
+
+    next_task = get_next_task(
+        user_id,
+        level,
+        lesson
+    )
 
     rows = db_execute(
-        "SELECT task_name FROM lesson_task_progress WHERE user_id = %s AND level = %s AND lesson = %s AND completed = TRUE",
-        (user_id, level, lesson), fetchall=True
+        """
+        SELECT task_name
+
+        FROM lesson_task_progress
+
+        WHERE user_id = %s
+        AND level = %s
+        AND lesson = %s
+        AND completed = TRUE
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchall=True
     )
-    completed_tasks = {r[0] for r in rows} if rows else set()
+
+    completed_tasks = {
+        row[0]
+        for row in rows
+    } if rows else set()
 
     for task in LESSON_TASKS:
+
         if task in completed_tasks:
-            icon, callback = "✅", f"start_{task}_{lesson}"
+
+            icon = "✅"
+
+            callback = (
+                f"start_{task}_{lesson}"
+            )
+
         elif task == next_task:
-            icon, callback = "📖", f"start_{task}_{lesson}"
+
+            icon = "📖"
+
+            callback = (
+                f"start_{task}_{lesson}"
+            )
+
         else:
-            icon, callback = "🔒", "locked_task"
 
-        builder.row(InlineKeyboardButton(text=f"{icon} {task}", callback_data=callback))
+            icon = "🔒"
 
-    builder.row(InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"level_{level}"))
+            callback = "locked_task"
+
+        builder.row(
+            InlineKeyboardButton(
+                text=f"{icon} {task}",
+                callback_data=callback
+            )
+        )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="⬅️ Orqaga",
+            callback_data=f"level_{level}"
+        )
+    )
+
     return builder.as_markup()
 # =========================================================
 # UNTERRICHT HANDLER
@@ -1478,6 +1633,32 @@ async def repeat_task(callback: CallbackQuery):
     await send_func(callback.message, user_id)
     await callback.answer()
 # =========================================================
+# SCORE KEYBOARD
+# =========================================================
+
+def build_score_keyboard(
+    user_id,
+    level,
+    lesson,
+    task_name
+):
+
+    builder = InlineKeyboardBuilder()
+
+    for score in range(21):
+
+        builder.button(
+
+            text=str(score),
+
+            callback_data=
+            f"rate:{user_id}:{level}:{lesson}:{task_name}:{score}"
+        )
+
+    builder.adjust(5)
+
+    return builder.as_markup()
+# =========================================================
 # CLOSE MENU
 # =========================================================
 
@@ -1507,11 +1688,69 @@ async def start_lesen(
     user_id = callback.from_user.id
 
     if user_id not in active_lessons:
+
+        await callback.answer(
+            "Dars topilmadi."
+        )
+
         return
 
     level = active_lessons[user_id]["level"]
 
     lesson = active_lessons[user_id]["lesson"]
+
+    # =====================================================
+    # CHECK PREVIOUS ATTEMPT
+    # =====================================================
+
+    row = db_execute(
+        """
+        SELECT completed
+
+        FROM lesson_task_progress
+
+        WHERE user_id = %s
+        AND level = %s
+        AND lesson = %s
+        AND task_name = 'Lesen'
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchone=True
+    )
+
+    if row and row[0]:
+
+        builder = InlineKeyboardBuilder()
+
+        builder.button(
+            text="🔄 Qayta ishlash",
+            callback_data="repeat_task:Lesen"
+        )
+
+        builder.button(
+            text="❌ Bekor qilish",
+            callback_data="close_menu"
+        )
+
+        builder.adjust(1)
+
+        await callback.message.answer(
+            "✅ Siz ushbu Lesen bo'limini oldin yakunlagansiz.\n\n"
+            "Qayta ishlamoqchimisiz?",
+            reply_markup=builder.as_markup()
+        )
+
+        await callback.answer()
+
+        return
+
+    # =====================================================
+    # SEND IMAGE
+    # =====================================================
 
     image_path = get_lesen_image(
         level,
@@ -1522,8 +1761,14 @@ async def start_lesen(
 
         await callback.message.answer_photo(
             FSInputFile(image_path),
-            caption=f"📖 Lesen\n\n🇩🇪 {level} | Unterricht {lesson}"
+            caption=
+            f"📖 Lesen\n\n"
+            f"🇩🇪 {level} | Unterricht {lesson}"
         )
+
+    # =====================================================
+    # LOAD TASKS
+    # =====================================================
 
     tasks = load_lesen(
         level,
@@ -1551,10 +1796,47 @@ async def start_lesen(
         "score": 0
     }
 
+    # =====================================================
+    # START BUTTON
+    # =====================================================
+
+    builder = InlineKeyboardBuilder()
+
+    builder.button(
+    text="▶️ Testni Boshlash",
+    callback_data="begin_lesen")
+
+    builder.adjust(1)
+
     await callback.message.answer(
-        f"📖 Lesen Test\n\n"
-        f"Jami savollar: {len(tasks)}"
+
+        "📖 Matnni yoki rasmni diqqat bilan o'qing.\n\n"
+        "Tayyor bo'lsangiz testni boshlang.",
+
+        reply_markup=
+        builder.as_markup()
     )
+
+    await callback.answer()
+
+# =========================================================
+# BEGIN LESEN
+# =========================================================
+
+@dp.callback_query(
+    F.data == "begin_lesen"
+)
+async def begin_lesen(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in lesen_progress:
+
+        await callback.answer()
+
+        return
 
     await send_lesen_question(
         callback.message,
@@ -1711,7 +1993,970 @@ async def lesen_answer(
         callback.message,
         user_id
     )
+# =========================================================
+# HOREN FILE HELPERS
+# =========================================================
 
+def get_horen_audio(
+    level,
+    lesson
+):
+
+    return os.path.join(
+        "A1-C1-Level",
+        "horen_audio",
+        f"{level}-{lesson}.mp3"
+    )
+
+
+def get_horen_photo(
+    level,
+    lesson
+):
+
+    return os.path.join(
+        "A1-C1-Level",
+        "horen_photo",
+        f"{level}-{lesson}.png"
+    )
+# =========================================================
+# START HOREN
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "start_Horen_"
+    )
+)
+async def start_horen(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in active_lessons:
+
+        await callback.answer(
+            "Dars topilmadi."
+        )
+        return
+
+    level = active_lessons[user_id]["level"]
+
+    lesson = active_lessons[user_id]["lesson"]
+
+    # =====================================================
+    # OLD ATTEMPT CHECK
+    # =====================================================
+
+    row = db_execute(
+        """
+        SELECT completed
+
+        FROM lesson_task_progress
+
+        WHERE user_id=%s
+        AND level=%s
+        AND lesson=%s
+        AND task_name='Horen'
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchone=True
+    )
+
+    if row and row[0]:
+
+        builder = InlineKeyboardBuilder()
+
+        builder.button(
+            text="🔄 Qayta ishlash",
+            callback_data="repeat_task:Horen"
+        )
+
+        builder.button(
+            text="❌ Bekor qilish",
+            callback_data="close_menu"
+        )
+
+        builder.adjust(1)
+
+        await callback.message.answer(
+            "✅ Siz ushbu Hören bo'limini oldin yakunlagansiz.\n\n"
+            "Qayta ishlamoqchimisiz?",
+            reply_markup=builder.as_markup()
+        )
+
+        await callback.answer()
+        return
+    # =====================================================
+    # LOAD TASKS
+    # =====================================================
+
+    tasks = load_horen(
+        level,
+        lesson
+    )
+
+    if not tasks:
+
+        await callback.answer(
+            "Hören topilmadi."
+        )
+
+        return
+
+    # =====================================================
+    # SEND AUDIO
+    # =====================================================
+
+    audio_path = get_horen_audio(
+        level,
+        lesson
+    )
+
+    if os.path.exists(
+        audio_path
+    ):
+
+        await callback.message.answer_audio(
+            audio=FSInputFile(
+                audio_path
+            ),
+            caption=
+            f"🎧 Hören\n\n"
+            f"🇩🇪 {level} | Unterricht {lesson}"
+        )
+
+    # =====================================================
+    # SEND PHOTO
+    # =====================================================
+
+    photo_path = get_horen_photo(
+        level,
+        lesson
+    )
+
+    if os.path.exists(
+        photo_path
+    ):
+
+        await callback.message.answer_photo(
+            FSInputFile(
+                photo_path
+            )
+        )
+
+    # =====================================================
+    # SAVE PROGRESS
+    # =====================================================
+
+    horen_progress[user_id] = {
+
+        "level": level,
+
+        "lesson": lesson,
+
+        "tasks": tasks,
+
+        "index": 0,
+
+        "score": 0
+    }
+
+    # =====================================================
+    # START BUTTON
+    # =====================================================
+
+    builder = InlineKeyboardBuilder()
+
+    builder.button(
+        text="▶️ Testni Boshlash",
+        callback_data="begin_horen"
+    )
+
+    builder.adjust(1)
+
+    await callback.message.answer(
+
+        "🎧 Audio va rasmni diqqat bilan ko'rib chiqing.\n\n"
+
+        "Tayyor bo'lsangiz testni boshlang.",
+
+        reply_markup=
+        builder.as_markup()
+    )
+
+    await callback.answer()
+# =========================================================
+# BEGIN HOREN
+# =========================================================
+
+@dp.callback_query(
+    F.data == "begin_horen"
+)
+async def begin_horen(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in horen_progress:
+
+        await callback.answer()
+
+        return
+
+    await send_horen_question(
+        callback.message,
+        user_id
+    )
+
+    await callback.answer()
+# =========================================================
+# SCHREIBEN PHOTO
+# =========================================================
+
+def get_schreiben_photo(
+    level,
+    lesson
+):
+
+    return os.path.join(
+        "A1-C1-Level",
+        "schreiben_photo",
+        f"{level}-{lesson}.png"
+    )
+
+
+# =========================================================
+# SPRECHEN PHOTO
+# =========================================================
+
+def get_sprechen_photo(
+    level,
+    lesson
+):
+
+    return os.path.join(
+        "A1-C1-Level",
+        "sprechen_photo",
+        f"{level}-{lesson}.png"
+    )
+# =========================================================
+# START SCHREIBEN
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "start_Schreiben_"
+    )
+)
+async def start_schreiben(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in active_lessons:
+
+        await callback.answer(
+            "Dars topilmadi."
+        )
+
+        return
+
+    level = active_lessons[user_id]["level"]
+
+    lesson = active_lessons[user_id]["lesson"]
+
+    # =====================================================
+    # CHECK PREVIOUS ATTEMPT
+    # =====================================================
+
+    row = db_execute(
+        """
+        SELECT completed
+
+        FROM lesson_task_progress
+
+        WHERE user_id = %s
+        AND level = %s
+        AND lesson = %s
+        AND task_name = 'Schreiben'
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchone=True
+    )
+
+    if row and row[0]:
+
+        builder = InlineKeyboardBuilder()
+
+        builder.button(
+            text="🔄 Qayta ishlash",
+            callback_data="repeat_task:Schreiben"
+        )
+
+        builder.button(
+            text="❌ Bekor qilish",
+            callback_data="close_menu"
+        )
+
+        builder.adjust(1)
+
+        await callback.message.answer(
+            "✅ Siz ushbu Schreiben bo'limini oldin yakunlagansiz.\n\n"
+            "Qayta ishlamoqchimisiz?",
+            reply_markup=builder.as_markup()
+        )
+
+        await callback.answer()
+
+        return
+
+    photo_path = get_schreiben_photo(
+        level,
+        lesson
+    )
+
+    if os.path.exists(photo_path):
+
+        await callback.message.answer_photo(
+            FSInputFile(photo_path),
+            caption=
+            f"✍️ Schreiben\n\n"
+            f"🇩🇪 {level}\n"
+            f"📖 Unterricht {lesson}\n\n"
+            f"Topshiriqni bajaring va rasm yoki PDF yuboring."
+        )
+
+    await state.update_data(
+        level=level,
+        lesson=lesson
+    )
+
+    await state.set_state(
+        SchreibenState.waiting_file
+    )
+
+    await callback.answer()
+# =========================================================
+# RECEIVE SCHREIBEN
+# =========================================================
+
+@dp.message(
+    SchreibenState.waiting_file,
+    F.photo | F.document
+)
+async def receive_schreiben(
+    message: Message,
+    state: FSMContext
+):
+
+    data = await state.get_data()
+
+    level = data["level"]
+
+    lesson = data["lesson"]
+
+    caption = (
+        f"✍️ SCHREIBEN\n\n"
+        f"👤 USER ID: {message.from_user.id}\n"
+        f"🇩🇪 LEVEL: {level}\n"
+        f"📖 LESSON: {lesson}"
+    )
+
+    await bot.send_message(
+
+        SCHREIBEN_CHANNEL_ID,
+
+        caption,
+
+        reply_markup=
+        build_score_keyboard(
+            message.from_user.id,
+            level,
+            lesson,
+            "Schreiben"
+        )
+    )
+
+    await bot.forward_message(
+
+        chat_id=SCHREIBEN_CHANNEL_ID,
+
+        from_chat_id=message.chat.id,
+
+        message_id=message.message_id
+    )
+
+    await message.answer(
+
+        "✅ Schreiben topshirig'i yuborildi.\n\n"
+        "Ustoz tekshirganidan keyin ball beriladi."
+    )
+
+    await state.clear()
+# =========================================================
+# INVALID SCHREIBEN
+# =========================================================
+
+@dp.message(
+    SchreibenState.waiting_file
+)
+async def invalid_schreiben(
+    message: Message
+):
+
+    await message.answer(
+        "❌ Rasm yoki PDF yuboring."
+    )
+# =========================================================
+# START SPRECHEN
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "start_Sprechen_"
+    )
+)
+async def start_sprechen(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in active_lessons:
+
+        await callback.answer(
+            "Dars topilmadi."
+        )
+
+        return
+
+    level = active_lessons[user_id]["level"]
+
+    lesson = active_lessons[user_id]["lesson"]
+
+    row = db_execute(
+        """
+        SELECT completed
+
+        FROM lesson_task_progress
+
+        WHERE user_id=%s
+        AND level=%s
+        AND lesson=%s
+        AND task_name='Sprechen'
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchone=True
+    )
+
+    if row and row[0]:
+
+        builder = InlineKeyboardBuilder()
+
+        builder.button(
+            text="🔄 Qayta ishlash",
+            callback_data="repeat_task:Sprechen"
+        )
+
+        builder.button(
+            text="❌ Bekor qilish",
+            callback_data="close_menu"
+        )
+
+        builder.adjust(1)
+
+        await callback.message.answer(
+            "✅ Siz ushbu Sprechen bo'limini oldin yakunlagansiz.\n\n"
+            "Qayta ishlamoqchimisiz?",
+            reply_markup=builder.as_markup()
+        )
+
+        await callback.answer()
+
+        return
+
+    photo_path = get_sprechen_photo(
+        level,
+        lesson
+    )
+
+    if os.path.exists(
+        photo_path
+    ):
+
+        await callback.message.answer_photo(
+            FSInputFile(
+                photo_path
+            ),
+            caption=
+            f"🎤 Sprechen\n\n"
+            f"🇩🇪 {level}\n"
+            f"📖 Unterricht {lesson}\n\n"
+            f"Voice yuboring."
+        )
+
+    await state.update_data(
+        level=level,
+        lesson=lesson
+    )
+
+    await state.set_state(
+        SprechenState.waiting_voice
+    )
+
+    await callback.answer()
+# =========================================================
+# RECEIVE SPRECHEN
+# =========================================================
+
+@dp.message(
+    SprechenState.waiting_voice,
+    F.voice
+)
+async def receive_sprechen(
+    message: Message,
+    state: FSMContext
+):
+
+    data = await state.get_data()
+
+    level = data["level"]
+
+    lesson = data["lesson"]
+
+    caption = (
+        f"🎤 SPRECHEN\n\n"
+        f"👤 USER ID: {message.from_user.id}\n"
+        f"🇩🇪 LEVEL: {level}\n"
+        f"📖 LESSON: {lesson}"
+    )
+
+    await bot.send_message(
+
+        SPRECHEN_CHANNEL_ID,
+
+        caption,
+
+        reply_markup=
+        build_score_keyboard(
+            message.from_user.id,
+            level,
+            lesson,
+            "Sprechen"
+        )
+    )
+
+    await bot.forward_message(
+
+        chat_id=SPRECHEN_CHANNEL_ID,
+
+        from_chat_id=message.chat.id,
+
+        message_id=message.message_id
+    )
+
+    await message.answer(
+
+        "✅ Sprechen topshirig'i yuborildi.\n\n"
+        "Ustoz tekshirganidan keyin ball beriladi."
+    )
+
+    await state.clear()
+# =========================================================
+# INVALID SPRECHEN
+# =========================================================
+
+@dp.message(
+    SprechenState.waiting_voice
+)
+async def invalid_sprechen(
+    message: Message
+):
+
+    await message.answer(
+        "❌ Voice yuboring."
+    )
+
+# =========================================================
+# SCORE KEYBOARD
+# =========================================================
+
+def build_score_keyboard(
+    user_id,
+    level,
+    lesson,
+    task_name
+):
+
+    builder = InlineKeyboardBuilder()
+
+    for score in range(21):
+
+        builder.button(
+            text=str(score),
+            callback_data=
+            f"rate:{user_id}:{level}:{lesson}:{task_name}:{score}"
+        )
+
+    builder.adjust(5)
+
+    return builder.as_markup()
+# =========================================================
+# RATE TASK
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "rate:"
+    )
+)
+async def rate_task(
+    callback: CallbackQuery
+):
+
+    if callback.from_user.id != ADMIN_ID:
+
+        await callback.answer()
+
+        return
+
+    _, user_id, level, lesson, task_name, score = (
+        callback.data.split(":")
+    )
+
+    user_id = int(user_id)
+
+    lesson = int(lesson)
+
+    score = int(score)
+
+    # =====================================================
+    # SAVE SCORE
+    # =====================================================
+
+    db_execute(
+        """
+        INSERT INTO lesson_scores
+        (
+            user_id,
+            level,
+            lesson,
+            task_name,
+            score,
+            rated_by
+        )
+        VALUES
+        (
+            %s,%s,%s,%s,%s,%s
+        )
+        ON CONFLICT
+        (
+            user_id,
+            level,
+            lesson,
+            task_name
+        )
+        DO UPDATE SET
+            score = EXCLUDED.score,
+            rated_by = EXCLUDED.rated_by,
+            rated_at = NOW()
+        """,
+        (
+            user_id,
+            level,
+            lesson,
+            task_name,
+            score,
+            callback.from_user.id
+        )
+    )
+
+    # =====================================================
+    # COMPLETE TASK
+    # =====================================================
+
+    db_execute(
+        """
+        INSERT INTO lesson_task_progress
+        (
+            user_id,
+            level,
+            lesson,
+            task_name,
+            completed
+        )
+        VALUES
+        (
+            %s,%s,%s,%s,TRUE
+        )
+        ON CONFLICT
+        (
+            user_id,
+            level,
+            lesson,
+            task_name
+        )
+        DO UPDATE SET
+            completed = TRUE,
+            completed_at = NOW()
+        """,
+        (
+            user_id,
+            level,
+            lesson,
+            task_name
+        )
+    )
+
+    # =====================================================
+    # USER NOTIFICATION
+    # =====================================================
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"✅ {task_name} tekshirildi.\n\n"
+            f"Natija: {score}/20"
+        )
+
+    except Exception:
+
+        pass
+
+    # =====================================================
+    # LESSON COMPLETED ?
+    # =====================================================
+
+    rows = db_execute(
+        """
+        SELECT task_name
+
+        FROM lesson_task_progress
+
+        WHERE user_id = %s
+        AND level = %s
+        AND lesson = %s
+        AND completed = TRUE
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchall=True
+    )
+
+    completed_tasks = {
+        row[0]
+        for row in rows
+    }
+
+    required_tasks = {
+
+        "Grammatik",
+
+        "Lesen",
+
+        "Horen",
+
+        "Schreiben",
+
+        "Sprechen"
+    }
+
+    if required_tasks.issubset(
+        completed_tasks
+    ):
+
+        db_execute(
+            """
+            INSERT INTO lesson_progress
+            (
+                user_id,
+                level,
+                lesson,
+                completed
+            )
+            VALUES
+            (
+                %s,%s,%s,TRUE
+            )
+            ON CONFLICT
+            (
+                user_id,
+                level,
+                lesson
+            )
+            DO UPDATE SET
+                completed = TRUE,
+                completed_at = NOW()
+            """,
+            (
+                user_id,
+                level,
+                lesson
+            )
+        )
+
+        try:
+
+            await bot.send_message(
+
+                user_id,
+
+                f"🎉 Unterricht {lesson} muvaffaqiyatli yakunlandi!\n\n"
+                f"✅ Keyingi dars ochildi."
+            )
+
+        except Exception:
+
+            pass
+
+    # =====================================================
+    # UPDATE ADMIN MESSAGE
+    # =====================================================
+
+    try:
+
+        await callback.message.edit_text(
+
+            callback.message.text +
+
+            f"\n\n✅ BAHOLANDI: {score}/20"
+        )
+
+    except Exception:
+
+        pass
+
+    await callback.answer(
+        "Ball saqlandi."
+    )
+# =========================================================
+# CHECK LESSON COMPLETED
+# =========================================================
+
+def check_lesson_completed(
+    user_id,
+    level,
+    lesson
+):
+
+    rows = db_execute(
+        """
+        SELECT task_name
+
+        FROM lesson_task_progress
+
+        WHERE user_id = %s
+        AND level = %s
+        AND lesson = %s
+        AND completed = TRUE
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        ),
+        fetchall=True
+    )
+
+    completed = {
+        row[0]
+        for row in rows
+    }
+
+    required = {
+
+        "Grammatik",
+
+        "Lesen",
+
+        "Horen",
+
+        "Schreiben",
+
+        "Sprechen"
+    }
+
+    return required.issubset(
+        completed
+    )
+# =========================================================
+# COMPLETE LESSON
+# =========================================================
+
+async def complete_lesson(
+    user_id,
+    level,
+    lesson
+):
+
+    db_execute(
+        """
+        INSERT INTO lesson_progress
+        (
+            user_id,
+            level,
+            lesson,
+            completed
+        )
+        VALUES
+        (
+            %s,%s,%s,TRUE
+        )
+        ON CONFLICT
+        (
+            user_id,
+            level,
+            lesson
+        )
+        DO UPDATE SET
+            completed = TRUE,
+            completed_at = NOW()
+        """,
+        (
+            user_id,
+            level,
+            lesson
+        )
+    )
+
+    try:
+
+        await bot.send_message(
+
+            user_id,
+
+            f"🎉 Unterricht {lesson} yakunlandi!\n\n"
+
+            f"✅ Keyingi dars ochildi."
+        )
+
+    except Exception:
+
+        pass
 # =========================================================
 # CHECK SUBSCRIPTION
 # =========================================================
@@ -6403,6 +7648,163 @@ def load_horen(
         level,
         lesson,
         teil
+    )
+
+# =========================================================
+# Send horen question
+# =========================================================
+async def send_horen_question(
+    message,
+    user_id
+):
+
+    progress = horen_progress[user_id]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    options = [
+
+        task["correct"],
+
+        task["wrong1"],
+
+        task["wrong2"]
+
+    ]
+
+    random.shuffle(
+        options
+    )
+
+    builder = InlineKeyboardBuilder()
+
+    for option in options:
+
+        builder.button(
+
+            text=option,
+
+            callback_data=
+            f"horen:{option}"
+        )
+
+    builder.adjust(1)
+
+    await message.answer(
+
+        f"🎧 Frage "
+        f"{progress['index'] + 1}"
+        f"/{len(progress['tasks'])}\n\n"
+
+        f"{task['question']}",
+
+        reply_markup=
+        builder.as_markup()
+    )
+
+# =========================================================
+# Save horen answer
+# =========================================================
+@dp.callback_query(
+    F.data.startswith(
+        "horen:"
+    )
+)
+async def horen_answer(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in horen_progress:
+        return
+
+    progress = horen_progress[
+        user_id
+    ]
+
+    answer = callback.data.split(
+        ":",
+        1
+    )[1]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    if answer == task["correct"]:
+
+        progress["score"] += 1
+
+        await callback.answer(
+            "✅ Richtig"
+        )
+
+    else:
+
+        await callback.answer(
+            f"❌ {task['correct']}"
+        )
+
+    progress["index"] += 1
+
+    if progress["index"] >= len(
+        progress["tasks"]
+    ):
+
+        db_execute(
+            """
+            INSERT INTO
+            lesson_task_progress
+            (
+                user_id,
+                level,
+                lesson,
+                task_name,
+                completed
+            )
+            VALUES
+            (
+                %s,%s,%s,%s,TRUE
+            )
+            ON CONFLICT
+            (
+                user_id,
+                level,
+                lesson,
+                task_name
+            )
+            DO UPDATE SET
+            completed = TRUE
+            """,
+            (
+                user_id,
+                progress["level"],
+                progress["lesson"],
+                "Horen"
+            )
+        )
+
+        await callback.message.answer(
+
+            f"🏁 Hören yakunlandi!\n\n"
+
+            f"Natija: "
+            f"{progress['score']}"
+            f"/{len(progress['tasks'])}"
+        )
+
+        del horen_progress[
+            user_id
+        ]
+
+        return
+
+    await send_horen_question(
+        callback.message,
+        user_id
     )
 # =========================================================
 # LOAD VIZU LESEN
