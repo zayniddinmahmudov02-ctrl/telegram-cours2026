@@ -1,27 +1,56 @@
 # =========================================================
-# STANDARD LIBRARY & DEPENDENCY IMPORTS
+# STANDARD LIBRARY IMPORTS
 # =========================================================
 import os
 import csv
+import uuid
 import random
 import logging
 import asyncio
-import uuid
 import qrcode
+
 from datetime import datetime, timedelta, date
 from contextlib import contextmanager
 from threading import Thread
-from typing import Optional
-# bot.py faylining eng yuqorisiga qo'shing:
-from aiogram import F
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile
+from typing import (
+    Optional,
+    Callable,
+    Dict,
+    Any,
+    Awaitable
+)
 
-# ReportLab
+# =========================================================
+# WEB & ENVIRONMENT
+# =========================================================
+from flask import Flask
+from dotenv import load_dotenv
+
+# =========================================================
+# DATABASE
+# =========================================================
+import psycopg2
+from psycopg2 import pool
+
+# =========================================================
+# IMAGE PROCESSING
+# =========================================================
+from PIL import (
+    Image,
+    ImageDraw,
+    ImageFont
+)
+
+# =========================================================
+# REPORTLAB
+# =========================================================
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet
+
 from reportlab.pdfgen import canvas
+
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -30,42 +59,67 @@ from reportlab.platypus import (
     TableStyle,
     Image as RLImage
 )
+
 # =========================================================
-# THIRD-PARTY IMPORTS
+# AIOGRAM
 # =========================================================
-# Web & Environment
-from flask import Flask
-from dotenv import load_dotenv
-
-# Imaging & Utilities
-from PIL import Image, ImageDraw, ImageFont
-import qrcode
-
-# Database
-import psycopg2
-from psycopg2 import pool
-
-# AIOGRAM (Guruhlangan)
-from aiogram import Bot, Dispatcher, F
-from aiogram.types import (
-    Message, ReplyKeyboardMarkup, KeyboardButton, 
-    InlineKeyboardMarkup, InlineKeyboardButton, 
-    CallbackQuery, FSInputFile, ReplyKeyboardRemove
+from aiogram import (
+    Bot,
+    Dispatcher,
+    F,
+    BaseMiddleware
 )
-from aiogram.filters import CommandStart, Command, StateFilter
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.context import FSMContext
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-# Logging sozlamalari
+
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    FSInputFile,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardRemove,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
+
+from aiogram.filters import (
+    CommandStart,
+    Command,
+    StateFilter
+)
+
+from aiogram.fsm.storage.memory import (
+    MemoryStorage
+)
+
+from aiogram.fsm.state import (
+    State,
+    StatesGroup
+)
+
+from aiogram.fsm.context import (
+    FSMContext
+)
+
+from aiogram.utils.keyboard import (
+    InlineKeyboardBuilder
+)
+from aiogram import BaseMiddleware
+from typing import Callable, Dict, Any, Awaitable
+# =========================================================
+# LOGGING
+# =========================================================
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-# Konfiguratsiya o'zgaruvchilari
+
+# =========================================================
+# CONFIGURATION
+# =========================================================
 GENERATED_DIR = "generated"
 CERTIFICATE_DIR = "certificates"
-TOTAL_WORDS = 5555 
+TOTAL_WORDS = 5555
+
 # =========================================================
-# ENV & CONFIGURATION
+# ENV VARIABLES
 # =========================================================
 load_dotenv()
 
@@ -76,15 +130,16 @@ ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 ADMIN_CHANNEL_ID = int(os.getenv("ADMIN_CHANNEL_ID", "0"))
 
-# Xavfsizlik tekshiruvi
+CHANNEL_USERNAME = "@vizu_deutsch"
+
+# =========================================================
+# SECURITY CHECK
+# =========================================================
 if not TOKEN:
     raise ValueError("TOKEN topilmadi")
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL topilmadi")
-
-CHANNEL_USERNAME = "@vizu_deutsch"
-
 # =========================================================
 # COURSE LINKS
 # =========================================================
@@ -511,14 +566,13 @@ def get_existing_certificate(user_id, rank):
         fetchone=True
     )
 
-# Agar save_certificate yoki send_admin_photo_log funksiyalaringiz bo'lsa,
-# ularni ham shu yerga yoki faylning teparoq qismiga joylashtiring.
 # =========================================================
 # BOT INSTANCE & STORAGE
 # =========================================================
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+
 
 # =========================================================
 # STATES GROUP
@@ -1135,33 +1189,11 @@ async def lesson_handler(
             message.text.split()[-1]
         )
 
-        row = db_execute(
-            """
-            SELECT course
-
-            FROM users
-
-            WHERE user_id = %s
-            """,
-            (user_id,),
-            fetchone=True
+        # FOYDALANUVCHI TANLAGAN LEVEL
+        level = selected_levels.get(
+            user_id,
+            "A1"
         )
-
-        if row and row[0]:
-
-            levels = get_available_levels(
-                row[0]
-            )
-
-            level = (
-                levels[0]
-                if levels
-                else "A1"
-            )
-
-        else:
-
-            level = "A1"
 
         # ACTIVE LESSON
         active_lessons[user_id] = {
@@ -1197,6 +1229,220 @@ async def lesson_handler(
             "❌ Darsni ochishda xatolik."
         )
 # =========================================================
+# START GRAMMATIK
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("start_Grammatik_")
+)
+async def start_grammatik(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in active_lessons:
+
+        await callback.answer(
+            "Dars topilmadi."
+        )
+
+        return
+
+    level = active_lessons[user_id]["level"]
+
+    lesson = active_lessons[user_id]["lesson"]
+
+    tasks = load_grammatik(
+        level,
+        lesson
+    )
+
+    if not tasks:
+
+        await callback.answer(
+            "Grammatik topilmadi."
+        )
+
+        return
+
+    grammatik_progress[user_id] = {
+
+        "level": level,
+
+        "lesson": lesson,
+
+        "tasks": tasks,
+
+        "index": 0,
+
+        "score": 0
+    }
+
+    await callback.message.answer(
+        f"📚 Grammatik\n\n"
+        f"Jami savollar: {len(tasks)}"
+    )
+
+    await send_grammatik_question(
+        callback.message,
+        user_id
+    )
+
+    await callback.answer()
+# =========================================================
+# SEND GRAMMATIK QUESTION
+# =========================================================
+
+async def send_grammatik_question(
+    message,
+    user_id
+):
+
+    progress = grammatik_progress[
+        user_id
+    ]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    options = [
+
+        task["correct"],
+
+        task["wrong1"],
+
+        task["wrong2"]
+
+    ]
+
+    random.shuffle(
+        options
+    )
+
+    builder = InlineKeyboardBuilder()
+
+    for option in options:
+
+        builder.button(
+
+            text=option,
+
+            callback_data=
+            f"grammatik_answer:{option}"
+        )
+
+    builder.adjust(1)
+
+    await message.answer(
+
+        f"📚 Savol "
+        f"{progress['index'] + 1}"
+        f"/{len(progress['tasks'])}\n\n"
+
+        f"{task['question']}",
+
+        reply_markup=
+        builder.as_markup()
+    )
+# =========================================================
+# GRAMMATIK ANSWER
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith(
+        "grammatik_answer:"
+    )
+)
+async def grammatik_answer(
+    callback: CallbackQuery
+):
+
+    user_id = callback.from_user.id
+
+    if user_id not in grammatik_progress:
+
+        return
+
+    progress = grammatik_progress[
+        user_id
+    ]
+
+    answer = callback.data.split(
+        ":",
+        1
+    )[1]
+
+    task = progress["tasks"][
+        progress["index"]
+    ]
+
+    if answer == task["correct"]:
+
+        progress["score"] += 1
+
+        await callback.answer(
+            "✅ To'g'ri"
+        )
+
+    else:
+
+        await callback.answer(
+            f"❌ {task['correct']}"
+        )
+
+    progress["index"] += 1
+
+    if progress["index"] >= len(
+        progress["tasks"]
+    ):
+
+        db_execute(
+            """
+            INSERT INTO
+            lesson_task_progress
+            (
+                user_id,
+                level,
+                lesson,
+                task_name,
+                completed
+            )
+            VALUES
+            (
+                %s,%s,%s,%s,TRUE
+            )
+            ON CONFLICT DO NOTHING
+            """,
+            (
+                user_id,
+                progress["level"],
+                progress["lesson"],
+                "Grammatik"
+            )
+        )
+
+        await callback.message.answer(
+
+            f"🏁 Grammatik yakunlandi!\n\n"
+
+            f"Natija: "
+            f"{progress['score']}"
+            f"/{len(progress['tasks'])}"
+        )
+
+        del grammatik_progress[
+            user_id
+        ]
+
+        return
+
+    await send_grammatik_question(
+        callback.message,
+        user_id
+    )
+    # =========================================================
 # CHECK SUBSCRIPTION
 # =========================================================
 
@@ -1204,20 +1450,163 @@ async def check_subscription(
     user_id: int
 ) -> bool:
     try:
+
         member = await bot.get_chat_member(
             CHANNEL_USERNAME,
             user_id
         )
+
         return member.status not in (
             "left",
             "kicked"
         )
+
     except Exception as e:
+
         logger.error(
             f"Subscription error: {e}"
         )
+
         return False
 
+
+# =========================================================
+# SUBSCRIPTION MIDDLEWARE
+# =========================================================
+
+class SubscriptionMiddleware(BaseMiddleware):
+
+    async def __call__(
+        self,
+        handler: Callable,
+        event,
+        data: Dict[str, Any]
+    ):
+
+        if not getattr(
+            event,
+            "from_user",
+            None
+        ):
+            return await handler(
+                event,
+                data
+            )
+
+        # ADMIN BYPASS
+        if event.from_user.id == ADMIN_ID:
+            return await handler(
+                event,
+                data
+            )
+
+        # /start
+        if isinstance(
+            event,
+            Message
+        ):
+
+            if (
+                event.text
+                and
+                event.text.startswith(
+                    "/start"
+                )
+            ):
+                return await handler(
+                    event,
+                    data
+                )
+
+        # CHECK SUB CALLBACK
+        if isinstance(
+            event,
+            CallbackQuery
+        ):
+
+            if event.data == "check_sub":
+                return await handler(
+                    event,
+                    data
+                )
+
+        subscribed = await check_subscription(
+            event.from_user.id
+        )
+
+        if not subscribed:
+
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="📢 Kanalga A'zo Bo'lish",
+                            url="https://t.me/vizu_deutsch"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="✅ Tekshirish",
+                            callback_data="check_sub"
+                        )
+                    ]
+                ]
+            )
+
+            text = (
+                "❌ Botdan foydalanish uchun "
+                "avval kanalga a'zo bo'ling."
+            )
+
+            try:
+
+                if isinstance(
+                    event,
+                    Message
+                ):
+
+                    await event.answer(
+                        text,
+                        reply_markup=keyboard
+                    )
+
+                elif isinstance(
+                    event,
+                    CallbackQuery
+                ):
+
+                    await event.message.answer(
+                        text,
+                        reply_markup=keyboard
+                    )
+
+                    await event.answer()
+
+            except Exception as e:
+
+                logger.error(
+                    f"Subscription middleware error: {e}"
+                )
+
+            return
+
+        return await handler(
+            event,
+            data
+        )
+
+
+# =========================================================
+# GLOBAL SUBSCRIPTION PROTECTION
+# =========================================================
+
+dp.message.middleware(
+    SubscriptionMiddleware()
+)
+
+dp.callback_query.middleware(
+    SubscriptionMiddleware()
+)
 # =========================================================
 # ADMIN TEXT LOG
 # =========================================================
@@ -1770,7 +2159,7 @@ async def xp_rating(message: Message):
         FROM users
         WHERE approved = 1
         ORDER BY total_score DESC
-        LIMIT 50
+        LIMIT 100
         """,
         fetchall=True
     )
@@ -5311,25 +5700,64 @@ async def lessons_home(message: Message):
         "Darajani tanlang:",
         reply_markup=build_lessons_menu(levels)
     )
-
 # =========================================================
 # LEVEL HANDLERS
 # =========================================================
 
-@dp.message(F.text.in_({"📘 A1", "📘 A2", "📘 B1", "📘 B2", "📘 C1"}))
-async def level_lessons(message: Message):
-    level = message.text.replace("📘 ", "").strip()
-    user_id = message.from_user.id
+@dp.message(
+    F.text.in_(
+        {
+            "📘 A1",
+            "📘 A2",
+            "📘 B1",
+            "📘 B2",
+            "📘 C1"
+        }
+    )
+)
+async def level_lessons(
+    message: Message
+):
 
-    unlocked = get_unlocked_lesson(user_id, level)
-    exam_passed = is_final_exam_passed(user_id, level)
-
-    await message.answer(
-        f"🇩🇪 {level} Darajasi\n\n"
-        f"Darsni tanlang:",
-        reply_markup=build_level_lessons_menu(level, unlocked, exam_passed)
+    level = (
+        message.text
+        .replace("📘 ", "")
+        .strip()
     )
 
+    user_id = (
+        message.from_user.id
+    )
+
+    # ACTIVE LEVEL SAVE
+    selected_levels[
+        user_id
+    ] = level
+
+    unlocked = get_unlocked_lesson(
+        user_id,
+        level
+    )
+
+    exam_passed = (
+        is_final_exam_passed(
+            user_id,
+            level
+        )
+    )
+
+    await message.answer(
+
+        f"🇩🇪 {level} Darajasi\n\n"
+        f"Darsni tanlang:",
+
+        reply_markup=
+        build_level_lessons_menu(
+            level,
+            unlocked,
+            exam_passed
+        )
+    )
 # =========================
 # AI TEACHER
 # =========================
@@ -5340,11 +5768,6 @@ async def ai_teacher_menu(message: Message):
         "🤖 AI Teacher\n\n"
         "🚧 Tez orada ishga tushadi."
     )
-
-
-# =========================================================
-# ADVANCED CEFR QUIZ ENGINE
-# =========================================================
 
 # =========================================================
 # GLOBALS
@@ -5366,6 +5789,16 @@ vizu_horen_questions = []
 vizu_horen_progress = {}
 vizu_sprechen_progress = {}
 vizu_mock_deadlines = {}
+# =========================================================
+# ACTIVE LEVELS
+# =========================================================
+
+selected_levels = {}
+# =========================================================
+# GRAMMATIK PROGRESS
+# =========================================================
+
+grammatik_progress = {}
 # =========================================================
 # LESSON QUIZ SYSTEM
 # =========================================================
@@ -5488,43 +5921,178 @@ def load_all_quizzes():
             logger.error(f"{level} load failed: {e}")
     logger.info("All quizzes loaded ✅")
 
-
 # =========================================================
-# LOAD LESSON CSV
+# UNIVERSAL CSV LOADER
+# Grammatik.csv
+# Lesen.csv
+# Hören.csv
 # =========================================================
 
-def load_lesson_csv(filename, lesson):
+def load_tasks(
+    filename,
+    level,
+    lesson,
+    teil=None
+):
+
     data = []
 
-    if not os.path.exists(filename):
+    filepath = os.path.join(
+        "A1-C1-Level",
+        filename
+    )
+
+    if not os.path.exists(filepath):
+
+        logger.error(
+            f"CSV FILE NOT FOUND: {filepath}"
+        )
+
         return []
 
     try:
-        with open(filename, "r", encoding="utf-8") as f:
+
+        with open(
+            filepath,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
             reader = csv.DictReader(f)
 
             for row in reader:
+
                 try:
-                    # Kalit so'zlar borligini va satr butunligini xavfsiz tekshirish
-                    if not row.get("lesson") or not row.get("task_id"):
+
+                    if (
+                        not row.get("level")
+                        or not row.get("lesson")
+                        or not row.get("task_id")
+                    ):
                         continue
-                        
-                    if int(row["lesson"]) != lesson:
+
+                    if (
+                        row["level"].strip()
+                        != level
+                    ):
+                        continue
+
+                    if (
+                        int(row["lesson"])
+                        != lesson
+                    ):
+                        continue
+
+                    if (
+                        teil is not None
+                        and
+                        int(row["teil"])
+                        != teil
+                    ):
                         continue
 
                     data.append({
-                        "id": int(row["task_id"]),
-                        "question": row.get("question", "").strip(),
-                        "correct": row.get("correct", "").strip(),
-                        "wrong1": row.get("wrong1", "").strip(),
-                        "wrong2": row.get("wrong2", "").strip()
+
+                        "task_id":
+                            int(
+                                row["task_id"]
+                            ),
+
+                        "question":
+                            row.get(
+                                "question",
+                                ""
+                            ).strip(),
+
+                        "correct":
+                            row.get(
+                                "correct",
+                                ""
+                            ).strip(),
+
+                        "wrong1":
+                            row.get(
+                                "wrong1",
+                                ""
+                            ).strip(),
+
+                        "wrong2":
+                            row.get(
+                                "wrong2",
+                                ""
+                            ).strip(),
+
+                        "type":
+                            row.get(
+                                "type",
+                                "test"
+                            ).strip()
                     })
+
                 except Exception as e:
-                    logger.error(f"Lesson CSV row parsed error: {e}")
+
+                    logger.error(
+                        f"CSV ROW ERROR: {e}"
+                    )
+
     except Exception as e:
-        logger.error(f"Lesson CSV file read error: {e}")
+
+        logger.error(
+            f"CSV LOAD ERROR: {e}"
+        )
 
     return data
+
+
+# =========================================================
+# GRAMMATIK LOADER
+# =========================================================
+
+def load_grammatik(
+    level,
+    lesson,
+    teil=None
+):
+    return load_tasks(
+        "Grammatik.csv",
+        level,
+        lesson,
+        teil
+    )
+
+
+# =========================================================
+# LESEN LOADER
+# =========================================================
+
+def load_lesen(
+    level,
+    lesson,
+    teil=None
+):
+    return load_tasks(
+        "Lesen.csv",
+        level,
+        lesson,
+        teil
+    )
+
+
+# =========================================================
+# HÖREN LOADER
+# =========================================================
+
+def load_horen(
+    level,
+    lesson,
+    teil=None
+):
+    return load_tasks(
+        "Horen.csv",
+        level,
+        lesson,
+        teil
+    )
 # =========================================================
 # LOAD VIZU LESEN
 # =========================================================
@@ -5565,6 +6133,7 @@ def load_vizu_lesen():
         logger.error(
             f"VIZU Lesen load error: {e}"
         )
+
 # =========================================================
 # LOAD VIZU HOREN
 # =========================================================
@@ -6048,6 +6617,7 @@ def build_block_keyboard(level, user_id):
         keyboard=rows,
         resize_keyboard=True
     )
+
 # =========================================================
 # OPEN WORD GAME
 # =========================================================
@@ -6952,9 +7522,9 @@ async def _get_ranking_text(
     )
 
     title = (
-        "🏆 TOP 50 UMUMIY REYTING"
+        "🏆 TOP 100 UMUMIY REYTING"
         if query_type == "total"
-        else "⚡ TOP 50 KUNLIK REYTING"
+        else "⚡ TOP 100 KUNLIK REYTING"
     )
 
     rankings = db_execute(
@@ -6965,7 +7535,7 @@ async def _get_ranking_text(
         FROM users
         WHERE {col} > 0
         ORDER BY {col} DESC
-        LIMIT 50
+        LIMIT 100
         """,
         fetchall=True
     )
