@@ -4,14 +4,12 @@
 import os
 import csv
 import uuid
-import random
-import logging
-import asyncio
+import hmac
 import random
 import hashlib
-import hmac
-
-logger = logging.getLogger(__name__)
+import logging
+import asyncio
+import qrcode
 from datetime import datetime, timedelta, date
 from contextlib import contextmanager
 from threading import Thread
@@ -20,6 +18,7 @@ from typing import (
     Callable,
     Dict,
     Any,
+    Awaitable
 )
 
 # =========================================================
@@ -105,8 +104,7 @@ from aiogram.fsm.context import (
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder
 )
-from aiogram import BaseMiddleware
-from typing import Callable, Dict, Any, Awaitable
+
 # =========================================================
 # LOGGING
 # =========================================================
@@ -237,7 +235,7 @@ lesen_progress = {}
 # HOREN PROGRESS
 # =========================================================
 
-hören_progress = {}
+horen_progress = {}
 
 LESSON_QUIZ_DATA = {}
 lesson_quiz_sessions = {}
@@ -399,73 +397,58 @@ def init_w_certificates_table():
             UNIQUE (user_id, level, lesson, task_name)
         )
     """)
-# =========================================================
-# LESSON SCORES
-# =========================================================
-
-db_execute("""
-    CREATE TABLE IF NOT EXISTS lesson_scores (
-        id SERIAL PRIMARY KEY,
-
-        user_id BIGINT NOT NULL,
-
-        level TEXT NOT NULL,
-
-        lesson INTEGER NOT NULL,
-
-        task_name TEXT NOT NULL,
-
-        score INTEGER DEFAULT 0,
-
-        rated_by BIGINT,
-
-        rated_at TIMESTAMP DEFAULT NOW(),
-
-        UNIQUE (
-            user_id,
-            level,
-            lesson,
-            task_name
+def init_lesson_scores_and_indexes():
+    """Module yuklanishida emas, init vaqtida chaqiriladi."""
+    # LESSON SCORES
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS lesson_scores (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            level TEXT NOT NULL,
+            lesson INTEGER NOT NULL,
+            task_name TEXT NOT NULL,
+            score INTEGER DEFAULT 0,
+            rated_by BIGINT,
+            rated_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE (user_id, level, lesson, task_name)
         )
-    )
-""")
-# LEVEL EXAMS
-db_execute("""
-    CREATE TABLE IF NOT EXISTS level_exams (
-        id SERIAL PRIMARY KEY,
-        user_id BIGINT NOT NULL,
-        level TEXT NOT NULL,
-        score INTEGER DEFAULT 0,
-        final_exam_passed BOOLEAN DEFAULT FALSE,
-        passed_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE (user_id, level)
-    )
-""")
-# LESSON ANSWERS
-db_execute("""
-    CREATE TABLE IF NOT EXISTS lesson_answers (
-        id SERIAL PRIMARY KEY,
-        user_id BIGINT NOT NULL,
-        level TEXT NOT NULL,
-        lesson INTEGER NOT NULL,
-        task_type TEXT,
-        answer_text TEXT,
-        answer_file TEXT,
-        checked BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT NOW()
-    )
-""")
-
-# QUIZ PROGRESS
-db_execute("""
-    CREATE TABLE IF NOT EXISTS quiz_progress (
-        user_id BIGINT NOT NULL,
-        level TEXT NOT NULL,
-        block_number INTEGER NOT NULL,
-        best_score INTEGER DEFAULT 0,
-        PRIMARY KEY (user_id, level, block_number)
-    )
-""")
+    """)
+    # LEVEL EXAMS
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS level_exams (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            level TEXT NOT NULL,
+            score INTEGER DEFAULT 0,
+            final_exam_passed BOOLEAN DEFAULT FALSE,
+            passed_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE (user_id, level)
+        )
+    """)
+    # LESSON ANSWERS
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS lesson_answers (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            level TEXT NOT NULL,
+            lesson INTEGER NOT NULL,
+            task_type TEXT,
+            answer_text TEXT,
+            answer_file TEXT,
+            checked BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+    # QUIZ PROGRESS
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS quiz_progress (
+            user_id BIGINT NOT NULL,
+            level TEXT NOT NULL,
+            block_number INTEGER NOT NULL,
+            best_score INTEGER DEFAULT 0,
+            PRIMARY KEY (user_id, level, block_number)
+        )
+    """)
 # =========================================================
 # VIZU ATTEMPTS TABLE
 # =========================================================
@@ -1114,7 +1097,7 @@ async def back_to_main_menu(
 # =========================================================
 # GLOBAL CONSTANTS
 # =========================================================
-LESSON_TASKS = ["Grammatik", "Lesen", "Hören", "Schreiben", "Sprechen"]
+LESSON_TASKS = ["Grammatik", "Lesen", "Horen", "Schreiben", "Sprechen"]
 
 # Har bir daraja uchun darslar nomini dinamik hosil qilish uchun 
 # bazaviy raqamlarni saqlaymiz
@@ -1647,7 +1630,7 @@ async def repeat_task(callback: CallbackQuery):
     tasks_map = {
         "Grammatik": (load_grammatik, grammatik_progress, send_grammatik_question),
         "Lesen": (load_lesen, lesen_progress, send_lesson_lesen_question),
-        "ören": (load_hören, hören_progress, send_lesson_hören_question),
+        "Horen": (load_horen, horen_progress, send_lesson_horen_question),
     }
 
     if task_name not in tasks_map:
@@ -2111,26 +2094,26 @@ async def lesen_answer(
 # HOREN FILE HELPERS
 # =========================================================
 
-def get_lesson_hören_audio(
+def get_horen_audio(
     level,
     lesson
 ):
 
     return os.path.join(
         "A1-C1-Level",
-        "hören_audio",
+        "horen_audio",
         f"{level}-{lesson}.mp3"
     )
 
 
-def get_hören_photo(
+def get_horen_photo(
     level,
     lesson
 ):
 
     return os.path.join(
         "A1-C1-Level",
-        "hören_photo",
+        "horen_photo",
         f"{level}-{lesson}.png"
     )
 
@@ -2161,16 +2144,13 @@ def verify_answer_token(user_id: int, index: int, correct: str, token: str) -> b
 
 
 # =========================================================
-# START HÖREN
+# START HOREN
 # =========================================================
-@dp.callback_query(
-    F.data.startswith("start_Hören_")
-)
-async def start_hören(callback: CallbackQuery):
 
-    # log callback info here (callback is only defined inside handler)
-    logger.warning(f"[HÖREN] CLICKED: {callback.data}")
-    logger.warning(f"[HÖREN] USER: {callback.from_user.id}")
+@dp.callback_query(
+    F.data.startswith("start_Horen_")
+)
+async def start_horen(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
@@ -2212,13 +2192,13 @@ async def start_hören(callback: CallbackQuery):
         return
 
     # --- Savollarni yuklash ---
-    tasks = load_hören(level, lesson)
+    tasks = load_horen(level, lesson)
     if not tasks:
         await callback.answer("Horen topilmadi.", show_alert=True)
         return
 
     # --- Progressni saqlash ---
-    hören_progress[user_id] = {
+    horen_progress[user_id] = {
         "level":  level,
         "lesson": lesson,
         "tasks":  tasks,
@@ -2227,18 +2207,18 @@ async def start_hören(callback: CallbackQuery):
     }
 
     # --- Audio yuborish ---
-    audio_path = get_hören_audio(level, lesson)
+    audio_path = get_horen_audio(level, lesson)
     if os.path.exists(audio_path):
         await callback.message.answer_audio(
             audio=FSInputFile(audio_path),
             caption=(
-                f"🎧 Hören\n\n"
+                f"🎧 Horen\n\n"
                 f"🇩🇪 {level} | Unterricht {lesson}"
             )
         )
 
     # --- Rasm yuborish ---
-    photo_path = get_hören_photo(level, lesson)
+    photo_path = get_horen_photo(level, lesson)
     if os.path.exists(photo_path):
         await callback.message.answer_photo(FSInputFile(photo_path))
 
@@ -2259,13 +2239,13 @@ async def start_hören(callback: CallbackQuery):
 # SAVOL YUBORISH (ichki funksiya)
 # =========================================================
 
-async def send_lesson_hören_question(message, user_id: int):
+async def send_lesson_horen_question(message, user_id: int):
     """
     Joriy savolni shuffled variantlar bilan yuboradi.
-    Har bir tugma callback_data = "hören:{token}:{option}" ko'rinishida.
+    Har bir tugma callback_data = "horen:{token}:{option}" ko'rinishida.
     Token serverda tekshiriladi — foydalanuvchi soxta javob yubora olmaydi.
     """
-    progress = hören_progress.get(user_id)
+    progress = horen_progress.get(user_id)
     if not progress:
         await message.answer("❌ Sessiya topilmadi. Qaytadan boshlang.")
         return
@@ -2274,9 +2254,9 @@ async def send_lesson_hören_question(message, user_id: int):
 
     # Chegaradan chiqib ketishdan himoya
     if index >= len(progress["tasks"]):
-        logger.warning(f"[HÖREN] user={user_id} index={index} out of range")
+        logger.warning(f"[HOREN] user={user_id} index={index} out of range")
         await message.answer("❌ Ichki xatolik. Qaytadan boshlang.")
-        hören_progress.pop(user_id, None)
+        horen_progress.pop(user_id, None)
         return
 
     task = progress["tasks"][index]
@@ -2292,7 +2272,7 @@ async def send_lesson_hören_question(message, user_id: int):
     for option in options:
         builder.button(
             text=option,
-            callback_data=f"hören:{token}:{option}"
+            callback_data=f"horen:{token}:{option}"
         )
     builder.adjust(1)
 
@@ -2307,12 +2287,12 @@ async def send_lesson_hören_question(message, user_id: int):
 # JAVOB QABUL QILISH
 # =========================================================
 
-@dp.callback_query(F.data.startswith("hören:"))
-async def hören_answer(callback: CallbackQuery):
+@dp.callback_query(F.data.startswith("horen:"))
+async def horen_answer(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    progress = hören_progress.get(user_id)
+    progress = horen_progress.get(user_id)
     if not progress:
         await callback.answer("❌ Sessiya topilmadi.", show_alert=True)
         return
@@ -2338,11 +2318,11 @@ async def hören_answer(callback: CallbackQuery):
     # --- Token tekshiruvi (soxtalashtirish oldini olish) ---
     if not verify_answer_token(user_id, index, correct, received_token):
         logger.warning(
-            f"[HÖREN] Invalid token: user={user_id} "
+            f"[HOREN] Invalid token: user={user_id} "
             f"index={index} option={chosen_option!r}"
         )
         await callback.answer("❌ Token xatosi. Qaytadan boshlang.", show_alert=True)
-        hören_progress.pop(user_id, None)
+        horen_progress.pop(user_id, None)
         return
 
     # --- Javobni baholash ---
@@ -2373,10 +2353,10 @@ async def hören_answer(callback: CallbackQuery):
                 ON CONFLICT (user_id, level, lesson, task_name)
                 DO UPDATE SET completed = TRUE
                 """,
-                (user_id, level, lesson, "Hören")
+                (user_id, level, lesson, "Horen")
             )
         except Exception as e:
-            logger.exception(f"[HÖREN] DB write error: {e}")
+            logger.exception(f"[HOREN] DB write error: {e}")
 
         await callback.message.answer(
             f"🏁 Hören yakunlandi!\n\n"
@@ -2384,37 +2364,37 @@ async def hören_answer(callback: CallbackQuery):
         )
 
         # Sessiyani tozalash
-        hören_progress.pop(user_id, None)
+        horen_progress.pop(user_id, None)
         return
 
     # --- Keyingi savol ---
-    await send_lesson_hören_question(callback.message, user_id)
+    await send_lesson_horen_question(callback.message, user_id)
 
 
 # =========================================================
 # BOSHLASH TUGMASI
 # =========================================================
 
-@dp.callback_query(F.data == "begin_hören")
-async def begin_hören(callback: CallbackQuery):
+@dp.callback_query(F.data == "begin_horen")
+async def begin_horen(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    if user_id not in hören_progress:
+    if user_id not in horen_progress:
         await callback.answer(
-            "❌ Hören sessiyasi topilmadi. Qaytadan boshlang.",
+            "❌ Horen sessiyasi topilmadi. Qaytadan boshlang.",
             show_alert=True
         )
         return
 
     try:
-        await send_lesson_hören_question(callback.message, user_id)
+        await send_lesson_horen_question(callback.message, user_id)
     except Exception as e:
-        logger.exception(f"[HÖREN] begin_hören error: {e}")
+        logger.exception(f"[HOREN] begin_horen error: {e}")
         await callback.message.answer(
             "❌ Xatolik yuz berdi. Qaytadan urinib ko'ring."
         )
-        hören_progress.pop(user_id, None)
+        horen_progress.pop(user_id, None)
         return
 
     await callback.answer()
@@ -2980,7 +2960,7 @@ async def rate_task(
 
         "Lesen",
 
-        "Hören",
+        "Horen",
 
         "Schreiben",
 
@@ -3095,7 +3075,7 @@ def check_lesson_completed(
 
         "Lesen",
 
-        "Hören",
+        "Horen",
 
         "Schreiben",
 
@@ -3964,18 +3944,23 @@ async def vizu_certificate_level_handler(
 
         return
 
+    ALLOWED_ACCESS_COLUMNS = {
+        "vizu_a1_access", "vizu_a2_access", "vizu_b1_access",
+        "vizu_b2_access", "vizu_c1_access"
+    }
+
     access_column = (
         certificate.lower()
         .replace("-", "_")
         + "_access"
     )
 
+    if access_column not in ALLOWED_ACCESS_COLUMNS:
+        await message.answer("❌ Noto'g'ri sertifikat turi.")
+        return
+
     row = db_execute(
-        f"""
-        SELECT {access_column}
-        FROM users
-        WHERE user_id = %s
-        """,
+        f"SELECT {access_column} FROM users WHERE user_id = %s",
         (message.from_user.id,),
         fetchone=True
     )
@@ -4004,15 +3989,10 @@ async def vizu_certificate_level_handler(
         )
 
         await message.answer(
-
             f"🏅 {certificate}\n\n"
-
             f"✅ Sizda ruxsat mavjud.\n\n"
-
             f"🚀 Mock Testni boshlashingiz mumkin.",
-
             reply_markup=keyboard
-
         )
 
     else:
@@ -4035,86 +4015,17 @@ async def vizu_certificate_level_handler(
         )
 
         await message.answer(
-
-            f"🏅 {certificate}\n\n"
-
-            f"❌ Sizda ruxsat mavjud emas.\n\n"
-
-            f"💳 To'lov qiling yoki Golden Ticket yuboring.",
-
+            f"🏅 {certificate} Mock Test\n\n"
+            f"📚 Lesen\n"
+            f"🎧 Hören\n"
+            f"✍️ Schreiben\n"
+            f"🗣 Sprechen\n\n"
+            f"💰 Imtihon narxi: 20 000 so'm\n\n"
+            f"🎟 Golden Ticket egalari "
+            f"imtihonni bepul topshirishlari mumkin.\n\n"
+            f"👇 Davom etish usulini tanlang:",
             reply_markup=keyboard
-
         )
-    # =====================================
-    # ACCESS OPEN
-    # =====================================
-
-    if has_access:
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="🚀 Mock Testni Boshlash",
-                        callback_data=f"startvizu:{certificate}"
-                    )
-                ]
-            ]
-        )
-
-        await message.answer(
-
-            f"🏅 {certificate}\n\n"
-
-            f"✅ Sizning to'lovingiz tasdiqlangan.\n\n"
-
-            f"🚀 Mock Testni boshlashingiz mumkin.",
-
-            reply_markup=keyboard
-
-        )
-
-        return
-
-    # =====================================
-    # PAYMENT MENU
-    # =====================================
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="💳 To'lov Qilish",
-                    callback_data=f"vizupay:{certificate}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🎟 Golden Ticket",
-                    callback_data=f"vizuticket:{certificate}"
-                )
-            ]
-        ]
-    )
-
-    await message.answer(
-
-        f"🏅 {certificate} Mock Test\n\n"
-
-        f"📚 Lesen\n"
-        f"🎧 Hören\n"
-        f"✍️ Schreiben\n"
-        f"🗣 Sprechen\n\n"
-
-        f"💰 Imtihon narxi: 20 000 so'm\n\n"
-
-        f"🎟 Golden Ticket egalari "
-        f"imtihonni bepul topshirishlari mumkin.\n\n"
-
-        f"👇 Davom etish usulini tanlang:",
-
-        reply_markup=keyboard
-    )
 # =========================================================
 # VIZU PAYMENT START
 # =========================================================
@@ -5252,20 +5163,20 @@ async def start_horen(
 # HOREN AUDIO & IMAGE HELPERS
 # =========================================================
 
-def get_hören_audio(task):
+def get_horen_audio(task):
     task = int(task)
     if task <= 6: return "VIZU-A1/Hören-audio/hören-teil1.mp3"
     elif task <= 10: return "VIZU-A1/Hören-audio/hören-teil2.mp3"
     else: return "VIZU-A1/Hören-audio/hören-teil3.mp3"
 
-def get_hören_image(task):
+def get_horen_image(task):
     task = int(task)
     if task <= 3: return "VIZU-A1/Hören-photo/hören-teil1.png"
     elif task <= 6: return "VIZU-A1/Hören-photo/hören-teil1.2.png"
     elif task <= 10: return "VIZU-A1/Hören-photo/hören-teil2.png"
     else: return "VIZU-A1/Hören-photo/hören-teil3.png"
 # =========================================================
-# SEND HÖREN QUESTION
+# SEND HOREN QUESTION
 # =========================================================
 
 async def send_horen_question(
@@ -5435,7 +5346,7 @@ async def send_horen_question(
     await message.answer_photo(
 
         photo=FSInputFile(
-            get_hören_image(task)
+            get_horen_image(task)
         ),
 
         caption=(
@@ -7600,6 +7511,9 @@ def load_all_quizzes():
 
 # =========================================================
 # UNIVERSAL CSV LOADER
+# Grammatik.csv
+# Lesen.csv
+# Hören.csv
 # =========================================================
 
 def load_tasks(
@@ -7790,13 +7704,13 @@ def get_lesen_image(
 # HÖREN LOADER
 # =========================================================
 
-def load_hören(
+def load_horen(
     level,
     lesson,
     teil=None
 ):
     return load_tasks(
-        "Hören.csv",
+        "Horen.csv",
         level,
         lesson,
         teil
