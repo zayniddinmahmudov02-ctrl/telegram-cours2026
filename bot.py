@@ -8,7 +8,13 @@ import random
 import logging
 import asyncio
 import qrcode
+import os
+import random
+import hashlib
+import hmac
+import logging
 
+logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta, date
 from contextlib import contextmanager
 from threading import Thread
@@ -2109,7 +2115,7 @@ async def lesen_answer(
 # HOREN FILE HELPERS
 # =========================================================
 
-def get_horen_audio(
+def get_lesson_horen_audio(
     level,
     lesson
 ):
@@ -2131,69 +2137,71 @@ def get_horen_photo(
         "horen_photo",
         f"{level}-{lesson}.png"
     )
+
+
+# =========================================================
+# HELPER: answer index hash (oldini olish uchun)
+# =========================================================
+
+SECRET_KEY = os.environ.get("BOT_SECRET_KEY", "change_this_in_production")
+
+
+def make_answer_token(user_id: int, index: int, correct: str) -> str:
+    """
+    Foydalanuvchi to'g'ri javobni callback_data orqali soxtalashtira
+    olmasligi uchun HMAC token yaratadi.
+    """
+    raw = f"{user_id}:{index}:{correct}"
+    return hmac.new(
+        SECRET_KEY.encode(),
+        raw.encode(),
+        hashlib.sha256
+    ).hexdigest()[:16]
+
+
+def verify_answer_token(user_id: int, index: int, correct: str, token: str) -> bool:
+    expected = make_answer_token(user_id, index, correct)
+    return hmac.compare_digest(expected, token)
+
+
 # =========================================================
 # START HOREN
 # =========================================================
 
 @dp.callback_query(
-    F.data.startswith(
-        "start_Horen_"
-    )
+    F.data.startswith("start_Horen_")
 )
-async def start_horen(
-    callback: CallbackQuery
-):
+async def start_horen(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    if user_id not in active_lessons:
-
-        await callback.answer(
-            "Dars topilmadi."
-        )
+    # --- Aktiv dars tekshiruvi ---
+    lesson_data = active_lessons.get(user_id)
+    if not lesson_data:
+        await callback.answer("Dars topilmadi.", show_alert=True)
         return
 
-    level = active_lessons[user_id]["level"]
+    level  = lesson_data["level"]
+    lesson = lesson_data["lesson"]
 
-    lesson = active_lessons[user_id]["lesson"]
-
-    # =====================================================
-    # OLD ATTEMPT CHECK
-    # =====================================================
-
+    # --- Oldingi urinish tekshiruvi ---
     row = db_execute(
         """
         SELECT completed
-
         FROM lesson_task_progress
-
-        WHERE user_id=%s
-        AND level=%s
-        AND lesson=%s
-        AND task_name='Horen'
+        WHERE user_id = %s
+          AND level   = %s
+          AND lesson  = %s
+          AND task_name = 'Horen'
         """,
-        (
-            user_id,
-            level,
-            lesson
-        ),
+        (user_id, level, lesson),
         fetchone=True
     )
 
     if row and row[0]:
-
         builder = InlineKeyboardBuilder()
-
-        builder.button(
-            text="🔄 Qayta ishlash",
-            callback_data="repeat_task:Horen"
-        )
-
-        builder.button(
-            text="❌ Bekor qilish",
-            callback_data="close_menu"
-        )
-
+        builder.button(text="🔄 Qayta ishlash",  callback_data="repeat_task:Horen")
+        builder.button(text="❌ Bekor qilish",    callback_data="close_menu")
         builder.adjust(1)
 
         await callback.message.answer(
@@ -2201,300 +2209,213 @@ async def start_horen(
             "Qayta ishlamoqchimisiz?",
             reply_markup=builder.as_markup()
         )
-
         await callback.answer()
         return
-    # =====================================================
-    # LOAD TASKS
-    # =====================================================
 
-    tasks = load_horen(
-        level,
-        lesson
-    )
-
+    # --- Savollarni yuklash ---
+    tasks = load_horen(level, lesson)
     if not tasks:
-
-        await callback.answer(
-            "Horen topilmadi."
-        )
-
+        await callback.answer("Horen topilmadi.", show_alert=True)
         return
-    # =====================================================
-    # SAVE PROGRESS
-    # =====================================================
 
+    # --- Progressni saqlash ---
     horen_progress[user_id] = {
-
-        "level": level,
-
+        "level":  level,
         "lesson": lesson,
-
-        "tasks": tasks,
-
-        "index": 0,
-
-        "score": 0
+        "tasks":  tasks,
+        "index":  0,
+        "score":  0,
     }
-    # =====================================================
-    # SEND AUDIO
-    # =====================================================
 
-    audio_path = get_horen_audio(
-        level,
-        lesson
-    )
-
-    if os.path.exists(
-        audio_path
-    ):
-
+    # --- Audio yuborish ---
+    audio_path = get_horen_audio(level, lesson)
+    if os.path.exists(audio_path):
         await callback.message.answer_audio(
-            audio=FSInputFile(
-                audio_path
-            ),
-            caption=
-            f"🎧 Horen\n\n"
-            f"🇩🇪 {level} | Unterricht {lesson}"
-        )
-
-    # =====================================================
-    # SEND PHOTO
-    # =====================================================
-
-    photo_path = get_horen_photo(
-        level,
-        lesson
-    )
-
-    if os.path.exists(
-        photo_path
-    ):
-
-        await callback.message.answer_photo(
-            FSInputFile(
-                photo_path
+            audio=FSInputFile(audio_path),
+            caption=(
+                f"🎧 Horen\n\n"
+                f"🇩🇪 {level} | Unterricht {lesson}"
             )
         )
-    # =====================================================
-    # START BUTTON
-    # =====================================================
 
+    # --- Rasm yuborish ---
+    photo_path = get_horen_photo(level, lesson)
+    if os.path.exists(photo_path):
+        await callback.message.answer_photo(FSInputFile(photo_path))
+
+    # --- Boshlash tugmasi ---
     builder = InlineKeyboardBuilder()
-
-    builder.button(
-        text="▶️ Testni Boshlash",
-        callback_data="begin_horen"
-    )
-
+    builder.button(text="▶️ Testni Boshlash", callback_data="begin_horen")
     builder.adjust(1)
 
     await callback.message.answer(
-
         "🎧 Audio va rasmni diqqat bilan ko'rib chiqing.\n\n"
-
         "Tayyor bo'lsangiz testni boshlang.",
-
-        reply_markup=
-        builder.as_markup()
+        reply_markup=builder.as_markup()
     )
-
     await callback.answer()
+
+
 # =========================================================
-# Send horen question
+# SAVOL YUBORISH (ichki funksiya)
 # =========================================================
-async def send_lesson_horen_question(
-    message,
-    user_id
-):
 
-    progress = horen_progress[user_id]
+async def send_lesson_horen_question(message, user_id: int):
+    """
+    Joriy savolni shuffled variantlar bilan yuboradi.
+    Har bir tugma callback_data = "horen:{token}:{option}" ko'rinishida.
+    Token serverda tekshiriladi — foydalanuvchi soxta javob yubora olmaydi.
+    """
+    progress = horen_progress.get(user_id)
+    if not progress:
+        await message.answer("❌ Sessiya topilmadi. Qaytadan boshlang.")
+        return
 
-    task = progress["tasks"][
-        progress["index"]
-    ]
+    index = progress["index"]
 
-    options = [
+    # Chegaradan chiqib ketishdan himoya
+    if index >= len(progress["tasks"]):
+        logger.warning(f"[HOREN] user={user_id} index={index} out of range")
+        await message.answer("❌ Ichki xatolik. Qaytadan boshlang.")
+        horen_progress.pop(user_id, None)
+        return
 
-        task["correct"],
+    task = progress["tasks"][index]
+    correct = task["correct"]
 
-        task["wrong1"],
+    options = [correct, task["wrong1"], task["wrong2"]]
+    random.shuffle(options)
 
-        task["wrong2"]
-
-    ]
-
-    random.shuffle(
-        options
-    )
+    # Har bir variant uchun HMAC token
+    token = make_answer_token(user_id, index, correct)
 
     builder = InlineKeyboardBuilder()
-
     for option in options:
-
         builder.button(
-
             text=option,
-
-            callback_data=
-            f"horen:{option}"
+            callback_data=f"horen:{token}:{option}"
         )
-
     builder.adjust(1)
 
     await message.answer(
-
-        f"🎧 Frage "
-        f"{progress['index'] + 1}"
-        f"/{len(progress['tasks'])}\n\n"
-
+        f"🎧 Frage {index + 1}/{len(progress['tasks'])}\n\n"
         f"{task['question']}",
-
-        reply_markup=
-        builder.as_markup()
+        reply_markup=builder.as_markup()
     )
 
+
 # =========================================================
-# Save horen answer
+# JAVOB QABUL QILISH
 # =========================================================
-@dp.callback_query(
-    F.data.startswith(
-        "horen:"
-    )
-)
-async def horen_answer(
-    callback: CallbackQuery
-):
+
+@dp.callback_query(F.data.startswith("horen:"))
+async def horen_answer(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    if user_id not in horen_progress:
+    progress = horen_progress.get(user_id)
+    if not progress:
+        await callback.answer("❌ Sessiya topilmadi.", show_alert=True)
         return
 
-    progress = horen_progress[
-        user_id
-    ]
+    # --- Callback ma'lumotini ajratish ---
+    parts = callback.data.split(":", 2)
+    if len(parts) != 3:
+        await callback.answer("❌ Noto'g'ri format.", show_alert=True)
+        return
 
-    answer = callback.data.split(
-        ":",
-        1
-    )[1]
+    _, received_token, chosen_option = parts
 
-    task = progress["tasks"][
-        progress["index"]
-    ]
+    index   = progress["index"]
+    tasks   = progress["tasks"]
 
-    if answer == task["correct"]:
+    if index >= len(tasks):
+        await callback.answer("❌ Savol topilmadi.", show_alert=True)
+        return
 
+    task    = tasks[index]
+    correct = task["correct"]
+
+    # --- Token tekshiruvi (soxtalashtirish oldini olish) ---
+    if not verify_answer_token(user_id, index, correct, received_token):
+        logger.warning(
+            f"[HOREN] Invalid token: user={user_id} "
+            f"index={index} option={chosen_option!r}"
+        )
+        await callback.answer("❌ Token xatosi. Qaytadan boshlang.", show_alert=True)
+        horen_progress.pop(user_id, None)
+        return
+
+    # --- Javobni baholash ---
+    if chosen_option == correct:
         progress["score"] += 1
-
-        await callback.answer(
-            "✅ Richtig"
-        )
-
+        await callback.answer("✅ Richtig!")
     else:
-
-        await callback.answer(
-            f"❌ {task['correct']}"
-        )
+        await callback.answer(f"❌ To'g'ri javob: {correct}", show_alert=True)
 
     progress["index"] += 1
 
-    if progress["index"] >= len(
-        progress["tasks"]
-    ):
+    # --- Tugadimi? ---
+    if progress["index"] >= len(tasks):
 
-        db_execute(
-            """
-            INSERT INTO
-            lesson_task_progress
-            (
-                user_id,
-                level,
-                lesson,
-                task_name,
-                completed
+        score  = progress["score"]
+        total  = len(tasks)
+        level  = progress["level"]
+        lesson = progress["lesson"]
+
+        # DB ga yozish
+        try:
+            db_execute(
+                """
+                INSERT INTO lesson_task_progress
+                    (user_id, level, lesson, task_name, completed)
+                VALUES
+                    (%s, %s, %s, %s, TRUE)
+                ON CONFLICT (user_id, level, lesson, task_name)
+                DO UPDATE SET completed = TRUE
+                """,
+                (user_id, level, lesson, "Horen")
             )
-            VALUES
-            (
-                %s,%s,%s,%s,TRUE
-            )
-            ON CONFLICT
-            (
-                user_id,
-                level,
-                lesson,
-                task_name
-            )
-            DO UPDATE SET
-            completed = TRUE
-            """,
-            (
-                user_id,
-                progress["level"],
-                progress["lesson"],
-                "Horen"
-            )
-        )
+        except Exception as e:
+            logger.exception(f"[HOREN] DB write error: {e}")
 
         await callback.message.answer(
-
             f"🏁 Hören yakunlandi!\n\n"
-
-            f"Natija: "
-            f"{progress['score']}"
-            f"/{len(progress['tasks'])}"
+            f"Natija: {score}/{total}"
         )
 
-        del horen_progress[
-            user_id
-        ]
-
+        # Sessiyani tozalash
+        horen_progress.pop(user_id, None)
         return
 
-    await send_lesson_horen_question(
-        callback.message,
-        user_id
-    )
+    # --- Keyingi savol ---
+    await send_lesson_horen_question(callback.message, user_id)
+
+
 # =========================================================
-# BEGIN HOREN
+# BOSHLASH TUGMASI
 # =========================================================
 
-@dp.callback_query(
-    F.data == "begin_horen"
-)
-async def begin_horen(
-    callback: CallbackQuery
-):
+@dp.callback_query(F.data == "begin_horen")
+async def begin_horen(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
     if user_id not in horen_progress:
-
         await callback.answer(
-            "❌ Horen sessiyasi topilmadi.",
+            "❌ Horen sessiyasi topilmadi. Qaytadan boshlang.",
             show_alert=True
         )
-
         return
 
     try:
-
-        await send_lesson_horen_question(
-            callback.message,
-            user_id
-        )
-
+        await send_lesson_horen_question(callback.message, user_id)
     except Exception as e:
-
-        logger.exception(
-            f"HOREN ERROR: {e}"
-        )
-
+        logger.exception(f"[HOREN] begin_horen error: {e}")
         await callback.message.answer(
-            f"ERROR: {e}"
+            "❌ Xatolik yuz berdi. Qaytadan urinib ko'ring."
         )
-
+        horen_progress.pop(user_id, None)
         return
 
     await callback.answer()
