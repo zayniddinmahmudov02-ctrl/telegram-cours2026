@@ -794,7 +794,6 @@ medien_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="📚 De-Bücher")],
         [KeyboardButton(text="🎵 De-Musik")],
         [KeyboardButton(text="🎬 De-Filme")],
-        [KeyboardButton(text="📺 De-Videos")],
         [KeyboardButton(text="🔍 Qidiruv")],
         [KeyboardButton(text="⬅️ Orqaga")]
     ],
@@ -966,34 +965,6 @@ async def search_media(
 
         with open(
             "Filme.csv",
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            reader = csv.DictReader(f)
-
-            for row in reader:
-
-                title = row.get(
-                    "title",
-                    ""
-                )
-
-                if query in title.lower():
-
-                    found += 1
-
-    except Exception:
-        pass
-
-    # ======================
-    # VIDEOS
-    # ======================
-
-    try:
-
-        with open(
-            "Videos.csv",
             "r",
             encoding="utf-8"
         ) as f:
@@ -1539,19 +1510,6 @@ async def open_films(message: Message):
     await message.answer(
 
         "🎬 Nemis filmlari bo'limi\n\n"
-        "🚧 Tez orada ishga tushiriladi."
-
-    )
-# =========================================================
-# DE-VIDEOS
-# =========================================================
-
-@dp.message(F.text == "📺 De-Videos")
-async def open_videos(message: Message):
-
-    await message.answer(
-
-        "📺 Nemis videolari bo'limi\n\n"
         "🚧 Tez orada ishga tushiriladi."
 
     )
