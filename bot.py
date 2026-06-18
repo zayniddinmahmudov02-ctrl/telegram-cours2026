@@ -879,7 +879,6 @@ async def open_search(
 # =========================================================
 # GLOBAL SEARCH
 # =========================================================
-
 @dp.message(
     SearchState.waiting_query
 )
@@ -887,9 +886,7 @@ async def search_media(
     message: Message,
     state: FSMContext
 ):
-
     if not message.text:
-
         return
 
     query = (
@@ -932,6 +929,33 @@ async def search_media(
 
                 )
 
+        # ======================
+        # MUSIC
+        # ======================
+
+        for track_number in music_titles:
+
+            title = music_titles[
+                track_number
+            ]
+
+            if query in title.lower():
+
+                found += 1
+
+                builder.row(
+
+                    InlineKeyboardButton(
+
+                        text=f"🎵 {title}",
+
+                        callback_data=
+                        f"music_{track_number}"
+
+                    )
+
+                )
+
         await state.clear()
 
         if found == 0:
@@ -969,8 +993,10 @@ async def search_media(
 MUSIC_CHANNEL_ID = -1003763602068
 
 music_tracks = {}
+music_titles = {}
 
 try:
+
     with open(
         "Musik.csv",
         "r",
@@ -980,13 +1006,26 @@ try:
         reader = csv.DictReader(f)
 
         for row in reader:
+
+            track_number = int(
+                row["track_number"]
+            )
+
             music_tracks[
-                int(row["track_number"])
+                track_number
             ] = int(
                 row["message_id"]
             )
 
+            music_titles[
+                track_number
+            ] = row.get(
+                "title",
+                f"Track {track_number}"
+            )
+
 except Exception as e:
+
     logger.error(
         f"MUSIK CSV ERROR: {e}"
     )
@@ -1146,10 +1185,9 @@ async def send_music(
             message_id=
             message_id
         )
-
         await callback.answer(
-            f"🎵 Track #{track_number}"
-        )
+    f"🎵 {music_titles.get(track_number, f'Track #{track_number}')}"
+)
 
     except Exception as e:
 

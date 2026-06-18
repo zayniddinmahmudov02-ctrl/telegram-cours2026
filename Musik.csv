@@ -1,451 +1,451 @@
-track_number,message_id
-1,2
-2,3
-3,4
-4,5
-5,6
-6,7
-7,8
-8,9
-9,10
-10,11
-11,12
-12,13
-13,14
-14,15
-15,16
-16,17
-17,18
-18,19
-19,20
-20,21
-21,22
-22,23
-23,24
-24,25
-25,26
-26,27
-27,28
-28,29
-29,30
-30,31
-31,32
-32,33
-33,34
-34,35
-35,36
-36,37
-37,38
-38,39
-39,40
-40,41
-41,42
-42,43
-43,44
-44,45
-45,46
-46,47
-47,48
-48,49
-49,50
-50,51
-51,52
-52,53
-53,54
-54,55
-55,56
-56,57
-57,58
-58,59
-59,60
-60,61
-61,62
-62,63
-63,64
-64,65
-65,66
-66,67
-67,68
-68,69
-69,70
-70,71
-71,72
-72,73
-73,74
-74,75
-75,76
-76,77
-77,78
-78,79
-79,80
-80,81
-81,82
-82,83
-83,84
-84,85
-85,86
-86,87
-87,88
-88,89
-89,90
-90,91
-91,92
-92,93
-93,94
-94,95
-95,96
-96,97
-97,98
-98,99
-99,100
-100,101
-101,102
-102,103
-103,104
-104,105
-105,106
-106,107
-107,108
-108,109
-109,110
-110,111
-111,112
-112,113
-113,114
-114,115
-115,116
-116,117
-117,118
-118,119
-119,120
-120,121
-121,122
-122,123
-123,124
-124,125
-125,126
-126,127
-127,128
-128,129
-129,130
-130,131
-131,132
-132,133
-133,134
-134,135
-135,136
-136,137
-137,138
-138,139
-139,140
-140,141
-141,142
-142,143
-143,144
-144,145
-145,146
-146,147
-147,148
-148,149
-149,150
-150,151
-151,152
-152,153
-153,154
-154,155
-155,156
-156,157
-157,158
-158,159
-159,160
-160,161
-161,162
-162,163
-163,164
-164,165
-165,166
-166,167
-167,174
-168,175
-169,176
-170,177
-171,178
-172,179
-173,180
-174,181
-175,182
-176,183
-177,184
-178,185
-179,186
-180,187
-181,188
-182,189
-183,190
-184,191
-185,192
-186,193
-187,194
-188,195
-189,196
-190,197
-191,198
-192,199
-193,200
-194,201
-195,202
-196,203
-197,204
-198,205
-199,206
-200,207
-201,208
-202,209
-203,210
-204,211
-205,212
-206,213
-207,214
-208,215
-209,216
-210,217
-211,218
-212,219
-213,220
-214,221
-215,222
-216,223
-217,224
-218,225
-219,226
-220,227
-221,228
-222,229
-223,230
-224,231
-225,232
-226,233
-227,234
-228,235
-229,236
-230,237
-231,238
-232,239
-233,240
-234,241
-235,242
-236,243
-237,244
-238,245
-239,246
-240,247
-241,248
-242,249
-243,250
-244,251
-245,252
-246,253
-247,254
-248,255
-249,256
-250,257
-251,258
-252,259
-253,260
-254,261
-255,262
-256,263
-257,264
-258,265
-259,266
-260,267
-261,268
-262,269
-263,270
-264,271
-265,272
-266,273
-267,274
-268,275
-269,276
-270,277
-271,278
-272,279
-273,280
-274,281
-275,282
-276,283
-277,284
-278,285
-279,286
-280,287
-281,288
-282,289
-283,290
-284,291
-285,292
-286,293
-287,294
-288,295
-289,296
-290,297
-291,298
-292,299
-293,300
-294,301
-295,302
-296,303
-297,304
-298,305
-299,306
-300,307
-301,308
-302,309
-303,310
-304,311
-305,312
-306,313
-307,314
-308,315
-309,316
-310,317
-311,318
-312,319
-313,320
-314,321
-315,322
-316,323
-317,324
-318,325
-319,326
-320,327
-321,328
-322,329
-323,330
-324,331
-325,332
-326,333
-327,334
-328,335
-329,336
-330,337
-331,338
-332,339
-333,340
-334,341
-335,342
-336,343
-337,344
-338,345
-339,346
-340,347
-341,348
-342,349
-343,350
-344,351
-345,352
-346,353
-347,354
-348,355
-349,356
-350,357
-351,358
-352,359
-353,360
-354,361
-355,362
-356,363
-357,364
-358,365
-359,366
-360,367
-361,368
-362,369
-363,370
-364,371
-365,372
-366,373
-367,374
-368,375
-369,376
-370,377
-371,378
-372,379
-373,380
-374,381
-375,382
-376,383
-377,384
-378,385
-379,386
-380,387
-381,388
-382,389
-383,390
-384,391
-385,392
-386,393
-387,394
-388,395
-389,396
-390,397
-391,398
-392,399
-393,400
-394,401
-395,402
-396,403
-397,404
-398,405
-399,406
-400,407
-401,408
-402,409
-403,410
-404,411
-405,412
-406,413
-407,414
-408,415
-409,416
-410,417
-411,418
-412,419
-413,420
-414,421
-415,422
-416,423
-417,424
-418,425
-419,426
-420,427
-421,428
-422,429
-423,430
-424,431
-425,432
-426,433
-427,434
-428,435
-429,436
-430,437
-431,438
-432,439
-433,440
-434,441
-435,442
-436,443
-437,444
-438,445
-439,446
-440,447
-441,448
-442,449
-443,450
-444,451
-445,452
-446,453
-447,454
-448,455
-449,456
-450,457
+track_number,title,message_id
+1,Lilli - Kein Schlaf,2
+2,Lina Maly - 3 Jahre lang,3
+3,Wincent Weiss - Gegenteil von Traurigkeit,4
+4,Fiora - Fahrrad,5
+5,LUNA - Frühling,6
+6,Marita - Allein in Berlin,7
+7,Wanda - Sie steht nicht auf dich,8
+8,LARA - Kalt,9
+9,skuth - Das machst du,10
+10,Lea - Ich mag dich,11
+11,maïa & Jassin - Stadt,12
+12,Frytz - Ein Stück meiner Angst,13
+13,skuth - Oktober,14
+14,Trille - Alle traurig,15
+15,robin peaches - my german playlist for reading,16
+16,ExGerWolf - Frieden,17
+17,Wanda - Sie steht nicht auf dich,18
+18,Paula Hartmann & T-Low - Sag was,19
+19,Tim Bendzko - Nur Noch Kurz Die Welt Retten,20
+20,Philipp Dittberner - Gib mir einen Grund,21
+21,FiNCH - NUR FiNCH NiCHT,22
+22,PA Sports - Leyfi,23
+23,Nand - Wo bist du,24
+24,Bac - Manchmal so, Manchmal so,25
+25,YUNG SAINT PAUL & FOURTY - Viertel nach acht,26
+26,Fiora - Wie wir uns verlieren,27
+27,FAYAN & Dalton - KANN ES SO FÜR IMMER SEIN?,28
+28,Ché Salah & Nimo - Aladin,29
+29,Alexander Eder - ALL THE WAY UP,30
+30,Max Grimm - Anarchie Zu Zweit,31
+31,CIVO - Auf jeden Blick,32
+32,Yola & Dani Lia - aufn sack,33
+33,ENNIO - Barcelona,34
+34,Bekkaa - Birkenstocks,35
+35,George Jr - Blicke erklären,36
+36,YC - Cut it,37
+37,Summer Cem & Jumpa - DEADLINE (RED BULL 64 BARS),38
+38,Juju - $HORTY,39
+39,bangerfabrique & Baran Kok & NEBOU - 4 SCHLAMPEN,40
+40,1986zig & Mucco - 68,41
+41,Farin Urlaub - 999,42
+42,Culcha Candela - Adrenalin,43
+43,Ufo361 - ALLE MEINE BRÜDER TOT,44
+44,Dominik Hartz - Alles geht vorbei,45
+45,Florian Künstler - Alles nur geliehen,46
+46,Annett Louisan - An deiner Seite,47
+47,Sampagne - angel eyez,48
+48,anaïs - ciao bb,49
+49,Boondawg - cliché,50
+50,Montez & Chapo102 - Die Falschen geküsst,51
+51,Deine Cousine - Dosenbier und Schiffe schauen,52
+52,Madeline Juno - Funkstille,53
+53,MELLER - für ne weile,54
+54,Jamin & Jazeek - Go Hard,55
+55,KITSCHKRIEG & Blumengarten & Shirin David - Blumengarten,56
+56,BRUCKNER - Gute Dinge,57
+57,OK KID - Hör Nie Auf,58
+58,Dardan & Azet - Joga Bonito,59
+59,Summer Cem & BILLA JOE - KILLY MANJARO,60
+60,Sandra Hesch - Kommst du mit?,61
+61,Ivo Martin - Koordinaten,62
+62,Ibra - Lieblingsmensch,63
+63,Zombic - Nie Erlebt,64
+64,DELA - Ohne Dich,65
+65,RAF Camora & Amo & Aymen - ONLY ONE,66
+66,Mine & LIONSTORM - Oxytocin,67
+67,Yuyu19 & Lucio101 - Piatella,68
+68,Replay Okay & Zsá Zsá - playboy,69
+69,FiLow - REISS EIN,70
+70,OSWALD & Esther Graf - sommer,71
+71,BIBIZA - Sterne,72
+72,Bac - Sturzflug,73
+73,Tream & treamiboii - SÜDAFRIKA,74
+74,Christoph Sakwerda - Tanz,75
+75,liska - zähl die tage,76
+76,Hava & Erda - Pass auf wen du liebst,77
+77,Maite Kelly - Der Morgen danach,78
+78,Florian Künstler & Clara Lösel - Alles geht vorbei,79
+79,Tim Bendzko - Alles in Bewegung,80
+80,NESS - Auto,81
+81,LUNAX & Isi Glück - Blödsinn,82
+82,Carli - CARLI,83
+83,Rian - Das Leben ist schon ernst genug,84
+84,SOFFIE - Dass ich gerade traurig bin,85
+85,Lina Maly & Enno Bunger - Du bist alles,86
+86,LINA - Für immer,87
+87,SAMIRA - Für immer,88
+88,Anna Grey - für immer jung,89
+89,ELEHA - Hallo,90
+90,Kauta - Ich hoff,91
+91,OSWALD & Marita - Irgendwo, irgendwann,92
+92,Ceren - Kein Liebeslied,93
+93,Marteria - L.I.E.B.,94
+94,Lostboi Lino - Liebe & Entzug,95
+95,Longus Mongus & BHZ - maria,96
+96,CHEKAA & Eddin & Zera - mOJA bEBO,97
+97,WILSN & Mathea - PANORAMA DACH,98
+98,Florentina - Pech für dich,99
+99,Ronja - Platzangst,100
+100,KAYEF - ROTER KNOPF,101
+101,Monet192 - Sie ist,102
+102,Johannes Oerding - Sonntag,103
+103,Juna - unser ende,104
+104,Das Lumpenpack & Peter B. & Sportfreunde Stiller - Wand,105
+105,ENKAY & Jona - Wenn die Welt zerbricht,106
+106,SSIO - Sei mal ehrlich,107
+107,Jazeek & Luciano - Ma Shawty,108
+108,Ché Salah & Amo - Medusa,109
+109,Ufo361 - KEIN PLAN B,110
+110,Sosa La M - Paparazzi,111
+111,Mike Singer - ANGELINA,112
+112,Ella - bittersüß,113
+113,ZOË MË - Clair de Lune,114
+114,verifiziert - denk drüber nach,115
+115,Tristan Brusch - Die Liebe in Maßen,116
+116,1986zig - Filmriss,117
+117,Gregor Hägele - ICH HAB'S GUT, ICH HAB DICH,118
+118,Loredana & Schwesta Ewa - IHR MÖCHTEGERN,119
+119,Jonny Mahoro - Innenleben,120
+120,siovo - KANDY PAINT,121
+121,Clueso - Lovesick,122
+122,Kasi & Antonius - oktober,123
+123,DUEJA - OOTD,124
+124,PA69 & Ikkimel - RAN AN DIE BULETTEN,125
+125,Wincent Weiss - Sommer der bleibt,126
+126,LYZA - Vergess mich,127
+127,Bella - vielleicht fehlst du mir,128
+128,ALLESS. & Liska - Wer wir sind,129
+129,Charlotte Kudella - zumindest red ich mir das ein,130
+130,Vega & LUNA - Liebe,131
+131,MARNELE & 9inebro - Flügel,132
+132,KALIM & Lucio101 - SHOW OFF,133
+133,OG LU & Wa22ermann - Hasskick,134
+134,Bobby Vandamme & Azet - Brazil Funk Freestyle #2,135
+135,Aymo & Aymen & Amo - Bleib stark,136
+136,benno! - ITALY,137
+137,SIRA & Monk & Themba - 30,138
+138,Dardan - Drama,139
+139,Nizi19 - Cotton Candy,140
+140,Maia - Aschenbecher,141
+141,Juh-Dee & Young Mesh & Jazeek & Aitch - BÆD,142
+142,Kontra K - Das Glück,143
+143,HE/RO - DAS LEBEN IST...,144
+144,Sarah Connor - Das schönste Mädchen der Welt,145
+145,error - Die Hälfte von Nichts,146
+146,SDP - Eigentlich wollte ich dir nie sagen,147
+147,SOPHIA - Erst wenn die Sterne,148
+148,T-Low - GEH ALLEIN2,149
+149,Kati K & CIVO & Joris - Herz über Kopf,150
+150,Sampagne & YUNG SAINT PAUL - lolo,151
+151,shosharascal & makko - MAGAZIN,152
+152,Ikkimel & The Cratez - MAMI,153
+153,Zackavelli - messi,154
+154,Carlo5 & anaïs - nah am meer gebaut,155
+155,ELIF - NEIN,156
+156,Sosa La M - No Limit,157
+157,Longus Mongus & BHZ - rosa,158
+158,Jamule - SOBER,159
+159,Ela. - Spiegelbild,160
+160,Culcha Candela - Von A nach B,161
+161,NESS - Walking Dead,162
+162,Madeline Juno - Wärst du mir nie passiert,163
+163,Luna Antonia - WELT RETTEN,164
+164,LUNA - Worte wie Messer,165
+165,Jassin - Wann trennt ihr euch,166
+166,Aymo & Aymen & Amo - Zieh Zieh,167
+167,ENNIO - 2 Teile,174
+168,Carlo5 - Alcatraz,175
+169,CRO - BAD BOi,176
+170,LACAZETTE - CLS,177
+171,1986zig - Du und ich,178
+172,Lostboi Lino - Dumme Idee,179
+173,Losin - Frei,180
+174,Mika Noé - Frieden,181
+175,makko - G.I.N.A. (GELDISTNICHTALLES),182
+176,Luciano - Hit One,183
+177,Ellice - im Wunderland,184
+178,Alexander Eder - Jetzt gehts mir besser,185
+179,RAF Camora & Apache 207 - JUPITER,186
+180,SDP & Bozza - Kein Pflaster,187
+181,Veysel & Kontra K - KILL,188
+182,Tropikel Ltd - Live und Alive,189
+183,Amo & Aymen - Love all night,190
+184,Dardan - Luje,191
+185,verifiziert - mkgee,192
+186,Lune - NICHT VERDIENT,193
+187,Ritter Lean - OHMEINGOTT,194
+188,Isi Glück & Specktakel - Paarungszeit,195
+189,Bonez MC & LX & DeeVoe - PIZZA SALAMI,196
+190,Nina Chuba & Kauta & Layla - RAGE GIRL (Remix),197
+191,Alies & JBS - Sommer tut weh,198
+192,Shindy - Sport & Diät,199
+193,Ion Miles & SIRA & BHZ - Teenage Dreams,200
+194,Nimo & KALIM - Von vorn,201
+195,Jamal & HoodBlaq - WENN DU MICH SIEHST,202
+196,Jazeek - Baddest in Germany,203
+197,Jaydee - bisschen fantasie,204
+198,KAFFKIEZ - Capri Sonne,205
+199,JAS - Einfach sein,206
+200,Loredana - EMOTION,207
+201,Eddin - Es tut weh,208
+202,reezy - GANGSTAAA (GLS CLASS),209
+203,Ivo Martin - gladiolen,210
+204,Gzuz - Glitch,211
+205,Samra - Irgendwann,212
+206,Bausa & Nucci & Voyage - Jebiga,213
+207,Yasola - Kommst du vorbei,214
+208,Aymen & Nimo - Lebenlang,215
+209,FiNCH & Boki - OK OK,216
+210,S1RENA - R1SKANT,217
+211,Das Lumpenpack - Schluss mit Reden,218
+212,Chapo102 & 102 Boyz - Schön, dass du da warst,219
+213,Ronja - Sorgenkind,220
+214,Frytz - Tanzen ja ok,221
+215,YAKARY - Toxicgirl II,222
+216,Wa22ermann - Uhh Ahh,223
+217,benno! - VACATION,224
+218,MOLA & Salo - Vielleicht bin ich dumm,225
+219,Esther Graf - was ich fühl,226
+220,Betterov - 17. Juli 1989,227
+221,Fabian Wegerer - 24/7/0,228
+222,Tom Twers - Alles Wird Okay (Meine Story),229
+223,Anna Grey - Antarktis,230
+224,anaïs & jolle - arsch der welt,231
+225,Dilla - Autopilot,232
+226,BABYJOY & Carlo5 - Babe wir tanzen,233
+227,Jamule & RAF Camora - Bei dir,234
+228,Jassin - Bitte sei vorsichtig,235
+229,Ikkimel & Nocashfromparents - BLING BLING,236
+230,verifiziert - blonded radio,237
+231,DELA - Brauchst du mich,238
+232,Ela. - EASY,239
+233,Aaron - einszweidreivier,240
+234,Shindy - Habemus Papam,241
+235,KATI K - Kompromiss,242
+236,Stereo Luchs & Trettmann - Love Reload,243
+237,Miss Bashful & Ski Aggu & GDA - NEIN SCHATZ,244
+238,Julia Meladin - Oldtimer,245
+239,Becks - Orbit,246
+240,Amo & Soufian - RS7,247
+241,Aymen - Run Run,248
+242,Elias - Sonne,249
+243,Zsá Zsá & Replay Okay - tip top,250
+244,PaulWetz - Träumer,251
+245,HE/RO - WELLE,252
+246,Fiora - wie wir uns verlieren,253
+247,Stickle & YUNG SAINT PAUL - Wunderschön,254
+248,LACAZETTE - XOX,255
+249,Chiara - zeilen aus eisen,256
+250,oddworld & Eli Preiss - u so pretty,257
+251,Olexesh - Wassereis,258
+252,Zartmann - wunderschön,259
+253,Tropikel Ltd & Sofia Portanet - Bisschen Love,260
+254,Milliarden - Clean (Bonus Track),261
+255,JEREMIAS - ein mensch,262
+256,Luna Simao - Fußmatte,263
+257,Sandra Isabel - Ich Hab Nur So Getan,264
+258,Drangsal - Ich hab von der Musik geträumt,265
+259,Bac - Jemand,266
+260,LUNA - Käptn Peng,267
+261,PA Sports - Leyfi,268
+262,ILO - Lieb mich,269
+263,Feine Sahne Fischfilet & FiNCH - in dich scheisse (feat. FiNCH),270
+264,Noah Kraus & Wir sind Helden - Nur ein Wort,271
+265,Mika Noé - Oliver,272
+266,K.I.Z & Solomun - Samstag Ist Krieg (Solomun Remix),273
+267,CALLI - Skandal,274
+268,Luca-Dante Spadafora & BELLA X - TokTokTok,275
+269,Hecht - Tontauben,276
+270,Ski Aggu - übersee freistil,277
+271,Makko & Miksu / Macloud - UNDERCOVER,278
+272,Samra - Ungebrochen,279
+273,Kwam.E & Trettmann - Uuuhhhh,280
+274,Florian Künstler & Wilhelmine - Salz in der Luft,281
+275,Ness - Vergesslich,282
+276,Fabian Wegerer & Luna Antonia - Weit weg,283
+277,Alexander Eder - Der Doktor hat gesagt,284
+278,Alies - cm2,285
+279,Anna Grey - glücklich ohne dich,286
+280,Ansu - Halb eins,287
+281,badchieff - HALB VOLL,288
+282,Adrian - Bastard,289
+283,Basti Stein - Was machst du so?,290
+284,Bella - fehler,291
+285,amely - beuteschema kompliziert,292
+286,Blond - so hot,293
+287,Blumengarten - Ultraviolette,294
+288,Bonez MC - bissu dumm,295
+289,Charlize - Doppel Ass,296
+290,EMELIA - ego,297
+291,Ellice - genz love,298
+292,Jazeek - CRAZYYY,299
+293,Kasi - beifahrersitz,300
+294,Losin - Kurz vor halb 4,301
+295,Majan - Atlantik/One More Time,302
+296,Philipp Dittberner - Gib mir einen Grund,303
+297,Rowli - Kleiner Junge viel Herz,304
+298,Sampagne - immerjung,305
+299,Sira - Margiela,306
+300,Stickle - Noch nie gesehen,307
+301,Tom Twers - Herz Auseinander,308
+302,AB Syndrom & Mine - Verlier Mich Selbst,309
+303,Wolke 8 - lass los,310
+304,wylhem - Berlin ohne Dich,311
+305,YAENNIVER - ANGRY WOMEN,312
+306,YAKARY - 4EVER,313
+307,Samra - Asozialer Araber,314
+308,Erda & Chiaraspureluv - Ay Ay Ay,315
+309,Nimo & AMO - Aye,316
+310,Erobique & Jacques Palminger - Bert & Ernie,317
+311,Akryl - Blumen aus Metall,318
+312,Mieze Katz & Ami Warning & MIA. - Boys & Girls & Theys,319
+313,KAYEF - DU MICH AUCH,320
+314,FREDRIK - Grösste Angst,321
+315,Madeline Juno - Hab ich dir je gesagt...,322
+316,PA Sports & Mucco - Juliusstraße,323
+317,Kayla Shyx - Keine Zeit/Selbstmitleid,324
+318,KASIMIR1441 - LALA,325
+319,DUEJA - liebe in meinem kopf,326
+320,CALLI - Nie wieder,327
+321,SANTOS & YAKARY - party girls don't cry,328
+322,LACAZETTE - RAP,329
+323,Ana Kohler - Rotes Haus,330
+324,Zartmann & Gustav & 01099 - schönhauser (feat. Gustav),331
+325,Julian Sommer - SOS,332
+326,JAS - Stacheldraht,333
+327,reezy - THOUGHTS,334
+328,Nina Chuba - Unsicher,335
+329,GRETA - wiedersehen,336
+330,Nand - Wo bist du,337
+331,3LNA & Longus Mongus - Armani Top,338
+332,Fabian Wegerer - Bevor es gut wird,339
+333,Kontra K - Boncuk,340
+334,Luciano - Chanelli,341
+335,Basstard & JuJu - DEMONS,342
+336,MERO - Diadem,343
+337,CIVO - Du bist das Beste,344
+338,Katha Rosa & Lukas Linder - Es ist okay,345
+339,Sarah Connor - FICKA,346
+340,Kane - Freiheit,347
+341,Kitty Kat & Unverhofft - Glaub an Dich,348
+342,Beatrice Egli - Hör nie auf damit,349
+343,Ivo Martin - ich kenn liebe nicht,350
+344,Knappe - Immer für dich,351
+345,Fritz Speck - Immerhin,352
+346,Tjark - junge,353
+347,LEA x LINDA - Kaputt,354
+348,Florentina - küss mich,355
+349,LEVKA - langsam warm,356
+350,Marita - luftkuss,357
+351,FREDRIK - Alle meine Lieder,358
+352,Kool Savas - Justitia,359
+353,Frida Gold - Morgenrot (Alles kommt irgendwann hin),360
+354,YAENNIVER - NEUE MÄNNER,361
+355,Kauta - Nie wieder,362
+356,Beatrice Egli - Voll unter Strom,363
+357,AYCA - Dolce&Gabbana,364
+358,Erda - drop body,365
+359,Sandra Hesch - Liebling,366
+360,Alexander Eder - Als ich Mädchen noch scheiße fand,367
+361,Sosa La M - Häagen Dazs,368
+362,Enno Bunger & Lina Maly - Hör auf die Liebe,369
+363,George Jr - Kreise,370
+364,KALIM - WAS KANN ICH DAFÜR?,371
+365,SANTOS - Pinienbäume,372
+366,LACAZETTE & Bushido - CCN,373
+367,HE/RO - DAS LEBEN IST...,374
+368,Das Lumpenpack - Alles schwarz,375
+369,Miami Yacine - Buonasera,376
+370,Gregor Hägele - SHOOT SHOOT SHOOT,377
+371,The Cratez & 1986zig - Scheitern,378
+372,01099 & Paul & Zachi - Leopard,379
+373,Frytz - Fliegengewicht,380
+374,Nina Chuba - Malediven,381
+375,Elias & Luis Domingo - FREI,382
+376,Kontra K & Gzuz - Dreckig & Gemein,383
+377,Monet192 - Day N Nite,384
+378,PaulWetz - Rauschgift,385
+379,Azet & Dhurata Dora & Dardan - Syt,386
+380,Chapo102 & 102 Boyz - Schöne Dinge,387
+381,MOLA & MC WINDHUND - Schmetterling,388
+382,SDP - Die wollen nur spielen,389
+383,MYLLER - Ich x dich,390
+384,Emma Rose - Hauptsache easy,391
+385,Pietro Basile - Hey Macarena!,392
+386,01099 & Paul & Zachi - Was ich in die Lieder steck,393
+387,YC - Shake,394
+388,Mike Singer - HEY,395
+389,KORD - Nur zu Besuch,396
+390,Paula Engels - Bin nicht verantwortlich für dich,397
+391,Johannes Oerding - Hier Gehör Ich Hin,398
+392,Nizi19 & Yuyu19 - GHW,399
+393,Laurenz Nikolaus - Annemarie,400
+394,Lostboi Lino - Zünd dich an,401
+395,Luca Noel - das universum macht das schon.,402
+396,Ella Stern - 4 akkorde,403
+397,Ali As & Summer Cem & Mik... - SINGLELADIES,404
+398,Max Giesinger - Glück auf den Strassen,405
+399,Jonny Mahoro - Zukunftsangst,406
+400,Hava - Kannst du mich lieben?,407
+401,Kasi & Antonius - kids,408
+402,Zsá Zsá & Replay Okay - raris & rovers (na na na na),409
+403,NESS - Fehler,410
+404,Tjark - keinen namen,411
+405,Lucio101 & Zackavelli - Sprite Cherry,412
+406,Nimo - Gott vergib,413
+407,Rowli - Wie du,414
+408,Freddy & anaïs - kommst du mich trösten,415
+409,Haaland936 & Aymen & Amo - Tiki Taka,416
+410,Aaron & Keule - wiese,417
+411,Oimara & Melissa Naschenweng - Koa Bauernbua,418
+412,Sampagne & YUNG SAINT PAUL - aus versehen,419
+413,Felix Herbst - Kleiner Herbst,420
+414,Emma - alien,421
+415,BRUNKE - wo sonst,422
+416,YAENNIVER - DIE GOLDENE ZEIT,423
+417,Beatrice Egli - Ja zum Leben,424
+418,Joplyn - AIRPORT,425
+419,Mario Novembre - NIRWANA,426
+420,ThreeShots & Lucio101 & Nizi19 & Omar101 - Ritz,427
+421,OG LU - O'Malley,428
+422,Lovis - Scherben,429
+423,Christoph Sakwerda - Stolpern,430
+424,Kool Savas - Über sie hinaus,431
+425,T-Low - LASS MICH NICHT LOS,432
+426,Tim Bendzko - Alles, nur nicht zurück,433
+427,SSIO & K.I.Z - Ich Ich Ich Ich Ich,434
+428,Von Wegen Lisbeth - Madame Tussauds,435
+429,Kane - Benzin,436
+430,Tream & treamiboii - NARCOTIC,437
+431,Basti Stein - Elefantastisch,438
+432,Frytz - Shoutout,439
+433,Katja Krasavice - Pasta,440
+434,Mark Forster - Rettest Du Mich,441
+435,JBS - Kalt gemacht,442
+436,Aymo & Aymen & Amo - Pech & Schwefel,443
+437,01099 & Zachi & Trettmann - Baltimore (feat. Trettmann),444
+438,Luciano - Memories,445
+439,Bonez MC - Theater ?,446
+440,MERO - Mrs. Toxic,447
+441,Romy - Kommst du noch vorbei,448
+442,Katha Rosa & LUKA MAKSIM - Eins,449
+443,Yecca - Rezept,450
+444,Liska & ALLESS. - so fühlt sich liebe an,451
+445,Katha Pauer - Unter meinem Kissen,452
+446,Vanessa Mai - Traumfabrik,453
+447,LEVKA - vertigo,454
+448,Blümchen & 2 Engel & Charlie - Magnet,455
+449,Wilhelmine - tanz vor dir,456
+450,Yu - Therapieplatz,457
