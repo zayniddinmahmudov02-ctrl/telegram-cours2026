@@ -105,7 +105,8 @@ from aiogram.fsm.context import (
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder
 )
-
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 # =========================================================
 # LOGGING
 # =========================================================
@@ -834,17 +835,49 @@ async def open_vizu_certificate_menu(
 
     )
 # =========================================================
-# KIRISH VA TEKSHIRUVLAR (INITIAL CHECKS)
+# SEARCH STATES
 # =========================================================
-@dp.message()
-async def search_media(message: Message):
-    if (
-        message.from_user.id
-        not in search_users
-    ):
-        return
+
+class SearchState(StatesGroup):
+
+    waiting_query = State()
+
+# =========================================================
+# OPEN SEARCH
+# =========================================================
+
+@dp.message(
+    F.text == "🔍 Qidiruv"
+)
+async def open_search(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        SearchState.waiting_query
+    )
+
+    await message.answer(
+
+        "🔍 Qidiruv\n\n"
+        "Kitob, musiqa yoki film nomini yuboring."
+
+    )
+# =========================================================
+# GLOBAL SEARCH
+# =========================================================
+
+@dp.message(
+    SearchState.waiting_query
+)
+async def search_media(
+    message: Message,
+    state: FSMContext
+):
 
     if not message.text:
+
         return
 
     query = (
@@ -853,22 +886,15 @@ async def search_media(message: Message):
         .strip()
     )
 
-    if len(query) < 2:
+    builder = InlineKeyboardBuilder()
 
-        await message.answer(
-            "❌ Kamida 2 ta harf kiriting."
-        )
+    found = 0
 
-        return
-
-# =========================================================
-# QIDIRUV JARAYONI (PROCESSING)
-# =========================================================
     try:
 
-        builder = InlineKeyboardBuilder()
-
-        found = 0
+        # ======================
+        # BOOKS
+        # ======================
 
         for book in book_files:
 
@@ -877,11 +903,7 @@ async def search_media(message: Message):
                 ""
             )
 
-            if (
-                query
-                in
-                title.lower()
-            ):
+            if query in title.lower():
 
                 found += 1
 
@@ -898,13 +920,8 @@ async def search_media(message: Message):
 
                 )
 
-        search_users.discard(
-            message.from_user.id
-        )
+        await state.clear()
 
-# =========================================================
-# NATIJALARNI YUBORISH VA YAKUNLASH (FINALIZING)
-# =========================================================
         if found == 0:
 
             await message.answer(
@@ -928,102 +945,11 @@ async def search_media(message: Message):
             f"SEARCH ERROR: {e}"
         )
 
-        search_users.discard(
-            message.from_user.id
-        )
+        await state.clear()
 
         await message.answer(
             "❌ Qidiruvda xatolik."
         )
-    # ======================
-    # MUSIC
-    # ======================
-
-    try:
-
-        with open(
-            "Musik.csv",
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            reader = csv.DictReader(f)
-
-            for row in reader:
-
-                title = row.get(
-                    "title",
-                    ""
-                )
-
-                if query in title.lower():
-
-                    found += 1
-
-                    builder.row(
-
-                        InlineKeyboardButton(
-
-                            text=f"🎵 {title}",
-
-                            callback_data=
-                            f"music_{row['track_number']}"
-
-                        )
-
-                    )
-
-    except Exception:
-        pass
-
-    # ======================
-    # FILMS
-    # ======================
-
-    try:
-
-        with open(
-            "Filme.csv",
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            reader = csv.DictReader(f)
-
-            for row in reader:
-
-                title = row.get(
-                    "title",
-                    ""
-                )
-
-                if query in title.lower():
-
-                    found += 1
-
-    except Exception:
-        pass
-
-    search_users.discard(
-        message.from_user.id
-    )
-
-    if found == 0:
-
-        await message.answer(
-            "❌ Hech narsa topilmadi."
-        )
-
-        return
-
-    await message.answer(
-
-        f"🔍 Topildi: {found}",
-
-        reply_markup=
-        builder.as_markup()
-
-    )
 # =========================================================
 # MEDIEN
 # =========================================================
