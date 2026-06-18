@@ -1922,19 +1922,21 @@ async def start_lesen(
             reply_markup=
             builder.as_markup()
         )
-
 # =========================================================
 # LESEN IMAGE HELPERS
 # =========================================================
 
 def get_lesson_lesen_images(level, lesson):
     """
-    Berilgan daraja (level) va dars (lesson) uchun 
+    Berilgan daraja (level) va dars (lesson) uchun
     mos keladigan rasmlar ro'yxatini qaytaradi.
     """
-    folder = os.path.join("A1-C1-Level", "lesen_photo")
 
-    # Qidiruv shablonlari
+    folder = os.path.join(
+        "A1-C1-Level",
+        "lesen_photo"
+    )
+
     patterns = [
         os.path.join(folder, f"{level}-{lesson}.png"),
         os.path.join(folder, f"{level}-{lesson}.jpg"),
@@ -1943,13 +1945,13 @@ def get_lesson_lesen_images(level, lesson):
     ]
 
     files = []
+
     for pattern in patterns:
         files.extend(glob.glob(pattern))
 
-    # set() orqali dublikatlarni o'chirib, sorted() bilan tartiblaymiz
-    return sorted(list(set(files)))
-
-    await callback.answer()
+    return sorted(
+        list(set(files))
+    )
 # =========================================================
 # BEGIN LESEN
 # =========================================================
