@@ -1224,7 +1224,6 @@ try:
         for row in reader:
 
             book_files.append({
-                "number": int(row["number"]),
                 "level": row["level"],
                 "category": row["category"],
                 "title": row["title"],
