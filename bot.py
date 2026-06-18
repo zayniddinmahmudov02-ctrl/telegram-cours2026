@@ -1037,57 +1037,85 @@ TOTAL_TRACKS = len(
 # =========================================================
 # MUSIC KEYBOARD
 # =========================================================
-
 def build_music_keyboard(
-    page=1
+page=1
 ):
-
     builder = InlineKeyboardBuilder()
 
-    start = (
-        (page - 1) * 5
-    ) + 1
-
-    end = min(
-        start + 4,
-        TOTAL_TRACKS
+    tracks = sorted(
+        music_titles.keys()
     )
 
-    for track in range(
-        start,
-        end + 1
-    ):
+    start_index = (
+        page - 1
+    ) * 5
+
+    end_index = min(
+        start_index + 5,
+        len(tracks)
+    )
+
+    current_tracks = tracks[
+        start_index:end_index
+    ]
+
+    for track in current_tracks:
+
+        title = music_titles.get(
+            track,
+            f"Track {track}"
+        )
 
         builder.row(
+
             InlineKeyboardButton(
-                text=f"🎵 {track}",
-                callback_data=f"music_{track}"
+
+                text=f"{track}. {title[:40]}",
+
+                callback_data=
+                f"music_{track}"
+
             )
+
         )
 
     navigation = []
 
     if page > 1:
+
         navigation.append(
+
             InlineKeyboardButton(
+
                 text="⬅️",
-                callback_data=f"music_page_{page-1}"
+
+                callback_data=
+                f"music_page_{page-1}"
+
             )
+
         )
 
-    if end < TOTAL_TRACKS:
+    if end_index < len(tracks):
+
         navigation.append(
+
             InlineKeyboardButton(
+
                 text="➡️",
-                callback_data=f"music_page_{page+1}"
+
+                callback_data=
+                f"music_page_{page+1}"
+
             )
+
         )
 
     if navigation:
+
         builder.row(*navigation)
 
     return builder.as_markup()
-
 # =========================================================
 # DE-MUSIK
 # =========================================================
