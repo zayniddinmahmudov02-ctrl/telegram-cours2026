@@ -1044,6 +1044,103 @@ async def send_music(
             show_alert=True
         )
 # =========================================================
+# BOOKS
+# =========================================================
+
+BOOK_CHANNEL_ID = -1003796668138
+
+book_files = []
+
+try:
+    with open(
+        "Bucher.csv",
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(f)
+
+        for row in reader:
+
+            book_files.append({
+                "number": int(row["number"]),
+                "level": row["level"],
+                "category": row["category"],
+                "title": row["title"],
+                "message_id": int(row["message_id"])
+            })
+
+except Exception as e:
+
+    logger.error(
+        f"BUCHER CSV ERROR: {e}"
+    )
+
+TOTAL_BOOKS = len(book_files)
+# =========================================================
+# BOOK LEVEL MENU
+# =========================================================
+
+def build_books_levels():
+
+    builder = InlineKeyboardBuilder()
+
+    levels = [
+        "A1",
+        "A2",
+        "B1",
+        "B2",
+        "C1"
+    ]
+
+    for level in levels:
+
+        builder.row(
+            InlineKeyboardButton(
+                text=f"🇩🇪 {level}",
+                callback_data=f"book_{level}"
+            )
+        )
+
+    return builder.as_markup()
+# =========================================================
+# BOOK CATEGORY MENU
+# =========================================================
+
+def build_book_categories(level):
+
+    builder = InlineKeyboardBuilder()
+
+    builder.row(
+        InlineKeyboardButton(
+            text="📖 Literarisch",
+            callback_data=f"book_{level}_literatur"
+        )
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="📝 Zur Vorbereitung",
+            callback_data=f"book_{level}_vorbereitung"
+        )
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="📚 Wortliste",
+            callback_data=f"book_{level}_wortliste"
+        )
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="⬅️ Orqaga",
+            callback_data="book_back_levels"
+        )
+    )
+
+    return builder.as_markup()
+# =========================================================
 # DE-BUCHER
 # =========================================================
 
@@ -1052,10 +1149,195 @@ async def open_books(message: Message):
 
     await message.answer(
 
-        "📚 Nemis kitoblari bo'limi\n\n"
-        "🚧 Tez orada ishga tushiriladi."
+        "📚 Deutsche Bücher\n\n"
+        "Darajani tanlang:",
+
+        reply_markup=
+        build_books_levels()
 
     )
+# =========================================================
+# BOOK LEVEL HANDLER
+# =========================================================
+
+@dp.callback_query(
+    F.data.in_(
+        [
+            "book_A1",
+            "book_A2",
+            "book_B1",
+            "book_B2",
+            "book_C1"
+        ]
+    )
+)
+async def book_level_handler(
+    callback: CallbackQuery
+):
+
+    level = callback.data.split("_")[1]
+
+    await callback.message.edit_text(
+
+        f"📚 {level} Bücher\n\n"
+        "Kategoriyani tanlang:",
+
+        reply_markup=
+        build_book_categories(level)
+
+    )
+
+    await callback.answer()
+# =========================================================
+# BACK TO LEVELS
+# =========================================================
+
+@dp.callback_query(
+    F.data == "book_back_levels"
+)
+async def back_book_levels(
+    callback: CallbackQuery
+):
+
+    await callback.message.edit_text(
+
+        "📚 Deutsche Bücher\n\n"
+        "Darajani tanlang:",
+
+        reply_markup=
+        build_books_levels()
+
+    )
+
+    await callback.answer()
+# =========================================================
+# BOOK CATEGORY HANDLER
+# =========================================================
+
+@dp.callback_query(
+    F.data.regexp(
+        r"^book_(A1|A2|B1|B2|C1)_(literatur|vorbereitung|wortliste)$"
+    )
+)
+async def book_category_handler(
+    callback: CallbackQuery
+):
+
+    level = callback.data.split("_")[1]
+    category = callback.data.split("_")[2]
+
+    builder = InlineKeyboardBuilder()
+
+    filtered_books = []
+
+    for book in book_files:
+
+        if (
+            book["level"] == level
+            and
+            book["category"] == category
+        ):
+
+            filtered_books.append(book)
+
+    if not filtered_books:
+
+        await callback.answer(
+            "❌ Kitob topilmadi",
+            show_alert=True
+        )
+
+        return
+
+    for book in filtered_books:
+
+        builder.row(
+
+            InlineKeyboardButton(
+
+                text=book["title"],
+
+                callback_data=
+                f"bookfile_{book['number']}"
+
+            )
+
+        )
+
+    await callback.message.edit_text(
+
+        f"📚 {level} | {category}",
+
+        reply_markup=
+        builder.as_markup()
+
+    )
+
+    await callback.answer()
+# =========================================================
+# SEND BOOK FILE
+# =========================================================
+
+@dp.callback_query(
+    F.data.startswith("bookfile_")
+)
+async def send_book_file(
+    callback: CallbackQuery
+):
+
+    number = int(
+        callback.data.split("_")[1]
+    )
+
+    selected_book = None
+
+    for book in book_files:
+
+        if book["number"] == number:
+
+            selected_book = book
+
+            break
+
+    if not selected_book:
+
+        await callback.answer(
+            "❌ Kitob topilmadi",
+            show_alert=True
+        )
+
+        return
+
+    try:
+
+        await bot.copy_message(
+
+            chat_id=
+            callback.from_user.id,
+
+            from_chat_id=
+            BOOK_CHANNEL_ID,
+
+            message_id=
+            selected_book["message_id"]
+
+        )
+
+        await callback.answer(
+            "📚 Kitob yuborildi"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"BOOK ERROR: {e}"
+        )
+
+        await callback.answer(
+            "❌ Kitob yuborishda xatolik",
+            show_alert=True
+        )
+
 # =========================================================
 # DE-FILME
 # =========================================================
@@ -7097,7 +7379,7 @@ async def send_course_info(message: Message, course: str):
         return
 
     text = (
-        f"🎉 Hozirda barcha kurslar 50% CHEGIRMADA!\n\n"
+        f"🎉 Hozirda barcha kurslar Katta CHEGIRMADA!\n\n"
         f"{course} Video Darslari\n\n"
         f"📚 {info['lessons']} dars\n\n"
         f"❌ Eski narx: {info['old_price']}\n"
