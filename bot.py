@@ -105,8 +105,7 @@ from aiogram.fsm.context import (
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder
 )
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.context import FSMContext
+
 # =========================================================
 # LOGGING
 # =========================================================
@@ -834,6 +833,19 @@ async def open_vizu_certificate_menu(
         reply_markup=vizu_certificate_menu_keyboard
 
     )
+
+# =========================================================
+# Medien Handler
+# =========================================================
+
+@dp.message(F.text == "🎬 Medien")
+async def open_medien(message: Message):
+
+    await message.answer(
+        "🎬 Medien bo'limi",
+        reply_markup=medien_menu
+    )
+
 # =========================================================
 # SEARCH STATES
 # =========================================================
