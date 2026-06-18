@@ -217,10 +217,7 @@ vizu_horen_questions = []
 vizu_horen_progress = {}
 vizu_sprechen_progress = {}
 vizu_mock_deadlines = {}
-# =========================================================
-# SEARCH USERS
-# =========================================================
-search_users = set()
+
 # =========================================================
 # ACTIVE LEVELS
 # =========================================================
@@ -836,50 +833,18 @@ async def open_vizu_certificate_menu(
         reply_markup=vizu_certificate_menu_keyboard
 
     )
-
 # =========================================================
-# Medien Handler
-# =========================================================
-
-@dp.message(F.text == "🎬 Medien")
-async def open_medien(message: Message):
-
-    await message.answer(
-        "🎬 Medien bo'limi",
-        reply_markup=medien_menu
-    )
-
-
-# =========================================================
-# OPEN SEARCH
-# =========================================================
-@dp.message(
-    F.text == "🔍 Qidiruv"
-)
-async def open_search(
-    message: Message
-):
-    search_users.add(
-        message.from_user.id
-    )
-
-    await message.answer(
-
-        "🔍 Qidiruv\n\n"
-        "Kitob, musiqa yoki film nomini yuboring."
-
-    )
-# =========================================================
-# GLOBAL SEARCH
+# KIRISH VA TEKSHIRUVLAR (INITIAL CHECKS)
 # =========================================================
 @dp.message()
-async def search_media(
-    message: Message
-):
+async def search_media(message: Message):
     if (
         message.from_user.id
         not in search_users
     ):
+        return
+
+    if not message.text:
         return
 
     query = (
@@ -888,35 +853,88 @@ async def search_media(
         .strip()
     )
 
-    builder = InlineKeyboardBuilder()
+    if len(query) < 2:
 
-    found = 0
+        await message.answer(
+            "❌ Kamida 2 ta harf kiriting."
+        )
 
-    # ======================
-    # BOOKS
-    # ======================
+        return
 
-    for book in book_files:
+# =========================================================
+# QIDIRUV JARAYONI (PROCESSING)
+# =========================================================
+    try:
 
-        title = book["title"]
+        builder = InlineKeyboardBuilder()
 
-        if query in title.lower():
+        found = 0
 
-            found += 1
+        for book in book_files:
 
-            builder.row(
+            title = book.get(
+                "title",
+                ""
+            )
 
-                InlineKeyboardButton(
+            if (
+                query
+                in
+                title.lower()
+            ):
 
-                    text=f"📚 {title}",
+                found += 1
 
-                    callback_data=
-                    f"bookfile_{book['message_id']}"
+                builder.row(
+
+                    InlineKeyboardButton(
+
+                        text=f"📚 {title}",
+
+                        callback_data=
+                        f"bookfile_{book['message_id']}"
+
+                    )
 
                 )
 
+        search_users.discard(
+            message.from_user.id
+        )
+
+# =========================================================
+# NATIJALARNI YUBORISH VA YAKUNLASH (FINALIZING)
+# =========================================================
+        if found == 0:
+
+            await message.answer(
+                "❌ Hech narsa topilmadi."
             )
 
+            return
+
+        await message.answer(
+
+            f"🔍 Topildi: {found}",
+
+            reply_markup=
+            builder.as_markup()
+
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"SEARCH ERROR: {e}"
+        )
+
+        search_users.discard(
+            message.from_user.id
+        )
+
+        await message.answer(
+            "❌ Qidiruvda xatolik."
+        )
     # ======================
     # MUSIC
     # ======================
