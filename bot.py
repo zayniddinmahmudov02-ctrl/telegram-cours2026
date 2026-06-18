@@ -795,6 +795,7 @@ medien_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="🎵 De-Musik")],
         [KeyboardButton(text="🎬 De-Filme")],
         [KeyboardButton(text="📺 De-Videos")],
+        [KeyboardButton(text="🔍 Qidiruv")],
         [KeyboardButton(text="⬅️ Orqaga")]
     ],
     resize_keyboard=True
@@ -843,6 +844,195 @@ async def open_medien(message: Message):
     await message.answer(
         "🎬 Medien bo'limi",
         reply_markup=medien_menu
+    )
+# =========================================================
+# SEARCH USERS
+# =========================================================
+search_users = set()
+
+# =========================================================
+# OPEN SEARCH
+# =========================================================
+@dp.message(
+    F.text == "🔍 Qidiruv"
+)
+async def open_search(
+    message: Message
+):
+    search_users.add(
+        message.from_user.id
+    )
+
+    await message.answer(
+
+        "🔍 Qidiruv\n\n"
+        "Kitob, musiqa yoki film nomini yuboring."
+
+    )
+# =========================================================
+# GLOBAL SEARCH
+# =========================================================
+@dp.message()
+async def search_media(
+    message: Message
+):
+    if (
+        message.from_user.id
+        not in search_users
+    ):
+        return
+
+    query = (
+        message.text
+        .lower()
+        .strip()
+    )
+
+    builder = InlineKeyboardBuilder()
+
+    found = 0
+
+    # ======================
+    # BOOKS
+    # ======================
+
+    for book in book_files:
+
+        title = book["title"]
+
+        if query in title.lower():
+
+            found += 1
+
+            builder.row(
+
+                InlineKeyboardButton(
+
+                    text=f"📚 {title}",
+
+                    callback_data=
+                    f"bookfile_{book['message_id']}"
+
+                )
+
+            )
+
+    # ======================
+    # MUSIC
+    # ======================
+
+    try:
+
+        with open(
+            "Musik.csv",
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            reader = csv.DictReader(f)
+
+            for row in reader:
+
+                title = row.get(
+                    "title",
+                    ""
+                )
+
+                if query in title.lower():
+
+                    found += 1
+
+                    builder.row(
+
+                        InlineKeyboardButton(
+
+                            text=f"🎵 {title}",
+
+                            callback_data=
+                            f"music_{row['track_number']}"
+
+                        )
+
+                    )
+
+    except Exception:
+        pass
+
+    # ======================
+    # FILMS
+    # ======================
+
+    try:
+
+        with open(
+            "Filme.csv",
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            reader = csv.DictReader(f)
+
+            for row in reader:
+
+                title = row.get(
+                    "title",
+                    ""
+                )
+
+                if query in title.lower():
+
+                    found += 1
+
+    except Exception:
+        pass
+
+    # ======================
+    # VIDEOS
+    # ======================
+
+    try:
+
+        with open(
+            "Videos.csv",
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            reader = csv.DictReader(f)
+
+            for row in reader:
+
+                title = row.get(
+                    "title",
+                    ""
+                )
+
+                if query in title.lower():
+
+                    found += 1
+
+    except Exception:
+        pass
+
+    search_users.discard(
+        message.from_user.id
+    )
+
+    if found == 0:
+
+        await message.answer(
+            "❌ Hech narsa topilmadi."
+        )
+
+        return
+
+    await message.answer(
+
+        f"🔍 Topildi: {found}",
+
+        reply_markup=
+        builder.as_markup()
+
     )
 # =========================================================
 # MEDIEN
