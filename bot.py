@@ -2,6 +2,7 @@
 # STANDARD LIBRARY IMPORTS
 # =========================================================
 import os
+import glob
 import csv
 import uuid
 import hmac
@@ -1833,82 +1834,120 @@ async def start_lesen(
         return
 
     # =====================================================
-    # SEND IMAGE
+    # SEND LESEN MATERIALS
     # =====================================================
 
-    image_path = get_lesen_image(
-        level,
-        lesson
-    )
+    # Yordamchi funksiyani chaqiramiz
+    images = get_lesson_lesen_images(level, lesson)
 
-    if image_path:
+    logger.info(f"LESEN FILES FOUND: {images}")
 
-        await callback.message.answer_photo(
-            FSInputFile(image_path),
-            caption=
-            f"📖 Lesen\n\n"
-            f"🇩🇪 {level} | Unterricht {lesson}"
+    if images:
+        total = len(images)
+
+        for index, image_path in enumerate(images, start=1):
+            caption = (
+                f"📖 Lesen\n\n"
+                f"🇩🇪 {level}\n"
+                f"📚 Unterricht {lesson}\n"
+                f"🖼 Rasm {index}/{total}"
+            )
+
+            try:
+                # Faylni yuborish
+                await callback.message.answer_photo(
+                    photo=FSInputFile(image_path),
+                    caption=caption
+                )
+            except Exception as e:
+                logger.exception(f"LESEN PHOTO ERROR: {image_path}")
+    else:
+        logger.warning(f"LESEN IMAGE NOT FOUND | {level}-{lesson}")
+        # =====================================================
+        # LOAD TASKS
+        # =====================================================
+
+        tasks = load_lesen(
+            level,
+            lesson
         )
 
-    # =====================================================
-    # LOAD TASKS
-    # =====================================================
+        if not tasks:
 
-    tasks = load_lesen(
-        level,
-        lesson
-    )
+            await callback.answer(
+                "Lesen topilmadi."
+            )
 
-    if not tasks:
+            return
 
-        await callback.answer(
-            "Lesen topilmadi."
+        lesen_progress[user_id] = {
+
+            "level": level,
+
+            "lesson": lesson,
+
+            "tasks": tasks,
+
+            "index": 0,
+
+            "score": 0
+        }
+        # =====================================================
+        # START BUTTON
+        # =====================================================
+
+        builder = InlineKeyboardBuilder()
+
+        builder.button(
+            text="▶️ Testni Boshlash",
+            callback_data="begin_lesen"
         )
 
-        return
+        builder.adjust(1)
 
-    lesen_progress[user_id] = {
+        logger.info(
+            f"LESEN READY | USER={user_id}"
+        )
 
-        "level": level,
+        logger.info(
+            f"LESEN USERS: "
+            f"{list(lesen_progress.keys())}"
+        )
 
-        "lesson": lesson,
+        await callback.message.answer(
 
-        "tasks": tasks,
+            "📖 Matnni yoki rasmni diqqat bilan o'qing.\n\n"
+            "Tayyor bo'lsangiz testni boshlang.",
 
-        "index": 0,
+            reply_markup=
+            builder.as_markup()
+        )
 
-        "score": 0
-    }
-    # =====================================================
-    # START BUTTON
-    # =====================================================
+# =========================================================
+# LESEN IMAGE HELPERS
+# =========================================================
 
-    builder = InlineKeyboardBuilder()
+def get_lesson_lesen_images(level, lesson):
+    """
+    Berilgan daraja (level) va dars (lesson) uchun 
+    mos keladigan rasmlar ro'yxatini qaytaradi.
+    """
+    folder = os.path.join("A1-C1-Level", "lesen_photo")
 
-    builder.button(
-        text="▶️ Testni Boshlash",
-        callback_data="begin_lesen"
-    )
+    # Qidiruv shablonlari
+    patterns = [
+        os.path.join(folder, f"{level}-{lesson}.png"),
+        os.path.join(folder, f"{level}-{lesson}.jpg"),
+        os.path.join(folder, f"{level}-{lesson}-*.png"),
+        os.path.join(folder, f"{level}-{lesson}-*.jpg"),
+    ]
 
-    builder.adjust(1)
+    files = []
+    for pattern in patterns:
+        files.extend(glob.glob(pattern))
 
-    logger.info(
-        f"LESEN READY | USER={user_id}"
-    )
-
-    logger.info(
-        f"LESEN USERS: "
-        f"{list(lesen_progress.keys())}"
-    )
-
-    await callback.message.answer(
-
-        "📖 Matnni yoki rasmni diqqat bilan o'qing.\n\n"
-        "Tayyor bo'lsangiz testni boshlang.",
-
-        reply_markup=
-        builder.as_markup()
-    )
+    # set() orqali dublikatlarni o'chirib, sorted() bilan tartiblaymiz
+    return sorted(list(set(files)))
 
     await callback.answer()
 # =========================================================
@@ -7737,42 +7776,37 @@ def load_lesen(
         lesson,
         teil
     )
+
 # =========================================================
-# GET LESEN IMAGE
-# =========================================================
+# GET LESEN IMAGES
+# ==========================================================
 
-def get_lesen_image(
-    level,
-    lesson
-):
+def get_lesson_lesen_images(level: str, lesson: str) -> list:
+    """
+    Belgilangan daraja va dars uchun rasmlar yo'llarini xavfsiz qidirish.
+    """
+    # Fayl yo'lini xavfsiz birlashtirish
+    folder = os.path.join(BASE_DIR, "A1-C1-Level", "lesen_photo")
 
-    folder = os.path.join(
-        BASE_DIR,
-        "A1-C1-Level",
-        "lesen_photo"
-    )
+    # Papka mavjudligini tekshirish (xavfsizlik uchun)
+    if not os.path.exists(folder):
+        return []
 
-    candidates = [
-
-        f"{level}-{lesson}-lesen.png",
-
-        f"{level}-{lesson}.1-lesen.png"
+    # Qidiruv shablonlari
+    search_patterns = [
+        f"{level}-{lesson}.png",
+        f"{level}-{lesson}.jpg",
+        f"{level}-{lesson}-*.png",
+        f"{level}-{lesson}-*.jpg"
     ]
 
-    for filename in candidates:
+    files = []
+    for pattern in search_patterns:
+        full_path = os.path.join(folder, pattern)
+        files.extend(glob.glob(full_path))
 
-        filepath = os.path.join(
-            folder,
-            filename
-        )
-
-        if os.path.exists(
-            filepath
-        ):
-            return filepath
-
-    return None
-
+    # Dublikatlarni olib tashlash va tartiblash
+    return sorted(list(set(files)))
 # =========================================================
 # LESSON HOREN LOADER
 # =========================================================
