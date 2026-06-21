@@ -598,7 +598,20 @@ def init_certificate_table():
     db_execute("CREATE INDEX IF NOT EXISTS idx_quiz_progress_user ON quiz_progress(user_id)")
 
     logger.info("DATABASE TABLES READY ✅")
+db_execute("""
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS bot_name TEXT DEFAULT 'vizu_academy_bot'
+""")
 
+db_execute("""
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS accepted_tasks INTEGER DEFAULT 0
+""")
+
+db_execute("""
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS rejected_tasks INTEGER DEFAULT 0
+""")
 # =========================================================
 # FLASK WEB SERVER (FOR KEEP-ALIVE)
 # =========================================================
