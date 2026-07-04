@@ -358,6 +358,39 @@ medien_menu = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 # =========================================================
+# DE-FILME MENU
+# =========================================================
+films_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(
+                text="🟢 A1-A2 Filmlari"
+            )
+        ],
+        [
+            KeyboardButton(
+                text="🔵 B1-B2 Filmlari"
+            )
+        ],
+        [
+            KeyboardButton(
+                text="🔴 C1 Filmlari"
+            )
+        ],
+        [
+            KeyboardButton(
+                text="🌟 Ommaviy Filmlar"
+            )
+        ],
+        [
+            KeyboardButton(
+                text="⬅️ Medien"
+            )
+        ]
+    ],
+    resize_keyboard=True
+)
+# =========================================================
 # VIZU CERTIFICATE MENU
 # =========================================================
 
@@ -1080,17 +1113,220 @@ async def send_book_file(
             show_alert=True
         )
 # =========================================================
-# DE-FILME
+# FILME LOAD
 # =========================================================
 
+import csv
+
+FILME = []
+
+try:
+
+    with open(
+        "Filme.csv",
+        encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(f)
+
+        for row in reader:
+
+            FILME.append({
+                "level":
+                    row["level"].strip(),
+                "title":
+                    row["title"].strip(),
+                "message_id":
+                    int(row["message_id"])
+            })
+
+    print(
+        f"FILME LOADED: "
+        f"{len(FILME)}"
+    )
+
+except Exception as e:
+
+    print(
+        f"FILME LOAD ERROR: {e}"
+    )
+# =========================================================
+# DE-FILME
+# =========================================================
 @dp.message(F.text == "🎬 De-Filme")
 async def open_films(message: Message):
 
     await message.answer(
+        "🎬 DE-FILME\n\n"
+        "Quyidagi bo'limlardan birini tanlang:",
+        reply_markup=films_menu
+    )
+# =========================================================
+# A1-A2 FILMS
+# =========================================================
+@dp.message(
+    F.text=="🟢 A1-A2 Filmlari"
+)
+async def a1_films(
+    message: Message
+):
 
-        "🎬 Nemis filmlari bo'limi\n\n"
-        "🚧 Tez orada ishga tushiriladi."
+    films = [
+        x
+        for x in FILME
+        if x["level"] == "A1"
+    ]
 
+    if not films:
+
+        await message.answer(
+            "🚧 Hozircha A1-A2 filmlari yuklanmagan."
+        )
+
+        return
+
+    text = (
+        "🟢 A1-A2 FILMLARI\n\n"
+    )
+
+    for film in films:
+
+        text += (
+            f"🎬 "
+            f"{film['title']}\n"
+        )
+
+    await message.answer(
+        text
+    )
+# =========================================================
+# B1-B2 FILMS
+# =========================================================
+@dp.message(
+    F.text=="🔵 B1-B2 Filmlari"
+)
+async def b1_films(
+    message: Message
+):
+
+    films = [
+        x
+        for x in FILME
+        if x["level"] == "B1"
+    ]
+
+    if not films:
+
+        await message.answer(
+            "🚧 Hozircha B1-B2 filmlari yuklanmagan."
+        )
+
+        return
+
+    text = (
+        "🔵 B1-B2 FILMLARI\n\n"
+    )
+
+    for film in films:
+
+        text += (
+            f"🎬 "
+            f"{film['title']}\n"
+        )
+
+    await message.answer(
+        text
+    )
+# =========================================================
+# C1 FILMS
+# =========================================================
+@dp.message(
+    F.text=="🔴 C1 Filmlari"
+)
+async def c1_films(
+    message: Message
+):
+
+    films = [
+        x
+        for x in FILME
+        if x["level"] == "C1"
+    ]
+
+    if not films:
+
+        await message.answer(
+            "🚧 Hozircha C1 filmlari yuklanmagan."
+        )
+
+        return
+
+    text = (
+        "🔴 C1 FILMLARI\n\n"
+    )
+
+    for film in films:
+
+        text += (
+            f"🎬 "
+            f"{film['title']}\n"
+        )
+
+    await message.answer(
+        text
+    )
+# =========================================================
+# POPULAR FILMS
+# =========================================================
+@dp.message(
+    F.text=="🌟 Ommaviy Filmlar"
+)
+async def popular_films(
+    message: Message
+):
+
+    films = [
+        x
+        for x in FILME
+        if x["level"] == "POPULAR"
+    ]
+
+    if not films:
+
+        await message.answer(
+            "🚧 Hozircha ommaviy filmlar yuklanmagan."
+        )
+
+        return
+
+    text = (
+        "🌟 OMMAVIY FILMLAR\n\n"
+    )
+
+    for i, film in enumerate(
+        films,
+        start=1
+    ):
+
+        text += (
+            f"{i}. "
+            f"{film['title']}\n"
+        )
+
+    await message.answer(
+        text
+    )
+# =========================================================
+# BACK TO MEDIEN
+# =========================================================
+@dp.message(
+    F.text == "⬅️ Medien"
+)
+async def back_medien(message: Message):
+
+    await message.answer(
+        "🎬 Medien bo'limi",
+        reply_markup=medien_menu
     )
 # =========================================================
 # BACK FROM MEDIEN
