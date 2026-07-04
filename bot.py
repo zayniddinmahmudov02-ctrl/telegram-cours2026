@@ -1112,44 +1112,7 @@ async def send_book_file(
             "❌ Kitob yuborishda xatolik",
             show_alert=True
         )
-# =========================================================
-# FILME LOAD
-# =========================================================
 
-import csv
-
-FILME = []
-
-try:
-
-    with open(
-        "Filme.csv",
-        encoding="utf-8"
-    ) as f:
-
-        reader = csv.DictReader(f)
-
-        for row in reader:
-
-            FILME.append({
-                "level":
-                    row["level"].strip(),
-                "title":
-                    row["title"].strip(),
-                "message_id":
-                    int(row["message_id"])
-            })
-
-    print(
-        f"FILME LOADED: "
-        f"{len(FILME)}"
-    )
-
-except Exception as e:
-
-    print(
-        f"FILME LOAD ERROR: {e}"
-    )
 # =========================================================
 # DE-FILME
 # =========================================================
@@ -7855,7 +7818,44 @@ def load_level_csv(level, filename):
     QUIZ_DATA[level] = data
     logger.info(f"{level}: {len(data)} loaded ✅")
 
+# =========================================================
+# FILME LOAD
+# =========================================================
 
+import csv
+
+FILME = []
+
+try:
+
+    with open(
+        "Filme.csv",
+        encoding="utf-8"
+    ) as f:
+
+        reader = csv.DictReader(f)
+
+        for row in reader:
+
+            FILME.append({
+                "level":
+                    row["level"].strip(),
+                "title":
+                    row["title"].strip(),
+                "message_id":
+                    int(row["message_id"])
+            })
+
+    print(
+        f"FILME LOADED: "
+        f"{len(FILME)}"
+    )
+
+except Exception as e:
+
+    print(
+        f"FILME LOAD ERROR: {e}"
+    )
 # =========================================================
 # LOAD ALL QUIZZES
 # =========================================================
