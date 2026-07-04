@@ -1124,11 +1124,13 @@ async def open_films(message: Message):
         "Quyidagi bo'limlardan birini tanlang:",
         reply_markup=films_menu
     )
+
+
 # =========================================================
 # A1-A2 FILMS
 # =========================================================
 @dp.message(
-    F.text=="🟢 A1-A2 Filmlari"
+    F.text == "🟢 A1-A2 Filmlari"
 )
 async def a1_films(
     message: Message
@@ -1148,25 +1150,83 @@ async def a1_films(
 
         return
 
-    text = (
-        "🟢 A1-A2 FILMLARI\n\n"
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🎬 Extra auf Deutsch",
+                    callback_data=
+                    "extra_deutsch"
+                )
+            ]
+        ]
     )
+
+    await message.answer(
+        "🟢 A1-A2 FILMLARI\n\n"
+        "Filmni tanlang:",
+        reply_markup=kb
+    )
+
+
+# =========================================================
+# EXTRA AUF DEUTSCH
+# =========================================================
+@dp.callback_query(
+    F.data == "extra_deutsch"
+)
+async def extra_deutsch(
+    callback: CallbackQuery
+):
+
+    films = [
+        x
+        for x in FILME
+        if (
+            x["level"] == "A1"
+            and
+            "Extra auf Deutsch"
+            in x["title"]
+        )
+    ]
+
+    keyboard = []
 
     for film in films:
 
-        text += (
-            f"🎬 "
-            f"{film['title']}\n"
+        folge = (
+            film["title"]
+            .split("Folge ")[1]
         )
 
-    await message.answer(
-        text
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=folge,
+                    callback_data=
+                    f"film:{film['message_id']}"
+                )
+            ]
+        )
+
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=keyboard
     )
+
+    await callback.message.edit_text(
+        "🎬 Extra auf Deutsch\n\n"
+        "Folgeni tanlang:",
+        reply_markup=kb
+    )
+
+    await callback.answer()
+
+
 # =========================================================
 # B1-B2 FILMS
 # =========================================================
 @dp.message(
-    F.text=="🔵 B1-B2 Filmlari"
+    F.text == "🔵 B1-B2 Filmlari"
 )
 async def b1_films(
     message: Message
@@ -1186,25 +1246,17 @@ async def b1_films(
 
         return
 
-    text = (
-        "🔵 B1-B2 FILMLARI\n\n"
-    )
-
-    for film in films:
-
-        text += (
-            f"🎬 "
-            f"{film['title']}\n"
-        )
-
     await message.answer(
-        text
+        "🔵 B1-B2 FILMLARI\n\n"
+        "🚧 Hozircha yuklanmoqda."
     )
+
+
 # =========================================================
 # C1 FILMS
 # =========================================================
 @dp.message(
-    F.text=="🔴 C1 Filmlari"
+    F.text == "🔴 C1 Filmlari"
 )
 async def c1_films(
     message: Message
@@ -1224,20 +1276,12 @@ async def c1_films(
 
         return
 
-    text = (
-        "🔴 C1 FILMLARI\n\n"
-    )
-
-    for film in films:
-
-        text += (
-            f"🎬 "
-            f"{film['title']}\n"
-        )
-
     await message.answer(
-        text
+        "🔴 C1 FILMLARI\n\n"
+        "🚧 Hozircha yuklanmoqda."
     )
+
+
 # =========================================================
 # POPULAR FILMS
 # =========================================================
@@ -1269,7 +1313,8 @@ async def popular_films(
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=f"🎬 {film['title']}",
+                    text=
+                    f"🎬 {film['title']}",
                     callback_data=
                     f"film:{film['message_id']}"
                 )
@@ -1285,6 +1330,8 @@ async def popular_films(
         "Filmni tanlang:",
         reply_markup=kb
     )
+
+
 # =========================================================
 # SEND FILM
 # =========================================================
@@ -1301,10 +1348,6 @@ async def send_film(
             callback.data.split(":")
         )
 
-        message_id = int(
-            message_id
-        )
-
         await bot.copy_message(
             chat_id=
             callback.from_user.id,
@@ -1313,7 +1356,7 @@ async def send_film(
             FILM_CHANNEL_ID,
 
             message_id=
-            message_id
+            int(message_id)
         )
 
         await callback.answer(
@@ -1321,6 +1364,9 @@ async def send_film(
         )
 
     except Exception as e:
+
+        import traceback
+        traceback.print_exc()
 
         print(
             f"FILM ERROR: {e}"
@@ -1330,13 +1376,17 @@ async def send_film(
             "❌ Film topilmadi.",
             show_alert=True
         )
+
+
 # =========================================================
 # BACK TO MEDIEN
 # =========================================================
 @dp.message(
     F.text == "⬅️ Medien"
 )
-async def back_medien(message: Message):
+async def back_medien(
+    message: Message
+):
 
     await message.answer(
         "🎬 Medien bo'limi",
