@@ -1242,7 +1242,7 @@ async def c1_films(
 # POPULAR FILMS
 # =========================================================
 @dp.message(
-    F.text=="🌟 Ommaviy Filmlar"
+    F.text == "🌟 Ommaviy Filmlar"
 )
 async def popular_films(
     message: Message
@@ -1262,23 +1262,74 @@ async def popular_films(
 
         return
 
-    text = (
-        "🌟 OMMAVIY FILMLAR\n\n"
-    )
+    keyboard = []
 
-    for i, film in enumerate(
-        films,
-        start=1
-    ):
+    for film in films:
 
-        text += (
-            f"{i}. "
-            f"{film['title']}\n"
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=f"🎬 {film['title']}",
+                    callback_data=
+                    f"film:{film['message_id']}"
+                )
+            ]
         )
 
-    await message.answer(
-        text
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=keyboard
     )
+
+    await message.answer(
+        "🌟 OMMAVIY FILMLAR\n\n"
+        "Filmni tanlang:",
+        reply_markup=kb
+    )
+# =========================================================
+# SEND FILM
+# =========================================================
+@dp.callback_query(
+    F.data.startswith("film:")
+)
+async def send_film(
+    callback: CallbackQuery
+):
+
+    try:
+
+        _, message_id = (
+            callback.data.split(":")
+        )
+
+        message_id = int(
+            message_id
+        )
+
+        await bot.copy_message(
+            chat_id=
+            callback.from_user.id,
+
+            from_chat_id=
+            FILM_CHANNEL_ID,
+
+            message_id=
+            message_id
+        )
+
+        await callback.answer(
+            "🎬 Film yuborildi."
+        )
+
+    except Exception as e:
+
+        print(
+            f"FILM ERROR: {e}"
+        )
+
+        await callback.answer(
+            "❌ Film topilmadi.",
+            show_alert=True
+        )
 # =========================================================
 # BACK TO MEDIEN
 # =========================================================
