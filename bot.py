@@ -7840,10 +7840,17 @@ try:
             FILME.append({
                 "level":
                     row["level"].strip(),
+
+                "category":
+                    row["category"].strip(),
+
                 "title":
                     row["title"].strip(),
+
                 "message_id":
-                    int(row["message_id"])
+                    int(
+                        row["message_id"]
+                    )
             })
 
     print(
