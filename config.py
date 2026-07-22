@@ -125,3 +125,26 @@ if not DATABASE_URL:
     raise ValueError(
         "DATABASE_URL topilmadi"
     )
+# =========================================================
+# SOCIAL LINKS
+# =========================================================
+
+ADMIN_URL = "https://t.me/Mahmudow_Z"
+
+CHANNEL_URL = "https://t.me/vizu_academy"
+
+GROUP_URL = "https://t.me/"
+
+INSTAGRAM_URL = "https://instagram.com/vizu_academy"
+
+YOUTUBE_URL = "https://youtube.com/@vizuacademy"
+
+WEBSITE_URL = "https://vizu-de.com"
+
+RESULTS_URL = "https://t.me/+o8b2cf3rwAs1MzFi"
+
+# =========================================================
+# FILES
+# =========================================================
+
+TEACHER_PHOTO = "teacher.jpg"
