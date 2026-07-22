@@ -125,6 +125,70 @@ def init_tables():
         ADD COLUMN IF NOT EXISTS rejected_tasks INTEGER DEFAULT 0
     """)
 # =========================================================
+# USERS MIGRATION
+# =========================================================
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS course TEXT
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS approved INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS total_score INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS daily_score INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS unlocked_level TEXT DEFAULT 'A1'
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS last_daily_reset DATE
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS vizu_a1_access INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS vizu_a2_access INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS vizu_b1_access INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS vizu_b2_access INTEGER DEFAULT 0
+""")
+
+db_execute("""
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS vizu_c1_access INTEGER DEFAULT 0
+""")
+
+# =========================================================
 # W CERTIFICATES TABLE
 # =========================================================
 
@@ -371,13 +435,45 @@ def init_certificate_table():
     logger.info(
         "CERTIFICATES TABLE READY ✅"
     )
-    # INDEXES
-    db_execute("CREATE INDEX IF NOT EXISTS idx_users_score ON users(score)")
-    db_execute("CREATE INDEX IF NOT EXISTS idx_users_total_score ON users(total_score)")
-    db_execute("CREATE INDEX IF NOT EXISTS idx_users_daily_score ON users(daily_score)")
-    db_execute("CREATE INDEX IF NOT EXISTS idx_users_course ON users(course)")
-    db_execute("CREATE INDEX IF NOT EXISTS idx_users_approved ON users(approved)")
-    db_execute("CREATE INDEX IF NOT EXISTS idx_quiz_progress_user ON quiz_progress(user_id)")
+
+# =========================================================
+# INDEXES
+# =========================================================
+
+db_execute("""
+CREATE INDEX IF NOT EXISTS idx_users_score
+ON users(score)
+""")
+
+db_execute("""
+CREATE INDEX IF NOT EXISTS idx_users_total_score
+ON users(total_score)
+""")
+
+db_execute("""
+CREATE INDEX IF NOT EXISTS idx_users_daily_score
+ON users(daily_score)
+""")
+
+db_execute("""
+CREATE INDEX IF NOT EXISTS idx_users_course
+ON users(course)
+""")
+
+db_execute("""
+CREATE INDEX IF NOT EXISTS idx_users_approved
+ON users(approved)
+""")
+
+db_execute("""
+CREATE INDEX IF NOT EXISTS idx_users_level
+ON users(unlocked_level)
+""")
+
+db_execute("""
+CREATE INDEX IF NOT EXISTS idx_quiz_progress_user
+ON quiz_progress(user_id)
+""")
 
 # =========================================================
 # DATABASE INIT
