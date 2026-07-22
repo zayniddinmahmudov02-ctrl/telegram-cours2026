@@ -293,7 +293,224 @@ def init_access_codes():
     """)
 
     logger.info("ACCESS CODES READY ✅")
+# =========================================================
+# HOMEWORK ASSIGNMENTS
+# =========================================================
 
+def init_homework_assignments():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS homework_assignments(
+
+        id SERIAL PRIMARY KEY,
+
+        category_code TEXT NOT NULL,
+
+        level TEXT,
+
+        lesson INTEGER,
+
+        competency TEXT NOT NULL,
+
+        title TEXT NOT NULL,
+
+        description TEXT,
+
+        allow_text BOOLEAN DEFAULT TRUE,
+        allow_photo BOOLEAN DEFAULT TRUE,
+        allow_audio BOOLEAN DEFAULT TRUE,
+        allow_voice BOOLEAN DEFAULT TRUE,
+        allow_pdf BOOLEAN DEFAULT TRUE,
+        allow_document BOOLEAN DEFAULT TRUE,
+
+        max_files INTEGER DEFAULT 20,
+
+        active BOOLEAN DEFAULT TRUE,
+
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+    """)
+
+    logger.info("HOMEWORK ASSIGNMENTS READY ✅")
+    # =========================================================
+# HOMEWORK SUBMISSIONS
+# =========================================================
+
+def init_homework_submissions():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS homework_submissions(
+
+        id SERIAL PRIMARY KEY,
+
+        user_id BIGINT NOT NULL,
+
+        assignment_id INTEGER NOT NULL,
+
+        category_code TEXT NOT NULL,
+
+        level TEXT,
+
+        lesson INTEGER,
+
+        competency TEXT,
+
+        status TEXT DEFAULT 'submitted',
+
+        created_at TIMESTAMP DEFAULT NOW(),
+
+        UNIQUE(user_id,assignment_id)
+    )
+    """)
+
+    logger.info("HOMEWORK SUBMISSIONS READY ✅")
+
+    # =========================================================
+# HOMEWORK FILES
+# =========================================================
+
+def init_homework_files():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS homework_files(
+
+        id SERIAL PRIMARY KEY,
+
+        submission_id INTEGER NOT NULL,
+
+        file_id TEXT,
+
+        file_type TEXT,
+
+        file_name TEXT,
+
+        telegram_message_id BIGINT,
+
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+    """)
+
+    logger.info("HOMEWORK FILES READY ✅")
+    # =========================================================
+# HOMEWORK SCORES
+# =========================================================
+
+def init_homework_scores():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS homework_scores(
+
+        id SERIAL PRIMARY KEY,
+
+        submission_id INTEGER UNIQUE NOT NULL,
+
+        teacher_id BIGINT,
+
+        score INTEGER,
+
+        feedback TEXT,
+
+        scored_at TIMESTAMP DEFAULT NOW()
+    )
+    """)
+
+    logger.info("HOMEWORK SCORES READY ✅")
+    # =========================================================
+# TEACHER QUESTIONS
+# =========================================================
+
+def init_teacher_questions():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS teacher_questions(
+
+        id SERIAL PRIMARY KEY,
+
+        user_id BIGINT NOT NULL,
+
+        category_code TEXT,
+
+        level TEXT,
+
+        lesson INTEGER,
+
+        status TEXT DEFAULT 'OPEN',
+
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+    """)
+
+    logger.info("TEACHER QUESTIONS READY ✅")
+    # =========================================================
+# TEACHER QUESTION FILES
+# =========================================================
+
+def init_teacher_question_files():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS teacher_question_files(
+
+        id SERIAL PRIMARY KEY,
+
+        question_id INTEGER NOT NULL,
+
+        file_id TEXT,
+
+        file_type TEXT,
+
+        file_name TEXT,
+
+        telegram_message_id BIGINT,
+
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+    """)
+
+    logger.info("TEACHER QUESTION FILES READY ✅")
+    # =========================================================
+# TEACHER ANSWERS
+# =========================================================
+
+def init_teacher_answers():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS teacher_answers(
+
+        id SERIAL PRIMARY KEY,
+
+        question_id INTEGER UNIQUE NOT NULL,
+
+        teacher_id BIGINT,
+
+        answer TEXT,
+
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+    """)
+
+    logger.info("TEACHER ANSWERS READY ✅")
+    # =========================================================
+# SUBMISSION LOGS
+# =========================================================
+
+def init_submission_logs():
+
+    db_execute("""
+    CREATE TABLE IF NOT EXISTS submission_logs(
+
+        id SERIAL PRIMARY KEY,
+
+        submission_id INTEGER,
+
+        action TEXT,
+
+        actor_id BIGINT,
+
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+    """)
+
+    logger.info("SUBMISSION LOGS READY ✅")
 # =========================================================
 # W CERTIFICATES TABLE
 # =========================================================
@@ -612,7 +829,16 @@ def init_database():
     init_homework_access()
 
     init_access_codes()
+    init_homework_assignments()
+    init_homework_submissions()
+    init_homework_files()
+    init_homework_scores()
 
+    init_teacher_questions()
+    init_teacher_question_files()
+    init_teacher_answers()
+
+    init_submission_logs()
     logger.info("DATABASE READY ✅")
 
 # =========================================================
