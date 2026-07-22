@@ -958,21 +958,458 @@ def increase_access_code_usage(code):
         """,
         (code,)
     )
-
-
 def create_access_code(code, category):
 
     db_execute(
         """
         INSERT INTO access_codes
 
-        (code,category_code)
+        (code, category_code)
 
-        VALUES(%s,%s)
+        VALUES (%s, %s)
 
-        ON CONFLICT(code)
+        ON CONFLICT (code)
 
         DO NOTHING
         """,
         (code, category)
+    )
+
+
+# =========================================================
+# HOMEWORK FEEDBACK
+# =========================================================
+
+def save_homework_feedback(
+    submission_id,
+    teacher_id,
+    stars,
+    feedback,
+    attachment,
+    status
+):
+
+    # Homework bahosini saqlash
+    db_execute(
+        """
+        INSERT INTO homework_scores
+        (
+            submission_id,
+            teacher_id,
+            stars
+        )
+
+        VALUES (%s, %s, %s)
+        """,
+        (
+            submission_id,
+            teacher_id,
+            stars
+        )
+    )
+
+    # Teacher javobini saqlash
+    db_execute(
+        """
+        INSERT INTO teacher_answers
+        (
+            submission_id,
+            teacher_id,
+            feedback,
+            attachment,
+            status
+        )
+
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (
+            submission_id,
+            teacher_id,
+            feedback,
+            attachment,
+            status
+        )
+    )
+
+    # Homework statusini yangilash
+    db_execute(
+        """
+        UPDATE homework_submissions
+
+        SET status = %s
+
+        WHERE id = %s
+        """,
+        (
+            status,
+            submission_id
+        )
+    )
+
+# =========================================================
+# CREATE HOMEWORK SUBMISSION
+# =========================================================
+
+def create_homework_submission(
+    user_id,
+    full_name,
+    category,
+    level,
+    lesson,
+    kompetenz=None,
+    task_number=None
+):
+    row = db_execute(
+        """
+        INSERT INTO homework_submissions
+        (
+            user_id,
+            full_name,
+            category,
+            level,
+            lesson,
+            kompetenz,
+            task_number,
+            status,
+            created_at
+        )
+
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            'pending',
+            NOW()
+        )
+
+        RETURNING id
+        """,
+        (
+            user_id,
+            full_name,
+            category,
+            level,
+            lesson,
+            kompetenz,
+            task_number
+        ),
+        fetchone=True
+    )
+
+    return row[0]
+# =========================================================
+# ADD HOMEWORK FILE
+# =========================================================
+
+def add_homework_file(
+    submission_id,
+    file_type,
+    file_id=None,
+    text=None
+):
+    db_execute(
+        """
+        INSERT INTO homework_files
+        (
+            submission_id,
+            file_type,
+            file_id,
+            text,
+            created_at
+        )
+
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            %s,
+            NOW()
+        )
+        """,
+        (
+            submission_id,
+            file_type,
+            file_id,
+            text
+        )
+    )
+# =========================================================
+# GET HOMEWORK SUBMISSION
+# =========================================================
+
+def get_homework_submission(submission_id):
+
+    return db_execute(
+        """
+        SELECT *
+
+        FROM homework_submissions
+
+        WHERE id=%s
+        """,
+        (submission_id,),
+        fetchone=True
+    )
+# =========================================================
+# GET HOMEWORK FILES
+# =========================================================
+
+def get_homework_files(submission_id):
+
+    return db_execute(
+        """
+        SELECT
+            id,
+            submission_id,
+            file_type,
+            file_id,
+            text,
+            created_at
+
+        FROM homework_files
+
+        WHERE submission_id=%s
+
+        ORDER BY id
+        """,
+        (submission_id,),
+        fetch=True
+    )
+# =========================================================
+# SAVE HOMEWORK SCORE
+# =========================================================
+
+def save_homework_score(
+    submission_id,
+    teacher_id,
+    stars
+):
+
+    db_execute(
+        """
+        INSERT INTO homework_scores
+        (
+            submission_id,
+            teacher_id,
+            stars,
+            created_at
+        )
+
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            NOW()
+        )
+
+        ON CONFLICT (submission_id)
+
+        DO UPDATE SET
+
+            teacher_id = EXCLUDED.teacher_id,
+            stars = EXCLUDED.stars,
+            created_at = NOW()
+        """,
+        (
+            submission_id,
+            teacher_id,
+            stars
+        )
+    )
+# =========================================================
+# SAVE HOMEWORK FEEDBACK
+# =========================================================
+
+def save_homework_feedback(
+    submission_id,
+    teacher_id,
+    feedback,
+    attachment=None,
+    status="checked"
+):
+
+    db_execute(
+        """
+        INSERT INTO teacher_answers
+        (
+            submission_id,
+            teacher_id,
+            feedback,
+            attachment,
+            created_at
+        )
+
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            %s,
+            NOW()
+        )
+        """,
+        (
+            submission_id,
+            teacher_id,
+            feedback,
+            attachment
+        )
+    )
+
+    db_execute(
+        """
+        UPDATE homework_submissions
+
+        SET
+            status=%s
+
+        WHERE id=%s
+        """,
+        (
+            status,
+            submission_id
+        )
+    )
+# =========================================================
+# SUBMISSION LOG
+# =========================================================
+
+def add_submission_log(
+    submission_id,
+    action,
+    user_id,
+    description=None
+):
+
+    db_execute(
+        """
+        INSERT INTO submission_logs
+        (
+            submission_id,
+            action,
+            user_id,
+            description,
+            created_at
+        )
+
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            %s,
+            NOW()
+        )
+        """,
+        (
+            submission_id,
+            action,
+            user_id,
+            description
+        )
+    )
+# =========================================================
+# GET PENDING HOMEWORKS
+# =========================================================
+
+def get_pending_homeworks():
+
+    return db_execute(
+        """
+        SELECT *
+
+        FROM homework_submissions
+
+        WHERE status='pending'
+
+        ORDER BY created_at
+        """,
+        fetch=True
+    )
+# =========================================================
+# GET USER HOMEWORKS
+# =========================================================
+
+def get_user_homeworks(user_id):
+
+    return db_execute(
+        """
+        SELECT *
+
+        FROM homework_submissions
+
+        WHERE user_id=%s
+
+        ORDER BY created_at DESC
+        """,
+        (user_id,),
+        fetch=True
+    )
+# =========================================================
+# GET TEACHER FEEDBACK
+# =========================================================
+
+def get_teacher_feedback(submission_id):
+
+    return db_execute(
+        """
+        SELECT *
+
+        FROM teacher_answers
+
+        WHERE submission_id=%s
+
+        ORDER BY created_at DESC
+
+        LIMIT 1
+        """,
+        (submission_id,),
+        fetchone=True
+    )
+# =========================================================
+# GET HOMEWORK SCORE
+# =========================================================
+
+def get_homework_score(submission_id):
+
+    return db_execute(
+        """
+        SELECT *
+
+        FROM homework_scores
+
+        WHERE submission_id=%s
+        """,
+        (submission_id,),
+        fetchone=True
+    )
+# =========================================================
+# UPDATE HOMEWORK STATUS
+# =========================================================
+
+def update_homework_status(
+    submission_id,
+    status
+):
+
+    db_execute(
+        """
+        UPDATE homework_submissions
+
+        SET
+            status=%s
+
+        WHERE id=%s
+        """,
+        (
+            status,
+            submission_id
+        )
     )
