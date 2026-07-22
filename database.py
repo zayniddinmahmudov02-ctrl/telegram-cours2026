@@ -227,6 +227,74 @@ def init_homework_categories():
     logger.info("HOMEWORK CATEGORIES READY ✅")
 
 # =========================================================
+# HOMEWORK ACCESS
+# =========================================================
+
+def init_homework_access():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS homework_access(
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+
+            category_code TEXT NOT NULL,
+
+            active BOOLEAN DEFAULT TRUE,
+
+            source TEXT NOT NULL,
+
+            activated_at TIMESTAMP DEFAULT NOW(),
+
+            expires_at TIMESTAMP,
+
+            UNIQUE(user_id, category_code)
+
+        )
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_homework_access_user
+        ON homework_access(user_id)
+    """)
+
+    db_execute("""
+        CREATE INDEX IF NOT EXISTS idx_homework_access_category
+        ON homework_access(category_code)
+    """)
+
+    logger.info("HOMEWORK ACCESS READY ✅")
+
+# =========================================================
+# ACCESS CODES
+# =========================================================
+
+def init_access_codes():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS access_codes(
+
+            id SERIAL PRIMARY KEY,
+
+            code TEXT UNIQUE NOT NULL,
+
+            category_code TEXT NOT NULL,
+
+            max_activations INTEGER DEFAULT 1,
+
+            used_count INTEGER DEFAULT 0,
+
+            active BOOLEAN DEFAULT TRUE,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        )
+    """)
+
+    logger.info("ACCESS CODES READY ✅")
+
+# =========================================================
 # W CERTIFICATES TABLE
 # =========================================================
 
@@ -541,4 +609,144 @@ def init_database():
 
     init_homework_categories()
 
+    init_homework_access()
+
+    init_access_codes()
+
     logger.info("DATABASE READY ✅")
+
+# =========================================================
+# HOMEWORK HELPERS
+# =========================================================
+
+def has_homework_access(user_id, category):
+    row = db_execute(
+        """
+        SELECT active
+        FROM homework_access
+        WHERE user_id=%s
+          AND category_code=%s
+        """,
+        (user_id, category),
+        fetchone=True
+    )
+
+    return bool(row and row[0])
+
+
+def grant_homework_access(user_id, category, source):
+    db_execute(
+        """
+        INSERT INTO homework_access
+            (user_id, category_code, source)
+
+        VALUES
+            (%s, %s, %s)
+
+        ON CONFLICT (user_id, category_code)
+
+        DO UPDATE SET
+            active = TRUE,
+            source = EXCLUDED.source,
+            activated_at = NOW()
+        """,
+        (user_id, category, source)
+    )
+
+
+def revoke_homework_access(user_id, category):
+    db_execute(
+        """
+        UPDATE homework_access
+
+        SET
+            active = FALSE
+
+        WHERE
+            user_id = %s
+            AND category_code = %s
+        """,
+        (user_id, category)
+    )
+
+
+def get_homework_access(user_id):
+    return db_execute(
+        """
+        SELECT
+            category_code,
+            active,
+            source,
+            activated_at,
+            expires_at
+
+        FROM homework_access
+
+        WHERE user_id=%s
+
+        ORDER BY category_code
+        """,
+        (user_id,),
+        fetch=True
+    )
+
+
+def get_user_homework_categories(user_id):
+    rows = db_execute(
+        """
+        SELECT category_code
+
+        FROM homework_access
+
+        WHERE
+            user_id=%s
+            AND active=TRUE
+        """,
+        (user_id,),
+        fetch=True
+    )
+
+    return [row[0] for row in rows] if rows else []
+
+def get_access_code(code):
+
+    return db_execute(
+        """
+        SELECT *
+
+        FROM access_codes
+
+        WHERE code=%s
+        """,
+        (code,),
+        fetchone=True
+    )
+def increase_access_code_usage(code):
+    db_execute(
+        """
+        UPDATE access_codes
+
+        SET used_count=used_count+1
+
+        WHERE code=%s
+        """,
+        (code,)
+    )
+
+
+def create_access_code(code, category):
+
+    db_execute(
+        """
+        INSERT INTO access_codes
+
+        (code,category_code)
+
+        VALUES(%s,%s)
+
+        ON CONFLICT(code)
+
+        DO NOTHING
+        """,
+        (code, category)
+    )
