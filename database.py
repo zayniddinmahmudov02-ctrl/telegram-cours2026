@@ -187,6 +187,44 @@ db_execute("""
     ALTER TABLE users
     ADD COLUMN IF NOT EXISTS vizu_c1_access INTEGER DEFAULT 0
 """)
+# =========================================================
+# HOMEWORK CATEGORIES
+# =========================================================
+
+def init_homework_categories():
+
+    db_execute("""
+        CREATE TABLE IF NOT EXISTS homework_categories (
+
+            id SERIAL PRIMARY KEY,
+
+            code TEXT UNIQUE NOT NULL,
+
+            title TEXT NOT NULL,
+
+            access_type TEXT NOT NULL,
+
+            price INTEGER DEFAULT 0,
+
+            active BOOLEAN DEFAULT TRUE,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        )
+        
+    """)
+    db_execute("""
+    INSERT INTO homework_categories
+    (code,title,access_type,price)
+
+    VALUES
+    ('online','Online Kurs','promo',0),
+    ('video','Video Kurs','payment',0),
+    ('speaking','Speaking Kurs','promo_payment',49000)
+
+    ON CONFLICT (code) DO NOTHING
+    """)
+    logger.info("HOMEWORK CATEGORIES READY ✅")
 
 # =========================================================
 # W CERTIFICATES TABLE
@@ -500,5 +538,7 @@ def init_database():
     init_vizu_sprechen_results_table()
 
     init_certificate_table()
+
+    init_homework_categories()
 
     logger.info("DATABASE READY ✅")
