@@ -65,6 +65,25 @@ from reportlab.platypus import (
 from keyboards import *
 
 # =========================================================
+# States
+# =========================================================
+from states.register import RegisterState
+from states.profile import ProfileState
+from states.certificate import VizuCertificateState
+from states.admin import BroadcastState, PersonalMessageState
+from states.schreiben import (
+    SchreibenState,
+    SchreibenRateState,
+    VizuSchreibenState,
+)
+from states.sprechen import (
+    SprechenState,
+    VizuSprechenState,
+)
+from states.lesen import VizuLesenState
+from states.horen import VizuHorenState
+
+# =========================================================
 # AIOGRAM
 # =========================================================
 from aiogram import (
@@ -200,84 +219,6 @@ def get_existing_certificate(user_id, rank):
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
-
-
-# =========================================================
-# STATES GROUP
-# =========================================================
-
-class VizuSchreibenState(
-    StatesGroup
-):
-
-    teil1 = State()
-
-    teil2 = State()
-class VizuHorenState(StatesGroup):
-    solving = State()
-
-class VizuLesenState(StatesGroup):
-    solving = State()
-
-class RegisterState(StatesGroup):
-    waiting_for_name = State()
-    waiting_for_phone = State()
-
-class VizuCertificateState(StatesGroup):
-    waiting_for_payment_check = State()
-    waiting_for_ticket_photo = State()
-
-class BroadcastState(StatesGroup):
-    waiting_for_message = State()
-
-class PersonalMessageState(StatesGroup):
-    waiting_for_id = State()
-    waiting_for_text = State()
-
-class ProfileState(StatesGroup):
-    change_name = State()
-
-class SchreibenRateState(
-    StatesGroup
-):
-    waiting_score = State()
-# =========================================================
-# SCHREIBEN STATE
-# =========================================================
-
-class SchreibenState(
-    StatesGroup
-):
-
-    waiting_file = State()
-
-
-# =========================================================
-# SPRECHEN STATE
-# =========================================================
-
-class SprechenState(
-    StatesGroup
-):
-
-    waiting_voice = State()
-# =========================================================
-# VIZU SPRECHEN STATE
-# =========================================================
-
-class VizuSprechenState(
-    StatesGroup
-):
-
-    teil1 = State()
-
-    teil21 = State()
-
-    teil22 = State()
-
-    teil31 = State()
-
-    teil32 = State()
 
 # =========================================================
 # OPEN VIZU CERTIFICATE MENU
