@@ -59,6 +59,10 @@ from reportlab.platypus import (
     TableStyle,
     Image as RLImage
 )
+# =========================================================
+# Keyboards
+# =========================================================
+from keyboards import *
 
 # =========================================================
 # AIOGRAM
@@ -274,137 +278,7 @@ class VizuSprechenState(
     teil31 = State()
 
     teil32 = State()
-# =========================================================
-# KEYBOARDS (REPLY MARKUPS)
-# =========================================================
-main_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-         KeyboardButton(text="📚 Artikel Topish"),
-         KeyboardButton(text="🎮 So'z O'yini")],
 
-        [KeyboardButton(text="🎥 Video Kurslar"),
-         KeyboardButton(text="🎓 Darslarni O'rganish")],
-
-        [KeyboardButton(text="🎬 Medien"),
-         KeyboardButton(text="🏅 VIZU-Zertifikat")],
-         
-        [KeyboardButton(text="📚 Ma'lumotlar"),
-         KeyboardButton(text="👤 Mening Profilim")]
-    ],
-    resize_keyboard=True
-)
-video_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="🎬 Bepul Namuna Darslar")],
-        [KeyboardButton(text="🇩🇪 A1")],
-        [KeyboardButton(text="🇩🇪 A2")],
-        [KeyboardButton(text="🇩🇪 B1")],
-        [KeyboardButton(text="🔥 A1-B1")],
-        [KeyboardButton(text="🔥 A1-C1")],
-        [KeyboardButton(text="⬅️ Orqaga")]
-    ],
-    resize_keyboard=True
-)
-
-admin_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="📊 Statistika")],
-        [KeyboardButton(text="📢 Reklama Yuborish")],
-        [KeyboardButton(text="📨 Shaxsiy Xabar")],
-        [KeyboardButton(text="⬅️ Admin Chiqish")]
-    ],
-    resize_keyboard=True
-)
-
-info_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="👨‍🏫 Ustoz haqida")],
-        [KeyboardButton(text="🏆 Natijalar")],
-        [KeyboardButton(text="📞 Admin bilan bog'lanish")],
-        [KeyboardButton(text="⬅️ Orqaga")]
-    ],
-    resize_keyboard=True
-)
-
-lessons_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="🇩🇪 A1"), KeyboardButton(text="🇩🇪 A2")],
-        [KeyboardButton(text="🇩🇪 B1"), KeyboardButton(text="🇩🇪 B2")],
-        [KeyboardButton(text="🇩🇪 C1")],
-        [KeyboardButton(text="🤖 AI Teacher")],
-        [KeyboardButton(text="⬅️ Orqaga")]
-    ],
-    resize_keyboard=True
-)
-
-def profile_keyboard():
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🏅 Mening Sertifikatlarim")],
-            [KeyboardButton(text="✏️ Ism Familiyani o'zgartirish")],
-            [KeyboardButton(text="⬅️ Orqaga")]
-        ],
-        resize_keyboard=True
-    )
-medien_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="📚 De-Bücher")],
-        [KeyboardButton(text="🎵 De-Musik")],
-        [KeyboardButton(text="🎬 De-Filme")],
-        [KeyboardButton(text="🔍 Qidiruv")],
-        [KeyboardButton(text="⬅️ Orqaga")]
-    ],
-    resize_keyboard=True
-)
-# =========================================================
-# DE-FILME MENU
-# =========================================================
-films_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(
-                text="🟢 A1-A2 Filmlari"
-            )
-        ],
-        [
-            KeyboardButton(
-                text="🔵 B1-B2 Filmlari"
-            )
-        ],
-        [
-            KeyboardButton(
-                text="🔴 C1 Filmlari"
-            )
-        ],
-        [
-            KeyboardButton(
-                text="🌟 Ommaviy Filmlar"
-            )
-        ],
-        [
-            KeyboardButton(
-                text="⬅️ Medien"
-            )
-        ]
-    ],
-    resize_keyboard=True
-)
-# =========================================================
-# VIZU CERTIFICATE MENU
-# =========================================================
-
-vizu_certificate_menu_keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="🏅 VIZU-A1")],
-        [KeyboardButton(text="🏅 VIZU-A2")],
-        [KeyboardButton(text="🏅 VIZU-B1")],
-        [KeyboardButton(text="🏅 VIZU-B2")],
-        [KeyboardButton(text="🏅 VIZU-C1")],
-        [KeyboardButton(text="⬅️ Orqaga")]
-    ],
-    resize_keyboard=True
-)
 # =========================================================
 # OPEN VIZU CERTIFICATE MENU
 # =========================================================
