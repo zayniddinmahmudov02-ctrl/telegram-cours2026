@@ -1,4 +1,4 @@
-from aiogram import F
+from aiogram import Router, F
 from aiogram.types import Message
 
 from database import db_execute
@@ -6,12 +6,12 @@ from keyboards import video_menu
 from services.runtime import artikel_users
 from config import COURSE_INFO
 
-
+router = Router()
 # =========================================================
 # VIDEO COURSES
 # =========================================================
 
-@dp.message(F.text == "🎥 Video Kurslar")
+@router.message(F.text == "🎥 Video Kurslar")
 async def video_courses(message: Message):
     artikel_users.pop(message.from_user.id, None)
 
@@ -25,7 +25,7 @@ async def video_courses(message: Message):
 # SAMPLE LESSON
 # =========================================================
 
-@dp.message(F.text == "🎬 Bepul Namuna Darslar")
+@router.message(F.text == "🎬 Bepul Namuna Darslar")
 async def sample_lesson(message: Message):
     await message.answer(
         "🎬 Bepul Namuna Dars:\n"
@@ -70,26 +70,26 @@ async def send_course_info(message: Message, course: str):
 # COURSES
 # =========================================================
 
-@dp.message(F.text == "🇩🇪 A1")
+@router.message(F.text == "🇩🇪 A1")
 async def course_a1(message: Message):
     await send_course_info(message, "🇩🇪 A1")
 
 
-@dp.message(F.text == "🇩🇪 A2")
+@router.message(F.text == "🇩🇪 A2")
 async def course_a2(message: Message):
     await send_course_info(message, "🇩🇪 A2")
 
 
-@dp.message(F.text == "🇩🇪 B1")
+@router.message(F.text == "🇩🇪 B1")
 async def course_b1(message: Message):
     await send_course_info(message, "🇩🇪 B1")
 
 
-@dp.message(F.text == "🔥 A1-B1")
+@router.message(F.text == "🔥 A1-B1")
 async def course_a1b1(message: Message):
     await send_course_info(message, "🔥 A1-B1")
 
 
-@dp.message(F.text == "🔥 A1-C1")
+@router.message(F.text == "🔥 A1-C1")
 async def course_a1c1(message: Message):
     await send_course_info(message, "🔥 A1-C1")
