@@ -148,3 +148,24 @@ RESULTS_URL = "https://t.me/+o8b2cf3rwAs1MzFi"
 # =========================================================
 
 TEACHER_PHOTO = "teacher.jpg"
+# =========================================================
+# LEVEL CONFIG
+# =========================================================
+
+LEVEL_CONFIG = {
+    "A1": {
+        "file": "A1-words.csv",
+    },
+    "A2": {
+        "file": "A2-words.csv",
+    },
+    "B1": {
+        "file": "B1-words.csv",
+    },
+    "B2": {
+        "file": "B2-words.csv",
+    },
+    "C1": {
+        "file": "C1-words.csv",
+    },
+}
