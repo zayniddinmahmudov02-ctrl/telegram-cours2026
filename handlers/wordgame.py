@@ -438,3 +438,51 @@ async def start_block(
         level,
         block
     )
+# =========================================================
+# NAVIGATION
+# =========================================================
+
+from keyboards import main_menu
+
+
+@router.message(F.text == "⬅️ Darajalar")
+async def back_to_levels(
+    message: Message,
+):
+    menu = await build_level_menu(
+        message.from_user.id
+    )
+
+    await message.answer(
+        "🎮 WortSpiel\n\n"
+        "Darajani tanlang:",
+        reply_markup=menu,
+    )
+
+
+@router.message(F.text == "⬅️ Orqaga")
+async def back_to_main(
+    message: Message,
+):
+    await message.answer(
+        "🏠 Asosiy menyu",
+        reply_markup=main_menu,
+    )
+
+
+@router.message(F.text == "🏆 Reytinglar")
+async def open_ranking(
+    message: Message,
+):
+    await message.answer(
+        "🏆 Reyting bo'limi ochilmoqda..."
+    )
+
+
+@router.message(F.text == "🏅 W-Zertifikat")
+async def open_certificate(
+    message: Message,
+):
+    await message.answer(
+        "🏅 W-Zertifikat bo'limi ochilmoqda..."
+    )
