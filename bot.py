@@ -6,7 +6,7 @@ import asyncio
 import logging
 import os
 from threading import Thread
-
+from loader import bot, dp
 # =========================================================
 # FLASK
 # =========================================================
