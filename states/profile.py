@@ -1,4 +1,5 @@
 from aiogram.fsm.state import State, StatesGroup
 
+
 class ProfileState(StatesGroup):
-    waiting_for_photo = State()
+    change_name = State()
