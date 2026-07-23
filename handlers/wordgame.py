@@ -289,34 +289,32 @@ async def save_full_name(
         reply_markup=menu
     )
 
-
 # =========================================================
 # OPEN LEVEL
 # =========================================================
 
-@router.message(
-    F.text.regexp(
-        r"🎯 (A1|A2|B1|B2|C1)"
-    )
-)
-async def open_level_handler(
-    message: Message
-):
+LEVEL_BUTTONS = {
+    "🎯 A1": "A1",
+    "🎯 A2": "A2",
+    "🎯 B1": "B1",
+    "🎯 B2": "B2",
+    "🎯 C1": "C1",
+}
 
-    level = (
-        message.text
-        .replace("🎯 ", "")
-        .strip()
-    )
+
+@router.message(F.text.in_(LEVEL_BUTTONS.keys()))
+async def open_level_handler(
+    message: Message,
+):
+    level = LEVEL_BUTTONS[message.text]
 
     await message.answer(
         f"📚 {level} bloklari",
         reply_markup=build_block_keyboard(
             level,
-            message.from_user.id
-        )
+            message.from_user.id,
+        ),
     )
-
 
 # =========================================================
 # START BLOCK
