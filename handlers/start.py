@@ -28,5 +28,5 @@ async def start_handler(message: Message):
     await message.answer(
         f"Assalomu alaykum, {user.full_name}! 🇩🇪\n\n"
         "VIZU Academy botiga xush kelibsiz.",
-        reply_markup=main_menu(),
+        reply_markup=main_menu,
     )
