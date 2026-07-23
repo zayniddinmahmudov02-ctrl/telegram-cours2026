@@ -12,12 +12,12 @@ main_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="🎬 Medien"),
-            KeyboardButton(text="🏅 VIZU-Zertifikat"),
+            KeyboardButton(text="📚 Ma'lumotlar"),
         ],
         [
-            KeyboardButton(text="📚 Ma'lumotlar"),
             KeyboardButton(text="👤 Mening Profilim"),
         ],
     ],
     resize_keyboard=True,
+    input_field_placeholder="Bo'limni tanlang...",
 )
