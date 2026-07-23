@@ -20,7 +20,7 @@ from config import (
 )
 
 from loader import bot
-from logger import logger
+from services.logger import logger
 
 # =========================================================
 # CHECK LEVEL UNLOCK

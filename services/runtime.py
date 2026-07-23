@@ -11,7 +11,7 @@ from config import (
 )
 
 from services.ranking import reset_daily_scores
-from logger import logger
+from services.logger import logger
 
 
 # =========================================================
