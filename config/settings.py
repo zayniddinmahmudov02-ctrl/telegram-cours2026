@@ -44,13 +44,6 @@ CERTIFICATE_DIR = "certificates"
 
 TOTAL_WORDS = 5555
 
-# =========================================================
-# RATING CHANNELS
-# =========================================================
-
-SPRECHEN_CHANNEL_ID = -1003858674950
-
-SCHREIBEN_CHANNEL_ID = -1003895627242
 
 # =========================================================
 # COURSE LINKS
@@ -131,15 +124,13 @@ if not DATABASE_URL:
 
 ADMIN_URL = "https://t.me/Mahmudow_Z"
 
-CHANNEL_URL = "https://t.me/vizu_academy"
+CHANNEL_URL = "https://t.me/vizu_deutsch"
 
-GROUP_URL = "https://t.me/"
+INSTAGRAM_URL = "https://instagram.com/vizu_deutsch"
 
-INSTAGRAM_URL = "https://instagram.com/vizu_academy"
+YOUTUBE_URL = "https://youtube.com/@vizu_deutsch"
 
-YOUTUBE_URL = "https://youtube.com/@vizuacademy"
-
-WEBSITE_URL = "https://vizu-de.com"
+WEBSITE_URL = "https://vizu-deutsch.com"
 
 RESULTS_URL = "https://t.me/+o8b2cf3rwAs1MzFi"
 
