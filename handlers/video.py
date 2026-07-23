@@ -1,3 +1,7 @@
+print("VIDEO ROUTER LOADED")
+import logging
+
+logging.info("VIDEO CLICK")
 from aiogram import Router, F
 from aiogram.types import Message
 
