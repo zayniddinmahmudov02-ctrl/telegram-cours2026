@@ -101,8 +101,8 @@ answered_users = {}
 approved_users = set()
 admin_sessions = {}
 
-# Artikel Search
-artikel_data = {}
-
 # Daily Reset
 last_daily_reset = None
+# Artikel Search
+artikel_data = {}
+artikel_users = {}
