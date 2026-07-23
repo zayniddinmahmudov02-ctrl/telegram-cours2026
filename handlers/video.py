@@ -1,7 +1,5 @@
-print("VIDEO ROUTER LOADED")
 import logging
 
-logging.info("VIDEO CLICK")
 from aiogram import Router, F
 from aiogram.types import Message
 
@@ -11,6 +9,8 @@ from services.runtime import artikel_users
 from config import COURSE_INFO
 
 router = Router()
+
+print("VIDEO ROUTER LOADED")
 # =========================================================
 # VIDEO COURSES
 # =========================================================
@@ -40,36 +40,35 @@ async def sample_lesson(message: Message):
 # =========================================================
 # COURSE INFO
 # =========================================================
-
 async def send_course_info(message: Message, course: str):
-
     info = COURSE_INFO.get(course)
 
-    if not info:
+    if info is None:
         await message.answer("❌ Kurs haqida ma'lumot topilmadi.")
         return
 
     text = (
         f"🎉 Hozirda barcha kurslar Katta CHEGIRMADA!\n\n"
         f"{course} Video Darslari\n\n"
-        f"📚 {info['lessons']} dars\n\n"
+        f"📚 {info['lessons']} ta dars\n\n"
         f"❌ Eski narx: {info['old_price']}\n"
         f"🔥 Chegirmadagi narx: {info['price']}\n\n"
-        f"💳 To'lov:\n"
+        f"💳 To'lov uchun karta:\n"
         f"9860 3501 4490 7192\n\n"
         f"👤 Zayniddinkhuja Makhmudov\n\n"
-        f"📩 To'lovdan keyin chekni (rasm shaklida) shu botga yuboring.\n"
-        f"Admin tasdiqlaydi va kurs havolasini yuboradi."
+        f"📩 To'lov qilgandan so'ng chekni (rasm shaklida) ushbu botga yuboring.\n"
+        f"Admin tasdiqlagach kurs havolasi yuboriladi."
     )
 
-    db_execute(
-        "UPDATE users SET course=%s WHERE user_id=%s",
-        (course, message.from_user.id)
-    )
+    try:
+        db_execute(
+            "UPDATE users SET course=%s WHERE user_id=%s",
+            (course, message.from_user.id)
+        )
+    except Exception as e:
+        print("DB ERROR:", e)
 
     await message.answer(text)
-
-
 # =========================================================
 # COURSES
 # =========================================================
