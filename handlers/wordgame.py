@@ -562,7 +562,7 @@ async def save_full_name(
 
     await message.answer(
         "✅ Ism va familiya muvaffaqiyatli saqlandi.",
-        reply_markup=main_menu(),
+        reply_markup=main_menu,
     )
 
 # =========================================================
@@ -576,9 +576,8 @@ async def back_main_menu(
 
     await message.answer(
         "🏠 Asosiy menyu",
-        reply_markup=main_menu(),
+        reply_markup=main_menu,
     )
-
 
 # =========================================================
 # UNKNOWN BLOCK MESSAGE
