@@ -381,3 +381,281 @@ Avval oldingi blokni muvaffaqiyatli yakunlang.
 Keyin keyingi blok avtomatik ochiladi.
 """
     )
+# =========================================================
+# WORD GAME MENU
+# =========================================================
+
+@router.message(F.text == "🎮 So'z Oyini")
+@router.message(F.text == "🎮 So'z O'yini")
+async def word_game_handler(
+    message: Message,
+):
+
+    user = get_user(message.from_user.id)
+
+    if not user:
+
+        await message.answer(
+            "❌ Avval ro'yxatdan o'ting."
+        )
+
+        return
+
+    menu = await build_level_menu(
+        message.from_user.id
+    )
+
+    await message.answer(
+        (
+            "🎮 <b>WortSpiel</b>\n\n"
+            "Kerakli darajani tanlang."
+        ),
+        parse_mode="HTML",
+        reply_markup=menu,
+    )
+
+
+# =========================================================
+# LEVEL SELECT
+# =========================================================
+
+@router.message(
+    F.text.in_(LEVEL_BUTTONS.keys())
+)
+async def level_selected(
+    message: Message,
+):
+
+    level = LEVEL_BUTTONS[
+        message.text
+    ]
+
+    keyboard = build_block_keyboard(
+        level=level,
+        user_id=message.from_user.id,
+    )
+
+    await message.answer(
+        (
+            f"📚 <b>{level}</b>\n\n"
+            "Bloklardan birini tanlang."
+        ),
+        parse_mode="HTML",
+        reply_markup=keyboard,
+    )
+
+
+# =========================================================
+# BACK TO LEVELS
+# =========================================================
+
+@router.message(
+    F.text == "⬅️ Darajalar"
+)
+async def back_to_levels(
+    message: Message,
+):
+
+    menu = await build_level_menu(
+        message.from_user.id
+    )
+
+    await message.answer(
+        "🎯 Darajani tanlang.",
+        reply_markup=menu,
+    )
+
+
+# =========================================================
+# BLOCK SELECT
+# =========================================================
+
+BLOCK_PATTERN = re.compile(
+    r"^(?:🏆|✅|📖|🔒)\s*([A-Z0-9]+)-(\d+)-Blok"
+)
+
+
+@router.message()
+async def open_block(
+    message: Message,
+):
+
+    match = BLOCK_PATTERN.match(
+        message.text
+    )
+
+    if not match:
+        return
+
+    level = match.group(1)
+    block = int(
+        match.group(2)
+    )
+
+    if not can_open_block(
+        message.from_user.id,
+        level,
+        block,
+    ):
+
+        await send_locked_message(
+            message
+        )
+
+        return
+
+    await start_quiz_block(
+        message=message,
+        level=level,
+        block=block,
+    )
+
+
+# =========================================================
+# CHANGE FULL NAME
+# =========================================================
+
+@router.message(
+    F.text == "✏️ Ism va familiyani o'zgartirish"
+)
+async def change_full_name(
+    message: Message,
+    state: FSMContext,
+):
+
+    await state.set_state(
+        RegisterStates.waiting_full_name
+    )
+
+    await message.answer(
+        "📝 Yangi ism va familiyangizni yuboring."
+    )
+
+
+# =========================================================
+# SAVE FULL NAME
+# =========================================================
+
+@router.message(
+    RegisterStates.waiting_full_name
+)
+async def save_full_name(
+    message: Message,
+    state: FSMContext,
+):
+
+    full_name = message.text.strip()
+
+    db_execute(
+        """
+        UPDATE users
+        SET full_name=%s
+        WHERE user_id=%s
+        """,
+        (
+            full_name,
+            message.from_user.id,
+        ),
+    )
+
+    await state.clear()
+
+    await message.answer(
+        "✅ Ism va familiya muvaffaqiyatli saqlandi.",
+        reply_markup=main_menu(),
+    )
+# =========================================================
+# RANKING
+# =========================================================
+
+@router.message(F.text == "🏆 Reytinglar")
+async def ranking_menu(
+    message: Message,
+):
+
+    rows = db_execute(
+        """
+        SELECT
+            full_name,
+            total_score
+        FROM users
+        ORDER BY total_score DESC
+        LIMIT 10
+        """,
+        fetchall=True,
+    )
+
+    if not rows:
+
+        await message.answer(
+            "📭 Reyting hali shakllanmagan."
+        )
+
+        return
+
+    text = "🏆 <b>TOP 10 Reyting</b>\n\n"
+
+    for i, row in enumerate(rows, start=1):
+
+        text += (
+            f"{i}. "
+            f"{row['full_name']} — "
+            f"{row['total_score']} XP\n"
+        )
+
+    await message.answer(
+        text,
+        parse_mode="HTML",
+    )
+
+
+# =========================================================
+# CERTIFICATE
+# =========================================================
+
+@router.message(F.text == "🏅 W-Zertifikat")
+async def certificate_info(
+    message: Message,
+):
+
+    await message.answer(
+        (
+            "🏅 <b>W-Zertifikat</b>\n\n"
+            "Sertifikat olish uchun barcha bloklarni muvaffaqiyatli yakunlang.\n\n"
+            "🥇 Gold\n"
+            "🥈 Silver\n"
+            "🥉 Bronze"
+        ),
+        parse_mode="HTML",
+    )
+
+
+# =========================================================
+# BACK TO MAIN MENU
+# =========================================================
+
+@router.message(F.text == "⬅️ Orqaga")
+async def back_main_menu(
+    message: Message,
+):
+
+    await message.answer(
+        "🏠 Asosiy menyu",
+        reply_markup=main_menu(),
+    )
+
+
+# =========================================================
+# UNKNOWN BLOCK MESSAGE
+# =========================================================
+
+@router.message(
+    F.text.regexp(r"^(📖|✅|🏆|🔒)")
+)
+async def unknown_block(
+    message: Message,
+):
+
+    await message.answer(
+        "❌ Blok aniqlanmadi."
+    )
