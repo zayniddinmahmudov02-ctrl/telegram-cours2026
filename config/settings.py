@@ -192,11 +192,10 @@ LEVEL_ORDER = [
 # =========================================================
 # RUNTIME STORAGE
 # =========================================================
+quiz_sessions = {}
+
+quiz_running = set()
 
 active_questions = {}
 
 answered_users = {}
-
-quiz_sessions = {}
-
-quiz_running = {}
