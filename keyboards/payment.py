@@ -5,22 +5,23 @@ from aiogram.types import (
     KeyboardButton,
 )
 
+from config.settings import COURSE_INFO
+
+
 # =========================================================
 # COURSE KEYBOARD
 # =========================================================
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from config.settings import COURSE_PRICES
-
-
 def course_keyboard():
+
     keyboard = []
 
-    for course, price in COURSE_PRICES.items():
+    for course, info in COURSE_INFO.items():
+
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=f"{course} • {price:,} so'm",
+                    text=f"{course} • {info['price']}",
                     callback_data=f"course:{course}",
                 )
             ]
@@ -36,8 +37,10 @@ def course_keyboard():
     )
 
     return InlineKeyboardMarkup(
-        inline_keyboard=keyboard
+        inline_keyboard=keyboard,
     )
+
+
 # =========================================================
 # PAYMENT MENU
 # =========================================================
@@ -45,10 +48,14 @@ def course_keyboard():
 payment_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text="💳 To'lov qilish"),
+            KeyboardButton(
+                text="💳 To'lov qilish",
+            ),
         ],
         [
-            KeyboardButton(text="⬅️ Orqaga"),
+            KeyboardButton(
+                text="⬅️ Orqaga",
+            ),
         ],
     ],
     resize_keyboard=True,
@@ -56,7 +63,7 @@ payment_menu = ReplyKeyboardMarkup(
 
 
 # =========================================================
-# CONTACT
+# CONTACT KEYBOARD
 # =========================================================
 
 phone_keyboard = ReplyKeyboardMarkup(
@@ -65,10 +72,12 @@ phone_keyboard = ReplyKeyboardMarkup(
             KeyboardButton(
                 text="📱 Telefon raqamni yuborish",
                 request_contact=True,
-            )
+            ),
         ],
         [
-            KeyboardButton(text="❌ Bekor qilish"),
+            KeyboardButton(
+                text="❌ Bekor qilish",
+            ),
         ],
     ],
     resize_keyboard=True,
@@ -77,7 +86,7 @@ phone_keyboard = ReplyKeyboardMarkup(
 
 
 # =========================================================
-# CONFIRM
+# CONFIRM KEYBOARD
 # =========================================================
 
 confirm_keyboard = InlineKeyboardMarkup(
@@ -86,29 +95,30 @@ confirm_keyboard = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text="✅ Tasdiqlash",
                 callback_data="payment_confirm",
-            )
+            ),
         ],
         [
             InlineKeyboardButton(
                 text="✏️ Qayta kiritish",
                 callback_data="payment_restart",
-            )
+            ),
         ],
         [
             InlineKeyboardButton(
                 text="❌ Bekor qilish",
                 callback_data="payment_cancel",
-            )
+            ),
         ],
     ]
 )
 
 
 # =========================================================
-# ADMIN
+# ADMIN PAYMENT KEYBOARD
 # =========================================================
 
 def admin_payment_keyboard(payment_id: int):
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -121,5 +131,5 @@ def admin_payment_keyboard(payment_id: int):
                     callback_data=f"reject_payment:{payment_id}",
                 ),
             ],
-        ]
+        ],
     )
