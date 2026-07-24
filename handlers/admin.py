@@ -18,7 +18,9 @@ from database.users import (
     get_approved_users,
     get_blocked_users,
 )
-
+from database.payments import (
+    get_recent_payments,
+)
 from database.payments import (
     get_payment_statistics,
 )
@@ -233,6 +235,59 @@ async def buyers(message: Message):
             f"👨‍💻 {username}\n"
             f"📚 {buyer['course']}\n"
             f"💰 {buyer['amount']:,} so'm\n"
+            f"━━━━━━━━━━━━━━━━━━\n"
+        )
+
+        if len(text) + len(block) > 3800:
+            await message.answer(
+                text,
+                parse_mode="HTML",
+            )
+            text = ""
+
+        text += block
+
+    if text:
+        await message.answer(
+            text,
+            parse_mode="HTML",
+        )
+# =========================================================
+# PAYMENTS
+# =========================================================
+
+@router.message(F.text == "💰 To'lovlar")
+async def payments(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    payments = get_recent_payments(limit=30)
+
+    if not payments:
+        await message.answer(
+            "📭 To'lovlar mavjud emas."
+        )
+        return
+
+    text = "💰 <b>Oxirgi To'lovlar</b>\n\n"
+
+    for payment in payments:
+
+        status = {
+            "pending": "🟡 Kutilmoqda",
+            "approved": "🟢 Tasdiqlangan",
+            "rejected": "🔴 Rad etilgan",
+            "cancelled": "⚫ Bekor qilingan",
+            "refunded": "🔵 Refund",
+        }.get(payment["status"], payment["status"])
+
+        block = (
+            f"🆔 <b>#{payment['id']}</b>\n"
+            f"👤 {payment['full_name']}\n"
+            f"📚 {payment['course']}\n"
+            f"💰 {payment['amount']:,} so'm\n"
+            f"{status}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
         )
 

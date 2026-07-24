@@ -588,3 +588,26 @@ def get_approved_payments():
         """,
         fetchall=True,
     )
+# =========================================================
+# RECENT PAYMENTS
+# =========================================================
+
+def get_recent_payments(limit=30):
+
+    return db_execute(
+        """
+        SELECT
+            id,
+            full_name,
+            course,
+            amount,
+            status,
+            created_at
+        FROM payments
+        WHERE is_deleted = FALSE
+        ORDER BY created_at DESC
+        LIMIT %s
+        """,
+        (limit,),
+        fetchall=True,
+    )
