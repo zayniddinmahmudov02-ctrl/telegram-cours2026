@@ -1,16 +1,19 @@
 import logging
 from contextlib import contextmanager
 
-import psycopg2
 from psycopg2 import pool
+from psycopg2.extras import RealDictCursor
 
 from config import DATABASE_URL
 
 logger = logging.getLogger(__name__)
 
-
 _connection_pool = None
 
+
+# =========================================================
+# CONNECTION POOL
+# =========================================================
 
 def init_connection_pool(minconn: int = 1, maxconn: int = 10):
     global _connection_pool
@@ -23,6 +26,10 @@ def init_connection_pool(minconn: int = 1, maxconn: int = 10):
         )
         logger.info("✅ PostgreSQL connection pool initialized")
 
+
+# =========================================================
+# GET CONNECTION
+# =========================================================
 
 @contextmanager
 def get_connection():
@@ -37,6 +44,10 @@ def get_connection():
         _connection_pool.putconn(conn)
 
 
+# =========================================================
+# DATABASE EXECUTE
+# =========================================================
+
 def db_execute(
     query,
     params=None,
@@ -45,21 +56,33 @@ def db_execute(
     fetchall=False,
 ):
     with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(query, params)
+        try:
+            with conn.cursor(
+                cursor_factory=RealDictCursor
+            ) as cur:
 
-            if fetchone:
-                return cur.fetchone()
+                cur.execute(query, params)
 
-            if fetchall:
-                return cur.fetchall()
+                if fetchone:
+                    return cur.fetchone()
 
-            conn.commit()
+                if fetchall:
+                    return cur.fetchall()
 
+                conn.commit()
+
+        except Exception:
+            conn.rollback()
+            raise
+
+
+# =========================================================
+# CLOSE POOL
+# =========================================================
 
 def close_pool():
     global _connection_pool
 
     if _connection_pool:
         _connection_pool.closeall()
-        logger.info("✅ PostgreSQL pool closed")
+        logger.info("✅ PostgreSQL connection pool closed")

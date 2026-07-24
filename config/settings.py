@@ -25,8 +25,8 @@ ADMIN_PASSWORD = os.getenv(
     ""
 )
 
-ADMIN_CHANNEL_ID = int(
-    os.getenv("ADMIN_CHANNEL_ID", "0")
+BUYERS_CHANNEL_ID = int(
+    os.getenv("BUYERS_CHANNEL_ID", "0")
 )
 
 CHANNEL_USERNAME = "@vizu_deutsch"
