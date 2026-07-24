@@ -1,6 +1,6 @@
 import re
 
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     Message,
@@ -11,41 +11,107 @@ from aiogram.types import (
 )
 
 from database import db_execute
+from config import LEVEL_ORDER, LEVEL_CONFIG
 from states.register import RegisterStates
-
-from config import (
-    LEVEL_ORDER,
-    LEVEL_CONFIG,
-)
-
 from services.quiz import start_quiz_block
+from keyboards import main_menu
 
 router = Router()
 
-async def build_level_menu(user_id):
-    result = db_execute(
+
+# =========================================================
+# CONSTANTS
+# =========================================================
+
+LEVEL_BUTTONS = {
+    "🎯 A1": "A1",
+    "🎯 A2": "A2",
+    "🎯 B1": "B1",
+    "🎯 B2": "B2",
+    "🎯 C1": "C1",
+}
+
+
+# =========================================================
+# HELPER
+# =========================================================
+
+def get_user(user_id: int):
+
+    return db_execute(
         """
-        SELECT unlocked_level
+        SELECT
+            full_name,
+            unlocked_level,
+            total_score,
+            daily_score
         FROM users
-        WHERE user_id = %s
+        WHERE user_id=%s
         """,
         (user_id,),
-        fetchone=True
+        fetchone=True,
     )
 
-    unlocked = result[0] if result and result[0] else "A1"
 
-    if unlocked in LEVEL_ORDER:
-        unlocked_index = LEVEL_ORDER.index(unlocked)
-    else:
-        unlocked_index = 0
+def get_progress(user_id: int, level: str, block: int):
+
+    return db_execute(
+        """
+        SELECT
+            best_score
+        FROM quiz_progress
+        WHERE user_id=%s
+        AND level=%s
+        AND block_number=%s
+        """,
+        (
+            user_id,
+            level,
+            block,
+        ),
+        fetchone=True,
+    )
+
+
+def previous_block_completed(
+    user_id: int,
+    level: str,
+    block: int,
+) -> bool:
+
+    if block == 1:
+        return True
+
+    row = get_progress(
+        user_id,
+        level,
+        block - 1,
+    )
+
+    if not row:
+        return False
+
+    score = row["best_score"] or 0
+
+    return score >= 60
+
+
+# =========================================================
+# LEVEL MENU
+# =========================================================
+
+async def build_level_menu(user_id: int):
 
     rows = []
+
     current = []
 
     for level in LEVEL_ORDER:
+
         current.append(
-            KeyboardButton(text=f"🎯 {level}")
+            KeyboardButton(
+                text=f"🎯 {level}"
+            )
         )
 
         if len(current) == 2:
@@ -81,10 +147,73 @@ async def build_level_menu(user_id):
 
     return ReplyKeyboardMarkup(
         keyboard=rows,
-        resize_keyboard=True
+        resize_keyboard=True,
     )
 
-def build_block_keyboard(level, user_id):
+
+# =========================================================
+# BLOCK STATUS
+# =========================================================
+
+def get_block_title(
+    user_id: int,
+    level: str,
+    block: int,
+):
+
+    config = LEVEL_CONFIG[level]
+
+    progress = get_progress(
+        user_id,
+        level,
+        block,
+    )
+
+    if progress:
+
+        score = progress["best_score"] or 0
+
+        percent = round(
+            score / config["size"] * 100
+        )
+
+        if percent >= 100:
+
+            return (
+                f"🏆 "
+                f"{level}-{block}-Blok "
+                f"(100%)"
+            )
+
+        return (
+            f"✅ "
+            f"{level}-{block}-Blok "
+            f"({percent}%)"
+        )
+
+    if previous_block_completed(
+        user_id,
+        level,
+        block,
+    ):
+
+        return (
+            f"📖 "
+            f"{level}-{block}-Blok"
+        )
+
+    return (
+        f"🔒 "
+        f"{level}-{block}-Blok"
+    )
+# =========================================================
+# BLOCK KEYBOARD
+# =========================================================
+
+def build_block_keyboard(
+    level: str,
+    user_id: int,
+):
 
     config = LEVEL_CONFIG.get(level)
 
@@ -94,72 +223,31 @@ def build_block_keyboard(level, user_id):
             keyboard=[
                 [
                     KeyboardButton(
-                        text="⬅️ Orqaga"
+                        text="⬅️ Darajalar"
                     )
                 ]
             ],
-            resize_keyboard=True
+            resize_keyboard=True,
         )
 
     rows = []
+
     current = []
 
-    for i in range(
-        1,
-        config["blocks"] + 1
-    ):
+    total_blocks = config["blocks"]
 
-        progress = db_execute(
-            """
-            SELECT best_score
-            FROM quiz_progress
-            WHERE user_id = %s
-            AND level = %s
-            AND block_number = %s
-            """,
-            (
-                user_id,
-                level,
-                i
-            ),
-            fetchone=True
+    for block in range(1, total_blocks + 1):
+
+        text = get_block_title(
+            user_id=user_id,
+            level=level,
+            block=block,
         )
 
-        if progress:
-
-            score = progress[0] or 0
-
-            block_size = config["size"]
-
-            percent = round(
-                (score / block_size) * 100
-            ) if block_size > 0 else 0
-
-            if percent >= 100:
-
-                text = (
-                    f"🏆 "
-                    f"{level}-{i}-Blok "
-                    f"(100%)"
-                )
-
-            else:
-
-                text = (
-                    f"✅ "
-                    f"{level}-{i}-Blok "
-                    f"({percent}%)"
-                )
-
-        else:
-
-            text = (
-                f"📚 "
-                f"{level}-{i}-Blok"
-            )
-
         current.append(
-            KeyboardButton(text=text)
+            KeyboardButton(
+                text=text,
+            )
         )
 
         if len(current) == 2:
@@ -172,6 +260,22 @@ def build_block_keyboard(level, user_id):
     rows.append(
         [
             KeyboardButton(
+                text="🏆 Reytinglar"
+            )
+        ]
+    )
+
+    rows.append(
+        [
+            KeyboardButton(
+                text="🏅 W-Zertifikat"
+            )
+        ]
+    )
+
+    rows.append(
+        [
+            KeyboardButton(
                 text="⬅️ Darajalar"
             )
         ]
@@ -179,308 +283,101 @@ def build_block_keyboard(level, user_id):
 
     return ReplyKeyboardMarkup(
         keyboard=rows,
-        resize_keyboard=True
-    )
-@router.message(F.text == "🎮 So'z O'yini")
-async def word_game_handler(
-    message: Message,
-    state: FSMContext
-):
-    user_id = message.from_user.id
-
-    await state.clear()
-
-    result = db_execute(
-        """
-        SELECT full_name
-        FROM users
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
+        resize_keyboard=True,
     )
 
-    full_name = result[0] if result else None
-
-    if not full_name or full_name in {"Unknown", ""}:
-
-        await message.answer(
-            "📝 To'liq ism familiyangizni kiriting.\n\n"
-            "Masalan:\n"
-            "Zayniddinkhuja Makhmudov"
-        )
-
-        await state.set_state(
-            RegisterStates.waiting_full_name
-        )
-
-        return
-
-    menu = await build_level_menu(user_id)
-
-    await message.answer(
-        "🎮 WortSpiel\n\n"
-        "Darajani tanlang:",
-        reply_markup=menu
-    )
-# =========================================================
-# SAVE FULL NAME
-# =========================================================
-
-@router.message(RegisterStates.waiting_full_name)
-async def save_full_name(
-    message: Message,
-    state: FSMContext
-):
-    user_id = message.from_user.id
-    full_name = message.text.strip()
-
-    # =====================================================
-    # VALIDATION
-    # =====================================================
-
-    if len(full_name) < 5:
-        await message.answer(
-            "❌ Juda qisqa ism. Kamida 5 ta harf bo'lishi kerak."
-        )
-        return
-
-    if len(full_name) > 50:
-        await message.answer(
-            "❌ Juda uzun ism. Maksimal 50 ta harf bo'lishi mumkin."
-        )
-        return
-
-    if len(full_name.split()) < 2:
-        await message.answer(
-            "❌ Ism va familiyani to'liq kiriting.\n\n"
-            "Masalan:\n"
-            "Zayniddinkhuja Makhmudov"
-        )
-        return
-
-    # =====================================================
-    # SAVE DATABASE
-    # =====================================================
-
-    db_execute(
-        """
-        UPDATE users
-        SET full_name = %s
-        WHERE user_id = %s
-        """,
-        (
-            full_name,
-            user_id
-        )
-    )
-
-    await state.clear()
-
-    await message.answer(
-        f"✅ Saqlandi:\n{full_name}"
-    )
-
-    menu = await build_level_menu(user_id)
-
-    await message.answer(
-        "🎮 WortSpiel\n\n"
-        "Darajani tanlang:",
-        reply_markup=menu
-    )
 
 # =========================================================
-# OPEN LEVEL
+# BLOCK ACCESS
 # =========================================================
 
-LEVEL_BUTTONS = {
-    "🎯 A1": "A1",
-    "🎯 A2": "A2",
-    "🎯 B1": "B1",
-    "🎯 B2": "B2",
-    "🎯 C1": "C1",
-}
-
-
-@router.message(F.text.in_(LEVEL_BUTTONS.keys()))
-async def open_level_handler(
-    message: Message,
-):
-    level = LEVEL_BUTTONS[message.text]
-
-    await message.answer(
-        f"📚 {level} bloklari",
-        reply_markup=build_block_keyboard(
-            level,
-            message.from_user.id,
-        ),
-    )
-
-# =========================================================
-# START BLOCK
-# =========================================================
-
-@router.message(
-    F.text.regexp(
-        r"(📚|✅|🏆)\s?(A1|A2|B1|B2|C1)-(\d+)-Blok"
-    )
-)
-async def start_block(
-    message: Message
-):
-
-    match = re.search(
-        r"(A1|A2|B1|B2|C1)-(\d+)-Blok",
-        message.text
-    )
-
-    if not match:
-        return
-
-    level = match.group(1)
-    block = int(match.group(2))
-    user_id = message.from_user.id
-
-    # =====================================================
-    # FIRST BLOCK
-    # =====================================================
+def can_open_block(
+    user_id: int,
+    level: str,
+    block: int,
+) -> bool:
 
     if block == 1:
+        return True
 
-        await start_quiz_block(
-            message,
-            level,
-            block
-        )
-
-        return
-
-    # =====================================================
-    # USER
-    # =====================================================
-
-    user_data = db_execute(
-        """
-        SELECT unlocked_level
-        FROM users
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True
+    previous = get_progress(
+        user_id=user_id,
+        level=level,
+        block=block - 1,
     )
 
-    current_unlocked = (
-        user_data[0]
-        if user_data
-        else "A1"
-    )
+    if not previous:
+        return False
 
-    # =====================================================
-    # OLD RESULT
-    # =====================================================
+    score = previous["best_score"] or 0
 
-    row = db_execute(
-        """
-        SELECT best_score
-        FROM quiz_progress
-        WHERE user_id=%s
-        AND level=%s
-        AND block_number=%s
-        """,
-        (
-            user_id,
-            level,
-            block
-        ),
-        fetchone=True
-    )
+    return score >= 60
 
-    if row:
 
-        best_score = row[0] or 0
-
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="🔄 Ha, qayta ishlash",
-                        callback_data=f"restartquiz:{level}:{block}"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="❌ Yo'q",
-                        callback_data="cancelquiz"
-                    )
-                ]
-            ]
-        )
-
-        await message.answer(
-            f"📊 Oxirgi natijangiz\n\n"
-            f"🇩🇪 Daraja: {level}\n"
-            f"📚 Blok: {block}\n\n"
-            f"🏆 Eng yaxshi natija: {best_score}%\n\n"
-            f"Qayta ishlamoqchimisiz?",
-            reply_markup=keyboard
-        )
-
-        return
-
-    # =====================================================
-    # START
-    # =====================================================
-
-    await start_quiz_block(
-        message,
-        level,
-        block
-    )
 # =========================================================
-# NAVIGATION
+# BLOCK RESULT
 # =========================================================
 
-from keyboards import main_menu
-
-
-@router.message(F.text == "⬅️ Darajalar")
-async def back_to_levels(
-    message: Message,
+def get_best_score(
+    user_id: int,
+    level: str,
+    block: int,
 ):
-    menu = await build_level_menu(
-        message.from_user.id
+
+    row = get_progress(
+        user_id=user_id,
+        level=level,
+        block=block,
     )
 
-    await message.answer(
-        "🎮 WortSpiel\n\n"
-        "Darajani tanlang:",
-        reply_markup=menu,
+    if not row:
+        return 0
+
+    return row["best_score"] or 0
+
+
+# =========================================================
+# BLOCK COMPLETE
+# =========================================================
+
+def is_completed(
+    user_id: int,
+    level: str,
+    block: int,
+):
+
+    score = get_best_score(
+        user_id=user_id,
+        level=level,
+        block=block,
     )
 
+    block_size = LEVEL_CONFIG[level]["size"]
 
-@router.message(F.text == "⬅️ Orqaga")
-async def back_to_main(
-    message: Message,
-):
-    await message.answer(
-        "🏠 Asosiy menyu",
-        reply_markup=main_menu,
+    if block_size == 0:
+        return False
+
+    percent = round(
+        score / block_size * 100
     )
 
+    return percent >= 100
 
-@router.message(F.text == "🏆 Reytinglar")
-async def open_ranking(
+
+# =========================================================
+# LOCK MESSAGE
+# =========================================================
+
+async def send_locked_message(
     message: Message,
 ):
-    await message.answer(
-        "🏆 Reyting bo'limi ochilmoqda..."
-    )
 
-
-@router.message(F.text == "🏅 W-Zertifikat")
-async def open_certificate(
-    message: Message,
-):
     await message.answer(
-        "🏅 W-Zertifikat bo'limi ochilmoqda..."
+        """
+🔒 Bu blok hali ochilmagan.
+
+Avval oldingi blokni muvaffaqiyatli yakunlang.
+
+Keyin keyingi blok avtomatik ochiladi.
+"""
     )

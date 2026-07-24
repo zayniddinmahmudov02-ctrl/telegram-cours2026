@@ -21,12 +21,11 @@ from config import (
 
 from loader import bot
 from services.logger import logger
-
 # =========================================================
 # CHECK LEVEL UNLOCK
 # =========================================================
 
-def check_level_unlock(user_id, current_level):
+def check_level_unlock(user_id: int, current_level: str):
 
     if current_level == "C1":
         return None
@@ -36,55 +35,45 @@ def check_level_unlock(user_id, current_level):
     if not config:
         return None
 
-    required = config["required"]
-
     result = db_execute(
         """
-        SELECT COALESCE(SUM(best_score),0)
+        SELECT COALESCE(SUM(best_score),0) AS total_score
         FROM quiz_progress
         WHERE user_id=%s
         AND level=%s
         """,
         (
             user_id,
-            current_level
+            current_level,
         ),
-        fetchone=True
+        fetchone=True,
     )
 
-    total = result[0] if result else 0
+    total = result["total_score"] if result else 0
 
-    if total >= required:
+    if total < config["required"]:
+        return None
 
-        try:
+    try:
+        next_level = LEVEL_ORDER[
+            LEVEL_ORDER.index(current_level) + 1
+        ]
+    except (ValueError, IndexError):
+        return None
 
-            next_level = LEVEL_ORDER[
-                LEVEL_ORDER.index(current_level) + 1
-            ]
+    db_execute(
+        """
+        UPDATE users
+        SET unlocked_level=%s
+        WHERE user_id=%s
+        """,
+        (
+            next_level,
+            user_id,
+        ),
+    )
 
-            db_execute(
-                """
-                UPDATE users
-                SET unlocked_level=%s
-                WHERE user_id=%s
-                """,
-                (
-                    next_level,
-                    user_id
-                )
-            )
-
-            return next_level
-
-        except (ValueError, IndexError) as e:
-
-            logger.error(
-                f"Unlock error: {e}"
-            )
-
-            return None
-
-    return None
+    return next_level
 # =========================================================
 # START QUIZ BLOCK
 # =========================================================
@@ -129,12 +118,11 @@ async def start_quiz_block(
         (user_id,),
         fetchone=True
     )
-
     current_unlocked = (
-        user_data[0]
-        if user_data
-        else "A1"
-    )
+    user_data["unlocked_level"]
+    if user_data
+    else "A1"
+)
 
     if (
         level not in LEVEL_ORDER
@@ -185,7 +173,7 @@ async def start_quiz_block(
             fetchone=True
         )
 
-        if not res or (res[0] or 0) < 60:
+        if not res or (res["best_score"] or 0) < 60:
 
             await message.answer(
                 f"🔒 Avval {prev_block}-Blokdan kamida 60/100 ball to'plang."
@@ -399,12 +387,11 @@ async def finish_quiz(
         ),
         fetchone=True
     )
-
     old_score = (
-        old_result[0]
-        if old_result
-        else 0
-    )
+    old_result["best_score"]
+    if old_result
+    else 0
+)
 
     xp_gain = max(
         0,

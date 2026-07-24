@@ -142,18 +142,33 @@ TEACHER_PHOTO = "teacher.jpg"
 LEVEL_CONFIG = {
     "A1": {
         "file": "A1-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600,
     },
     "A2": {
         "file": "A2-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600,
     },
     "B1": {
         "file": "B1-words.csv",
+        "blocks": 10,
+        "size": 100,
+        "required": 600,
     },
     "B2": {
         "file": "B2-words.csv",
+        "blocks": 15,
+        "size": 100,
+        "required": 900,
     },
     "C1": {
         "file": "C1-words.csv",
+        "blocks": 11,
+        "size": 100,
+        "required": 600,
     },
 }
 # =========================================================
