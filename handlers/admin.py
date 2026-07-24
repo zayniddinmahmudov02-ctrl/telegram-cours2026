@@ -2,38 +2,36 @@
 # IMPORTS
 # =========================================================
 
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.types import Message
 
-from config.settings import ADMIN_IDS
+from config import ADMIN_ID
 
 from keyboards.admin import admin_menu
-from keyboards.menu import main_menu
-from database.payments import (
-    get_approved_payments,
-)
+from keyboards.main import main_menu
 
 from database.users import (
     get_total_users,
     get_approved_users,
     get_blocked_users,
+    get_latest_users,
 )
+
 from database.payments import (
+    get_approved_payments,
     get_recent_payments,
-)
-from database.payments import (
     get_payment_statistics,
 )
 
 router = Router()
+
 # =========================================================
 # ADMIN PANEL
 # =========================================================
 
 @router.message(F.text == "/admin")
 async def admin_panel(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     await message.answer(
@@ -48,7 +46,7 @@ async def admin_panel(message: Message):
 @router.message(F.text == "⬅️ Admin Chiqish")
 async def admin_exit(message: Message):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     await message.answer(
@@ -62,7 +60,7 @@ async def admin_exit(message: Message):
 @router.message(F.text == "📊 Statistika")
 async def statistics(message: Message):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     total_users = get_total_users()
@@ -121,7 +119,7 @@ from database.users import (
 @router.message(F.text == "👥 Foydalanuvchilar")
 async def users(message: Message):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     total = get_total_users()
@@ -178,34 +176,13 @@ async def users(message: Message):
         parse_mode="HTML",
     )
 # =========================================================
-# LATEST USERS
-# =========================================================
-
-def get_latest_users(limit=10):
-
-    rows = db_execute(
-        """
-        SELECT
-            user_id,
-            full_name,
-            username
-        FROM users
-        ORDER BY created_at DESC
-        LIMIT %s
-        """,
-        (limit,),
-        fetchall=True,
-    )
-
-    return rows
-# =========================================================
 # BUYERS
 # =========================================================
 
 @router.message(F.text == "💳 Xaridorlar")
 async def buyers(message: Message):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     buyers = get_approved_payments()
@@ -259,7 +236,7 @@ async def buyers(message: Message):
 @router.message(F.text == "💰 To'lovlar")
 async def payments(message: Message):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     payments = get_recent_payments(limit=30)
