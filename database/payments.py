@@ -564,3 +564,27 @@ def get_payment_statistics():
         "today_income": row[7],
         "monthly_income": row[8],
     }
+# =========================================================
+# APPROVED PAYMENTS
+# =========================================================
+
+def get_approved_payments():
+
+    return db_execute(
+        """
+        SELECT
+            id,
+            user_id,
+            full_name,
+            phone,
+            username,
+            course,
+            amount,
+            approved_at
+        FROM payments
+        WHERE status='approved'
+        AND is_deleted=FALSE
+        ORDER BY approved_at DESC
+        """,
+        fetchall=True,
+    )

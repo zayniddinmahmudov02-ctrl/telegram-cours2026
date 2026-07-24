@@ -283,3 +283,18 @@ def top_daily(limit=100):
         (limit,),
         fetchall=True,
     )
+# =========================================================
+# ALL USERS
+# =========================================================
+
+def get_all_users():
+
+    return db_execute(
+        """
+        SELECT user_id
+        FROM users
+        WHERE is_blocked=FALSE
+        ORDER BY id
+        """,
+        fetchall=True,
+    )
