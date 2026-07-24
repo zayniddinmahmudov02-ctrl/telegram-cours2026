@@ -6,7 +6,7 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
-from config.settings import ADMIN_IDS
+from config.settings import ADMIN_ID
 from states.private_message import PrivateMessageState
 
 router = Router()
@@ -20,7 +20,7 @@ async def private_message_start(
     state: FSMContext,
 ):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     await state.set_state(

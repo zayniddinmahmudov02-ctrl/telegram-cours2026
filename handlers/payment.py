@@ -20,7 +20,7 @@ from keyboards.payment import (
     admin_payment_keyboard,
 )
 
-from config.settings import ADMIN_IDS
+from config.settings import ADMIN_ID
 
 from config.settings import COURSE_INFO
 
@@ -329,7 +329,7 @@ async def confirm_payment(
 {data["amount"]:,} so'm
 """
 
-    for admin_id in ADMIN_IDS:
+    for admin_id in ADMIN_ID:
 
         if data["file_type"] == "photo":
 

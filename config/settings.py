@@ -20,10 +20,6 @@ ADMIN_ID = int(
     os.getenv("ADMIN_ID", "0")
 )
 
-ADMIN_PASSWORD = os.getenv(
-    "ADMIN_PASSWORD",
-    ""
-)
 
 BUYERS_CHANNEL_ID = int(
     os.getenv("BUYERS_CHANNEL_ID", "0")

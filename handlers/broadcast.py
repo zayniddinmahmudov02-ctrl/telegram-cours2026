@@ -9,7 +9,7 @@ from aiogram.types import (
 
 from aiogram.fsm.context import FSMContext
 
-from config.settings import ADMIN_IDS
+from config.settings import ADMIN_ID
 
 from states.broadcast import BroadcastState
 
@@ -28,7 +28,7 @@ async def start_broadcast(
     state: FSMContext,
 ):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     await state.set_state(
@@ -115,7 +115,7 @@ async def send_broadcast(
     state: FSMContext,
 ):
 
-    if message.from_user.id not in ADMIN_IDS:
+    if message.from_user.id not in ADMIN_ID:
         return
 
     data = await state.get_data()
