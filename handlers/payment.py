@@ -42,25 +42,8 @@ router = Router()
 )
 async def start_payment(
     callback: CallbackQuery,
-    state: FSMContext,
 ):
     course = callback.data.split(":", 1)[1]
-
-    info = COURSE_INFO.get(course)
-
-    if info is None:
-        await callback.answer(
-            "❌ Kurs topilmadi.",
-            show_alert=True,
-        )
-        return
-
-    await state.clear()
-
-    await state.update_data(
-        course=course,
-        amount=info["price"],
-    )
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -82,7 +65,7 @@ async def start_payment(
             ],
             [
                 InlineKeyboardButton(
-                    text="✅ Chekni yuborish",
+                    text="📷 Chekni yuborish",
                     callback_data=f"payment_receipt:{course}",
                 )
             ],
@@ -95,7 +78,7 @@ async def start_payment(
 
 💳 <b>To'lov ma'lumotlari</b>
 
-To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki boshqa to'lov ilovalari hamda bank terminallari orqali amalga oshirishingiz mumkin.
+To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki boshqa bank ilovalari hamda to'lov terminallari orqali amalga oshirishingiz mumkin.
 
 ━━━━━━━━━━━━━━━━━━━━
 
@@ -113,8 +96,8 @@ To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki bosh
 
 ━━━━━━━━━━━━━━━━━━━━
 
-📌 To'lovni amalga oshirgach pastdagi
-<b>✅ Chekni yuborish</b> tugmasini bosing.
+📌 To'lovni amalga oshirgach
+<b>📷 Chekni yuborish</b> tugmasini bosing.
 """,
         parse_mode="HTML",
         reply_markup=keyboard,
@@ -134,8 +117,20 @@ async def payment_receipt(
 ):
     course = callback.data.split(":", 1)[1]
 
+    info = COURSE_INFO.get(course)
+
+    if info is None:
+        await callback.answer(
+            "❌ Kurs topilmadi.",
+            show_alert=True,
+        )
+        return
+
+    await state.clear()
+
     await state.update_data(
         course=course,
+        amount=info["price"],
     )
 
     await state.set_state(
@@ -144,7 +139,7 @@ async def payment_receipt(
 
     await callback.message.answer(
         """
-📷 <b>Endi to'lov chekini yuboring.</b>
+📷 <b>To'lov chekini yuboring.</b>
 
 Qabul qilinadi:
 
