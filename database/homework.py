@@ -2,26 +2,94 @@ from .connection import db_execute
 
 
 # =========================================================
+# TABLES
+# =========================================================
+
+def create_tables():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS homework_submissions
+        (
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL,
+
+            course_type VARCHAR(20) NOT NULL,
+
+            level VARCHAR(5) NOT NULL,
+
+            lesson INTEGER NOT NULL,
+
+            component VARCHAR(30) NOT NULL,
+
+            task_number INTEGER,
+
+            status VARCHAR(20)
+                DEFAULT 'draft',
+
+            score INTEGER,
+
+            teacher_comment TEXT,
+
+            checked_by BIGINT,
+
+            checked_at TIMESTAMP,
+
+            submitted_at TIMESTAMP,
+
+            created_at TIMESTAMP
+                DEFAULT NOW()
+        )
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_homework_user
+        ON homework_submissions(user_id)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_homework_status
+        ON homework_submissions(status)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_homework_course
+        ON homework_submissions(course_type)
+        """
+    )
+
+
+# =========================================================
 # CREATE
 # =========================================================
 
-def create_homework(
+def create_submission(
     user_id: int,
+    course_type: str,
     level: str,
     lesson: int,
-    homework_type: str,
-    file_id: str,
+    component: str,
+    task_number: int | None = None,
 ):
     db_execute(
         """
-        INSERT INTO homework
+        INSERT INTO homework_submissions
         (
             user_id,
+            course_type,
             level,
             lesson,
-            homework_type,
-            file_id,
-            status
+            component,
+            task_number
         )
         VALUES
         (
@@ -30,15 +98,16 @@ def create_homework(
             %s,
             %s,
             %s,
-            'pending'
+            %s
         )
         """,
         (
             user_id,
+            course_type,
             level,
             lesson,
-            homework_type,
-            file_id,
+            component,
+            task_number,
         ),
     )
 
@@ -47,23 +116,23 @@ def create_homework(
 # GET
 # =========================================================
 
-def get_homework(homework_id: int):
+def get_submission(submission_id: int):
     return db_execute(
         """
         SELECT *
-        FROM homework
+        FROM homework_submissions
         WHERE id=%s
         """,
-        (homework_id,),
+        (submission_id,),
         fetchone=True,
     )
 
 
-def get_user_homeworks(user_id: int):
+def get_user_submissions(user_id: int):
     return db_execute(
         """
         SELECT *
-        FROM homework
+        FROM homework_submissions
         WHERE user_id=%s
         ORDER BY created_at DESC
         """,
@@ -72,66 +141,211 @@ def get_user_homeworks(user_id: int):
     )
 
 
-def get_pending_homeworks():
+def get_lesson_submissions(
+    user_id: int,
+    course_type: str,
+    level: str,
+    lesson: int,
+):
     return db_execute(
         """
         SELECT *
-        FROM homework
-        WHERE status='pending'
-        ORDER BY created_at
+        FROM homework_submissions
+        WHERE
+            user_id=%s
+            AND course_type=%s
+            AND level=%s
+            AND lesson=%s
+        ORDER BY id
         """,
+        (
+            user_id,
+            course_type,
+            level,
+            lesson,
+        ),
         fetchall=True,
     )
 
 
-def get_checked_homeworks():
-    return db_execute(
+def submission_exists(
+    user_id: int,
+    course_type: str,
+    level: str,
+    lesson: int,
+    component: str,
+    task_number: int | None = None,
+):
+    row = db_execute(
         """
-        SELECT *
-        FROM homework
-        WHERE status='checked'
-        ORDER BY checked_at DESC
+        SELECT id
+        FROM homework_submissions
+        WHERE
+            user_id=%s
+            AND course_type=%s
+            AND level=%s
+            AND lesson=%s
+            AND component=%s
+            AND
+            (
+                task_number IS NOT DISTINCT FROM %s
+            )
+        LIMIT 1
         """,
-        fetchall=True,
+        (
+            user_id,
+            course_type,
+            level,
+            lesson,
+            component,
+            task_number,
+        ),
+        fetchone=True,
     )
 
-
+    return bool(row)
 # =========================================================
-# STATUS
+# UPDATE
 # =========================================================
 
-def approve_homework(homework_id: int, score: int, comment: str):
+def update_status(
+    submission_id: int,
+    status: str,
+):
     db_execute(
         """
-        UPDATE homework
+        UPDATE homework_submissions
+        SET status=%s
+        WHERE id=%s
+        """,
+        (
+            status,
+            submission_id,
+        ),
+    )
+
+
+def update_score(
+    submission_id: int,
+    score: int,
+):
+    db_execute(
+        """
+        UPDATE homework_submissions
+        SET score=%s
+        WHERE id=%s
+        """,
+        (
+            score,
+            submission_id,
+        ),
+    )
+
+
+def update_teacher_comment(
+    submission_id: int,
+    comment: str,
+):
+    db_execute(
+        """
+        UPDATE homework_submissions
+        SET teacher_comment=%s
+        WHERE id=%s
+        """,
+        (
+            comment,
+            submission_id,
+        ),
+    )
+
+
+def update_checked_by(
+    submission_id: int,
+    teacher_id: int,
+):
+    db_execute(
+        """
+        UPDATE homework_submissions
+        SET checked_by=%s
+        WHERE id=%s
+        """,
+        (
+            teacher_id,
+            submission_id,
+        ),
+    )
+
+
+# =========================================================
+# SUBMIT
+# =========================================================
+
+def submit_homework(
+    submission_id: int,
+):
+    db_execute(
+        """
+        UPDATE homework_submissions
+        SET
+            status='submitted',
+            submitted_at=NOW()
+        WHERE id=%s
+        """,
+        (
+            submission_id,
+        ),
+    )
+
+
+# =========================================================
+# CHECK
+# =========================================================
+
+def approve_submission(
+    submission_id: int,
+    score: int,
+    teacher_comment: str,
+    teacher_id: int,
+):
+    db_execute(
+        """
+        UPDATE homework_submissions
         SET
             status='checked',
             score=%s,
             teacher_comment=%s,
+            checked_by=%s,
             checked_at=NOW()
         WHERE id=%s
         """,
         (
             score,
-            comment,
-            homework_id,
+            teacher_comment,
+            teacher_id,
+            submission_id,
         ),
     )
 
 
-def reject_homework(homework_id: int, comment: str):
+def reject_submission(
+    submission_id: int,
+    teacher_comment: str,
+    teacher_id: int,
+):
     db_execute(
         """
-        UPDATE homework
+        UPDATE homework_submissions
         SET
             status='rejected',
             teacher_comment=%s,
+            checked_by=%s,
             checked_at=NOW()
         WHERE id=%s
         """,
         (
-            comment,
-            homework_id,
+            teacher_comment,
+            teacher_id,
+            submission_id,
         ),
     )
 
@@ -140,54 +354,268 @@ def reject_homework(homework_id: int, comment: str):
 # DELETE
 # =========================================================
 
-def delete_homework(homework_id: int):
+def delete_submission(
+    submission_id: int,
+):
     db_execute(
         """
         DELETE
-        FROM homework
+        FROM homework_submissions
         WHERE id=%s
         """,
-        (homework_id,),
+        (
+            submission_id,
+        ),
+    )
+
+
+def delete_lesson(
+    user_id: int,
+    course_type: str,
+    level: str,
+    lesson: int,
+):
+    db_execute(
+        """
+        DELETE
+        FROM homework_submissions
+        WHERE
+            user_id=%s
+            AND course_type=%s
+            AND level=%s
+            AND lesson=%s
+        """,
+        (
+            user_id,
+            course_type,
+            level,
+            lesson,
+        ),
+    )
+# =========================================================
+# ADMIN
+# =========================================================
+
+def get_pending_submissions():
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE status='submitted'
+        ORDER BY submitted_at
+        """,
+        fetchall=True,
+    )
+
+
+def get_checked_submissions():
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE status='checked'
+        ORDER BY checked_at DESC
+        """,
+        fetchall=True,
+    )
+
+
+def get_rejected_submissions():
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE status='rejected'
+        ORDER BY checked_at DESC
+        """,
+        fetchall=True,
+    )
+
+
+def get_draft_submissions():
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE status='draft'
+        ORDER BY created_at DESC
+        """,
+        fetchall=True,
     )
 
 
 # =========================================================
-# STATISTICS
+# FILTER
 # =========================================================
 
-def homework_count():
+def get_level_submissions(level: str):
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE level=%s
+        ORDER BY created_at DESC
+        """,
+        (level,),
+        fetchall=True,
+    )
+
+
+def get_course_submissions(course_type: str):
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE course_type=%s
+        ORDER BY created_at DESC
+        """,
+        (course_type,),
+        fetchall=True,
+    )
+
+
+def get_component_submissions(component: str):
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE component=%s
+        ORDER BY created_at DESC
+        """,
+        (component,),
+        fetchall=True,
+    )
+
+
+# =========================================================
+# COUNTS
+# =========================================================
+
+def submissions_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
-        FROM homework
+        SELECT COUNT(*) AS count
+        FROM homework_submissions
         """,
         fetchone=True,
     )
 
-    return row[0]
+    return row["count"]
 
 
 def pending_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
-        FROM homework
-        WHERE status='pending'
+        SELECT COUNT(*) AS count
+        FROM homework_submissions
+        WHERE status='submitted'
         """,
         fetchone=True,
     )
 
-    return row[0]
+    return row["count"]
 
 
 def checked_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
-        FROM homework
+        SELECT COUNT(*) AS count
+        FROM homework_submissions
         WHERE status='checked'
         """,
         fetchone=True,
     )
 
-    return row[0]
+    return row["count"]
+
+
+def rejected_count():
+    row = db_execute(
+        """
+        SELECT COUNT(*) AS count
+        FROM homework_submissions
+        WHERE status='rejected'
+        """,
+        fetchone=True,
+    )
+
+    return row["count"]
+
+
+def draft_count():
+    row = db_execute(
+        """
+        SELECT COUNT(*) AS count
+        FROM homework_submissions
+        WHERE status='draft'
+        """,
+        fetchone=True,
+    )
+
+    return row["count"]
+
+
+# =========================================================
+# USER HELPERS
+# =========================================================
+
+def get_last_submission(user_id: int):
+    return db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE user_id=%s
+        ORDER BY created_at DESC
+        LIMIT 1
+        """,
+        (user_id,),
+        fetchone=True,
+    )
+
+
+def has_pending_submission(user_id: int):
+    row = db_execute(
+        """
+        SELECT id
+        FROM homework_submissions
+        WHERE
+            user_id=%s
+            AND status='submitted'
+        LIMIT 1
+        """,
+        (user_id,),
+        fetchone=True,
+    )
+
+    return bool(row)
+
+
+def has_draft_submission(user_id: int):
+    row = db_execute(
+        """
+        SELECT id
+        FROM homework_submissions
+        WHERE
+            user_id=%s
+            AND status='draft'
+        LIMIT 1
+        """,
+        (user_id,),
+        fetchone=True,
+    )
+
+    return bool(row)
+
+
+# =========================================================
+# DASHBOARD
+# =========================================================
+
+def dashboard_statistics():
+    return {
+        "total": submissions_count(),
+        "draft": draft_count(),
+        "submitted": pending_count(),
+        "checked": checked_count(),
+        "rejected": rejected_count(),
+    }
