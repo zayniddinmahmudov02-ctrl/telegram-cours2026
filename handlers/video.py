@@ -1,7 +1,13 @@
 import logging
 
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CopyTextButton,
+)
 
 from database import db_execute
 from keyboards import video_menu
@@ -24,7 +30,33 @@ async def video_courses(message: Message):
         reply_markup=video_menu
     )
 
+# =========================================================
+# PAYMENT KEYBOARD
+# =========================================================
 
+CARD_NUMBER = "9860350144907192"
+
+
+def payment_keyboard():
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💳 To'lov qilish",
+                    copy_text=CopyTextButton(
+                        text=CARD_NUMBER
+                    )
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✅ To'lov qildim",
+                    callback_data="payment_done"
+                )
+            ]
+        ]
+    )
 # =========================================================
 # SAMPLE LESSON
 # =========================================================
@@ -53,11 +85,6 @@ async def send_course_info(message: Message, course: str):
         f"📚 {info['lessons']} ta dars\n\n"
         f"❌ Eski narx: {info['old_price']}\n"
         f"🔥 Chegirmadagi narx: {info['price']}\n\n"
-        f"💳 To'lov uchun karta:\n"
-        f"9860 3501 4490 7192\n\n"
-        f"👤 Zayniddinkhuja Makhmudov\n\n"
-        f"📩 To'lov qilgandan so'ng chekni (rasm shaklida) ushbu botga yuboring.\n"
-        f"Admin tasdiqlagach kurs havolasi yuboriladi."
     )
 
     try:
@@ -67,8 +94,10 @@ async def send_course_info(message: Message, course: str):
         )
     except Exception as e:
         print("DB ERROR:", e)
-
-    await message.answer(text)
+    await message.answer(
+    text,
+    reply_markup=payment_keyboard()
+)
 # =========================================================
 # COURSES
 # =========================================================
@@ -96,3 +125,19 @@ async def course_a1b1(message: Message):
 @router.message(F.text == "🔥 A1-C1")
 async def course_a1c1(message: Message):
     await send_course_info(message, "🔥 A1-C1")
+
+# =========================================================
+# PAYMENT DONE
+# =========================================================
+
+@router.callback_query(F.data == "payment_done")
+async def payment_done(
+    callback: CallbackQuery,
+):
+
+    await callback.message.answer(
+        "🎉 Ajoyib!\n\n"
+        "📷 Endi to'lov chekini (rasm) yuboring."
+    )
+
+    await callback.answer()

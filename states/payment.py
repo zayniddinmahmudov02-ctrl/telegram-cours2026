@@ -1,5 +1,7 @@
-from aiogram.fsm.state import State, StatesGroup
-
+from aiogram.fsm.state import (
+    State,
+    StatesGroup,
+)
 
 # =========================================================
 # PAYMENT FSM
@@ -7,13 +9,10 @@ from aiogram.fsm.state import State, StatesGroup
 
 class PaymentState(StatesGroup):
 
-    # Kurs tanlash
-    waiting_course = State()
-
-    # Chek (rasm yoki PDF)
+    # To'lov cheki
     waiting_receipt = State()
 
-    # Ism-familiya
+    # Ism va familiya
     waiting_full_name = State()
 
     # Telefon raqami

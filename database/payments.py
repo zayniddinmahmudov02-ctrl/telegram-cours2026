@@ -1,5 +1,4 @@
 from .connection import db_execute
-from .connection import db_execute
 
 # =========================================================
 # CREATE PAYMENT

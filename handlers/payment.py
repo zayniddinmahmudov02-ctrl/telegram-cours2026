@@ -1,83 +1,62 @@
 from aiogram import Router, F
 from aiogram.types import (
-    Message,
     CallbackQuery,
+    Message,
+    ContentType,
 )
-from keyboards.payment import course_keyboard
 from aiogram.fsm.context import FSMContext
+
+from loader import bot
+
+from config.settings import (
+    ADMIN_ID,
+    COURSE_INFO,
+)
 
 from states.payment import PaymentState
 
 from keyboards.payment import (
     phone_keyboard,
     confirm_keyboard,
-)
-from loader import bot
-
-from database.payments import create_payment
-
-from keyboards.payment import (
     admin_payment_keyboard,
 )
 
-from config.settings import ADMIN_ID
-
-from config.settings import COURSE_INFO
+from database.payments import (
+    create_payment,
+    get_payment,
+    approve_payment,
+    reject_payment,
+)
 
 router = Router()
 # =========================================================
 # START PAYMENT
 # =========================================================
-@router.message(F.text == "💳 To'lov qilish")
-async def start_payment(
-    message: Message,
-    state: FSMContext,
-):
-    await state.clear()
-
-    await state.set_state(
-        PaymentState.waiting_course
-    )
-
-    await message.answer(
-        "💳 <b>Xarid qilmoqchi bo'lgan kursni tanlang.</b>",
-        parse_mode="HTML",
-        reply_markup=course_keyboard(),
-    )
-# =========================================================
-# SELECT COURSE
-# =========================================================
 
 @router.callback_query(
-    PaymentState.waiting_course,
-    F.data.startswith("course:")
+    F.data.startswith("payment:")
 )
-async def select_course(
+async def start_payment(
     callback: CallbackQuery,
     state: FSMContext,
 ):
     course = callback.data.split(":")[1]
 
-    amount = COURSE_INFO[course]
+    await state.clear()
 
     await state.update_data(
         course=course,
-        amount=amount,
     )
 
     await state.set_state(
         PaymentState.waiting_receipt
     )
 
-    await callback.message.edit_text(
+    await callback.message.answer(
         f"""
-📚 <b>Kurs:</b> {course}
+🎉 <b>{course}</b>
 
-💰 <b>Narx:</b> {amount:,} so'm
-
-────────────────
-
-📷 To'lov chekini yuboring.
+📷 Endi to'lov chekini yuboring.
 
 Qabul qilinadi:
 
@@ -89,6 +68,8 @@ Qabul qilinadi:
     )
 
     await callback.answer()
+
+
 # =========================================================
 # RECEIPT (PHOTO)
 # =========================================================
@@ -97,7 +78,7 @@ Qabul qilinadi:
     PaymentState.waiting_receipt,
     F.photo,
 )
-async def payment_receipt_photo(
+async def receipt_photo(
     message: Message,
     state: FSMContext,
 ):
@@ -113,6 +94,8 @@ async def payment_receipt_photo(
     await message.answer(
         "👤 Ism va familiyangizni kiriting."
     )
+
+
 # =========================================================
 # RECEIPT (PDF)
 # =========================================================
@@ -121,20 +104,19 @@ async def payment_receipt_photo(
     PaymentState.waiting_receipt,
     F.document,
 )
-async def payment_receipt_document(
+async def receipt_pdf(
     message: Message,
     state: FSMContext,
 ):
-    document = message.document
+    if message.document.mime_type != "application/pdf":
 
-    if document.mime_type != "application/pdf":
         await message.answer(
-            "❌ Faqat PDF hujjat yuborishingiz mumkin."
+            "❌ Faqat PDF yuborishingiz mumkin."
         )
         return
 
     await state.update_data(
-        receipt_file_id=document.file_id,
+        receipt_file_id=message.document.file_id,
         file_type="pdf",
     )
 
@@ -145,6 +127,8 @@ async def payment_receipt_document(
     await message.answer(
         "👤 Ism va familiyangizni kiriting."
     )
+
+
 # =========================================================
 # INVALID RECEIPT
 # =========================================================
@@ -162,7 +146,9 @@ async def invalid_receipt(
 Qabul qilinadi:
 
 📷 JPG
+
 📷 PNG
+
 📄 PDF
 """
     )
@@ -171,7 +157,6 @@ Qabul qilinadi:
 # =========================================================
 
 import re
-
 
 @router.message(
     PaymentState.waiting_full_name,
@@ -182,7 +167,6 @@ async def payment_full_name(
 ):
     full_name = message.text.strip()
 
-    # Kamida ism va familiya bo'lishi kerak
     if len(full_name.split()) < 2:
         await message.answer(
             "❌ Ism va familiyangizni to'liq kiriting.\n\n"
@@ -191,14 +175,12 @@ async def payment_full_name(
         )
         return
 
-    # Juda qisqa bo'lmasin
     if len(full_name) < 5:
         await message.answer(
             "❌ Ism juda qisqa."
         )
         return
 
-    # Faqat harflar, probel, apostrof va tire
     if not re.fullmatch(r"[A-Za-zÀ-ÿʻ'`\- ]+", full_name):
         await message.answer(
             "❌ Ismda faqat harflardan foydalaning."
@@ -217,6 +199,24 @@ async def payment_full_name(
         "📱 Telefon raqamingizni yuboring.",
         reply_markup=phone_keyboard,
     )
+
+
+# =========================================================
+# INVALID PHONE
+# =========================================================
+
+@router.message(
+    PaymentState.waiting_phone,
+)
+async def invalid_phone(
+    message: Message,
+):
+    await message.answer(
+        "📱 Telefon raqamingizni pastdagi tugma orqali yuboring.",
+        reply_markup=phone_keyboard,
+    )
+
+
 # =========================================================
 # PHONE
 # =========================================================
@@ -246,9 +246,6 @@ async def payment_phone(
 📚 <b>Kurs:</b>
 {data['course']}
 
-💰 <b>Narx:</b>
-{data['amount']:,} so'm
-
 📱 <b>Telefon:</b>
 {phone}
 
@@ -267,20 +264,6 @@ Ma'lumotlarni tekshiring.
         reply_markup=confirm_keyboard,
     )
 # =========================================================
-# INVALID PHONE
-# =========================================================
-
-@router.message(
-    PaymentState.waiting_phone,
-)
-async def invalid_phone(
-    message: Message,
-):
-    await message.answer(
-        "📱 Telefon raqamingizni tugma orqali yuboring.",
-        reply_markup=phone_keyboard,
-    )
-# =========================================================
 # CONFIRM PAYMENT
 # =========================================================
 
@@ -292,6 +275,7 @@ async def confirm_payment(
     callback: CallbackQuery,
     state: FSMContext,
 ):
+
     data = await state.get_data()
 
     payment_id = create_payment(
@@ -300,7 +284,6 @@ async def confirm_payment(
         phone=data["phone"],
         username=callback.from_user.username or "",
         course=data["course"],
-        amount=data["amount"],
         receipt_file_id=data["receipt_file_id"],
         file_type=data["file_type"],
     )
@@ -313,8 +296,8 @@ async def confirm_payment(
 👤 <b>Ism:</b>
 {data["full_name"]}
 
-👤 <b>Telegram:</b>
-@{callback.from_user.username or '-'}
+👤 <b>Username:</b>
+@{callback.from_user.username or "-"}
 
 🆔 <b>User ID:</b>
 <code>{callback.from_user.id}</code>
@@ -324,9 +307,6 @@ async def confirm_payment(
 
 📚 <b>Kurs:</b>
 {data["course"]}
-
-💰 <b>Summa:</b>
-{data["amount"]:,} so'm
 """
 
     for admin_id in ADMIN_ID:
@@ -353,11 +333,11 @@ async def confirm_payment(
 
     await callback.message.edit_text(
         """
-✅ <b>To'lovingiz qabul qilindi.</b>
+✅ <b>To'lovingiz muvaffaqiyatli yuborildi.</b>
 
-Chekingiz administratorga yuborildi.
+📨 Chekingiz administratorga yuborildi.
 
-Tekshiruvdan so'ng sizga avtomatik xabar yuboriladi.
+Tasdiqlangandan so'ng kurs avtomatik ochiladi.
 """,
         parse_mode="HTML",
     )
@@ -365,3 +345,104 @@ Tekshiruvdan so'ng sizga avtomatik xabar yuboriladi.
     await state.clear()
 
     await callback.answer()
+# =========================================================
+# APPROVE PAYMENT
+# =========================================================
+
+@router.callback_query(
+    F.data.startswith("approve_payment:")
+)
+async def approve_payment(
+    callback: CallbackQuery,
+):
+
+    payment_id = int(
+        callback.data.split(":")[1]
+    )
+
+    payment = get_payment(
+        payment_id
+    )
+
+    if payment is None:
+
+        await callback.answer(
+            "❌ To'lov topilmadi.",
+            show_alert=True,
+        )
+
+        return
+
+    approve_payment(
+    payment_id,
+    callback.from_user.id,
+)
+
+    await bot.send_message(
+        chat_id=payment["user_id"],
+        text=f"""
+🎉 <b>To'lovingiz tasdiqlandi.</b>
+
+📚 Kurs:
+{payment["course"]}
+
+✅ Endi Video Kurslar bo'limidan foydalanishingiz mumkin.
+
+Omad tilaymiz!
+""",
+        parse_mode="HTML",
+    )
+
+    await callback.message.edit_reply_markup()
+
+    await callback.answer(
+        "✅ To'lov tasdiqlandi."
+    )
+# =========================================================
+# REJECT PAYMENT
+# =========================================================
+
+@router.callback_query(
+    F.data.startswith("reject_payment:")
+)
+async def reject_payment(
+    callback: CallbackQuery,
+):
+
+    payment_id = int(
+        callback.data.split(":")[1]
+    )
+
+    payment = get_payment(
+        payment_id
+    )
+
+    if payment is None:
+
+        await callback.answer(
+            "❌ To'lov topilmadi.",
+            show_alert=True,
+        )
+
+        return
+
+    reject_payment(
+    payment_id,
+    callback.from_user.id,
+)
+
+    await bot.send_message(
+        chat_id=payment["user_id"],
+        text="""
+❌ <b>To'lov tasdiqlanmadi.</b>
+
+Iltimos chekni qayta yuboring yoki administrator bilan bog'laning.
+""",
+        parse_mode="HTML",
+    )
+
+    await callback.message.edit_reply_markup()
+
+    await callback.answer(
+        "❌ To'lov rad etildi."
+    )
