@@ -9,21 +9,19 @@ from aiogram.types import (
 
 def champions_back_keyboard():
 
-    keyboard = InlineKeyboardMarkup(
+    return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     text="⬅️ Yillar",
-                    callback_data="champions",
+                    callback_data="lb_champions",
                 )
             ],
             [
                 InlineKeyboardButton(
                     text="🏆 Reytinglar",
-                    callback_data="leaderboard",
+                    callback_data="lb_back",
                 )
             ],
         ]
     )
-
-    return keyboard
