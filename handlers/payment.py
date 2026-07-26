@@ -23,14 +23,12 @@ from keyboards.payment import (
     confirm_keyboard,
     admin_payment_keyboard,
 )
-
 from database.payments import (
     create_payment,
     get_payment,
-    approve_payment,
-    reject_payment,
+    approve_payment as approve_payment_db,
+    reject_payment as reject_payment_db,
 )
-
 router = Router()
 # =========================================================
 # START PAYMENT
@@ -46,11 +44,10 @@ async def start_payment(
     course = callback.data.split(":")[1]
 
     await state.clear()
-
     await state.update_data(
-        course=course,
-    )
-
+    course=course,
+    amount=COURSE_INFO[course]["price"],
+)
     await state.set_state(
         PaymentState.waiting_receipt
     )
@@ -280,16 +277,16 @@ async def confirm_payment(
 ):
 
     data = await state.get_data()
-
     payment_id = create_payment(
-        user_id=callback.from_user.id,
-        full_name=data["full_name"],
-        phone=data["phone"],
-        username=callback.from_user.username or "",
-        course=data["course"],
-        receipt_file_id=data["receipt_file_id"],
-        file_type=data["file_type"],
-    )
+    user_id=callback.from_user.id,
+    full_name=data["full_name"],
+    phone=data["phone"],
+    username=callback.from_user.username or "",
+    course=data["course"],
+    amount=data["amount"],
+    receipt_file_id=data["receipt_file_id"],
+    file_type=data["file_type"],
+)
 
     admin_text = f"""
 🆕 <b>Yangi to'lov</b>
@@ -355,48 +352,42 @@ Tasdiqlangandan so'ng kurs avtomatik ochiladi.
 @router.callback_query(
     F.data.startswith("approve_payment:")
 )
-async def approve_payment(
+async def approve_payment_callback(
     callback: CallbackQuery,
 ):
 
-    payment_id = int(
-        callback.data.split(":")[1]
-    )
+    payment_id = int(callback.data.split(":")[1])
 
-    payment = get_payment(
-        payment_id
-    )
+    payment = get_payment(payment_id)
 
     if payment is None:
-
         await callback.answer(
             "❌ To'lov topilmadi.",
             show_alert=True,
         )
-
         return
 
-    approve_payment(
-    payment_id,
-    callback.from_user.id,
-)
+    approve_payment_db(
+        payment_id,
+        callback.from_user.id,
+    )
 
     await bot.send_message(
         chat_id=payment["user_id"],
         text=f"""
 🎉 <b>To'lovingiz tasdiqlandi.</b>
 
-📚 Kurs:
+📚 <b>Kurs:</b>
 {payment["course"]}
 
 ✅ Endi Video Kurslar bo'limidan foydalanishingiz mumkin.
-
-Omad tilaymiz!
 """,
         parse_mode="HTML",
     )
 
-    await callback.message.edit_reply_markup()
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
 
     await callback.answer(
         "✅ To'lov tasdiqlandi."
@@ -408,43 +399,39 @@ Omad tilaymiz!
 @router.callback_query(
     F.data.startswith("reject_payment:")
 )
-async def reject_payment(
+async def reject_payment_callback(
     callback: CallbackQuery,
 ):
 
-    payment_id = int(
-        callback.data.split(":")[1]
-    )
+    payment_id = int(callback.data.split(":")[1])
 
-    payment = get_payment(
-        payment_id
-    )
+    payment = get_payment(payment_id)
 
     if payment is None:
-
         await callback.answer(
             "❌ To'lov topilmadi.",
             show_alert=True,
         )
-
         return
 
-    reject_payment(
-    payment_id,
-    callback.from_user.id,
-)
+    reject_payment_db(
+        payment_id,
+        callback.from_user.id,
+    )
 
     await bot.send_message(
         chat_id=payment["user_id"],
         text="""
-❌ <b>To'lov tasdiqlanmadi.</b>
+❌ <b>To'lovingiz rad etildi.</b>
 
-Iltimos chekni qayta yuboring yoki administrator bilan bog'laning.
+Iltimos yangi chek yuboring yoki administrator bilan bog'laning.
 """,
         parse_mode="HTML",
     )
 
-    await callback.message.edit_reply_markup()
+    await callback.message.edit_reply_markup(
+        reply_markup=None
+    )
 
     await callback.answer(
         "❌ To'lov rad etildi."
