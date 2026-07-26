@@ -21,7 +21,7 @@ from config.settings import (
 )
 from aiogram.types import ReplyKeyboardRemove
 from states.payment import PaymentState
-
+from config.settings import ADMIN_CHANNEL_ID
 from keyboards.payment import (
     admin_payment_keyboard,
 )
@@ -401,9 +401,8 @@ async def payment_phone(
 📚 <b>Kurs:</b>
 {data["course"]}
 """
-
         # -------------------------------------------------
-        # SEND TO ADMIN
+        # SEND TO ADMIN CHANNEL
         # -------------------------------------------------
 
         try:
@@ -411,7 +410,7 @@ async def payment_phone(
             if data["file_type"] == "photo":
 
                 await bot.send_photo(
-                    chat_id=ADMIN_ID,
+                    chat_id=ADMIN_CHANNEL_ID,
                     photo=data["receipt_file_id"],
                     caption=admin_text,
                     parse_mode="HTML",
@@ -421,7 +420,7 @@ async def payment_phone(
             else:
 
                 await bot.send_document(
-                    chat_id=ADMIN_ID,
+                    chat_id=ADMIN_CHANNEL_ID,
                     document=data["receipt_file_id"],
                     caption=admin_text,
                     parse_mode="HTML",
@@ -429,10 +428,10 @@ async def payment_phone(
                 )
 
         except Exception:
-            logger.exception("Adminga yuborishda xato")
+            logger.exception("Admin kanalga yuborishda xato")
 
             await message.answer(
-                "❌ Administratorga yuborishda xatolik yuz berdi."
+                "❌ Administrator kanaliga yuborishda xatolik yuz berdi."
             )
             return
 
