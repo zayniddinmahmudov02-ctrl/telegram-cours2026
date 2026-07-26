@@ -9,26 +9,25 @@ from loader import bot
 
 from config.settings import (
     BUYERS_CHANNEL_ID,
-)
-from database.payments import (
-    approve_payment,
-    get_payment,
-)
-from config.settings import (
-    BUYERS_CHANNEL_ID,
     COURSE_LINKS,
     GROUP_LINKS,
 )
+
 from database.users import approve_user
 
+from database.payments import (
+    get_payment,
+    approve_payment,
+    reject_payment,
+)
+
 router = Router()
+
 # =========================================================
 # APPROVE PAYMENT
 # =========================================================
 
-@router.callback_query(
-    F.data.startswith("approve_payment:")
-)
+@router.callback_query(F.data.startswith("approve_payment:"))
 async def approve_payment_callback(
     callback: CallbackQuery,
 ):
@@ -36,9 +35,9 @@ async def approve_payment_callback(
 
     payment = get_payment(payment_id)
 
-    if not payment:
+    if payment is None:
         await callback.answer(
-            "To'lov topilmadi.",
+            "❌ To'lov topilmadi.",
             show_alert=True,
         )
         return
@@ -50,22 +49,27 @@ async def approve_payment_callback(
         )
         return
 
-    # Payment status
+    # Payment approve
     approve_payment(
         payment_id,
         callback.from_user.id,
     )
 
-    # User approval
+    # User approve
     approve_user(
         payment["user_id"]
     )
 
-    # Links
-    course_link = COURSE_LINKS.get(payment["course"], "-")
-    group_link = GROUP_LINKS.get(payment["course"], "-")
+    course_link = COURSE_LINKS.get(
+        payment["course"],
+        "-"
+    )
 
-    # User notification
+    group_link = GROUP_LINKS.get(
+        payment["course"],
+        "-"
+    )
+
     text = f"""
 🎉 <b>To'lovingiz muvaffaqiyatli tasdiqlandi!</b>
 
@@ -76,14 +80,17 @@ async def approve_payment_callback(
 ━━━━━━━━━━━━━━━━━━
 
 🎥 <b>Kurs kanali:</b>
+
 {course_link}
 
 👥 <b>Guruh havolasi:</b>
+
 {group_link}
 
 ━━━━━━━━━━━━━━━━━━
 
-✅ Avval kurs kanaliga, so'ng guruhga qo'shiling.
+✅ Avval kanalga,
+so'ng guruhga qo'shiling.
 
 VIZU Academy'ni tanlaganingiz uchun rahmat! 🇩🇪
 """
@@ -95,7 +102,6 @@ VIZU Academy'ni tanlaganingiz uchun rahmat! 🇩🇪
         disable_web_page_preview=True,
     )
 
-    # Buyers channel
     buyer_text = f"""
 🎉 <b>Yangi o'quvchi qo'shildi</b>
 
@@ -114,45 +120,46 @@ Xush kelibsiz 🇩🇪
         parse_mode="HTML",
     )
 
-    # Update admin message
     if callback.message.photo:
+
+        caption = callback.message.caption or ""
+
         await callback.message.edit_caption(
-            caption=callback.message.caption + "\n\n✅ <b>TASDIQLANDI</b>",
+            caption=caption + "\n\n✅ <b>TASDIQLANDI</b>",
             parse_mode="HTML",
             reply_markup=None,
         )
+
     else:
+
+        text = callback.message.text or ""
+
         await callback.message.edit_text(
-            callback.message.text + "\n\n✅ <b>TASDIQLANDI</b>",
+            text + "\n\n✅ <b>TASDIQLANDI</b>",
             parse_mode="HTML",
             reply_markup=None,
         )
 
     await callback.answer(
-        "✅ To'lov muvaffaqiyatli tasdiqlandi."
+        "✅ To'lov tasdiqlandi."
     )
+
+
 # =========================================================
 # REJECT PAYMENT
 # =========================================================
 
-from database.payments import reject_payment
-
-
-@router.callback_query(
-    F.data.startswith("reject_payment:")
-)
+@router.callback_query(F.data.startswith("reject_payment:"))
 async def reject_payment_callback(
     callback: CallbackQuery,
 ):
-    payment_id = int(
-        callback.data.split(":")[1]
-    )
+    payment_id = int(callback.data.split(":")[1])
 
     payment = get_payment(payment_id)
 
-    if not payment:
+    if payment is None:
         await callback.answer(
-            "To'lov topilmadi.",
+            "❌ To'lov topilmadi.",
             show_alert=True,
         )
         return
@@ -169,36 +176,42 @@ async def reject_payment_callback(
         callback.from_user.id,
     )
 
-    text = f"""
+    reject_text = f"""
 ❌ <b>To'lovingiz rad etildi.</b>
 
-📚 <b>Kurs:</b>
-{payment['course']}
+📚 <b>Kurs:</b> {payment['course']}
 
 Administrator to'lovni tasdiqlamadi.
 
-Agar bu xato deb hisoblasangiz, administrator bilan bog'laning va yangi chek yuboring.
+Iltimos chekni qayta yuboring yoki administrator bilan bog'laning.
 """
 
     await bot.send_message(
-        payment["user_id"],
-        text,
+        chat_id=payment["user_id"],
+        text=reject_text,
         parse_mode="HTML",
     )
 
     if callback.message.photo:
+
+        caption = callback.message.caption or ""
+
         await callback.message.edit_caption(
-            caption=callback.message.caption +
-            "\n\n❌ <b>RAD ETILDI</b>",
+            caption=caption + "\n\n❌ <b>RAD ETILDI</b>",
             parse_mode="HTML",
+            reply_markup=None,
         )
+
     else:
+
+        text = callback.message.text or ""
+
         await callback.message.edit_text(
-            callback.message.text +
-            "\n\n❌ <b>RAD ETILDI</b>",
+            text + "\n\n❌ <b>RAD ETILDI</b>",
             parse_mode="HTML",
+            reply_markup=None,
         )
 
     await callback.answer(
-        "To'lov rad etildi."
+        "❌ To'lov rad etildi."
     )
