@@ -11,7 +11,8 @@ from .broadcast import router as broadcast
 from .private_message import router as private_message
 from .info import router as info
 from .leaderboard import router as leaderboard
-
+from .homework_online import router as homework_online
+from .teacher_homework import router as teacher_homework
 __all__ = [
     "start",
     "artikel",
@@ -26,4 +27,6 @@ __all__ = [
     "private_message",
     "info",
     "leaderboard",
+    "homework_online",
+    "teacher_homework",
 ]
