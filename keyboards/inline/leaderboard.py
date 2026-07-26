@@ -38,11 +38,5 @@ def leaderboard_keyboard() -> InlineKeyboardMarkup:
                     callback_data="lb_champions",
                 ),
             ],
-            [
-                InlineKeyboardButton(
-                    text="⬅️ Orqaga",
-                    callback_data="lb_back",
-                ),
-            ],
         ]
     )
