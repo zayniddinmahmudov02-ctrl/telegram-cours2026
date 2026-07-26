@@ -8,9 +8,7 @@ from keyboards.homework import (
     homework_menu_keyboard,
 )
 
-from keyboards.main_menu import (
-    main_menu_keyboard,
-)
+from keyboards.main import main_menu_keyboard
 
 from handlers import (
     homework_online,
