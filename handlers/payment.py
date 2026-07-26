@@ -44,17 +44,22 @@ async def start_payment(
     callback: CallbackQuery,
     state: FSMContext,
 ):
-    course = callback.data.split(":")[1]
+    course = callback.data.split(":", 1)[1]
+
+    info = COURSE_INFO.get(course)
+
+    if info is None:
+        await callback.answer(
+            "❌ Kurs topilmadi.",
+            show_alert=True,
+        )
+        return
 
     await state.clear()
 
     await state.update_data(
         course=course,
-        amount=COURSE_INFO[course]["price"],
-    )
-
-    await state.set_state(
-        PaymentState.waiting_receipt
+        amount=info["price"],
     )
 
     keyboard = InlineKeyboardMarkup(
@@ -75,6 +80,12 @@ async def start_payment(
                     ),
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text="✅ Chekni yuborish",
+                    callback_data=f"payment_receipt:{course}",
+                )
+            ],
         ]
     )
 
@@ -86,7 +97,7 @@ async def start_payment(
 
 To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki boshqa to'lov ilovalari hamda bank terminallari orqali amalga oshirishingiz mumkin.
 
-━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━
 
 💳 <b>UzCard</b>
 
@@ -100,9 +111,40 @@ To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki bosh
 
 <b>Zayniddinkhuja Makhmudov</b>
 
-━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━
 
-📷 <b>To'lovni amalga oshirgandan so'ng chekni yuboring.</b>
+📌 To'lovni amalga oshirgach pastdagi
+<b>✅ Chekni yuborish</b> tugmasini bosing.
+""",
+        parse_mode="HTML",
+        reply_markup=keyboard,
+    )
+
+    await callback.answer()
+# =========================================================
+# RECEIPT STEP
+# =========================================================
+
+@router.callback_query(
+    F.data.startswith("payment_receipt:")
+)
+async def payment_receipt(
+    callback: CallbackQuery,
+    state: FSMContext,
+):
+    course = callback.data.split(":", 1)[1]
+
+    await state.update_data(
+        course=course,
+    )
+
+    await state.set_state(
+        PaymentState.waiting_receipt
+    )
+
+    await callback.message.answer(
+        """
+📷 <b>Endi to'lov chekini yuboring.</b>
 
 Qabul qilinadi:
 
@@ -111,7 +153,6 @@ Qabul qilinadi:
 • PDF
 """,
         parse_mode="HTML",
-        reply_markup=keyboard,
     )
 
     await callback.answer()
