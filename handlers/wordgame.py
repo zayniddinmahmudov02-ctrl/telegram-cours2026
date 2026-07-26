@@ -465,7 +465,6 @@ async def back_to_levels(
         reply_markup=menu,
     )
 
-
 # =========================================================
 # BLOCK SELECT
 # =========================================================
@@ -475,33 +474,28 @@ BLOCK_PATTERN = re.compile(
 )
 
 
-@router.message()
+@router.message(
+    F.text.regexp(r"^(🏆|✅|📖|🔒)\s*[A-Z0-9]+-\d+-Blok")
+)
 async def open_block(
     message: Message,
 ):
 
-    match = BLOCK_PATTERN.match(
-        message.text
-    )
+    match = BLOCK_PATTERN.match(message.text)
 
     if not match:
+        await message.answer("❌ Blok aniqlanmadi.")
         return
 
     level = match.group(1)
-    block = int(
-        match.group(2)
-    )
+    block = int(match.group(2))
 
     if not can_open_block(
         message.from_user.id,
         level,
         block,
     ):
-
-        await send_locked_message(
-            message
-        )
-
+        await send_locked_message(message)
         return
 
     await start_quiz_block(
@@ -509,62 +503,6 @@ async def open_block(
         level=level,
         block=block,
     )
-
-
-# =========================================================
-# CHANGE FULL NAME
-# =========================================================
-
-@router.message(
-    F.text == "✏️ Ism va familiyani o'zgartirish"
-)
-async def change_full_name(
-    message: Message,
-    state: FSMContext,
-):
-
-    await state.set_state(
-        RegisterStates.waiting_full_name
-    )
-
-    await message.answer(
-        "📝 Yangi ism va familiyangizni yuboring."
-    )
-
-
-# =========================================================
-# SAVE FULL NAME
-# =========================================================
-
-@router.message(
-    RegisterStates.waiting_full_name
-)
-async def save_full_name(
-    message: Message,
-    state: FSMContext,
-):
-
-    full_name = message.text.strip()
-
-    db_execute(
-        """
-        UPDATE users
-        SET full_name=%s
-        WHERE user_id=%s
-        """,
-        (
-            full_name,
-            message.from_user.id,
-        ),
-    )
-
-    await state.clear()
-
-    await message.answer(
-        "✅ Ism va familiya muvaffaqiyatli saqlandi.",
-        reply_markup=main_menu,
-    )
-
 # =========================================================
 # BACK TO MAIN MENU
 # =========================================================
