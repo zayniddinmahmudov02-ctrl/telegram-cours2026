@@ -281,68 +281,98 @@ async def payment_full_name(
 # =========================================================
 # PHONE
 # =========================================================
-
 import re
+import logging
 
 @router.message(PaymentState.waiting_phone)
 async def payment_phone(
     message: Message,
     state: FSMContext,
 ):
-    if not message.text:
-        await message.answer(
-            "❌ Telefon raqamingizni matn ko'rinishida kiriting."
+    try:
+        if not message.text:
+            await message.answer(
+                "❌ Telefon raqamingizni matn ko'rinishida kiriting."
+            )
+            return
+
+        phone = message.text.strip()
+
+        # Harflar bo'lmasligi kerak
+        if re.search(r"[A-Za-zА-Яа-я]", phone):
+            await message.answer(
+                "❌ Telefon raqamda harflar bo'lmasligi kerak."
+            )
+            return
+
+        # Belgilarni tekshirish
+        if not re.fullmatch(r"[\d+\-\s()]+", phone):
+            await message.answer(
+                "❌ Telefon raqam noto'g'ri."
+            )
+            return
+
+        digits = re.sub(r"\D", "", phone)
+
+        if len(digits) < 7:
+            await message.answer(
+                "❌ Telefon raqam juda qisqa."
+            )
+            return
+
+        await state.update_data(phone=phone)
+
+        data = await state.get_data()
+
+        required = (
+            "full_name",
+            "course",
+            "amount",
+            "receipt_file_id",
+            "file_type",
         )
-        return
 
-    phone = message.text.strip()
+        for key in required:
+            if key not in data:
+                await state.clear()
+                await message.answer(
+                    "❌ To'lov jarayoni bekor qilindi.\n\n"
+                    "Iltimos boshidan qayta urinib ko'ring."
+                )
+                return
 
-    # Harflar bo'lmasligi kerak
-    if re.search(r"[A-Za-zА-Яа-я]", phone):
-        await message.answer(
-            "❌ Telefon raqamda harflar bo'lmasligi kerak."
-        )
-        return
+        try:
+            payment_id = create_payment(
+                user_id=message.from_user.id,
+                full_name=data["full_name"],
+                phone=phone,
+                username=message.from_user.username or "",
+                course=data["course"],
+                amount=data["amount"],
+                receipt_file_id=data["receipt_file_id"],
+                file_type=data["file_type"],
+            )
+        except Exception:
+            logging.exception("create_payment xatosi")
 
-    # Faqat raqam va + belgisi
-    if not re.fullmatch(r"[\d+\-\s()]+", phone):
-        await message.answer(
-            "❌ Telefon raqam noto'g'ri."
-        )
-        return
+            await message.answer(
+                "❌ To'lovni saqlashda xatolik yuz berdi."
+            )
+            return
 
-    # Faqat raqamlarni ajratib olamiz
-    digits = re.sub(r"\D", "", phone)
+        if payment_id is None:
+            await message.answer(
+                "❌ To'lov yaratilmadi."
+            )
+            return
 
-    # Kamida 7 ta raqam
-    if len(digits) < 7:
-        await message.answer(
-            "❌ Telefon raqam juda qisqa."
-        )
-        return
-
-    await state.update_data(phone=phone)
-
-    data = await state.get_data()
-
-    payment_id = create_payment(
-        user_id=message.from_user.id,
-        full_name=data["full_name"],
-        phone=phone,
-        username=message.from_user.username or "",
-        course=data["course"],
-        amount=data["amount"],
-        receipt_file_id=data["receipt_file_id"],
-        file_type=data["file_type"],
-    )
-
-    admin_text = f"""
+        admin_text = f"""
 🆕 <b>Yangi to'lov</b>
 
 🆔 <b>Payment ID:</b> {payment_id}
 
 👤 <b>Ism:</b>
-{data['full_name']}
+{data["full_name"]}
 
 👤 <b>Username:</b>
 @{message.from_user.username or "-"}
@@ -354,42 +384,55 @@ async def payment_phone(
 {phone}
 
 📚 <b>Kurs:</b>
-{data['course']}
+{data["course"]}
 """
 
-    for admin_id in ADMIN_ID:
+        for admin_id in ADMIN_ID:
+            try:
+                if data["file_type"] == "photo":
+                    await bot.send_photo(
+                        chat_id=admin_id,
+                        photo=data["receipt_file_id"],
+                        caption=admin_text,
+                        parse_mode="HTML",
+                        reply_markup=admin_payment_keyboard(payment_id),
+                    )
+                else:
+                    await bot.send_document(
+                        chat_id=admin_id,
+                        document=data["receipt_file_id"],
+                        caption=admin_text,
+                        parse_mode="HTML",
+                        reply_markup=admin_payment_keyboard(payment_id),
+                    )
 
-        if data["file_type"] == "photo":
+            except Exception:
+                logging.exception(
+                    f"Admin {admin_id} ga yuborishda xato"
+                )
 
-            await bot.send_photo(
-                chat_id=admin_id,
-                photo=data["receipt_file_id"],
-                caption=admin_text,
-                parse_mode="HTML",
-                reply_markup=admin_payment_keyboard(payment_id),
-            )
-
-        else:
-
-            await bot.send_document(
-                chat_id=admin_id,
-                document=data["receipt_file_id"],
-                caption=admin_text,
-                parse_mode="HTML",
-                reply_markup=admin_payment_keyboard(payment_id),
-            )
-
-    await message.answer(
-        """
+        await message.answer(
+            """
 ✅ <b>To'lovingiz muvaffaqiyatli yuborildi.</b>
 
 📨 Chekingiz administratorga yuborildi.
+
 Administrator tasdiqlagach kurs avtomatik ochiladi.
 """,
-        parse_mode="HTML",
-    )
+            parse_mode="HTML",
+        )
 
-    await state.clear()
+        await state.clear()
+
+    except Exception:
+        logging.exception("payment_phone umumiy xato")
+
+        await state.clear()
+
+        await message.answer(
+            "❌ Kutilmagan xatolik yuz berdi.\n"
+            "Iltimos qayta urinib ko'ring."
+        )
 # =========================================================
 # APPROVE PAYMENT
 # =========================================================
