@@ -133,3 +133,7 @@ async def close_info(callback: CallbackQuery):
     )
 
     await callback.answer()
+@router.message(F.text == "📚 Ma'lumotlar")
+async def info_menu_handler(message: Message):
+    print("INFO ISHLADI")
+    await message.answer("TEST")
