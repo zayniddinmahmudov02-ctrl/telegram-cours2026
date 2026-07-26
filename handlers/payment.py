@@ -8,7 +8,11 @@ from aiogram.types import (
     ContentType,
 )
 from aiogram.fsm.context import FSMContext
-
+from aiogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CopyTextButton,
+)
 from loader import bot
 
 from config.settings import (
@@ -43,19 +47,62 @@ async def start_payment(
     course = callback.data.split(":")[1]
 
     await state.clear()
+
     await state.update_data(
-    course=course,
-    amount=COURSE_INFO[course]["price"],
-)
+        course=course,
+        amount=COURSE_INFO[course]["price"],
+    )
+
     await state.set_state(
         PaymentState.waiting_receipt
     )
 
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📋 UzCard nusxalash",
+                    copy_text=CopyTextButton(
+                        text="9860350144907192",
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Visa Card nusxalash",
+                    copy_text=CopyTextButton(
+                        text="4448844427532174",
+                    ),
+                )
+            ],
+        ]
+    )
+
     await callback.message.answer(
         f"""
-🎉 <b>{course}</b>
+🎓 <b>{course}</b>
 
-📷 Endi to'lov chekini yuboring.
+💳 <b>To'lov ma'lumotlari</b>
+
+To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki boshqa to'lov ilovalari hamda bank terminallari orqali amalga oshirishingiz mumkin.
+
+━━━━━━━━━━━━━━
+
+💳 <b>UzCard</b>
+
+<code>9860 3501 4490 7192</code>
+
+💳 <b>Visa Card</b>
+
+<code>4448 8444 2753 2174</code>
+
+👤 <b>Karta egasi</b>
+
+<b>Zayniddinkhuja Makhmudov</b>
+
+━━━━━━━━━━━━━━
+
+📷 <b>To'lovni amalga oshirgandan so'ng chekni yuboring.</b>
 
 Qabul qilinadi:
 
@@ -64,11 +111,10 @@ Qabul qilinadi:
 • PDF
 """,
         parse_mode="HTML",
+        reply_markup=keyboard,
     )
 
     await callback.answer()
-
-
 # =========================================================
 # RECEIPT (PHOTO)
 # =========================================================
