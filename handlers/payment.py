@@ -23,7 +23,6 @@ from aiogram.types import ReplyKeyboardRemove
 from states.payment import PaymentState
 
 from keyboards.payment import (
-    phone_keyboard,
     admin_payment_keyboard,
 )
 from database.payments import (
@@ -278,7 +277,6 @@ async def payment_full_name(
 
     await message.answer(
         "📱 Telefon raqamingizni kiriting.",
-        reply_markup=phone_keyboard,
     )
 # =========================================================
 # PHONE
