@@ -18,8 +18,14 @@ from handlers import (
     private_message,
     info,
     leaderboard,
+
+    # Homework
+    homework,
     homework_online,
+    homework_video,
+    homework_speaking,
     teacher_homework,
+    teacher_chat,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -43,8 +49,14 @@ routers = [
     private_message,
     info,
     leaderboard,
+
+    # Homework
+    homework,
     homework_online,
+    homework_video,
+    homework_speaking,
     teacher_homework,
+    teacher_chat,
 ]
 
 for router in routers:
