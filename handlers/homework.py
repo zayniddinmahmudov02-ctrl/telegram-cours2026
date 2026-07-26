@@ -4,11 +4,13 @@ from aiogram.types import (
     Message,
 )
 
-from keyboards.homework import (
+from keyboards.homework_menu import (
     homework_menu_keyboard,
 )
 
-from keyboards.main import main_menu_keyboard
+from keyboards.main import (
+    main_menu,
+)
 
 from handlers import (
     homework_online,
@@ -89,6 +91,6 @@ async def teacher(callback: CallbackQuery):
 async def back(callback: CallbackQuery):
     await callback.message.edit_text(
         "🏠 <b>Asosiy menyu</b>",
-        reply_markup=main_menu_keyboard(),
+    reply_markup=main_menu,
     )
     await callback.answer()
