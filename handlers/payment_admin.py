@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery
 from loader import bot
 
 from config.settings import (
-    BUYERS_CHANNEL_ID,
+    ADMIN_CHANNEL_ID,
     COURSE_LINKS,
     GROUP_LINKS,
 )
@@ -115,7 +115,7 @@ Xush kelibsiz 🇩🇪
 """
 
     await bot.send_message(
-        chat_id=BUYERS_CHANNEL_ID,
+        chat_id=ADMIN_CHANNEL_ID,
         text=buyer_text,
         parse_mode="HTML",
     )
