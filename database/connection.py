@@ -15,16 +15,22 @@ _connection_pool = None
 # CONNECTION POOL
 # =========================================================
 
-def init_connection_pool(minconn: int = 1, maxconn: int = 10):
+def init_connection_pool(
+    minconn: int = 1,
+    maxconn: int = 10,
+):
     global _connection_pool
 
     if _connection_pool is None:
         _connection_pool = pool.SimpleConnectionPool(
-            minconn,
-            maxconn,
-            DATABASE_URL,
+            minconn=minconn,
+            maxconn=maxconn,
+            dsn=DATABASE_URL,
         )
-        logger.info("✅ PostgreSQL connection pool initialized")
+
+        logger.info(
+            "✅ PostgreSQL connection pool initialized"
+        )
 
 
 # =========================================================
@@ -33,6 +39,8 @@ def init_connection_pool(minconn: int = 1, maxconn: int = 10):
 
 @contextmanager
 def get_connection():
+    global _connection_pool
+
     if _connection_pool is None:
         init_connection_pool()
 
@@ -40,6 +48,7 @@ def get_connection():
 
     try:
         yield conn
+
     finally:
         _connection_pool.putconn(conn)
 
@@ -63,26 +72,40 @@ def db_execute(
 
                 cur.execute(query, params)
 
-                if fetchone:
-                    return cur.fetchone()
+                result = None
 
-                if fetchall:
-                    return cur.fetchall()
+                if fetchone:
+                    result = cur.fetchone()
+
+                elif fetchall:
+                    result = cur.fetchall()
 
                 conn.commit()
 
-        except Exception:
+                return result
+
+        except Exception as e:
             conn.rollback()
+
+            logger.exception(
+                "Database query failed: %s",
+                e,
+            )
+
             raise
 
 
 # =========================================================
-# CLOSE POOL
+# CLOSE CONNECTION POOL
 # =========================================================
 
 def close_pool():
     global _connection_pool
 
-    if _connection_pool:
+    if _connection_pool is not None:
         _connection_pool.closeall()
-        logger.info("✅ PostgreSQL connection pool closed")
+        _connection_pool = None
+
+        logger.info(
+            "✅ PostgreSQL connection pool closed"
+        )

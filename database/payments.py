@@ -55,7 +55,10 @@ def create_payment(
         fetchone=True,
     )
 
-    return row[0] if row else None
+    if not row:
+        return None
+
+    return row["id"]
 # =========================================================
 # GET
 # =========================================================
