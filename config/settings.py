@@ -64,36 +64,45 @@ GROUP_LINKS = {
     "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
     "🔥 A1-C1": "https://t.me/+pW308gWaYUwwNmY6",
 }
-
 # =========================================================
 # COURSE INFO
 # =========================================================
+
 COURSE_INFO = {
     "🇩🇪 A1": {
         "lessons": 14,
         "old_price": "100.000 so'm",
-        "price": "50.000 so'm"
+        "price": 50000,
+        "price_text": "50.000 so'm",
     },
+
     "🇩🇪 A2": {
         "lessons": 14,
         "old_price": "200.000 so'm",
-        "price": "100.000 so'm"
+        "price": 100000,
+        "price_text": "100.000 so'm",
     },
+
     "🇩🇪 B1": {
         "lessons": 20,
         "old_price": "200.000 so'm",
-        "price": "100.000 so'm"
+        "price": 100000,
+        "price_text": "100.000 so'm",
     },
+
     "🔥 A1-B1": {
         "lessons": 48,
         "old_price": "400.000 so'm",
-        "price": "200.000 so'm"
+        "price": 200000,
+        "price_text": "200.000 so'm",
     },
+
     "🔥 A1-C1": {
         "lessons": 100,
         "old_price": "800.000 so'm",
-        "price": "400.000 so'm"
-    }
+        "price": 400000,
+        "price_text": "400.000 so'm",
+    },
 }
 # =========================================================
 # MEDIEN CHANNELS
