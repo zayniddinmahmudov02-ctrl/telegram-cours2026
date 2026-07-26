@@ -326,7 +326,7 @@ from aiogram.fsm.context import FSMContext
 from database import homework
 from database import homework_files
 
-from config import HOMEWORK_ONLINE_CHANNEL
+from config import HOMEWORK_ONLINE_CHANNEL_ID
 
 
 # =========================================================
@@ -371,7 +371,7 @@ async def submit_homework(
     homework.submit_homework(submission_id)
 
     await bot.send_message(
-        HOMEWORK_ONLINE_CHANNEL,
+        HOMEWORK_ONLINE_CHANNEL_ID,
         format_submission_text(
             callback,
             submission,
@@ -381,7 +381,7 @@ async def submit_homework(
     for file in files:
         await send_homework_file(
             bot,
-            HOMEWORK_ONLINE_CHANNEL,
+            HOMEWORK_ONLINE_CHANNEL_ID,
             file,
         )
 
