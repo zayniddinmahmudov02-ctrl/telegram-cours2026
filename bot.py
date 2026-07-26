@@ -21,6 +21,7 @@ from handlers.payment import router as payment_router
 from handlers.payment_admin import router as payment_admin_router
 from handlers.broadcast import router as broadcast_router
 from handlers.private_message import router as private_message_router
+from handlers.info import router as info_router
 logging.basicConfig(level=logging.INFO)
 
 subscription = SubscriptionMiddleware()
@@ -41,3 +42,4 @@ dp.include_router(payment_router)
 dp.include_router(payment_admin_router)
 dp.include_router(broadcast_router)
 dp.include_router(private_message_router)
+dp.include_router(info_router)
