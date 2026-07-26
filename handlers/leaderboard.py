@@ -10,6 +10,7 @@ from database.leaderboard import (
     get_monthly_champions,
     get_user_rank,
 )
+
 from keyboards.inline.leaderboard import leaderboard_keyboard
 from keyboards.inline.champions import champions_years_keyboard
 from keyboards.inline.back import champions_back_keyboard
@@ -20,12 +21,17 @@ router = Router()
 # MENU
 # =========================================================
 
+LEADERBOARD_TEXT = (
+    "🏆 <b>VIZU Leaderboard</b>\n\n"
+    "Kerakli reyting turini tanlang."
+)
+
+
 @router.message(Command("leaderboard"))
 async def leaderboard_command(message: Message):
 
     await message.answer(
-        "🏆 <b>VIZU Leaderboard</b>\n\n"
-        "Kerakli reyting turini tanlang.",
+        LEADERBOARD_TEXT,
         reply_markup=leaderboard_keyboard(),
     )
 
@@ -34,10 +40,63 @@ async def leaderboard_command(message: Message):
 async def leaderboard_menu(message: Message):
 
     await message.answer(
-        "🏆 <b>VIZU Leaderboard</b>\n\n"
-        "Kerakli reyting turini tanlang.",
+        LEADERBOARD_TEXT,
         reply_markup=leaderboard_keyboard(),
     )
+
+
+# =========================================================
+# HELPER
+# =========================================================
+
+def build_leaderboard_text(
+    *,
+    title: str,
+    score_field: str,
+    period: str,
+    top: list,
+    user_id: int,
+) -> str:
+
+    text = f"{title}\n\n"
+
+    if not top:
+        return (
+            text
+            + "📭 Hozircha reyting mavjud emas.\n\n"
+            + "🎮 Birinchi bo'lib Word Game o'ynang!"
+        )
+
+    medals = ["🥇", "🥈", "🥉"]
+
+    for index, row in enumerate(top, start=1):
+
+        place = medals[index - 1] if index <= 3 else f"{index}."
+
+        text += (
+            f"{place} "
+            f"<b>{row['full_name']}</b>\n"
+            f"⭐ {row[score_field]} ball\n\n"
+        )
+
+    rank = get_user_rank(
+        user_id,
+        period,
+    )
+
+    text += "━━━━━━━━━━━━━━\n\n"
+
+    if rank:
+
+        text += (
+            f"👤 <b>Sizning o'rningiz:</b> #{rank}"
+        )
+
+    else:
+
+        text += "👤 Siz hali reytingda emassiz."
+
+    return text
 # =========================================================
 # DAILY
 # =========================================================
@@ -45,44 +104,13 @@ async def leaderboard_menu(message: Message):
 @router.callback_query(F.data == "lb_daily")
 async def daily_top(callback: CallbackQuery):
 
-    top = get_daily_top()
-
-    text = "📅 <b>Kunlik Reyting</b>\n\n"
-
-    if not top:
-        text += "Hozircha reyting mavjud emas."
-    else:
-
-        medals = ["🥇", "🥈", "🥉"]
-
-        for index, row in enumerate(top, start=1):
-
-            if index <= 3:
-                place = medals[index - 1]
-            else:
-                place = f"{index}."
-
-            text += (
-                f"{place} "
-                f"<b>{row['full_name']}</b>\n"
-                f"⭐ {row['daily_score']} ball\n\n"
-            )
-
-    rank = get_user_rank(
-        callback.from_user.id,
-        "daily",
+    text = build_leaderboard_text(
+        title="📅 <b>Kunlik Reyting</b>",
+        score_field="daily_score",
+        period="daily",
+        top=get_daily_top(),
+        user_id=callback.from_user.id,
     )
-
-    text += "━━━━━━━━━━━━━━\n\n"
-
-    if rank:
-        text += (
-            f"👤 <b>Sizning o'rningiz:</b> #{rank}"
-        )
-    else:
-        text += (
-            "👤 Siz hali reytingda emassiz."
-        )
 
     await callback.message.edit_text(
         text,
@@ -90,6 +118,8 @@ async def daily_top(callback: CallbackQuery):
     )
 
     await callback.answer()
+
+
 # =========================================================
 # WEEKLY
 # =========================================================
@@ -97,40 +127,13 @@ async def daily_top(callback: CallbackQuery):
 @router.callback_query(F.data == "lb_weekly")
 async def weekly_top(callback: CallbackQuery):
 
-    top = get_weekly_top()
-
-    text = "📆 <b>Haftalik Reyting</b>\n\n"
-
-    if not top:
-        text += "Hozircha reyting mavjud emas."
-    else:
-
-        medals = ["🥇", "🥈", "🥉"]
-
-        for index, row in enumerate(top, start=1):
-
-            if index <= 3:
-                place = medals[index - 1]
-            else:
-                place = f"{index}."
-
-            text += (
-                f"{place} "
-                f"<b>{row['full_name']}</b>\n"
-                f"⭐ {row['weekly_score']} ball\n\n"
-            )
-
-    rank = get_user_rank(
-        callback.from_user.id,
-        "weekly",
+    text = build_leaderboard_text(
+        title="📆 <b>Haftalik Reyting</b>",
+        score_field="weekly_score",
+        period="weekly",
+        top=get_weekly_top(),
+        user_id=callback.from_user.id,
     )
-
-    text += "\n━━━━━━━━━━━━━━\n\n"
-
-    if rank:
-        text += f"👤 <b>Sizning o'rningiz:</b> #{rank}"
-    else:
-        text += "👤 Siz hali reytingda emassiz."
 
     await callback.message.edit_text(
         text,
@@ -138,8 +141,6 @@ async def weekly_top(callback: CallbackQuery):
     )
 
     await callback.answer()
-
-
 # =========================================================
 # MONTHLY
 # =========================================================
@@ -147,40 +148,13 @@ async def weekly_top(callback: CallbackQuery):
 @router.callback_query(F.data == "lb_monthly")
 async def monthly_top(callback: CallbackQuery):
 
-    top = get_monthly_top()
-
-    text = "🗓 <b>Oylik Reyting</b>\n\n"
-
-    if not top:
-        text += "Hozircha reyting mavjud emas."
-    else:
-
-        medals = ["🥇", "🥈", "🥉"]
-
-        for index, row in enumerate(top, start=1):
-
-            if index <= 3:
-                place = medals[index - 1]
-            else:
-                place = f"{index}."
-
-            text += (
-                f"{place} "
-                f"<b>{row['full_name']}</b>\n"
-                f"⭐ {row['monthly_score']} ball\n\n"
-            )
-
-    rank = get_user_rank(
-        callback.from_user.id,
-        "monthly",
+    text = build_leaderboard_text(
+        title="🗓 <b>Oylik Reyting</b>",
+        score_field="monthly_score",
+        period="monthly",
+        top=get_monthly_top(),
+        user_id=callback.from_user.id,
     )
-
-    text += "\n━━━━━━━━━━━━━━\n\n"
-
-    if rank:
-        text += f"👤 <b>Sizning o'rningiz:</b> #{rank}"
-    else:
-        text += "👤 Siz hali reytingda emassiz."
 
     await callback.message.edit_text(
         text,
@@ -197,40 +171,13 @@ async def monthly_top(callback: CallbackQuery):
 @router.callback_query(F.data == "lb_global")
 async def global_top(callback: CallbackQuery):
 
-    top = get_global_top()
-
-    text = "🌍 <b>Global Reyting</b>\n\n"
-
-    if not top:
-        text += "Hozircha reyting mavjud emas."
-    else:
-
-        medals = ["🥇", "🥈", "🥉"]
-
-        for index, row in enumerate(top, start=1):
-
-            if index <= 3:
-                place = medals[index - 1]
-            else:
-                place = f"{index}."
-
-            text += (
-                f"{place} "
-                f"<b>{row['full_name']}</b>\n"
-                f"⭐ {row['global_score']} ball\n\n"
-            )
-
-    rank = get_user_rank(
-        callback.from_user.id,
-        "global",
+    text = build_leaderboard_text(
+        title="🌍 <b>Global Reyting</b>",
+        score_field="global_score",
+        period="global",
+        top=get_global_top(),
+        user_id=callback.from_user.id,
     )
-
-    text += "\n━━━━━━━━━━━━━━\n\n"
-
-    if rank:
-        text += f"👤 <b>Sizning o'rningiz:</b> #{rank}"
-    else:
-        text += "👤 Siz hali reytingda emassiz."
 
     await callback.message.edit_text(
         text,
@@ -245,66 +192,18 @@ async def global_top(callback: CallbackQuery):
 @router.callback_query(F.data == "lb_champions")
 async def champions(callback: CallbackQuery):
 
-    champions = get_monthly_champions(2026)
-
-    text = "👑 <b>VIZU Champions</b>\n\n"
-
-    text += "🏆 <b>2026 Champions</b>\n\n"
-
-    months = {
-        1: "Yanvar",
-        2: "Fevral",
-        3: "Mart",
-        4: "Aprel",
-        5: "May",
-        6: "Iyun",
-        7: "Iyul",
-        8: "Avgust",
-        9: "Sentabr",
-        10: "Oktabr",
-        11: "Noyabr",
-        12: "Dekabr",
-    }
-
-    if not champions:
-
-        text += "Hozircha Champion mavjud emas."
-
-    else:
-
-        for champion in champions:
-
-            text += (
-                f"👑 <b>{months.get(champion['month'])}</b>\n"
-                f"🥇 {champion['full_name']}\n"
-                f"⭐ {champion['score']} ball\n\n"
-            )
-
     await callback.message.edit_text(
-        text,
-        reply_markup=leaderboard_keyboard(),
-    )
-
-    await callback.answer()
-# =========================================================
-# CHAMPIONS YEARS
-# =========================================================
-
-@router.callback_query(F.data == "champions")
-async def champions(callback: CallbackQuery):
-
-    text = (
         "👑 <b>VIZU Champions</b>\n\n"
-        "Quyidagi yillardan birini tanlang."
-    )
-
-    await callback.message.edit_text(
-        text,
+        "Ko'rmoqchi bo'lgan yilni tanlang.",
         reply_markup=champions_years_keyboard(),
     )
 
     await callback.answer()
 
+
+# =========================================================
+# CHAMPIONS YEAR
+# =========================================================
 
 @router.callback_query(F.data.startswith("champions_year_"))
 async def champions_year(callback: CallbackQuery):
@@ -332,14 +231,14 @@ async def champions_year(callback: CallbackQuery):
 
     if not champions:
 
-        text += "Hozircha Champion mavjud emas."
+        text += "📭 Hozircha Champion mavjud emas."
 
     else:
 
         for champion in champions:
 
             text += (
-                f"🥇 <b>{months[champion['month']]}</b>\n"
+                f"🥇 <b>{months.get(champion['month'], champion['month'])}</b>\n"
                 f"👤 {champion['full_name']}\n"
                 f"⭐ {champion['score']} ball\n\n"
             )
@@ -353,15 +252,14 @@ async def champions_year(callback: CallbackQuery):
 
 
 # =========================================================
-# BACK
+# BACK TO LEADERBOARD
 # =========================================================
 
-@router.callback_query(F.data == "leaderboard")
-async def leaderboard(callback: CallbackQuery):
+@router.callback_query(F.data == "lb_back")
+async def back_to_leaderboard(callback: CallbackQuery):
 
     await callback.message.edit_text(
-        "🏆 <b>VIZU Leaderboard</b>\n\n"
-        "Kerakli reyting turini tanlang.",
+        LEADERBOARD_TEXT,
         reply_markup=leaderboard_keyboard(),
     )
 

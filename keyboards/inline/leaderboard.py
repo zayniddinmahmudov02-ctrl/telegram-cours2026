@@ -3,13 +3,14 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 
+
 # =========================================================
-# LEADERBOARD
+# LEADERBOARD KEYBOARD
 # =========================================================
 
-def leaderboard_keyboard():
+def leaderboard_keyboard() -> InlineKeyboardMarkup:
 
-    keyboard = InlineKeyboardMarkup(
+    return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
@@ -34,16 +35,14 @@ def leaderboard_keyboard():
             [
                 InlineKeyboardButton(
                     text="👑 Champions",
-                    callback_data="champions",
+                    callback_data="lb_champions",
                 ),
             ],
             [
                 InlineKeyboardButton(
                     text="⬅️ Orqaga",
-                    callback_data="back_main",
+                    callback_data="lb_back",
                 ),
             ],
         ]
     )
-
-    return keyboard
