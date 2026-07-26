@@ -281,8 +281,12 @@ async def payment_full_name(
 # =========================================================
 # PHONE
 # =========================================================
+
 import re
 import logging
+
+logger = logging.getLogger(__name__)
+
 
 @router.message(PaymentState.waiting_phone)
 async def payment_phone(
@@ -290,6 +294,10 @@ async def payment_phone(
     state: FSMContext,
 ):
     try:
+        # -------------------------------------------------
+        # TEXT
+        # -------------------------------------------------
+
         if not message.text:
             await message.answer(
                 "❌ Telefon raqamingizni matn ko'rinishida kiriting."
@@ -298,14 +306,16 @@ async def payment_phone(
 
         phone = message.text.strip()
 
-        # Harflar bo'lmasligi kerak
+        # -------------------------------------------------
+        # VALIDATION
+        # -------------------------------------------------
+
         if re.search(r"[A-Za-zА-Яа-я]", phone):
             await message.answer(
                 "❌ Telefon raqamda harflar bo'lmasligi kerak."
             )
             return
 
-        # Belgilarni tekshirish
         if not re.fullmatch(r"[\d+\-\s()]+", phone):
             await message.answer(
                 "❌ Telefon raqam noto'g'ri."
@@ -319,6 +329,10 @@ async def payment_phone(
                 "❌ Telefon raqam juda qisqa."
             )
             return
+
+        # -------------------------------------------------
+        # STATE
+        # -------------------------------------------------
 
         await state.update_data(phone=phone)
 
@@ -335,36 +349,37 @@ async def payment_phone(
         for key in required:
             if key not in data:
                 await state.clear()
+
                 await message.answer(
                     "❌ To'lov jarayoni bekor qilindi.\n\n"
                     "Iltimos boshidan qayta urinib ko'ring."
                 )
                 return
 
-        try:
-            payment_id = create_payment(
-                user_id=message.from_user.id,
-                full_name=data["full_name"],
-                phone=phone,
-                username=message.from_user.username or "",
-                course=data["course"],
-                amount=data["amount"],
-                receipt_file_id=data["receipt_file_id"],
-                file_type=data["file_type"],
-            )
-        except Exception:
-            logging.exception("create_payment xatosi")
+        # -------------------------------------------------
+        # CREATE PAYMENT
+        # -------------------------------------------------
 
-            await message.answer(
-                "❌ To'lovni saqlashda xatolik yuz berdi."
-            )
-            return
+        payment_id = create_payment(
+            user_id=message.from_user.id,
+            full_name=data["full_name"],
+            phone=phone,
+            username=message.from_user.username or "",
+            course=data["course"],
+            amount=data["amount"],
+            receipt_file_id=data["receipt_file_id"],
+            file_type=data["file_type"],
+        )
 
         if payment_id is None:
             await message.answer(
-                "❌ To'lov yaratilmadi."
+                "❌ To'lovni saqlab bo'lmadi."
             )
             return
+
+        # -------------------------------------------------
+        # ADMIN TEXT
+        # -------------------------------------------------
 
         admin_text = f"""
 🆕 <b>Yangi to'lov</b>
@@ -387,29 +402,43 @@ async def payment_phone(
 {data["course"]}
 """
 
-        for admin_id in ADMIN_ID:
-            try:
-                if data["file_type"] == "photo":
-                    await bot.send_photo(
-                        chat_id=admin_id,
-                        photo=data["receipt_file_id"],
-                        caption=admin_text,
-                        parse_mode="HTML",
-                        reply_markup=admin_payment_keyboard(payment_id),
-                    )
-                else:
-                    await bot.send_document(
-                        chat_id=admin_id,
-                        document=data["receipt_file_id"],
-                        caption=admin_text,
-                        parse_mode="HTML",
-                        reply_markup=admin_payment_keyboard(payment_id),
-                    )
+        # -------------------------------------------------
+        # SEND TO ADMIN
+        # -------------------------------------------------
 
-            except Exception:
-                logging.exception(
-                    f"Admin {admin_id} ga yuborishda xato"
+        try:
+
+            if data["file_type"] == "photo":
+
+                await bot.send_photo(
+                    chat_id=ADMIN_ID,
+                    photo=data["receipt_file_id"],
+                    caption=admin_text,
+                    parse_mode="HTML",
+                    reply_markup=admin_payment_keyboard(payment_id),
                 )
+
+            else:
+
+                await bot.send_document(
+                    chat_id=ADMIN_ID,
+                    document=data["receipt_file_id"],
+                    caption=admin_text,
+                    parse_mode="HTML",
+                    reply_markup=admin_payment_keyboard(payment_id),
+                )
+
+        except Exception:
+            logger.exception("Adminga yuborishda xato")
+
+            await message.answer(
+                "❌ Administratorga yuborishda xatolik yuz berdi."
+            )
+            return
+
+        # -------------------------------------------------
+        # SUCCESS
+        # -------------------------------------------------
 
         await message.answer(
             """
@@ -417,7 +446,7 @@ async def payment_phone(
 
 📨 Chekingiz administratorga yuborildi.
 
-Administrator tasdiqlagach kurs avtomatik ochiladi.
+⏳ Administrator tasdiqlagach kurs avtomatik ochiladi.
 """,
             parse_mode="HTML",
         )
@@ -425,7 +454,7 @@ Administrator tasdiqlagach kurs avtomatik ochiladi.
         await state.clear()
 
     except Exception:
-        logging.exception("payment_phone umumiy xato")
+        logger.exception("payment_phone umumiy xato")
 
         await state.clear()
 
