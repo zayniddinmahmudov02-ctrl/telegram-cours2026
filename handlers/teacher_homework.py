@@ -13,8 +13,7 @@ from keyboards.teacher_homework import (
     pending_homeworks_keyboard,
     submission_actions_keyboard,
 )
-
-from states.homework import TeacherHomeworkState
+from states.homework import HomeworkReviewState
 # =========================================================
 # ROUTER
 # =========================================================
@@ -164,7 +163,7 @@ async def update_submission_status(
     )
 
     await state.set_state(
-        TeacherHomeworkState.waiting_comment
+        HomeworkReviewState.waiting_comment
     )
 
     action = (
@@ -214,7 +213,7 @@ async def reject_submission(
 # =========================================================
 
 @router.message(
-    TeacherHomeworkState.waiting_comment
+    HomeworkReviewState.waiting_comment
 )
 async def save_teacher_comment(
     message: Message,
