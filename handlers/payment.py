@@ -14,10 +14,11 @@ from aiogram.types import (
     CopyTextButton,
 )
 from loader import bot
-
 from config.settings import (
-    ADMIN_ID,
+    ADMIN_CHANNEL_ID,
     COURSE_INFO,
+    COURSE_LINKS,
+    GROUP_LINKS,
 )
 from aiogram.types import ReplyKeyboardRemove
 from states.payment import PaymentState
@@ -25,9 +26,11 @@ from config.settings import ADMIN_CHANNEL_ID
 from keyboards.payment import (
     admin_payment_keyboard,
 )
+
 from database.payments import (
     create_payment,
     get_payment,
+    save_channel_message,
     approve_payment as approve_payment_db,
     reject_payment as reject_payment_db,
 )
@@ -172,9 +175,16 @@ async def receipt_photo(
     )
 
     await message.answer(
-        "👤 Ism va familiyangizni kiriting."
-    )
+        """
+✅ Chekingiz qabul qilindi.
 
+👤 Endi ism va familiyangizni kiriting.
+
+Masalan:
+Ali Valiyev
+""",
+        parse_mode="HTML",
+    )
 
 # =========================================================
 # RECEIPT (PDF)
@@ -189,9 +199,8 @@ async def receipt_pdf(
     state: FSMContext,
 ):
     if message.document.mime_type != "application/pdf":
-
         await message.answer(
-            "❌ Faqat PDF yuborishingiz mumkin."
+            "❌ Faqat PDF formatidagi chek yuborishingiz mumkin."
         )
         return
 
@@ -205,10 +214,16 @@ async def receipt_pdf(
     )
 
     await message.answer(
-        "👤 Ism va familiyangizni kiriting."
+        """
+✅ PDF chekingiz qabul qilindi.
+
+👤 Endi ism va familiyangizni kiriting.
+
+Masalan:
+Ali Valiyev
+""",
+        parse_mode="HTML",
     )
-
-
 # =========================================================
 # INVALID RECEIPT
 # =========================================================
@@ -294,6 +309,7 @@ async def payment_phone(
     state: FSMContext,
 ):
     try:
+
         # -------------------------------------------------
         # TEXT
         # -------------------------------------------------
@@ -401,39 +417,40 @@ async def payment_phone(
 📚 <b>Kurs:</b>
 {data["course"]}
 """
+
         # -------------------------------------------------
         # SEND TO ADMIN CHANNEL
         # -------------------------------------------------
 
-        try:
+        if data["file_type"] == "photo":
 
-            if data["file_type"] == "photo":
-
-                await bot.send_photo(
-                    chat_id=ADMIN_CHANNEL_ID,
-                    photo=data["receipt_file_id"],
-                    caption=admin_text,
-                    parse_mode="HTML",
-                    reply_markup=admin_payment_keyboard(payment_id),
-                )
-
-            else:
-
-                await bot.send_document(
-                    chat_id=ADMIN_CHANNEL_ID,
-                    document=data["receipt_file_id"],
-                    caption=admin_text,
-                    parse_mode="HTML",
-                    reply_markup=admin_payment_keyboard(payment_id),
-                )
-
-        except Exception:
-            logger.exception("Admin kanalga yuborishda xato")
-
-            await message.answer(
-                "❌ Administrator kanaliga yuborishda xatolik yuz berdi."
+            sent = await bot.send_photo(
+                chat_id=ADMIN_CHANNEL_ID,
+                photo=data["receipt_file_id"],
+                caption=admin_text,
+                parse_mode="HTML",
+                reply_markup=admin_payment_keyboard(payment_id),
             )
-            return
+
+        else:
+
+            sent = await bot.send_document(
+                chat_id=ADMIN_CHANNEL_ID,
+                document=data["receipt_file_id"],
+                caption=admin_text,
+                parse_mode="HTML",
+                reply_markup=admin_payment_keyboard(payment_id),
+            )
+
+        # -------------------------------------------------
+        # SAVE CHANNEL MESSAGE
+        # -------------------------------------------------
+
+        save_channel_message(
+            payment_id=payment_id,
+            channel_id=ADMIN_CHANNEL_ID,
+            message_id=sent.message_id,
+        )
 
         # -------------------------------------------------
         # SUCCESS
@@ -488,6 +505,23 @@ async def approve_payment_callback(
         callback.from_user.id,
     )
 
+    links = COURSE_LINKS.get(
+        payment["course"],
+        {}
+    )
+
+    course_link = links.get(
+        "course",
+        "-"
+    )
+
+    group_link = links.get(
+        "group",
+        "-"
+    )
+
+    # USER MESSAGE
+
     await bot.send_message(
         chat_id=payment["user_id"],
         text=f"""
@@ -496,13 +530,52 @@ async def approve_payment_callback(
 📚 <b>Kurs:</b>
 {payment["course"]}
 
-✅ Endi Video Kurslar bo'limidan foydalanishingiz mumkin.
+━━━━━━━━━━━━━━━
+
+🎥 <b>Video kurs</b>
+
+{course_link}
+
+━━━━━━━━━━━━━━━
+
+👥 <b>Guruh</b>
+
+{group_link}
+
+━━━━━━━━━━━━━━━
+
+VIZU Academy'ni tanlaganingiz uchun rahmat!
 """,
         parse_mode="HTML",
+        disable_web_page_preview=True,
     )
 
-    await callback.message.edit_reply_markup(
-        reply_markup=None
+    # CHANNEL POST
+
+    await callback.message.edit_caption(
+        caption=f"""
+🟢 <b>TASDIQLANDI</b>
+
+🆔 <b>Payment ID:</b>
+{payment["id"]}
+
+👤 <b>Ism:</b>
+{payment["full_name"]}
+
+👤 <b>Username:</b>
+@{payment["username"] or "-"}
+
+📱 <b>Telefon:</b>
+{payment["phone"]}
+
+📚 <b>Kurs:</b>
+{payment["course"]}
+
+💰 <b>Summa:</b>
+{payment["amount"]:,} so'm
+""",
+        parse_mode="HTML",
+        reply_markup=None,
     )
 
     await callback.answer(
@@ -518,7 +591,6 @@ async def approve_payment_callback(
 async def reject_payment_callback(
     callback: CallbackQuery,
 ):
-
     payment_id = int(callback.data.split(":")[1])
 
     payment = get_payment(payment_id)
@@ -530,23 +602,64 @@ async def reject_payment_callback(
         )
         return
 
+    # Database
     reject_payment_db(
         payment_id,
         callback.from_user.id,
     )
 
+    # Userga xabar
     await bot.send_message(
         chat_id=payment["user_id"],
-        text="""
+        text=f"""
 ❌ <b>To'lovingiz rad etildi.</b>
 
-Iltimos yangi chek yuboring yoki administrator bilan bog'laning.
+📚 <b>Kurs:</b>
+{payment["course"]}
+
+━━━━━━━━━━━━━━━
+
+Administrator to'lovni tasdiqlamadi.
+
+Iltimos:
+
+• yangi chek yuboring;
+yoki
+• administrator bilan bog'laning.
 """,
         parse_mode="HTML",
     )
 
-    await callback.message.edit_reply_markup(
-        reply_markup=None
+    # Kanal postini yangilash
+    await callback.message.edit_caption(
+        caption=f"""
+🔴 <b>RAD ETILDI</b>
+
+🆔 <b>Payment ID:</b>
+{payment["id"]}
+
+👤 <b>Ism:</b>
+{payment["full_name"]}
+
+👤 <b>Username:</b>
+@{payment["username"] or "-"}
+
+🆔 <b>User ID:</b>
+<code>{payment["user_id"]}</code>
+
+📱 <b>Telefon:</b>
+{payment["phone"]}
+
+📚 <b>Kurs:</b>
+{payment["course"]}
+
+💰 <b>Summa:</b>
+{payment["amount"]:,} so'm
+
+❌ <b>Holati:</b> RAD ETILDI
+""",
+        parse_mode="HTML",
+        reply_markup=None,
     )
 
     await callback.answer(

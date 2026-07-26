@@ -26,11 +26,12 @@ ADMIN_IDS = [
     if x.strip()
 ]
 
-# Orqaga moslik uchun
+# Orqaga moslik
 ADMIN_ID = ADMIN_IDS[0] if ADMIN_IDS else 0
 
-BUYERS_CHANNEL_ID = int(
-    os.getenv("BUYERS_CHANNEL_ID", "0")
+# To'lovlar keladigan admin kanal
+ADMIN_CHANNEL_ID = int(
+    os.getenv("ADMIN_CHANNEL_ID", "0")
 )
 
 CHANNEL_USERNAME = "@vizu_deutsch"
@@ -47,7 +48,6 @@ CERTIFICATE_DIR = "certificates"
 # =========================================================
 
 TOTAL_WORDS = 5555
-
 
 # =========================================================
 # COURSE LINKS
@@ -72,6 +72,7 @@ GROUP_LINKS = {
     "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
     "🔥 A1-C1": "https://t.me/+pW308gWaYUwwNmY6",
 }
+
 # =========================================================
 # COURSE INFO
 # =========================================================
@@ -112,25 +113,26 @@ COURSE_INFO = {
         "price_text": "400.000 so'm",
     },
 }
+
 # =========================================================
-# MEDIEN CHANNELS
+# CHANNELS
 # =========================================================
 
-FILM_CHANNEL_ID =-1004392327496
+FILM_CHANNEL_ID = -1004392327496
 
 # =========================================================
 # SECURITY CHECK
 # =========================================================
 
 if not TOKEN:
-    raise ValueError(
-        "TOKEN topilmadi"
-    )
+    raise ValueError("TOKEN topilmadi")
 
 if not DATABASE_URL:
-    raise ValueError(
-        "DATABASE_URL topilmadi"
-    )
+    raise ValueError("DATABASE_URL topilmadi")
+
+if ADMIN_CHANNEL_ID == 0:
+    raise ValueError("ADMIN_CHANNEL_ID topilmadi")
+
 # =========================================================
 # SOCIAL LINKS
 # =========================================================
@@ -152,6 +154,7 @@ RESULTS_URL = "https://t.me/+o8b2cf3rwAs1MzFi"
 # =========================================================
 
 TEACHER_PHOTO = "teacher.jpg"
+
 # =========================================================
 # LEVEL CONFIG
 # =========================================================
@@ -188,11 +191,6 @@ LEVEL_CONFIG = {
         "required": 600,
     },
 }
-# =========================================================
-# QUIZ STORAGE
-# =========================================================
-
-QUIZ_DATA = {}
 
 # =========================================================
 # LEVEL ORDER
@@ -207,8 +205,11 @@ LEVEL_ORDER = [
 ]
 
 # =========================================================
-# RUNTIME STORAGE
+# QUIZ STORAGE
 # =========================================================
+
+QUIZ_DATA = {}
+
 quiz_sessions = {}
 
 quiz_running = set()

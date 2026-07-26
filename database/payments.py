@@ -59,6 +59,30 @@ def create_payment(
         return None
 
     return row["id"]
+
+# =========================================================
+# SAVE CHANNEL MESSAGE
+# =========================================================
+
+def save_channel_message(
+    payment_id: int,
+    channel_id: int,
+    message_id: int,
+):
+    db_execute(
+        """
+        UPDATE payments
+        SET
+            channel_id=%s,
+            channel_message_id=%s
+        WHERE id=%s
+        """,
+        (
+            channel_id,
+            message_id,
+            payment_id,
+        ),
+    )
 # =========================================================
 # GET
 # =========================================================
