@@ -195,7 +195,7 @@ async def payment_full_name(
     )
 
     await message.answer(
-        "📱 Telefon raqamingizni yuboring.",
+        "📱 Telefon raqamingizni kiriting.",
         reply_markup=phone_keyboard,
     )
 # =========================================================
@@ -209,42 +209,35 @@ async def payment_phone(
     message: Message,
     state: FSMContext,
 ):
-    # Tugma orqali yuborilgan kontakt
-    if message.contact:
-        phone = message.contact.phone_number
-
-    # Qo'lda kiritilgan telefon
-    elif message.text:
-
-        phone = (
-            message.text
-            .replace(" ", "")
-            .replace("-", "")
-        )
-
-        if not re.fullmatch(
-            r"^\+998\d{9}$|^998\d{9}$|^0\d{9}$",
-            phone,
-        ):
-            await message.answer(
-                "❌ Telefon raqam noto'g'ri.\n\n"
-                "Masalan:\n"
-                "+998901234567\n"
-                "yoki\n"
-                "901234567"
-            )
-            return
-
-        if phone.startswith("0"):
-            phone = "+998" + phone[1:]
-
-        elif phone.startswith("998"):
-            phone = "+" + phone
-
-    else:
+    if not message.text:
         await message.answer(
-            "❌ Telefon raqamni kiriting yoki pastdagi tugma orqali yuboring.",
-            reply_markup=phone_keyboard,
+            "❌ Telefon raqamingizni matn ko'rinishida kiriting."
+        )
+        return
+
+    phone = message.text.strip()
+
+    # Harflar bo'lmasligi kerak
+    if re.search(r"[A-Za-zА-Яа-я]", phone):
+        await message.answer(
+            "❌ Telefon raqamda harflar bo'lmasligi kerak."
+        )
+        return
+
+    # Faqat raqam va + belgisi
+    if not re.fullmatch(r"[\d+\-\s()]+", phone):
+        await message.answer(
+            "❌ Telefon raqam noto'g'ri."
+        )
+        return
+
+    # Faqat raqamlarni ajratib olamiz
+    digits = re.sub(r"\D", "", phone)
+
+    # Kamida 7 ta raqam
+    if len(digits) < 7:
+        await message.answer(
+            "❌ Telefon raqam juda qisqa."
         )
         return
 
@@ -311,15 +304,12 @@ async def payment_phone(
 ✅ <b>To'lovingiz muvaffaqiyatli yuborildi.</b>
 
 📨 Chekingiz administratorga yuborildi.
-
 Administrator tasdiqlagach kurs avtomatik ochiladi.
 """,
         parse_mode="HTML",
-        reply_markup=ReplyKeyboardRemove(),
     )
 
     await state.clear()
-
 # =========================================================
 # APPROVE PAYMENT
 # =========================================================
