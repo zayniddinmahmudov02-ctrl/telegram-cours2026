@@ -1,3 +1,6 @@
+import logging
+
+logging.warning("RECEIPT HANDLER ISHLADI")
 from aiogram import Router, F
 from aiogram.types import (
     CallbackQuery,
