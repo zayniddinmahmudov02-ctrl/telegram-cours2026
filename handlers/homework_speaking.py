@@ -1,12 +1,19 @@
-from aiogram import Router, F
+from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
+    Bot,
     CallbackQuery,
     Message,
-    Bot,
 )
 
-from database import homework
-from database import homework_files
+from config.settings import (
+    HOMEWORK_SPEAKING_CHANNEL_ID,
+)
+
+from database import (
+    homework,
+    homework_files,
+)
 
 from keyboards.homework import (
     homework_levels_keyboard,
@@ -14,13 +21,11 @@ from keyboards.homework import (
     speaking_task_keyboard,
 )
 
-from states.homework import SpeakingHomeworkState
-
-from config import HOMEWORK_SPEAKING_CHANNEL
+from states.homework import (
+    SpeakingHomeworkState,
+)
 
 router = Router()
-
-
 # =========================================================
 # OPEN LEVELS
 # =========================================================
@@ -349,7 +354,7 @@ async def finish_lesson(
         return
 
     await bot.send_message(
-        HOMEWORK_SPEAKING_CHANNEL,
+        HOMEWORK_SPEAKING_CHANNEL_ID,
         (
             "🗣 <b>Speaking Homework</b>\n\n"
             f"👤 {callback.from_user.full_name}\n"
@@ -366,7 +371,7 @@ async def finish_lesson(
         )
 
         await bot.send_message(
-            HOMEWORK_SPEAKING_CHANNEL,
+            HOMEWORK_SPEAKING_CHANNEL_ID,
             (
                 f"🎯 Task {submission['task_number']}"
             ),
@@ -381,35 +386,35 @@ async def finish_lesson(
             if file["file_type"] == "text":
 
                 await bot.send_message(
-                    HOMEWORK_SPEAKING_CHANNEL,
+                    HOMEWORK_SPEAKING_CHANNEL_ID,
                     file["text_content"],
                 )
 
             elif file["file_type"] == "photo":
 
                 await bot.send_photo(
-                    HOMEWORK_SPEAKING_CHANNEL,
+                    HOMEWORK_SPEAKING_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 
             elif file["file_type"] == "document":
 
                 await bot.send_document(
-                    HOMEWORK_SPEAKING_CHANNEL,
+                    HOMEWORK_SPEAKING_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 
             elif file["file_type"] == "audio":
 
                 await bot.send_audio(
-                    HOMEWORK_SPEAKING_CHANNEL,
+                    HOMEWORK_SPEAKING_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 
             elif file["file_type"] == "voice":
 
                 await bot.send_voice(
-                    HOMEWORK_SPEAKING_CHANNEL,
+                    HOMEWORK_SPEAKING_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 

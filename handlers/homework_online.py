@@ -1,17 +1,32 @@
-from aiogram import Router, F
-from aiogram.types import CallbackQuery
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import (
+    Bot,
+    CallbackQuery,
+    Message,
+)
+
+from config.settings import (
+    HOMEWORK_ONLINE_CHANNEL_ID,
+)
+
+from database import (
+    homework,
+    homework_files,
+)
 
 from keyboards.homework import (
     homework_levels_keyboard,
     homework_lessons_keyboard,
     homework_components_keyboard,
+    homework_submit_keyboard,
 )
 
-from states.homework import OnlineHomeworkState
+from states.homework import (
+    OnlineHomeworkState,
+)
 
 router = Router()
-
 
 # =========================================================
 # OPEN LEVELS
