@@ -28,38 +28,10 @@ phone_keyboard = ReplyKeyboardMarkup(
 )
 
 # =========================================================
-# CONFIRM KEYBOARD
-# =========================================================
-
-confirm_keyboard = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(
-                text="✅ Tasdiqlash",
-                callback_data="payment_confirm",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="✏️ Qayta kiritish",
-                callback_data="payment_restart",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="❌ Bekor qilish",
-                callback_data="payment_cancel",
-            )
-        ],
-    ]
-)
-
-# =========================================================
 # ADMIN PAYMENT KEYBOARD
 # =========================================================
 
 def admin_payment_keyboard(payment_id: int):
-
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [

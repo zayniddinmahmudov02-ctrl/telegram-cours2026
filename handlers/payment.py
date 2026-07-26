@@ -15,12 +15,11 @@ from config.settings import (
     ADMIN_ID,
     COURSE_INFO,
 )
-
+from aiogram.types import ReplyKeyboardRemove
 from states.payment import PaymentState
 
 from keyboards.payment import (
     phone_keyboard,
-    confirm_keyboard,
     admin_payment_keyboard,
 )
 from database.payments import (
@@ -199,7 +198,6 @@ async def payment_full_name(
         "📱 Telefon raqamingizni yuboring.",
         reply_markup=phone_keyboard,
     )
-
 # =========================================================
 # PHONE
 # =========================================================
@@ -250,62 +248,20 @@ async def payment_phone(
         )
         return
 
-    await state.update_data(
-        phone=phone,
-    )
+    await state.update_data(phone=phone)
 
     data = await state.get_data()
 
-    text = f"""
-📝 <b>To'lov ma'lumotlari</b>
-
-👤 <b>Ism:</b>
-{data['full_name']}
-
-📚 <b>Kurs:</b>
-{data['course']}
-
-📱 <b>Telefon:</b>
-{phone}
-
-━━━━━━━━━━━━━━
-
-Ma'lumotlarni tekshiring.
-"""
-
-    await state.set_state(
-        PaymentState.waiting_confirm
-    )
-
-    await message.answer(
-        text,
-        parse_mode="HTML",
-        reply_markup=confirm_keyboard,
-    ) 
-# =========================================================
-# CONFIRM PAYMENT
-# =========================================================
-
-@router.callback_query(
-    PaymentState.waiting_confirm,
-    F.data == "payment_confirm",
-)
-async def confirm_payment(
-    callback: CallbackQuery,
-    state: FSMContext,
-):
-
-    data = await state.get_data()
     payment_id = create_payment(
-    user_id=callback.from_user.id,
-    full_name=data["full_name"],
-    phone=data["phone"],
-    username=callback.from_user.username or "",
-    course=data["course"],
-    amount=data["amount"],
-    receipt_file_id=data["receipt_file_id"],
-    file_type=data["file_type"],
-)
+        user_id=message.from_user.id,
+        full_name=data["full_name"],
+        phone=phone,
+        username=message.from_user.username or "",
+        course=data["course"],
+        amount=data["amount"],
+        receipt_file_id=data["receipt_file_id"],
+        file_type=data["file_type"],
+    )
 
     admin_text = f"""
 🆕 <b>Yangi to'lov</b>
@@ -313,19 +269,19 @@ async def confirm_payment(
 🆔 <b>Payment ID:</b> {payment_id}
 
 👤 <b>Ism:</b>
-{data["full_name"]}
+{data['full_name']}
 
 👤 <b>Username:</b>
-@{callback.from_user.username or "-"}
+@{message.from_user.username or "-"}
 
 🆔 <b>User ID:</b>
-<code>{callback.from_user.id}</code>
+<code>{message.from_user.id}</code>
 
 📱 <b>Telefon:</b>
-{data["phone"]}
+{phone}
 
 📚 <b>Kurs:</b>
-{data["course"]}
+{data['course']}
 """
 
     for admin_id in ADMIN_ID:
@@ -350,20 +306,20 @@ async def confirm_payment(
                 reply_markup=admin_payment_keyboard(payment_id),
             )
 
-    await callback.message.edit_text(
+    await message.answer(
         """
 ✅ <b>To'lovingiz muvaffaqiyatli yuborildi.</b>
 
 📨 Chekingiz administratorga yuborildi.
 
-Tasdiqlangandan so'ng kurs avtomatik ochiladi.
+Administrator tasdiqlagach kurs avtomatik ochiladi.
 """,
         parse_mode="HTML",
+        reply_markup=ReplyKeyboardRemove(),
     )
 
     await state.clear()
 
-    await callback.answer()
 # =========================================================
 # APPROVE PAYMENT
 # =========================================================

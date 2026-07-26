@@ -17,6 +17,3 @@ class PaymentState(StatesGroup):
 
     # Telefon raqami
     waiting_phone = State()
-
-    # Yakuniy tasdiqlash
-    waiting_confirm = State()
