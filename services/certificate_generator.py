@@ -20,6 +20,16 @@ from reportlab.lib.styles import (
     getSampleStyleSheet,
     ParagraphStyle,
 )
+from database.users import get_user
+
+from database.certificates import (
+    create_certificate,
+    get_level_certificate,
+)
+
+from services.certificate import (
+    build_level_status,
+)
 # =========================================================
 # ROOT PATHS
 # =========================================================
@@ -182,6 +192,75 @@ def register_fonts():
                 str(font_path),
             )
         )
+# =========================================================
+# USER DATA
+# =========================================================
+
+def get_certificate_user(
+    user_id: int,
+):
+
+    user = get_user(user_id)
+
+    if not user:
+        raise ValueError(
+            "User topilmadi."
+        )
+
+    return user
+
+
+# =========================================================
+# CERTIFICATE DATA
+# =========================================================
+
+def get_certificate_data(
+    user_id: int,
+    level: str,
+):
+
+    status = build_level_status(
+        user_id,
+        level,
+    )
+
+    if not status["ready"]:
+        raise ValueError(
+            "Sertifikat hali tayyor emas."
+        )
+
+    return status
+
+
+# =========================================================
+# CERTIFICATE ID
+# =========================================================
+
+def get_certificate_id(
+    user_id: int,
+    level: str,
+    average: int,
+    grade: str,
+):
+
+    certificate = get_level_certificate(
+        user_id,
+        "W",
+        level,
+    )
+
+    if certificate:
+        return certificate["certificate_id"]
+
+    return create_certificate(
+        user_id=user_id,
+        certificate_type="W",
+        level=level,
+        score=average,
+        percent=average,
+        rank=grade,
+    )
+
 # =========================================================
 # STYLES
 # =========================================================
@@ -637,191 +716,59 @@ def draw_background(
 # =========================================================
 
 def generate_certificate(
-
-    full_name: str,
-
+    user_id: int,
     level: str,
-
-    average: int,
-
-    grade: str,
-
-    certificate_id: str,
-
 ):
+
+    user = get_certificate_user(
+        user_id,
+    )
+
+    status = get_certificate_data(
+        user_id,
+        level,
+    )
+
+    certificate_id = get_certificate_id(
+        user_id=user_id,
+        level=level,
+        average=status["average"],
+        grade=status["rank"],
+    )
 
     register_fonts()
 
     ensure_directories()
 
     header, footer = get_template_files(
-
         level,
-
-        grade,
-
+        status["rank"],
     )
 
     pdf_path = build_file_name(
-
         certificate_id,
-
     )
 
     document = create_document(
-
         pdf_path,
-
     )
 
     story = build_story(
-
-        full_name,
-
-        level,
-
-        average,
-
-        grade,
-
-        certificate_id,
-
+        full_name=user["full_name"],
+        level=level,
+        average=status["average"],
+        grade=status["rank"],
+        certificate_id=certificate_id,
     )
 
     document.build(
-
         story,
-
         onFirstPage=lambda c, d: draw_background(
-
             c,
-
             d,
-
             header,
-
             footer,
-
         ),
-
     )
 
     return str(pdf_path)
-__all__ = [
-
-    "generate_certificate",
-
-]
-def draw_title(story):
-
-    story.append(
-        Paragraph(
-            "W-ZERTIFIKAT",
-            TITLE_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            6 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            "Visuales Institut für Zukunft und Unterricht",
-            BODY_STYLE,
-        )
-    )
-def draw_student_name(
-    story,
-    full_name,
-):
-
-    story.append(
-        Spacer(
-            1,
-            10 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            format_name(full_name),
-            NAME_STYLE,
-        )
-    )
-def draw_level(
-    story,
-    level,
-):
-
-    story.append(
-        Spacer(
-            1,
-            5 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            level,
-            TITLE_STYLE,
-        )
-    )
-def draw_grade(
-    story,
-    grade,
-):
-
-    story.append(
-        Spacer(
-            1,
-            8 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            grade,
-            GRADE_STYLE,
-        )
-    )
-def draw_average(
-    story,
-    average,
-):
-
-    story.append(
-        Paragraph(
-            f"{average} %",
-            GRADE_STYLE,
-        )
-    )
-def draw_certificate_id(
-    story,
-    certificate_id,
-):
-
-    story.append(
-        Spacer(
-            1,
-            15 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            f"Certificate ID: {certificate_id}",
-            FOOTER_STYLE,
-        )
-    )
-def draw_issue_date(story):
-
-    story.append(
-        Paragraph(
-            f"Issued: {today()}",
-            FOOTER_STYLE,
-        )
-    )
