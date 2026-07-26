@@ -200,36 +200,55 @@ async def payment_full_name(
         reply_markup=phone_keyboard,
     )
 
-
-# =========================================================
-# INVALID PHONE
-# =========================================================
-
-@router.message(
-    PaymentState.waiting_phone,
-)
-async def invalid_phone(
-    message: Message,
-):
-    await message.answer(
-        "📱 Telefon raqamingizni pastdagi tugma orqali yuboring.",
-        reply_markup=phone_keyboard,
-    )
-
-
 # =========================================================
 # PHONE
 # =========================================================
 
-@router.message(
-    PaymentState.waiting_phone,
-    F.contact,
-)
+import re
+
+@router.message(PaymentState.waiting_phone)
 async def payment_phone(
     message: Message,
     state: FSMContext,
 ):
-    phone = message.contact.phone_number
+    # Tugma orqali yuborilgan kontakt
+    if message.contact:
+        phone = message.contact.phone_number
+
+    # Qo'lda kiritilgan telefon
+    elif message.text:
+
+        phone = (
+            message.text
+            .replace(" ", "")
+            .replace("-", "")
+        )
+
+        if not re.fullmatch(
+            r"^\+998\d{9}$|^998\d{9}$|^0\d{9}$",
+            phone,
+        ):
+            await message.answer(
+                "❌ Telefon raqam noto'g'ri.\n\n"
+                "Masalan:\n"
+                "+998901234567\n"
+                "yoki\n"
+                "901234567"
+            )
+            return
+
+        if phone.startswith("0"):
+            phone = "+998" + phone[1:]
+
+        elif phone.startswith("998"):
+            phone = "+" + phone
+
+    else:
+        await message.answer(
+            "❌ Telefon raqamni kiriting yoki pastdagi tugma orqali yuboring.",
+            reply_markup=phone_keyboard,
+        )
+        return
 
     await state.update_data(
         phone=phone,
@@ -249,7 +268,7 @@ async def payment_phone(
 📱 <b>Telefon:</b>
 {phone}
 
-────────────────
+━━━━━━━━━━━━━━
 
 Ma'lumotlarni tekshiring.
 """
@@ -262,7 +281,7 @@ Ma'lumotlarni tekshiring.
         text,
         parse_mode="HTML",
         reply_markup=confirm_keyboard,
-    )
+    ) 
 # =========================================================
 # CONFIRM PAYMENT
 # =========================================================
