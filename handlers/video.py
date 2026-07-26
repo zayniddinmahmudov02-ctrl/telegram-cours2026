@@ -48,7 +48,6 @@ async def sample_lesson(message: Message):
         "https://t.me/+yUxu7EOWyd82ODhi"
     )
 
-
 # =========================================================
 # PAYMENT KEYBOARD
 # =========================================================
@@ -60,15 +59,13 @@ def payment_keyboard(course: str):
             [
                 InlineKeyboardButton(
                     text="💳 To'lov qilish",
-                    copy_text=CopyTextButton(
-                        text=CARD_NUMBER
-                    ),
+                    callback_data=f"payment:{course}",
                 )
             ],
             [
                 InlineKeyboardButton(
                     text="✅ To'lov qildim",
-                    callback_data=f"payment:{course}",
+                    callback_data=f"payment_done:{course}",
                 )
             ],
         ]
