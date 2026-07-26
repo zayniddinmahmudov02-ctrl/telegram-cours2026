@@ -129,9 +129,8 @@ def get_top(period: str, limit: int = 100):
         FROM user_scores s
         INNER JOIN users u
             ON u.user_id = s.user_id
-        WHERE
-            u.approved = TRUE
-            AND COALESCE(u.is_blocked, FALSE) = FALSE
+WHERE
+    u.is_blocked = FALSE
         ORDER BY s.{column} DESC
         LIMIT %s
         """,
@@ -425,8 +424,7 @@ def get_top_player(period: str):
         INNER JOIN users u
             ON u.user_id = s.user_id
         WHERE
-            u.approved = TRUE
-            AND COALESCE(u.is_blocked, FALSE) = FALSE
+         u.is_blocked = FALSE
         ORDER BY s.{column} DESC
         LIMIT 1
         """,
