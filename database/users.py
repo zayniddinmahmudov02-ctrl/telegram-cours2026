@@ -1,6 +1,5 @@
 from .connection import db_execute
 
-
 # =========================================================
 # CREATE
 # =========================================================
@@ -33,6 +32,19 @@ def create_user(user_id: int, full_name: str):
 # =========================================================
 # GET
 # =========================================================
+
+def get_user(user_id: int):
+    return db_execute(
+        """
+        SELECT *
+        FROM users
+        WHERE user_id=%s
+        """,
+        (user_id,),
+        fetchone=True,
+    )
+
+
 def get_full_name(user_id: int):
     row = db_execute(
         """
@@ -146,48 +158,26 @@ def update_unlocked_level(user_id: int, level: str):
     )
 
 
-# =========================================================
-# SCORE
-# =========================================================
-
-def add_total_score(user_id: int, score: int):
+def block_user(user_id: int):
     db_execute(
         """
         UPDATE users
-        SET total_score =
-            COALESCE(total_score,0)+%s
+        SET is_blocked=TRUE
         WHERE user_id=%s
         """,
-        (score, user_id),
+        (user_id,),
     )
 
 
-def add_daily_score(user_id: int, score: int):
+def unblock_user(user_id: int):
     db_execute(
         """
         UPDATE users
-        SET daily_score =
-            COALESCE(daily_score,0)+%s
+        SET is_blocked=FALSE
         WHERE user_id=%s
         """,
-        (score, user_id),
+        (user_id,),
     )
-
-
-def reset_daily_scores(today):
-    db_execute(
-        """
-        UPDATE users
-        SET
-            daily_score=0,
-            last_daily_reset=%s
-        WHERE
-            last_daily_reset IS NULL
-            OR last_daily_reset<%s
-        """,
-        (today, today),
-    )
-
 # =========================================================
 # STATISTICS
 # =========================================================
@@ -217,46 +207,30 @@ def approved_count():
     return row["count"]
 
 
+def blocked_count():
+    row = db_execute(
+        """
+        SELECT COUNT(*) AS count
+        FROM users
+        WHERE is_blocked=TRUE
+        """,
+        fetchone=True,
+    )
+
+    return row["count"]
+
+
 def pending_users():
     return db_execute(
         """
-        SELECT *
+        SELECT
+            user_id,
+            full_name,
+            approved
         FROM users
         WHERE approved=FALSE
-        ORDER BY user_id DESC
+        ORDER BY id DESC
         """,
-        fetchall=True,
-    )
-
-
-def top_total(limit: int = 100):
-    return db_execute(
-        """
-        SELECT
-            full_name,
-            total_score
-        FROM users
-        WHERE approved=TRUE
-        ORDER BY total_score DESC
-        LIMIT %s
-        """,
-        (limit,),
-        fetchall=True,
-    )
-
-
-def top_daily(limit: int = 100):
-    return db_execute(
-        """
-        SELECT
-            full_name,
-            daily_score
-        FROM users
-        WHERE approved=TRUE
-        ORDER BY daily_score DESC
-        LIMIT %s
-        """,
-        (limit,),
         fetchall=True,
     )
 
@@ -274,16 +248,7 @@ def get_approved_users():
 
 
 def get_blocked_users():
-    row = db_execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM users
-        WHERE is_blocked=TRUE
-        """,
-        fetchone=True,
-    )
-
-    return row["count"]
+    return blocked_count()
 
 
 def get_latest_users(limit: int = 10):
@@ -292,7 +257,8 @@ def get_latest_users(limit: int = 10):
         SELECT
             user_id,
             full_name,
-            approved
+            approved,
+            is_blocked
         FROM users
         ORDER BY id DESC
         LIMIT %s
@@ -300,54 +266,18 @@ def get_latest_users(limit: int = 10):
         (limit,),
         fetchall=True,
     )
-# =========================================================
-# ADMIN HELPERS
-# =========================================================
-
-def get_total_users():
-    return users_count()
 
 
-def get_approved_users():
-    return approved_count()
-
-
-def get_blocked_users():
-    row = db_execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM users
-        WHERE is_blocked=TRUE
-        """,
-        fetchone=True,
-    )
-
-    return row["count"]
-
-
-def get_latest_users(limit: int = 10):
-    return db_execute(
-        """
-        SELECT
-            user_id,
-            full_name,
-            approved
-        FROM users
-        ORDER BY id DESC
-        LIMIT %s
-        """,
-        (limit,),
-        fetchall=True,
-    )
 # =========================================================
 # ALL USERS
 # =========================================================
 
 def get_all_users():
-
     return db_execute(
         """
-        SELECT user_id
+        SELECT
+            user_id,
+            full_name
         FROM users
         WHERE is_blocked=FALSE
         ORDER BY id

@@ -1,10 +1,14 @@
 from .connection import db_execute
 
 # =========================================================
-# CREATE / UPDATE
+# CREATE
 # =========================================================
 
-def create_user_score(user_id):
+def create_user_score(user_id: int):
+    """
+    Create score record for a new player.
+    """
+
     db_execute(
         """
         INSERT INTO user_scores
@@ -22,20 +26,31 @@ def create_user_score(user_id):
     )
 
 
-def add_score(user_id, points):
+# =========================================================
+# UPDATE SCORE
+# =========================================================
+
+def add_score(user_id: int, points: int):
+    """
+    Add points to all active leaderboards.
+    """
+
     create_user_score(user_id)
 
     db_execute(
         """
         UPDATE user_scores
         SET
-            daily_score=daily_score+%s,
-            weekly_score=weekly_score+%s,
-            monthly_score=monthly_score+%s,
-            global_score=global_score+%s,
-            correct_answers=correct_answers+1,
-            updated_at=NOW()
-        WHERE user_id=%s
+            daily_score = daily_score + %s,
+            weekly_score = weekly_score + %s,
+            monthly_score = monthly_score + %s,
+            global_score = global_score + %s,
+
+            correct_answers = correct_answers + 1,
+
+            updated_at = NOW()
+
+        WHERE user_id = %s
         """,
         (
             points,
@@ -47,104 +62,117 @@ def add_score(user_id, points):
     )
 
 
-def add_wrong_answer(user_id):
+def add_wrong_answer(user_id: int):
+    """
+    Increase wrong answer counter.
+    """
+
     create_user_score(user_id)
 
     db_execute(
         """
         UPDATE user_scores
         SET
-            wrong_answers=wrong_answers+1,
-            updated_at=NOW()
-        WHERE user_id=%s
+            wrong_answers = wrong_answers + 1,
+            updated_at = NOW()
+
+        WHERE user_id = %s
         """,
-        (
-            user_id,
-        ),
+        (user_id,),
     )
-
-
 # =========================================================
 # GETTERS
 # =========================================================
 
-def get_user_score(user_id):
+def get_user_score(user_id: int):
     return db_execute(
         """
-        SELECT *
+        SELECT
+            *
         FROM user_scores
-        WHERE user_id=%s
+        WHERE user_id = %s
         """,
         (user_id,),
         fetchone=True,
     )
 
 
-def get_daily_top(limit=100):
-    return db_execute(
-        """
-        SELECT *
-        FROM user_scores
-        ORDER BY daily_score DESC
-        LIMIT %s
-        """,
-        (limit,),
-        fetchall=True,
-    )
-
-
-def get_weekly_top(limit=100):
-    return db_execute(
-        """
-        SELECT *
-        FROM user_scores
-        ORDER BY weekly_score DESC
-        LIMIT %s
-        """,
-        (limit,),
-        fetchall=True,
-    )
-
-
-def get_monthly_top(limit=100):
-    return db_execute(
-        """
-        SELECT *
-        FROM user_scores
-        ORDER BY monthly_score DESC
-        LIMIT %s
-        """,
-        (limit,),
-        fetchall=True,
-    )
-
-
-def get_global_top(limit=100):
-    return db_execute(
-        """
-        SELECT *
-        FROM user_scores
-        ORDER BY global_score DESC
-        LIMIT %s
-        """,
-        (limit,),
-        fetchall=True,
-    )
 # =========================================================
-# RANKS
+# TOP RANKINGS
 # =========================================================
 
-def get_user_rank(user_id, period):
+def get_top(period: str, limit: int = 100):
 
-    if period not in (
-        "daily",
-        "weekly",
-        "monthly",
-        "global",
-    ):
+    columns = {
+        "daily": "daily_score",
+        "weekly": "weekly_score",
+        "monthly": "monthly_score",
+        "global": "global_score",
+    }
+
+    column = columns.get(period)
+
+    if not column:
+        return []
+
+    return db_execute(
+        f"""
+        SELECT
+            u.user_id,
+            u.full_name,
+            s.daily_score,
+            s.weekly_score,
+            s.monthly_score,
+            s.global_score,
+            s.correct_answers,
+            s.wrong_answers
+        FROM user_scores s
+        INNER JOIN users u
+            ON u.user_id = s.user_id
+        WHERE
+            u.approved = TRUE
+            AND COALESCE(u.is_blocked, FALSE) = FALSE
+        ORDER BY s.{column} DESC
+        LIMIT %s
+        """,
+        (limit,),
+        fetchall=True,
+    )
+
+
+def get_daily_top(limit: int = 100):
+    return get_top("daily", limit)
+
+
+def get_weekly_top(limit: int = 100):
+    return get_top("weekly", limit)
+
+
+def get_monthly_top(limit: int = 100):
+    return get_top("monthly", limit)
+
+
+def get_global_top(limit: int = 100):
+    return get_top("global", limit)
+
+
+# =========================================================
+# USER RANK
+# =========================================================
+
+def get_user_rank(user_id: int, period: str):
+
+    columns = {
+        "daily": "daily_score",
+        "weekly": "weekly_score",
+        "monthly": "monthly_score",
+        "global": "global_score",
+    }
+
+    column = columns.get(period)
+
+    if not column:
         return None
-
-    column = f"{period}_score"
 
     row = db_execute(
         f"""
@@ -153,31 +181,27 @@ def get_user_rank(user_id, period):
         (
             SELECT
                 user_id,
-                RANK() OVER
-                (
+                RANK() OVER(
                     ORDER BY {column} DESC
                 ) AS rank
             FROM user_scores
-        ) t
-        WHERE user_id=%s
+        ) ranks
+        WHERE user_id = %s
         """,
         (user_id,),
         fetchone=True,
     )
 
-    return row[0] if row else None
-
-
+    return row["rank"] if row else None
 # =========================================================
 # CHAMPIONS
 # =========================================================
 
 def save_weekly_champion(
-    year,
-    week,
-    user_id,
-    full_name,
-    score,
+    year: int,
+    week: int,
+    user_id: int,
+    score: int,
 ):
     db_execute(
         """
@@ -189,31 +213,29 @@ def save_weekly_champion(
             full_name,
             score
         )
-        VALUES
-        (
+        SELECT
             %s,
             %s,
-            %s,
-            %s,
+            u.user_id,
+            u.full_name,
             %s
-        )
+        FROM users u
+        WHERE u.user_id = %s
         """,
         (
             year,
             week,
-            user_id,
-            full_name,
             score,
+            user_id,
         ),
     )
 
 
 def save_monthly_champion(
-    year,
-    month,
-    user_id,
-    full_name,
-    score,
+    year: int,
+    month: int,
+    user_id: int,
+    score: int,
 ):
     db_execute(
         """
@@ -225,31 +247,31 @@ def save_monthly_champion(
             full_name,
             score
         )
-        VALUES
-        (
+        SELECT
             %s,
             %s,
-            %s,
-            %s,
+            u.user_id,
+            u.full_name,
             %s
-        )
+        FROM users u
+        WHERE u.user_id = %s
         """,
         (
             year,
             month,
-            user_id,
-            full_name,
             score,
+            user_id,
         ),
     )
 
 
-def get_monthly_champions(year):
+def get_monthly_champions(year: int):
     return db_execute(
         """
-        SELECT *
+        SELECT
+            *
         FROM monthly_champions
-        WHERE year=%s
+        WHERE year = %s
         ORDER BY month
         """,
         (year,),
@@ -257,48 +279,17 @@ def get_monthly_champions(year):
     )
 
 
-def get_weekly_champions(year):
+def get_weekly_champions(year: int):
     return db_execute(
         """
-        SELECT *
+        SELECT
+            *
         FROM weekly_champions
-        WHERE year=%s
+        WHERE year = %s
         ORDER BY week
         """,
         (year,),
         fetchall=True,
-    )
-# =========================================================
-# RESET
-# =========================================================
-
-def reset_daily():
-    db_execute(
-        """
-        UPDATE user_scores
-        SET
-            daily_score=0
-        """
-    )
-
-
-def reset_weekly():
-    db_execute(
-        """
-        UPDATE user_scores
-        SET
-            weekly_score=0
-        """
-    )
-
-
-def reset_monthly():
-    db_execute(
-        """
-        UPDATE user_scores
-        SET
-            monthly_score=0
-        """
     )
 
 
@@ -307,9 +298,9 @@ def reset_monthly():
 # =========================================================
 
 def save_hall_of_fame(
-    year,
-    month,
-    champion_id,
+    year: int,
+    month: int,
+    champion_id: int,
 ):
     db_execute(
         """
@@ -334,16 +325,58 @@ def save_hall_of_fame(
     )
 
 
-def get_hall_of_fame(year):
+def get_hall_of_fame(year: int):
     return db_execute(
         """
-        SELECT *
-        FROM hall_of_fame
-        WHERE year=%s
-        ORDER BY month
+        SELECT
+            h.year,
+            h.month,
+            c.user_id,
+            c.full_name,
+            c.score
+        FROM hall_of_fame h
+        INNER JOIN monthly_champions c
+            ON h.champion_id = c.id
+        WHERE h.year = %s
+        ORDER BY h.month
         """,
         (year,),
         fetchall=True,
+    )
+# =========================================================
+# RESET
+# =========================================================
+
+def reset_daily():
+    db_execute(
+        """
+        UPDATE user_scores
+        SET
+            daily_score = 0,
+            updated_at = NOW()
+        """
+    )
+
+
+def reset_weekly():
+    db_execute(
+        """
+        UPDATE user_scores
+        SET
+            weekly_score = 0,
+            updated_at = NOW()
+        """
+    )
+
+
+def reset_monthly():
+    db_execute(
+        """
+        UPDATE user_scores
+        SET
+            monthly_score = 0,
+            updated_at = NOW()
+        """
     )
 
 
@@ -354,39 +387,54 @@ def get_hall_of_fame(year):
 def get_total_players():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS total
         FROM user_scores
         """,
         fetchone=True,
     )
 
-    return row[0] if row else 0
+    return row["total"] if row else 0
 
 
-def get_top_player(period):
+def get_top_player(period: str):
 
-    if period not in (
-        "daily",
-        "weekly",
-        "monthly",
-        "global",
-    ):
+    columns = {
+        "daily": "daily_score",
+        "weekly": "weekly_score",
+        "monthly": "monthly_score",
+        "global": "global_score",
+    }
+
+    column = columns.get(period)
+
+    if not column:
         return None
-
-    column = f"{period}_score"
 
     return db_execute(
         f"""
-        SELECT *
-        FROM user_scores
-        ORDER BY {column} DESC
+        SELECT
+            u.user_id,
+            u.full_name,
+            s.daily_score,
+            s.weekly_score,
+            s.monthly_score,
+            s.global_score,
+            s.correct_answers,
+            s.wrong_answers
+        FROM user_scores s
+        INNER JOIN users u
+            ON u.user_id = s.user_id
+        WHERE
+            u.approved = TRUE
+            AND COALESCE(u.is_blocked, FALSE) = FALSE
+        ORDER BY s.{column} DESC
         LIMIT 1
         """,
         fetchone=True,
     )
 
 
-def get_user_statistics(user_id):
+def get_user_statistics(user_id: int):
     return db_execute(
         """
         SELECT
@@ -399,8 +447,36 @@ def get_user_statistics(user_id):
             current_streak,
             best_streak
         FROM user_scores
-        WHERE user_id=%s
+        WHERE user_id = %s
         """,
         (user_id,),
         fetchone=True,
     )
+
+
+def get_accuracy(user_id: int):
+
+    row = db_execute(
+        """
+        SELECT
+            correct_answers,
+            wrong_answers
+        FROM user_scores
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True,
+    )
+
+    if not row:
+        return 0
+
+    correct = row["correct_answers"]
+    wrong = row["wrong_answers"]
+
+    total = correct + wrong
+
+    if total == 0:
+        return 0
+
+    return round((correct / total) * 100, 1)

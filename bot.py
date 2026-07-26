@@ -13,7 +13,6 @@ from handlers.artikel import (
 from handlers.profile import router as profile_router
 from handlers.wordgame import router as wordgame_router
 from handlers.quiz_callback import router as quiz_router
-from handlers.ranking import router as ranking_router
 from handlers.xp import router as xp_router
 from handlers.video import router as video_router
 from handlers.admin import router as admin_router
@@ -34,7 +33,6 @@ dp.include_router(artikel_router)
 dp.include_router(profile_router)
 dp.include_router(wordgame_router)
 dp.include_router(quiz_router)
-dp.include_router(ranking_router)
 dp.include_router(xp_router)
 dp.include_router(video_router)
 dp.include_router(admin_router)

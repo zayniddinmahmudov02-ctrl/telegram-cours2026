@@ -1,84 +1,72 @@
 from aiogram import Router, F
-from aiogram.types import (
-    Message,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-)
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 
-from database import db_execute
+from database.leaderboard import (
+    get_daily_top,
+    get_weekly_top,
+    get_monthly_top,
+    get_global_top,
+    get_monthly_champions,
+    get_user_rank,
+)
 
 router = Router()
 
 # =========================================================
-# GLOBAL MENU
+# KEYBOARDS
 # =========================================================
 
 rating_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text="🏆 Umumiy Reyting"),
-            KeyboardButton(text="⚡ Kunlik Reyting"),
+            KeyboardButton(text="📅 Kunlik"),
+            KeyboardButton(text="📆 Haftalik"),
         ],
         [
-            KeyboardButton(text="⬅️ Darajalar")
-        ]
+            KeyboardButton(text="🗓 Oylik"),
+            KeyboardButton(text="🌍 Global"),
+        ],
+        [
+            KeyboardButton(text="👑 Champions"),
+        ],
+        [
+            KeyboardButton(text="⬅️ Darajalar"),
+        ],
     ],
-    resize_keyboard=True
+    resize_keyboard=True,
 )
 
 # =========================================================
-# OPEN RANKING MENU
+# MENU
 # =========================================================
 
 @router.message(F.text == "🏆 Reytinglar")
 async def open_rating_menu(message: Message):
 
     await message.answer(
-        "🏆 Reyting bo'limi",
-        reply_markup=rating_menu
+        "🏆 Reyting bo'limiga xush kelibsiz!\n\n"
+        "Kerakli bo'limni tanlang.",
+        reply_markup=rating_menu,
     )
-
 # =========================================================
-# RANKING TEXT
+# HELPERS
 # =========================================================
 
-async def _get_ranking_text(
-    query_type: str,
-    message: Message
+async def build_ranking_text(
+    title: str,
+    score_type: str,
+    top: list,
+    user_id: int,
 ):
 
-    col = (
-        "total_score"
-        if query_type == "total"
-        else "daily_score"
-    )
+    text = f"🏆 <b>{title}</b>\n\n"
 
-    title = (
-        "🏆 TOP 100 UMUMIY REYTING"
-        if query_type == "total"
-        else "⚡ TOP 100 KUNLIK REYTING"
-    )
-
-    rankings = db_execute(
-        f"""
-        SELECT
-            COALESCE(full_name, 'Unknown') AS full_name,
-            {col}
-        FROM users
-        WHERE {col} > 0
-        ORDER BY {col} DESC
-        LIMIT 100
-        """,
-        fetchall=True
-    )
-
-    if not rankings:
+    if not top:
         return (
-            f"📭 {title} hali bo'sh.\n\n"
-            "🎮 Birinchi bo'lib test ishlang!"
+            text +
+            "📭 Hozircha reyting mavjud emas.\n\n"
+            "🎮 Birinchi bo'lib Word Game o'ynang!"
         )
-
-    text = f"{title}\n\n"
 
     medals = {
         1: "🥇",
@@ -86,122 +74,50 @@ async def _get_ranking_text(
         3: "🥉",
     }
 
-    for i, row in enumerate(rankings, start=1):
+    for index, row in enumerate(top, start=1):
 
-        name = row["full_name"]
-        score = row[col]
-
-        medal = medals.get(i, f"{i}.")
+        medal = medals.get(index, f"{index}.")
 
         text += (
             f"{medal} "
-            f"{name} "
-            f"— "
-            f"{score} XP\n"
+            f"<b>{row['full_name']}</b>\n"
+            f"⭐ {row[f'{score_type}_score']} ball\n\n"
         )
 
-    my_score_row = db_execute(
-        f"""
-        SELECT {col}
-        FROM users
-        WHERE user_id = %s
-        """,
-        (message.from_user.id,),
-        fetchone=True
+    rank = get_user_rank(
+        user_id,
+        score_type,
     )
 
-    my_score = (
-        my_score_row[col]
-        if my_score_row
-        else 0
-    )
+    text += "━━━━━━━━━━━━━━\n\n"
 
-    my_rank = db_execute(
-        f"""
-        SELECT
-            COUNT(*) + 1 AS position
-        FROM users
-        WHERE {col} > %s
-        """,
-        (my_score,),
-        fetchone=True
-    )
+    if rank:
 
-    my_position = (
-        my_rank["position"]
-        if my_rank
-        else "-"
-    )
+        user = next(
+            (
+                x
+                for x in top
+                if x["user_id"] == user_id
+            ),
+            None,
+        )
 
-    text += "\n━━━━━━━━━━━━━━\n"
-
-    if my_score > 0:
+        score = (
+            user[f"{score_type}_score"]
+            if user
+            else 0
+        )
 
         text += (
-            f"👤 Sizning o'rningiz: #{my_position}\n"
-            f"⭐ Ballingiz: {my_score} XP"
+            f"👤 <b>Siz</b>\n"
+            f"🏅 O'rningiz: #{rank}\n"
+            f"⭐ Ballingiz: {score}"
         )
 
     else:
 
-        text += "🎮 Siz hali test ishlamagansiz."
+        text += (
+            "👤 Siz hali reytingda emassiz."
+        )
 
     return text
-# =========================================================
-# TOTAL RANKING
-# =========================================================
-
-@router.message(F.text == "🏆 Umumiy Reyting")
-async def total_ranking(
-    message: Message
-):
-
-    text = await _get_ranking_text(
-        query_type="total",
-        message=message,
-    )
-
-    await message.answer(
-        text,
-        reply_markup=rating_menu,
-    )
-
-
-# =========================================================
-# DAILY RANKING
-# =========================================================
-
-@router.message(F.text == "⚡ Kunlik Reyting")
-async def daily_ranking(
-    message: Message
-):
-
-    text = await _get_ranking_text(
-        query_type="daily",
-        message=message,
-    )
-
-    await message.answer(
-        text,
-        reply_markup=rating_menu,
-    )
-
-
-# =========================================================
-# BACK TO LEVELS
-# =========================================================
-
-@router.message(F.text == "⬅️ Darajalar")
-async def back_to_levels(
-    message: Message
-):
-    from handlers.wordgame import build_level_menu
-
-    menu = await build_level_menu(
-        message.from_user.id
-    )
-
-    await message.answer(
-        "🎯 Darajani tanlang.",
-        reply_markup=menu,
-    )

@@ -13,7 +13,6 @@ from database.leaderboard import (
 from keyboards.inline.leaderboard import leaderboard_keyboard
 from keyboards.inline.champions import champions_years_keyboard
 from keyboards.inline.back import champions_back_keyboard
-from keyboards.inline.leaderboard import leaderboard_keyboard
 
 router = Router()
 
