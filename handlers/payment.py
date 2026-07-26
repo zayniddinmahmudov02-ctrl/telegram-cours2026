@@ -488,7 +488,6 @@ async def payment_phone(
 async def approve_payment_callback(
     callback: CallbackQuery,
 ):
-
     payment_id = int(callback.data.split(":")[1])
 
     payment = get_payment(payment_id)
@@ -500,57 +499,64 @@ async def approve_payment_callback(
         )
         return
 
+    # -------------------------------------------------
+    # DATABASE
+    # -------------------------------------------------
+
     approve_payment_db(
         payment_id,
         callback.from_user.id,
     )
 
-    links = COURSE_LINKS.get(
+    # -------------------------------------------------
+    # COURSE LINKS
+    # -------------------------------------------------
+
+    course_link = COURSE_LINKS.get(
         payment["course"],
-        {}
-    )
-
-    course_link = links.get(
-        "course",
         "-"
     )
 
-    group_link = links.get(
-        "group",
+    group_link = GROUP_LINKS.get(
+        payment["course"],
         "-"
     )
 
+    # -------------------------------------------------
     # USER MESSAGE
+    # -------------------------------------------------
 
     await bot.send_message(
         chat_id=payment["user_id"],
         text=f"""
-🎉 <b>To'lovingiz tasdiqlandi.</b>
+🎉 <b>To'lovingiz muvaffaqiyatli tasdiqlandi!</b>
+
+━━━━━━━━━━━━━━━━━━
 
 📚 <b>Kurs:</b>
 {payment["course"]}
 
-━━━━━━━━━━━━━━━
-
-🎥 <b>Video kurs</b>
+🎥 <b>Video kurs:</b>
 
 {course_link}
 
-━━━━━━━━━━━━━━━
-
-👥 <b>Guruh</b>
+👥 <b>Guruh:</b>
 
 {group_link}
 
-━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━
 
-VIZU Academy'ni tanlaganingiz uchun rahmat!
+📌 Endi Video Kurslar bo'limidan foydalanishingiz mumkin.
+
+VIZU Academy'ni tanlaganingiz uchun rahmat! ❤️
 """,
         parse_mode="HTML",
         disable_web_page_preview=True,
     )
 
-    # CHANNEL POST
+    # -------------------------------------------------
+    # UPDATE CHANNEL POST
+    # -------------------------------------------------
 
     await callback.message.edit_caption(
         caption=f"""
@@ -565,6 +571,9 @@ VIZU Academy'ni tanlaganingiz uchun rahmat!
 👤 <b>Username:</b>
 @{payment["username"] or "-"}
 
+🆔 <b>User ID:</b>
+<code>{payment["user_id"]}</code>
+
 📱 <b>Telefon:</b>
 {payment["phone"]}
 
@@ -573,6 +582,8 @@ VIZU Academy'ni tanlaganingiz uchun rahmat!
 
 💰 <b>Summa:</b>
 {payment["amount"]:,} so'm
+
+✅ <b>Holati:</b> TASDIQLANDI
 """,
         parse_mode="HTML",
         reply_markup=None,
