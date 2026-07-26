@@ -185,5 +185,5 @@ async def back_to_main_menu(message: Message):
 
     await message.answer(
         "🏠 Bosh menyu",
-        reply_markup=main_menu(),
+        reply_markup=main_menu,
     )
