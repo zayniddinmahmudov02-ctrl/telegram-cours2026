@@ -4,10 +4,10 @@ from aiogram.types import (
 )
 
 # =========================================================
-# BACK
+# CHAMPIONS BACK KEYBOARD
 # =========================================================
 
-def champions_back_keyboard():
+def champions_back_keyboard() -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -15,13 +15,13 @@ def champions_back_keyboard():
                 InlineKeyboardButton(
                     text="⬅️ Yillar",
                     callback_data="lb_champions",
-                )
+                ),
             ],
             [
                 InlineKeyboardButton(
                     text="🏆 Reytinglar",
                     callback_data="lb_back",
-                )
+                ),
             ],
         ]
     )
