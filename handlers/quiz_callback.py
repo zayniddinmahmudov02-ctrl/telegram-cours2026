@@ -16,72 +16,92 @@ from config import (
     answered_users,
 )
 
+from database.leaderboard import (
+    add_score,
+    add_wrong_answer,
+)
+
 router = Router()
+
+
+# =========================================================
+# HELPERS
+# =========================================================
+
+def cleanup_question(qid: str):
+    active_questions.pop(qid, None)
+    answered_users.pop(qid, None)
+
+
+# =========================================================
+# QUIZ ANSWER
+# =========================================================
+
 @router.callback_query(F.data.startswith("quiz:"))
 async def quiz_answer(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    data_parts = callback.data.split(":", 2)
+    parts = callback.data.split(":", 2)
 
-    if len(data_parts) < 3:
+    if len(parts) != 3:
         await callback.answer(
             "❌ Callback xatosi.",
-            show_alert=True
+            show_alert=True,
         )
         return
 
-    qid = data_parts[1]
-    answer_key = data_parts[2]
+    qid = parts[1]
+    answer_key = parts[2]
 
-    question_data = active_questions.get(qid)
     session = quiz_sessions.get(user_id)
+    question = active_questions.get(qid)
 
-    if not question_data or not session:
+    if not session or not question:
         await callback.answer(
             "❌ Test seansi tugagan yoki eskirgan.",
-            show_alert=True
+            show_alert=True,
         )
         return
 
-    if user_id in answered_users.get(qid, set()):
+    users = answered_users.setdefault(qid, set())
+
+    if user_id in users:
         await callback.answer(
             "❌ Siz allaqachon javob bergansiz.",
-            show_alert=True
+            show_alert=True,
         )
         return
 
-    answered_users.setdefault(
-        qid,
-        set()
-    ).add(user_id)
+    users.add(user_id)
 
-    correct = question_data["correct"]
-
-    selected = question_data["answers"].get(
-        answer_key
-    )
+    correct = question["correct"]
+    selected = question["answers"].get(answer_key)
 
     if selected == correct:
 
         session["score"] += 1
 
-        await callback.answer(
-            "✅ To'g'ri!"
+        add_score(
+            user_id=user_id,
+            points=1,
         )
 
+        await callback.answer("✅ To'g'ri!")
+
     else:
+
+        add_wrong_answer(user_id)
 
         await callback.answer(
             f"❌ Noto'g'ri!\n\n"
             f"✅ {correct}",
-            show_alert=True
+            show_alert=True,
         )
 
     session["index"] += 1
 
-    active_questions.pop(qid, None)
-    answered_users.pop(qid, None)
+    cleanup_question(qid)
 
     try:
         await callback.message.edit_reply_markup(
@@ -92,9 +112,8 @@ async def quiz_answer(callback: CallbackQuery):
 
     await send_next_question(
         callback.message.chat.id,
-        user_id
+        user_id,
     )
-
 # =========================================================
 # RESTART QUIZ
 # =========================================================
@@ -104,7 +123,6 @@ async def restart_quiz_handler(callback: CallbackQuery):
 
     user_id = callback.from_user.id
 
-    # Tozalash
     quiz_running.discard(user_id)
     quiz_sessions.pop(user_id, None)
 
@@ -115,38 +133,41 @@ async def restart_quiz_handler(callback: CallbackQuery):
         for k in active_questions
         if k.startswith(prefix)
     ]:
-        active_questions.pop(key, None)
-        answered_users.pop(key, None)
+        cleanup_question(key)
 
     parts = callback.data.split(":")
 
     if len(parts) != 3:
-
         await callback.answer(
             "❌ Callback xatosi.",
-            show_alert=True
+            show_alert=True,
         )
-
         return
 
     level = parts[1]
-    block = int(parts[2])
+
+    try:
+        block = int(parts[2])
+    except ValueError:
+        await callback.answer(
+            "❌ Callback xatosi.",
+            show_alert=True,
+        )
+        return
 
     try:
         await callback.message.delete()
     except Exception:
         pass
 
-    await callback.answer(
-        "🔄 Test qayta boshlandi."
-    )
+    await callback.answer("🔄 Test qayta boshlandi.")
 
     await start_quiz_block(
         message=callback.message,
         level=level,
         block=block,
         force_restart=True,
-        user_id=user_id
+        user_id=user_id,
     )
 
 
@@ -167,8 +188,10 @@ async def cancel_quiz_handler(callback: CallbackQuery):
     )
 
     await callback.message.answer(
-        "🎮 WortSpiel\n\nDarajani tanlang:",
-        reply_markup=menu
+        "🎮 <b>WortSpiel</b>\n\n"
+        "Kerakli darajani tanlang.",
+        parse_mode="HTML",
+        reply_markup=menu,
     )
 
     await callback.answer()
@@ -185,17 +208,18 @@ async def stop_quiz(callback: CallbackQuery):
         user_id = int(
             callback.data.split(":")[1]
         )
-
     except (IndexError, ValueError):
+        await callback.answer(
+            "❌ Callback xatosi.",
+            show_alert=True,
+        )
         return
 
     if callback.from_user.id != user_id:
-
         await callback.answer(
             "❌ Bu sizning testingiz emas.",
-            show_alert=True
+            show_alert=True,
         )
-
         return
 
     try:
@@ -207,5 +231,7 @@ async def stop_quiz(callback: CallbackQuery):
 
     await finish_quiz(
         callback.message.chat.id,
-        user_id
+        user_id,
     )
+
+    await callback.answer()

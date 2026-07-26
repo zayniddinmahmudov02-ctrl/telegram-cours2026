@@ -9,6 +9,10 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database import db_execute
+from database.leaderboard import (
+    add_score,
+    add_wrong_answer,
+)
 from config import (
     LEVEL_ORDER,
     LEVEL_CONFIG,
@@ -438,50 +442,38 @@ async def finish_quiz(
             score
         )
     )
-
     # =====================================================
-    # XP UPDATE
+    # LEADERBOARD UPDATE
     # =====================================================
 
     if xp_gain > 0:
 
-        db_execute(
-            """
-            UPDATE users
-            SET
-                total_score =
-                    COALESCE(total_score,0) + %s,
+        add_score(
+            user_id=user_id,
+            points=xp_gain,
+        )
 
-                daily_score =
-                    COALESCE(daily_score,0) + %s
+        # =====================================================
+        # LEVEL UNLOCK
+        # =====================================================
 
-            WHERE user_id = %s
-            """,
-            (
-                xp_gain,
-                xp_gain,
-                user_id
+        new_level = check_level_unlock(
+            user_id,
+            level
+        )
+
+        unlock_text = ""
+
+        if new_level:
+
+            unlock_text = (
+                "\n\n"
+                f"🔓 Yangi daraja ochildi!\n"
+                f"🎯 {new_level}"
             )
-        )
+    else:
+        unlock_text = ""
 
-    # =====================================================
-    # LEVEL UNLOCK
-    # =====================================================
-
-    new_level = check_level_unlock(
-        user_id,
-        level
-    )
-
-    unlock_text = ""
-
-    if new_level:
-
-        unlock_text = (
-            "\n\n"
-            f"🔓 Yangi daraja ochildi!\n"
-            f"🎯 {new_level}"
-        )
     # =====================================================
     # RESULT KEYBOARD
     # =====================================================
@@ -507,18 +499,23 @@ async def finish_quiz(
     # SEND RESULT
     # =====================================================
 
-    await bot.send_message(
-        chat_id,
-        (
-            f"🏁 Test yakunlandi!\n\n"
-            f"🇩🇪 Daraja: {level}\n"
-            f"📚 Blok: {block}\n\n"
-            f"🏆 Natija: {score}/{total}\n"
-            f"⭐ XP: +{xp_gain}"
-            f"{unlock_text}"
-        ),
-        reply_markup=keyboard
-    )
+    try:
+        await bot.send_message(
+            chat_id,
+            (
+                f"🏁 Test yakunlandi!\n\n"
+                f"🇩🇪 Daraja: {level}\n"
+                f"📚 Blok: {block}\n\n"
+                f"🏆 Natija: {score}/{total}\n"
+                f"⭐ XP: +{xp_gain}"
+                f"{unlock_text}"
+            ),
+            reply_markup=keyboard
+        )
+    except Exception as e:
+        logger.error(
+            f"Send result error: {e}"
+        )
 
     # =====================================================
     # CLEAN SESSION
