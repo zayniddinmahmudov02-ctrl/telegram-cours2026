@@ -54,11 +54,11 @@ TOTAL_WORDS = 5555
 # =========================================================
 
 COURSE_LINKS = {
-    "🇩🇪 A1": "https://t.me/+Y0ilZiDqgTJjZjMy",
-    "🇩🇪 A2": "https://t.me/+Co8biP05FtViZGEy",
-    "🇩🇪 B1": "https://t.me/+XcBAw2lLmdlmNDky",
-    "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
-    "🔥 A1-C1": "https://t.me/+9sT2uj8rbHM1YTNi",
+    "🇩🇪 A1": "https://t.me/+Kmh9agD9LDRlNGZi",
+    "🇩🇪 A2": "https://t.me/+SZCN9fthZcpiZDEy",
+    "🇩🇪 B1": "https://t.me/+1l2f9IQWIfg1ZTZi",
+    "🔥 A1-B1": "https://t.me/+uN_dHBYQCUY0MzUy",
+    "🔥 A1-C1": "https://t.me/+oRNjGr3PoY5kYjIy",
 }
 
 # =========================================================
@@ -66,11 +66,11 @@ COURSE_LINKS = {
 # =========================================================
 
 GROUP_LINKS = {
-    "🇩🇪 A1": "https://t.me/+_76BNOk0NTgxODRi",
-    "🇩🇪 A2": "https://t.me/+syhRWPBkeoxlZjQy",
-    "🇩🇪 B1": "https://t.me/+6vSnu6iFLBI1ZGIy",
-    "🔥 A1-B1": "https://t.me/+ILaI0GhJkS1jYmQy",
-    "🔥 A1-C1": "https://t.me/+pW308gWaYUwwNmY6",
+    "🇩🇪 A1": "https://t.me/+fvnLkVcG29k5ZDhi",
+    "🇩🇪 A2": "https://t.me/+Z91t_jwr7i82MGZi",
+    "🇩🇪 B1": "https://t.me/+N1DgYCQSRK80ZmZi",
+    "🔥 A1-B1": "https://t.me/+WAm5rG5jr4M0ZjVi",
+    "🔥 A1-C1": "https://t.me/+toQIeCS3Obo3MDVi",
 }
 
 # =========================================================
