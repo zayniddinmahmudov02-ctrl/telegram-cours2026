@@ -11,7 +11,7 @@ from keyboards.info import (
     admin_keyboard,
 )
 
-from keyboards.main_menu import main_menu
+from keyboards.main import main_menu
 
 from texts.info import (
     INFO_MENU_TEXT,
