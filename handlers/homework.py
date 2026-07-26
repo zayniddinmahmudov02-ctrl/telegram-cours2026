@@ -24,7 +24,7 @@ router = Router()
 # HOMEWORK MENU
 # =========================================================
 
-@router.message(F.text == "🏠 Homework")
+@router.message(F.text == "📝 Homework")
 async def homework_menu(message: Message):
     await message.answer(
         "🏠 <b>Homework</b>\n\n"
