@@ -1,8 +1,16 @@
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram import F, Router
+from aiogram.types import (
+    CallbackQuery,
+    Message,
+)
 
-from keyboards.homework import homework_menu_keyboard
-from keyboards.main_menu import main_menu_keyboard
+from keyboards.homework import (
+    homework_menu_keyboard,
+)
+
+from keyboards.main_menu import (
+    main_menu_keyboard,
+)
 
 from handlers import (
     homework_online,
@@ -12,8 +20,6 @@ from handlers import (
 )
 
 router = Router()
-
-
 # =========================================================
 # HOMEWORK MENU
 # =========================================================

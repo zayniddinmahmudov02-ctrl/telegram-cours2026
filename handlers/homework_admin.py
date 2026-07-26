@@ -1,10 +1,7 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    Bot,
-    CallbackQuery,
-    Message,
-)
+from aiogram import Bot, F, Router
+from aiogram.types import CallbackQuery, Message
 
 from config.settings import (
     HOMEWORK_ONLINE_CHANNEL_ID,

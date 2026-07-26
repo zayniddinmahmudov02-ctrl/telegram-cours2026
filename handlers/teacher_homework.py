@@ -2,11 +2,8 @@
 # IMPORTS
 # =========================================================
 
-from aiogram import Router, F
-from aiogram.types import (
-    CallbackQuery,
-    Message,
-)
+from aiogram import Bot, F, Router
+from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 
 from database import homework

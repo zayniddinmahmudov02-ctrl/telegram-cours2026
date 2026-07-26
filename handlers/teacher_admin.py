@@ -1,9 +1,6 @@
 from aiogram import Router, F
-from aiogram.types import (
-    Bot,
-    CallbackQuery,
-    Message,
-)
+from aiogram import Bot, F, Router
+from aiogram.types import CallbackQuery, Message
 
 from database import (
     teacher_chat,
