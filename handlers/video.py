@@ -8,17 +8,13 @@ from aiogram.types import (
     InlineKeyboardButton,
     CopyTextButton,
 )
-from aiogram.fsm.context import FSMContext
 
 from database import db_execute
 from keyboards import video_menu
 from services.runtime import artikel_users
 from config import COURSE_INFO
-from states.payment import PaymentState
 
 router = Router()
-
-CARD_NUMBER = "9860350144907192"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -48,6 +44,7 @@ async def sample_lesson(message: Message):
         "https://t.me/+yUxu7EOWyd82ODhi"
     )
 
+
 # =========================================================
 # PAYMENT KEYBOARD
 # =========================================================
@@ -60,12 +57,6 @@ def payment_keyboard(course: str):
                 InlineKeyboardButton(
                     text="💳 To'lov qilish",
                     callback_data=f"payment:{course}",
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="✅ To'lov qildim",
-                    callback_data=f"payment_done:{course}",
                 )
             ],
         ]
@@ -104,8 +95,7 @@ async def send_course_info(
         f"🎥 Darslar soni: {info['lessons']}\n\n"
         f"❌ Eski narx: {info['old_price']}\n"
         f"🔥 Chegirma narxi: {info['price']}\n\n"
-        f"💳 Kartaga to'lov qilib,"
-        f" <b>\"✅ To'lov qildim\"</b> tugmasini bosing."
+        f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
     )
 
     await message.answer(
@@ -145,39 +135,70 @@ async def course_a1c1(message: Message):
 
 
 # =========================================================
-# START PAYMENT FSM
+# PAYMENT INFO
 # =========================================================
 
 @router.callback_query(F.data.startswith("payment:"))
-async def start_payment(
-    callback: CallbackQuery,
-    state: FSMContext,
-):
+async def payment_info(callback: CallbackQuery):
 
     course = callback.data.split(":", 1)[1]
 
-    info = COURSE_INFO.get(course)
-
-    if info is None:
-        await callback.answer(
-            "❌ Kurs topilmadi.",
-            show_alert=True,
-        )
-        return
-
-    await state.update_data(
-        course=course,
-        amount=info["price"],
-    )
-
-    await state.set_state(
-        PaymentState.waiting_receipt
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📋 UzCard nusxalash",
+                    copy_text=CopyTextButton(
+                        text="9860350144907192",
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Visa Card nusxalash",
+                    copy_text=CopyTextButton(
+                        text="4448844427532174",
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📷 Chekni yuborish",
+                    callback_data=f"payment_receipt:{course}",
+                )
+            ],
+        ]
     )
 
     await callback.message.answer(
-        "📷 <b>To'lov chekini yuboring.</b>\n\n"
-        "Rasm yoki PDF yuborishingiz mumkin.",
+        f"""
+🎓 <b>{course}</b>
+
+💳 <b>To'lov ma'lumotlari</b>
+
+To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki boshqa bank ilovalari hamda to'lov terminallari orqali amalga oshirishingiz mumkin.
+
+━━━━━━━━━━━━━━━━━━━━
+
+💳 <b>UzCard</b>
+
+<code>9860 3501 4490 7192</code>
+
+💳 <b>Visa Card</b>
+
+<code>4448 8444 2753 2174</code>
+
+👤 <b>Karta egasi</b>
+
+<b>Zayniddinkhuja Makhmudov</b>
+
+━━━━━━━━━━━━━━━━━━━━
+
+📌 To'lovni amalga oshirgandan so'ng
+<b>📷 Chekni yuborish</b> tugmasini bosing.
+""",
         parse_mode="HTML",
+        reply_markup=keyboard,
     )
 
     await callback.answer()

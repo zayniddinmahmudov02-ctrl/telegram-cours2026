@@ -1,30 +1,6 @@
 from aiogram.types import (
-    ReplyKeyboardMarkup,
-    KeyboardButton,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-)
-
-# =========================================================
-# PHONE KEYBOARD
-# =========================================================
-
-phone_keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(
-                text="📱 Telefon raqamni yuborish",
-                request_contact=True,
-            )
-        ],
-        [
-            KeyboardButton(
-                text="❌ Bekor qilish",
-            )
-        ],
-    ],
-    resize_keyboard=True,
-    one_time_keyboard=True,
 )
 
 # =========================================================
