@@ -1,12 +1,19 @@
-from aiogram import Router, F
+from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
+    Bot,
     CallbackQuery,
     Message,
-    Bot,
 )
 
-from database import homework
-from database import homework_files
+from config.settings import (
+    HOMEWORK_VIDEO_CHANNEL_ID,
+)
+
+from database import (
+    homework,
+    homework_files,
+)
 
 from keyboards.homework import (
     homework_levels_keyboard,
@@ -15,13 +22,11 @@ from keyboards.homework import (
     homework_submit_keyboard,
 )
 
-from states.homework import VideoHomeworkState
-
-from config import HOMEWORK_VIDEO_CHANNEL
+from states.homework import (
+    VideoHomeworkState,
+)
 
 router = Router()
-
-
 # =========================================================
 # OPEN LEVELS
 # =========================================================
@@ -290,7 +295,7 @@ async def submit_homework(
         )
 
         await bot.send_message(
-            HOMEWORK_VIDEO_CHANNEL,
+            HOMEWORK_VIDEO_CHANNEL_ID,
             caption,
         )
 
@@ -298,31 +303,31 @@ async def submit_homework(
 
             if file["file_type"] == "text":
                 await bot.send_message(
-                    HOMEWORK_VIDEO_CHANNEL,
+                    HOMEWORK_VIDEO_CHANNEL_ID,
                     file["text_content"],
                 )
 
             elif file["file_type"] == "photo":
                 await bot.send_photo(
-                    HOMEWORK_VIDEO_CHANNEL,
+                    HOMEWORK_VIDEO_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 
             elif file["file_type"] == "document":
                 await bot.send_document(
-                    HOMEWORK_VIDEO_CHANNEL,
+                    HOMEWORK_VIDEO_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 
             elif file["file_type"] == "audio":
                 await bot.send_audio(
-                    HOMEWORK_VIDEO_CHANNEL,
+                    HOMEWORK_VIDEO_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 
             elif file["file_type"] == "voice":
                 await bot.send_voice(
-                    HOMEWORK_VIDEO_CHANNEL,
+                    HOMEWORK_VIDEO_CHANNEL_ID,
                     file["telegram_file_id"],
                 )
 

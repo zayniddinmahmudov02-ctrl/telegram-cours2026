@@ -1,19 +1,24 @@
-from aiogram import Router, F
+from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
-    Message,
     Bot,
+    CallbackQuery,
+    Message,
+)
+
+from config.settings import (
+    HOMEWORK_ONLINE_CHANNEL_ID,
+    HOMEWORK_VIDEO_CHANNEL_ID,
+    HOMEWORK_SPEAKING_CHANNEL_ID,
 )
 
 from database import (
     homework,
     homework_files,
 )
-from aiogram.types import (
-    CallbackQuery,
-)
 
-from keyboards.homework import (
-    homework_review_keyboard,
+from keyboards.teacher_homework import (
+    submission_actions_keyboard,
 )
 
 from states.homework import (
@@ -21,8 +26,6 @@ from states.homework import (
 )
 
 router = Router()
-
-
 # =========================================================
 # START REVIEW
 # =========================================================
