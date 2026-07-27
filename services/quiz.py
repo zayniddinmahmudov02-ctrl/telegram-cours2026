@@ -240,6 +240,7 @@ async def start_quiz_block(
         "questions": block_questions,
         "index": 0,
         "score": 0,
+        "is_retry": force_restart,
     }
 
     await message.answer(
@@ -392,15 +393,16 @@ async def finish_quiz(
         fetchone=True
     )
     old_score = (
-    old_result["best_score"]
-    if old_result
-    else 0
-)
-
-    xp_gain = max(
-        0,
-        score - old_score
+        old_result["best_score"]
+        if old_result
+        else 0
     )
+    is_retry = session.get("is_retry", False)
+
+    if is_retry:
+        xp_gain = max(0, score - old_score)
+    else:
+        xp_gain = score
 
     # =====================================================
     # SAVE QUIZ RESULT
@@ -482,9 +484,9 @@ async def finish_quiz(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔄 Qayta ishlash",
-                    callback_data=f"restartquiz:{level}:{block}"
-                )
+    text="🔄 Qayta ishlash",
+    callback_data=f"retryconfirm:{level}:{block}"
+)
             ],
             [
                 InlineKeyboardButton(

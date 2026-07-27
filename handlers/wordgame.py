@@ -10,7 +10,7 @@ from aiogram.types import (
 from config import LEVEL_CONFIG, LEVEL_ORDER
 from database import db_execute
 from keyboards import main_menu
-from services.quiz import start_quiz_block
+from handlers.quiz_retry import check_retry
 
 router = Router()
 
@@ -517,11 +517,11 @@ async def open_block(message: Message):
 
         return
 
-    await start_quiz_block(
-        message=message,
-        level=level,
-        block=block,
-    )
+    await check_retry(
+    message=message,
+    level=level,
+    block=block,
+)
 # =========================================================
 # BACK TO MAIN MENU
 # =========================================================

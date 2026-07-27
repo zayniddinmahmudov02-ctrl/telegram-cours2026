@@ -77,22 +77,11 @@ async def quiz_answer(callback: CallbackQuery):
 
     correct = question["correct"]
     selected = question["answers"].get(answer_key)
-
     if selected == correct:
-
         session["score"] += 1
-
-        add_score(
-            user_id=user_id,
-            points=1,
-        )
-
         await callback.answer("✅ To'g'ri!")
-
     else:
-
         add_wrong_answer(user_id)
-
         await callback.answer(
             f"❌ Noto'g'ri!\n\n"
             f"✅ {correct}",
@@ -115,25 +104,11 @@ async def quiz_answer(callback: CallbackQuery):
         user_id,
     )
 # =========================================================
-# RESTART QUIZ
+# RETRY CONFIRM
 # =========================================================
 
-@router.callback_query(F.data.startswith("restartquiz:"))
-async def restart_quiz_handler(callback: CallbackQuery):
-
-    user_id = callback.from_user.id
-
-    quiz_running.discard(user_id)
-    quiz_sessions.pop(user_id, None)
-
-    prefix = f"{user_id}_"
-
-    for key in [
-        k
-        for k in active_questions
-        if k.startswith(prefix)
-    ]:
-        cleanup_question(key)
+@router.callback_query(F.data.startswith("retryconfirm:"))
+async def retry_confirm(callback: CallbackQuery):
 
     parts = callback.data.split(":")
 
@@ -155,6 +130,20 @@ async def restart_quiz_handler(callback: CallbackQuery):
         )
         return
 
+    user_id = callback.from_user.id
+
+    quiz_running.discard(user_id)
+    quiz_sessions.pop(user_id, None)
+
+    prefix = f"{user_id}_"
+
+    for key in [
+        k
+        for k in active_questions
+        if k.startswith(prefix)
+    ]:
+        cleanup_question(key)
+
     try:
         await callback.message.delete()
     except Exception:
@@ -169,7 +158,6 @@ async def restart_quiz_handler(callback: CallbackQuery):
         force_restart=True,
         user_id=user_id,
     )
-
 
 # =========================================================
 # CANCEL QUIZ
