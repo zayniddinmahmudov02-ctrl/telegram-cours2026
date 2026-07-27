@@ -19,7 +19,7 @@ from .homework_video import router as homework_video
 from .homework_speaking import router as homework_speaking
 from .teacher_homework import router as teacher_homework
 from .teacher_chat import router as teacher_chat
-
+from .media import router as media
 
 __all__ = [
     "start",
@@ -43,4 +43,5 @@ __all__ = [
     "homework_speaking",
     "teacher_homework",
     "teacher_chat",
+    "media",
 ]
