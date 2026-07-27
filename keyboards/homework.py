@@ -284,3 +284,18 @@ def speaking_task_keyboard() -> InlineKeyboardMarkup:
     builder.adjust(1)
 
     return builder.as_markup()
+# =========================================================
+# TEACHER CHAT
+# =========================================================
+
+def teacher_chat_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+
+    builder.button(
+        text="❌ Suhbatni yakunlash",
+        callback_data="teacher_chat_close",
+    )
+
+    builder.adjust(1)
+
+    return builder.as_markup()
