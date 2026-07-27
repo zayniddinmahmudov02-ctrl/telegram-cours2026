@@ -76,7 +76,7 @@ async def receive_text(
         "\"📤 Yuborish\" tugmasini bosing.",
         reply_markup=teacher_chat_keyboard(),
     )
-from config import TEACHER_CHAT_CHANNEL
+from config import TEACHER_CHAT_CHANNEL_ID
 from database import teacher_message_files
 
 
@@ -262,7 +262,7 @@ async def submit_question(
     )
 
     await bot.send_message(
-        TEACHER_CHAT_CHANNEL,
+        TEACHER_CHAT_CHANNEL_ID,
         (
             "💬 <b>Yangi savol</b>\n\n"
             f"👤 {callback.from_user.full_name}\n"
@@ -275,31 +275,31 @@ async def submit_question(
 
         if file["file_type"] == "text":
             await bot.send_message(
-                TEACHER_CHAT_CHANNEL,
+                TEACHER_CHAT_CHANNEL_ID,
                 file["text_content"],
             )
 
         elif file["file_type"] == "photo":
             await bot.send_photo(
-                TEACHER_CHAT_CHANNEL,
+                TEACHER_CHAT_CHANNEL_ID,
                 file["telegram_file_id"],
             )
 
         elif file["file_type"] == "document":
             await bot.send_document(
-                TEACHER_CHAT_CHANNEL,
+                TEACHER_CHAT_CHANNEL_ID,
                 file["telegram_file_id"],
             )
 
         elif file["file_type"] == "audio":
             await bot.send_audio(
-                TEACHER_CHAT_CHANNEL,
+                TEACHER_CHAT_CHANNEL_ID,
                 file["telegram_file_id"],
             )
 
         elif file["file_type"] == "voice":
             await bot.send_voice(
-                TEACHER_CHAT_CHANNEL,
+                TEACHER_CHAT_CHANNEL_ID,
                 file["telegram_file_id"],
             )
 
