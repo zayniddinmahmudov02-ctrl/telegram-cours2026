@@ -26,6 +26,14 @@ def init_database():
 
     create_videos_table()
 
+    create_user_scores_table()
+
+    create_weekly_champions_table()
+
+    create_monthly_champions_table()
+
+    create_hall_of_fame_table()
+
 
 # =========================================================
 # USERS
@@ -271,6 +279,112 @@ def create_videos_table():
             description TEXT,
 
             telegram_file_id TEXT,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+# =========================================================
+# LEADERBOARD
+# =========================================================
+
+def create_user_scores_table():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS user_scores(
+
+            user_id BIGINT PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
+
+            daily_score INTEGER DEFAULT 0,
+
+            weekly_score INTEGER DEFAULT 0,
+
+            monthly_score INTEGER DEFAULT 0,
+
+            global_score INTEGER DEFAULT 0,
+
+            correct_answers INTEGER DEFAULT 0,
+
+            wrong_answers INTEGER DEFAULT 0,
+
+            current_streak INTEGER DEFAULT 0,
+
+            best_streak INTEGER DEFAULT 0,
+
+            updated_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+# =========================================================
+# WEEKLY CHAMPIONS
+# =========================================================
+
+def create_weekly_champions_table():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS weekly_champions(
+
+            id SERIAL PRIMARY KEY,
+
+            year INTEGER NOT NULL,
+
+            week INTEGER NOT NULL,
+
+            user_id BIGINT NOT NULL,
+
+            full_name TEXT,
+
+            score INTEGER DEFAULT 0,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+# =========================================================
+# MONTHLY CHAMPIONS
+# =========================================================
+
+def create_monthly_champions_table():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS monthly_champions(
+
+            id SERIAL PRIMARY KEY,
+
+            year INTEGER NOT NULL,
+
+            month INTEGER NOT NULL,
+
+            user_id BIGINT NOT NULL,
+
+            full_name TEXT,
+
+            score INTEGER DEFAULT 0,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+# =========================================================
+# HALL OF FAME
+# =========================================================
+
+def create_hall_of_fame_table():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS hall_of_fame(
+
+            id SERIAL PRIMARY KEY,
+
+            year INTEGER NOT NULL,
+
+            month INTEGER NOT NULL,
+
+            champion_id INTEGER REFERENCES monthly_champions(id) ON DELETE CASCADE,
 
             created_at TIMESTAMP DEFAULT NOW()
 

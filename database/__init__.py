@@ -12,6 +12,7 @@ from .init import *
 
 from .users import *
 from .wordgame import *
+from .leaderboard import *
 from .payments import *
 from .homework import *
 from .certificates import *
