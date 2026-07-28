@@ -13,6 +13,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     CopyTextButton,
 )
+from keyboards.main import main_menu
 from loader import bot
 from config.settings import (
     ADMIN_CHANNEL_ID,
@@ -260,6 +261,23 @@ async def payment_full_name(
     message: Message,
     state: FSMContext,
 ):
+    # FSM'dan chiqish
+    if message.text in (
+        "/start",
+        "🏠 Bosh menyu",
+        "🏆 Reytinglar",
+        "👤 Mening Profilim",
+        "🎥 Video Kurslar",
+        "📚 Kurslar",
+    ):
+        await state.clear()
+
+        await message.answer(
+            "🏠 Bosh menyu",
+            reply_markup=main_menu,
+        )
+        return
+
     full_name = message.text.strip()
 
     if len(full_name.split()) < 2:
