@@ -31,7 +31,7 @@ def get_best_score(user_id, level, block):
         fetchone=True,
     )
 
-    return row[0] if row else 0
+    return row["best_score"] if row else 0
 
 
 # =========================================================
@@ -87,7 +87,7 @@ def get_level_score(user_id, level):
     row = db_execute(
         """
         SELECT
-        COALESCE(SUM(best_score),0)
+        COALESCE(SUM(best_score),0) AS total
         FROM quiz_progress
         WHERE user_id=%s
         AND level=%s
@@ -96,7 +96,7 @@ def get_level_score(user_id, level):
         fetchone=True,
     )
 
-    return row[0] if row else 0
+    return row["total"] if row else 0
 
 
 def get_level_blocks(user_id, level):
@@ -179,7 +179,7 @@ def unlock_level(user_id, level):
 def total_questions(level):
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM quiz_progress
         WHERE level=%s
         """,
@@ -187,7 +187,7 @@ def total_questions(level):
         fetchone=True,
     )
 
-    return row[0]
+    return row["count"]
 
 
 def user_progress_percent(user_id, level, total_blocks):

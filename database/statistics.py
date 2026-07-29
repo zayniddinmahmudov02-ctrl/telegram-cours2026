@@ -8,36 +8,36 @@ from .connection import db_execute
 def users_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM users
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def approved_users_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM users
         WHERE approved=TRUE
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def pending_users_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM users
         WHERE approved=FALSE
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 # =========================================================
@@ -47,37 +47,37 @@ def pending_users_count():
 def buyers_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM payments
         WHERE status='approved'
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def pending_payments_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM payments
         WHERE status='pending'
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def total_income():
     row = db_execute(
         """
-        SELECT COALESCE(SUM(amount),0)
+        SELECT COALESCE(SUM(amount),0) AS total
         FROM payments
         WHERE status='approved'
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["total"]
 
 
 # =========================================================
@@ -87,24 +87,24 @@ def total_income():
 def homework_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM homework
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def pending_homework_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM homework
         WHERE status='pending'
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 # =========================================================
@@ -114,12 +114,12 @@ def pending_homework_count():
 def certificates_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM certificates
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 # =========================================================
@@ -129,45 +129,45 @@ def certificates_count():
 def films_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM films
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def books_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM books
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def music_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM music
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def videos_count():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM videos
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 # =========================================================
@@ -213,25 +213,25 @@ def top_daily_users(limit=100):
 def today_registered():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM users
         WHERE DATE(created_at)=CURRENT_DATE
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 def this_month_registered():
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
         FROM users
         WHERE DATE_TRUNC('month', created_at)=DATE_TRUNC('month', CURRENT_DATE)
         """,
         fetchone=True,
     )
-    return row[0]
+    return row["count"]
 
 
 # =========================================================

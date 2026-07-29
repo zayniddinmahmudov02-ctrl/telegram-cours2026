@@ -5,7 +5,7 @@
 from aiogram import F, Router
 from aiogram.types import Message
 
-from config import ADMIN_ID
+from services.auth import is_admin
 
 from keyboards.admin import admin_menu
 from keyboards.main import main_menu
@@ -31,7 +31,7 @@ router = Router()
 
 @router.message(F.text == "/admin")
 async def admin_panel(message: Message):
-    if message.from_user.id not in ADMIN_ID:
+    if not is_admin(message.from_user.id):
         return
 
     await message.answer(
@@ -46,7 +46,7 @@ async def admin_panel(message: Message):
 @router.message(F.text == "⬅️ Admin Chiqish")
 async def admin_exit(message: Message):
 
-    if message.from_user.id not in ADMIN_ID:
+    if not is_admin(message.from_user.id):
         return
 
     await message.answer(
@@ -60,7 +60,7 @@ async def admin_exit(message: Message):
 @router.message(F.text == "📊 Statistika")
 async def statistics(message: Message):
 
-    if message.from_user.id not in ADMIN_ID:
+    if not is_admin(message.from_user.id):
         return
 
     total_users = get_total_users()
@@ -119,7 +119,7 @@ from database.users import (
 @router.message(F.text == "👥 Foydalanuvchilar")
 async def users(message: Message):
 
-    if message.from_user.id not in ADMIN_ID:
+    if not is_admin(message.from_user.id):
         return
 
     total = get_total_users()
@@ -182,7 +182,7 @@ async def users(message: Message):
 @router.message(F.text == "💳 Xaridorlar")
 async def buyers(message: Message):
 
-    if message.from_user.id not in ADMIN_ID:
+    if not is_admin(message.from_user.id):
         return
 
     buyers = get_approved_payments()
@@ -236,7 +236,7 @@ async def buyers(message: Message):
 @router.message(F.text == "💰 To'lovlar")
 async def payments(message: Message):
 
-    if message.from_user.id not in ADMIN_ID:
+    if not is_admin(message.from_user.id):
         return
 
     payments = get_recent_payments(limit=30)

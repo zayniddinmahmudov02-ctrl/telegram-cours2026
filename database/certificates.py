@@ -222,14 +222,14 @@ def certificates_count() -> int:
 
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
 
         FROM certificates
         """,
         fetchone=True,
     )
 
-    return row[0]
+    return row["count"]
 
 
 def level_certificates(
@@ -238,7 +238,7 @@ def level_certificates(
 
     row = db_execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS count
 
         FROM certificates
 
@@ -248,7 +248,7 @@ def level_certificates(
         fetchone=True,
     )
 
-    return row[0]
+    return row["count"]
 
 
 # =========================================================

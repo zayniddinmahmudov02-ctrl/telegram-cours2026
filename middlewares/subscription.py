@@ -5,7 +5,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import BaseMiddleware
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import ADMIN_ID, CHANNEL_USERNAME
+from config import CHANNEL_USERNAME
+from services.auth import is_admin
 
 
 async def check_subscription(bot: Bot, user_id: int) -> bool:
@@ -38,7 +39,7 @@ class SubscriptionMiddleware(BaseMiddleware):
         if not getattr(event, "from_user", None):
             return await handler(event, data)
 
-        if event.from_user.id == ADMIN_ID:
+        if is_admin(event.from_user.id):
             return await handler(event, data)
 
         if isinstance(event, Message):

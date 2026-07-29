@@ -580,15 +580,15 @@ def get_payment_statistics():
     )
 
     return {
-        "total_payments": row[0],
-        "approved": row[1],
-        "pending": row[2],
-        "rejected": row[3],
-        "cancelled": row[4],
-        "refunded": row[5],
-        "total_income": row[6],
-        "today_income": row[7],
-        "monthly_income": row[8],
+        "total_payments": row["total_payments"],
+        "approved": row["approved"],
+        "pending": row["pending"],
+        "rejected": row["rejected"],
+        "cancelled": row["cancelled"],
+        "refunded": row["refunded"],
+        "total_income": row["total_income"],
+        "today_income": row["today_income"],
+        "monthly_income": row["monthly_income"],
     }
 # =========================================================
 # APPROVED PAYMENTS

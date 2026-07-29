@@ -1,5 +1,10 @@
 from .connection import db_execute
 
+from . import homework as _homework_db
+from . import homework_files as _homework_files_db
+from . import teacher_chat as _teacher_chat_db
+from . import teacher_message_files as _teacher_message_files_db
+
 # =========================================================
 # DATABASE INITIALIZATION
 # =========================================================
@@ -32,6 +37,18 @@ def init_database():
     create_monthly_champions_table()
 
     create_hall_of_fame_table()
+
+    # Homework submissions / teacher chat (previously never created)
+    _homework_db.create_tables()
+
+    _homework_files_db.create_tables()
+
+    _teacher_chat_db.create_tables()
+
+    _teacher_message_files_db.create_tables()
+
+    # Safe migrations for columns added after the initial deploy
+    migrate_schema()
 # =========================================================
 # USERS
 # =========================================================
@@ -48,6 +65,8 @@ def create_users_table():
             phone TEXT,
 
             approved BOOLEAN DEFAULT FALSE,
+
+            is_blocked BOOLEAN DEFAULT FALSE,
 
             unlocked_level VARCHAR(5) DEFAULT 'A1',
 
@@ -135,15 +154,35 @@ def create_payments_table():
 
             user_id BIGINT NOT NULL,
 
+            full_name TEXT,
+
+            phone TEXT,
+
+            username TEXT,
+
             course TEXT NOT NULL,
 
             amount INTEGER NOT NULL,
 
             receipt_file_id TEXT,
 
+            file_type TEXT,
+
             status VARCHAR(20) DEFAULT 'pending',
 
+            channel_id BIGINT,
+
+            channel_message_id BIGINT,
+
+            approved_by BIGINT,
+
             approved_at TIMESTAMP,
+
+            rejected_by BIGINT,
+
+            rejected_at TIMESTAMP,
+
+            is_deleted BOOLEAN DEFAULT FALSE,
 
             created_at TIMESTAMP DEFAULT NOW()
 
@@ -390,5 +429,110 @@ def create_hall_of_fame_table():
             created_at TIMESTAMP DEFAULT NOW()
 
         );
+        """
+    )
+
+
+# =========================================================
+# SAFE MIGRATIONS
+# =========================================================
+# CREATE TABLE IF NOT EXISTS above is a no-op on databases that
+# already have these tables from before these columns existed.
+# ADD COLUMN IF NOT EXISTS brings existing databases up to date
+# without touching any existing rows.
+
+def migrate_schema():
+
+    # ---------------------------------------------------
+    # USERS
+    # ---------------------------------------------------
+
+    db_execute(
+        """
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE
+        """
+    )
+
+    # ---------------------------------------------------
+    # PAYMENTS
+    # ---------------------------------------------------
+
+    for column_sql in (
+        "full_name TEXT",
+        "phone TEXT",
+        "username TEXT",
+        "file_type TEXT",
+        "channel_id BIGINT",
+        "channel_message_id BIGINT",
+        "approved_by BIGINT",
+        "rejected_by BIGINT",
+        "rejected_at TIMESTAMP",
+        "is_deleted BOOLEAN DEFAULT FALSE",
+    ):
+        db_execute(
+            f"""
+            ALTER TABLE payments
+            ADD COLUMN IF NOT EXISTS {column_sql}
+            """
+        )
+
+    # ---------------------------------------------------
+    # INDEXES
+    # ---------------------------------------------------
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_users_is_blocked
+        ON users(is_blocked)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_payments_user_id
+        ON payments(user_id)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_payments_status
+        ON payments(status)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_user_scores_daily
+        ON user_scores(daily_score DESC)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_user_scores_weekly
+        ON user_scores(weekly_score DESC)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_user_scores_monthly
+        ON user_scores(monthly_score DESC)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_user_scores_global
+        ON user_scores(global_score DESC)
         """
     )

@@ -20,9 +20,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # ADMINS
 # =========================================================
 
+_ADMIN_IDS_RAW = os.getenv("ADMIN_IDS") or os.getenv("ADMIN_ID", "")
+
 ADMIN_IDS = [
     int(x)
-    for x in os.getenv("ADMIN_IDS", "").split(",")
+    for x in _ADMIN_IDS_RAW.split(",")
     if x.strip()
 ]
 
