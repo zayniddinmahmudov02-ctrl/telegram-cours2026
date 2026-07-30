@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>W-Zertifikat</title>
+<link rel="stylesheet" href="{{ css_path }}">
+</head>
+<body>
+  <div class="certificate">
+
+    <div class="watermark" style="background-image: url('{{ watermark_path }}');"></div>
+    <div class="border-frame"></div>
+
+    {% if is_test %}
+    <div class="test-banner">TEST CERTIFICATE</div>
+    {% endif %}
+
+    <div class="grid">
+
+      <header class="cert-header">
+        <div class="brand">
+          <img class="brand-logo" src="{{ logo_path }}" alt="VIZU Academy">
+          <div class="brand-text">
+            <div class="brand-name">VIZU ACADEMY</div>
+            <div class="brand-tagline">Visuales Institut f&uuml;r<br>Zukunft und Unterricht</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="cert-title-block">
+        <h1 class="cert-title">W-ZERTIFIKAT</h1>
+        <div class="gold-divider"></div>
+      </div>
+
+      <main class="cert-body">
+        <p class="awarded-label">THIS CERTIFICATE IS AWARDED TO</p>
+        <h2 class="recipient-name {{ name_size_class }}">{{ full_name }}</h2>
+        <p class="completion-text">
+          For successfully completing the requirements of the<br>
+          <strong>German Language Program</strong>
+        </p>
+        <div class="level-badge">{{ level }}</div>
+      </main>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <img class="stat-icon" src="{{ icon_book }}" alt="">
+          <div class="stat-label">Vocabulary Learned</div>
+          <div class="stat-value">{{ vocab_learned }} / {{ vocab_total }} W&ouml;rter</div>
+        </div>
+        <div class="stat-card">
+          <img class="stat-icon" src="{{ icon_target }}" alt="">
+          <div class="stat-label">Accuracy</div>
+          <div class="stat-value">{{ accuracy_text }}</div>
+        </div>
+        <div class="stat-card">
+          <img class="stat-icon" src="{{ icon_award }}" alt="">
+          <div class="stat-label">Rank</div>
+          <div class="stat-value">{{ rank }}</div>
+        </div>
+        <div class="stat-card">
+          <img class="stat-icon" src="{{ icon_calendar }}" alt="">
+          <div class="stat-label">Completion</div>
+          <div class="stat-value">{{ issue_date }}</div>
+        </div>
+      </section>
+
+      <footer class="cert-footer">
+        <div class="footer-col footer-left">
+          <div class="signature">{{ director_name }}</div>
+          <div class="signature-line"></div>
+          <div class="signature-caption">Director, VIZU Academy</div>
+        </div>
+
+        <div class="footer-col footer-center">
+          <img class="seal" src="{{ seal_path }}" alt="">
+        </div>
+
+        <div class="footer-col footer-right">
+          <div class="meta-line">Certificate ID: <strong>{{ certificate_id }}</strong></div>
+          <div class="meta-line">Issued: {{ issue_date }}</div>
+          <div class="meta-line verify-url">{{ verify_url }}</div>
+          <img class="qr" src="{{ qr_path }}" alt="QR">
+        </div>
+      </footer>
+
+    </div>
+  </div>
+</body>
+</html>

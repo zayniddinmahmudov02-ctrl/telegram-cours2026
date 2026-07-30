@@ -1,228 +1,145 @@
-from pathlib import Path
+import base64
+import io
 from datetime import datetime
+from pathlib import Path
 
-from reportlab.lib.colors import HexColor
-from reportlab.lib.enums import TA_CENTER
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
+import qrcode
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML
 
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from config import WEBSITE_URL, LEVEL_CONFIG
 
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Image,
-)
-
-from reportlab.lib.styles import (
-    getSampleStyleSheet,
-    ParagraphStyle,
-)
 from database.users import get_user
-
 from database.certificates import (
     create_certificate,
     get_level_certificate,
 )
+from database.leaderboard import get_accuracy
 
 from services.certificate import (
     build_level_status,
     calculate_rank,
 )
+
 # =========================================================
 # ROOT PATHS
 # =========================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-CERTIFICATES_DIR = (
-    BASE_DIR / "certificates"
+ASSETS_DIR = BASE_DIR / "assets"
+TEMPLATES_DIR = BASE_DIR / "templates"
+STYLES_DIR = BASE_DIR / "styles"
+
+CERTIFICATES_DIR = BASE_DIR / "certificates"
+GENERATED_DIR = CERTIFICATES_DIR / "generated"
+
+LOGO_PATH = ASSETS_DIR / "logo" / "vizu-logo.png"
+SEAL_PATH = ASSETS_DIR / "background" / "gold-seal.svg"
+WATERMARK_PATH = ASSETS_DIR / "background" / "watermark-berlin.svg"
+
+ICON_BOOK = ASSETS_DIR / "icons" / "book.svg"
+ICON_TARGET = ASSETS_DIR / "icons" / "target.svg"
+ICON_AWARD = ASSETS_DIR / "icons" / "award.svg"
+ICON_CALENDAR = ASSETS_DIR / "icons" / "calendar.svg"
+
+CSS_PATH = STYLES_DIR / "certificate.css"
+TEMPLATE_NAME = "certificate.html"
+
+_jinja_env = Environment(
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
 )
 
-FONTS_DIR = (
-    BASE_DIR / "fonts"
-)
 
-GENERATED_DIR = (
-    CERTIFICATES_DIR / "generated"
-)
 # =========================================================
-# LEVEL PATHS
-# =========================================================
-# Real asset folders on disk: certificates/a1-level/, etc.
-
-LEVEL_PATHS = {
-
-    "A1": CERTIFICATES_DIR / "a1-level",
-
-    "A2": CERTIFICATES_DIR / "a2-level",
-
-    "B1": CERTIFICATES_DIR / "b1-level",
-
-    "B2": CERTIFICATES_DIR / "b2-level",
-
-    "C1": CERTIFICATES_DIR / "c1-level",
-
-}
-# =========================================================
-# GRADE FILE SLUGS
-# =========================================================
-# Real filenames on disk are level-prefixed, e.g.
-# certificates/a1-level/a1-gold-header.png. Only Gold/Silver/
-# Bronze artwork exists (no "Participant" tier - calculate_rank
-# in services/certificate.py never returns anything else).
-
-GRADE_SLUGS = {
-
-    "🥇 Gold": "gold",
-
-    "🥈 Silver": "silver",
-
-    "🥉 Bronze": "bronze",
-
-}
-# =========================================================
-# COLORS
+# HELPERS
 # =========================================================
 
-PRIMARY = HexColor("#0B1F3A")
+def _file_uri(path: Path) -> str:
+    return path.resolve().as_uri()
 
-SECONDARY = HexColor("#3D5A80")
 
-TEXT = HexColor("#2E2E2E")
+def today() -> str:
+    return datetime.now().strftime("%d.%m.%Y")
 
-GRAY = HexColor("#666666")
 
-GOLD = HexColor("#C9A227")
+def _name_size_class(full_name: str) -> str:
+    length = len(full_name.strip())
 
-SILVER = HexColor("#8E8E8E")
+    if length <= 18:
+        return "size-short"
 
-BRONZE = HexColor("#8B5A2B")
-# =========================================================
-# PAGE SETTINGS
-# =========================================================
+    if length <= 28:
+        return "size-medium"
 
-PAGE_WIDTH, PAGE_HEIGHT = A4
+    if length <= 40:
+        return "size-long"
 
-TOP_MARGIN = 20 * mm
+    return "size-xlong"
 
-BOTTOM_MARGIN = 20 * mm
 
-LEFT_MARGIN = 20 * mm
+def _rank_label(rank: str) -> str:
+    """Strip the medal emoji prefix stored in the DB (e.g. "🥇 Gold")
+    down to the plain word used on the certificate itself."""
 
-RIGHT_MARGIN = 20 * mm
-# =========================================================
-# FONT NAMES
-# =========================================================
-# Real font files on disk are under fonts/: GreatVibes-Regular
-# (a script/signature-style face, used for the title and name),
-# Montserrat-Regular/Bold for body text.
+    return rank.split(" ")[-1] if rank else "Bronze"
 
-TITLE_FONT = "GreatVibes-Regular"
 
-NAME_FONT = "GreatVibes-Regular"
+def _accuracy_text(user_id: int) -> str:
+    accuracy = get_accuracy(user_id)
+    return f"{accuracy}%" if accuracy is not None else "—"
 
-TEXT_FONT = "Montserrat-Regular"
 
-TEXT_BOLD = "Montserrat-Bold"
-# =========================================================
-# DATE
-# =========================================================
+def _generate_qr_data_uri(data: str) -> str:
+    qr = qrcode.QRCode(border=1)
+    qr.add_data(data)
+    qr.make(fit=True)
 
-def today():
-
-    return datetime.now().strftime(
-        "%d.%m.%Y"
+    image = qr.make_image(
+        fill_color="#0B1F3A",
+        back_color="#FFFEFC",
     )
+
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+
+    return f"data:image/png;base64,{encoded}"
+
+
 # =========================================================
-# REGISTER FONTS
-# =========================================================
-
-def register_fonts():
-
-    fonts = {
-
-        "GreatVibes-Regular":
-            "GreatVibes-Regular.ttf",
-
-        "Montserrat-Regular":
-            "Montserrat-Regular.ttf",
-
-        "Montserrat-Bold":
-            "Montserrat-Bold.ttf",
-
-    }
-
-    for font_name, file_name in fonts.items():
-
-        font_path = FONTS_DIR / file_name
-
-        if not font_path.exists():
-
-            raise FileNotFoundError(
-                f"Font topilmadi: {font_path}"
-            )
-
-        pdfmetrics.registerFont(
-            TTFont(
-                font_name,
-                str(font_path),
-            )
-        )
-# =========================================================
-# USER DATA
+# USER / CERTIFICATE DATA
 # =========================================================
 
-def get_certificate_user(
-    user_id: int,
-):
-
+def get_certificate_user(user_id: int):
     user = get_user(user_id)
 
     if not user:
-        raise ValueError(
-            "User topilmadi."
-        )
+        raise ValueError("User topilmadi.")
 
     return user
 
-
-# =========================================================
-# CERTIFICATE DATA
-# =========================================================
 
 def get_certificate_data(
     user_id: int,
     level: str,
     admin_override: bool = False,
 ):
-
-    status = build_level_status(
-        user_id,
-        level,
-    )
+    status = build_level_status(user_id, level)
 
     if not status["ready"] and not admin_override:
-        raise ValueError(
-            "Sertifikat hali tayyor emas."
-        )
+        raise ValueError("Sertifikat hali tayyor emas.")
 
     if not status["ready"]:
-        # Admin test/preview mode - grade a placeholder
-        # certificate from whatever progress exists so the
-        # PDF layout can be reviewed without completing a
-        # level for real.
+        # Admin test/preview mode - grade a placeholder certificate
+        # from whatever progress exists, so the layout can be
+        # reviewed without completing a level for real.
         status = dict(status)
         status["rank"] = calculate_rank(status["average"])
 
     return status
 
-
-# =========================================================
-# CERTIFICATE ID
-# =========================================================
 
 def get_certificate_id(
     user_id: int,
@@ -230,12 +147,7 @@ def get_certificate_id(
     average: int,
     grade: str,
 ):
-
-    certificate = get_level_certificate(
-        user_id,
-        "W",
-        level,
-    )
+    certificate = get_level_certificate(user_id, "W", level)
 
     if certificate:
         return certificate["certificate_id"]
@@ -249,468 +161,29 @@ def get_certificate_id(
         rank=grade,
     )
 
+
 # =========================================================
-# STYLES
-# =========================================================
-
-styles = getSampleStyleSheet()
-
-
-TITLE_STYLE = ParagraphStyle(
-
-    "Title",
-
-    parent=styles["Normal"],
-
-    fontName=TITLE_FONT,
-
-    fontSize=26,
-
-    leading=32,
-
-    alignment=TA_CENTER,
-
-    textColor=PRIMARY,
-
-    spaceAfter=10,
-
-)
-
-
-NAME_STYLE = ParagraphStyle(
-
-    "Name",
-
-    parent=styles["Normal"],
-
-    fontName=NAME_FONT,
-
-    fontSize=22,
-
-    leading=28,
-
-    alignment=TA_CENTER,
-
-    textColor=TEXT,
-
-    spaceAfter=14,
-
-)
-
-
-BODY_STYLE = ParagraphStyle(
-
-    "Body",
-
-    parent=styles["Normal"],
-
-    fontName=TEXT_FONT,
-
-    fontSize=13,
-
-    leading=20,
-
-    alignment=TA_CENTER,
-
-    textColor=TEXT,
-
-)
-
-
-GRADE_STYLE = ParagraphStyle(
-
-    "Grade",
-
-    parent=styles["Normal"],
-
-    fontName=TEXT_BOLD,
-
-    fontSize=18,
-
-    leading=24,
-
-    alignment=TA_CENTER,
-
-    textColor=PRIMARY,
-
-)
-
-
-FOOTER_STYLE = ParagraphStyle(
-
-    "Footer",
-
-    parent=styles["Normal"],
-
-    fontName=TEXT_FONT,
-
-    fontSize=11,
-
-    leading=16,
-
-    alignment=TA_CENTER,
-
-    textColor=GRAY,
-
-)
-# =========================================================
-# CREATE GENERATED DIRECTORY
+# FILE PATH
 # =========================================================
 
 def ensure_directories():
+    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
-    GENERATED_DIR.mkdir(
 
-        parents=True,
-
-        exist_ok=True,
-
-    )
-# =========================================================
-# GET TEMPLATE FILES
-# =========================================================
-
-def get_template_files(
-
-    level: str,
-
-    grade: str,
-
-):
-
-    level_dir = LEVEL_PATHS[level]
-
-    slug = GRADE_SLUGS[grade]
-
-    level_slug = level.lower()
-
-    header = (
-        level_dir /
-        f"{level_slug}-{slug}-header.png"
-    )
-
-    footer = (
-        level_dir /
-        f"{level_slug}-{slug}-footer.png"
-    )
-
-    if not header.exists():
-
-        raise FileNotFoundError(
-
-            f"Header topilmadi: {header}"
-
-        )
-
-    if not footer.exists():
-
-        raise FileNotFoundError(
-
-            f"Footer topilmadi: {footer}"
-
-        )
-
-    return (
-
-        str(header),
-
-        str(footer),
-
-    )
-# =========================================================
-# FILE NAME
-# =========================================================
-
-def build_file_name(
-
-    certificate_id: str,
-
-):
-
-    return (
-
-        GENERATED_DIR /
-
-        f"{certificate_id}.pdf"
-
-    )
+def build_file_name(certificate_id: str):
+    return GENERATED_DIR / f"{certificate_id}.pdf"
 
 
 def get_certificate_file_path(certificate_id: str) -> Path:
     """
     Path to an already-generated certificate's PDF (admin
-    browsing - looks up by certificate_id directly, no
-    readiness check, no regeneration).
+    browsing / profile retrieval - looks up by certificate_id
+    directly, no readiness check, no regeneration).
     """
 
     return build_file_name(certificate_id)
-# =========================================================
-# FORMAT NAME
-# =========================================================
 
-def format_name(
 
-    full_name: str,
-
-):
-
-    full_name = full_name.strip()
-
-    full_name = " ".join(
-
-        full_name.split()
-
-    )
-
-    return full_name.upper()
-# =========================================================
-# CREATE DOCUMENT
-# =========================================================
-
-def create_document(
-
-    file_path,
-
-):
-
-    return SimpleDocTemplate(
-
-        str(file_path),
-
-        pagesize=A4,
-
-        leftMargin=LEFT_MARGIN,
-
-        rightMargin=RIGHT_MARGIN,
-
-        topMargin=TOP_MARGIN,
-
-        bottomMargin=BOTTOM_MARGIN,
-
-    )
-# =========================================================
-# BUILD STORY
-# =========================================================
-
-def build_story(
-    full_name: str,
-    level: str,
-    average: int,
-    grade: str,
-    certificate_id: str,
-):
-
-    story = []
-
-    # Header rasmi uchun joy (header 70mm baland - draw_background)
-    story.append(
-        Spacer(
-            1,
-            78 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            "W-ZERTIFIKAT",
-            TITLE_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            5 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            (
-                "Visuales Institut für "
-                "Zukunft und Unterricht"
-            ),
-            BODY_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            8 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            (
-                "Ushbu sertifikat"
-            ),
-            BODY_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            5 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            format_name(full_name),
-            NAME_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            5 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            (
-                "nemis tili bo'yicha"
-            ),
-            BODY_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            3 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            level,
-            TITLE_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            4 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            (
-                "darajasini muvaffaqiyatli "
-                "yakunlagani uchun taqdim etiladi."
-            ),
-            BODY_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            10 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            grade,
-            GRADE_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            3 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            f"{average} %",
-            GRADE_STYLE,
-        )
-    )
-
-    story.append(
-        Spacer(
-            1,
-            14 * mm,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            f"Certificate ID: {certificate_id}",
-            FOOTER_STYLE,
-        )
-    )
-
-    story.append(
-        Paragraph(
-            f"Berilgan sana: {today()}",
-            FOOTER_STYLE,
-        )
-    )
-
-    return story
-# =========================================================
-# HEADER / FOOTER
-# =========================================================
-
-def draw_background(
-    canvas,
-    doc,
-    header,
-    footer,
-):
-
-    canvas.saveState()
-
-    canvas.drawImage(
-
-        header,
-
-        0,
-
-        PAGE_HEIGHT - 70 * mm,
-
-        width=PAGE_WIDTH,
-
-        height=70 * mm,
-
-        preserveAspectRatio=False,
-
-        mask="auto",
-
-    )
-
-    canvas.drawImage(
-
-        footer,
-
-        0,
-
-        0,
-
-        width=PAGE_WIDTH,
-
-        height=40 * mm,
-
-        preserveAspectRatio=False,
-
-        mask="auto",
-
-    )
-
-    canvas.restoreState()
 # =========================================================
 # GENERATE CERTIFICATE
 # =========================================================
@@ -730,9 +203,7 @@ def generate_certificate(
     returned as-is instead of being rebuilt.
     """
 
-    user = get_certificate_user(
-        user_id,
-    )
+    user = get_certificate_user(user_id)
 
     status = get_certificate_data(
         user_id,
@@ -749,40 +220,45 @@ def generate_certificate(
 
     ensure_directories()
 
-    pdf_path = build_file_name(
-        certificate_id,
-    )
+    pdf_path = build_file_name(certificate_id)
 
     if pdf_path.exists():
         return str(pdf_path)
 
-    register_fonts()
+    config = LEVEL_CONFIG[level]
+    vocab_total = config["blocks"] * config["size"]
+    vocab_learned = min(sum(status["scores"]), vocab_total)
 
-    header, footer = get_template_files(
-        level,
-        status["rank"],
-    )
+    issue_date = today()
+    verify_url = f"{WEBSITE_URL}/verify/{certificate_id}"
 
-    document = create_document(
-        pdf_path,
-    )
-
-    story = build_story(
-        full_name=user["full_name"],
+    html = _jinja_env.get_template(TEMPLATE_NAME).render(
+        css_path=_file_uri(CSS_PATH),
+        logo_path=_file_uri(LOGO_PATH),
+        seal_path=_file_uri(SEAL_PATH),
+        watermark_path=_file_uri(WATERMARK_PATH),
+        icon_book=_file_uri(ICON_BOOK),
+        icon_target=_file_uri(ICON_TARGET),
+        icon_award=_file_uri(ICON_AWARD),
+        icon_calendar=_file_uri(ICON_CALENDAR),
+        is_test=admin_override and not status["ready"],
+        full_name=(user["full_name"] or "").strip().upper(),
+        name_size_class=_name_size_class(user["full_name"] or ""),
         level=level,
-        average=status["average"],
-        grade=status["rank"],
+        vocab_learned=vocab_learned,
+        vocab_total=vocab_total,
+        accuracy_text=_accuracy_text(user_id),
+        rank=_rank_label(status["rank"]),
+        issue_date=issue_date,
+        director_name="Zayniddinkhuja Makhmudov",
         certificate_id=certificate_id,
+        verify_url=verify_url,
+        qr_path=_generate_qr_data_uri(verify_url),
     )
 
-    document.build(
-        story,
-        onFirstPage=lambda c, d: draw_background(
-            c,
-            d,
-            header,
-            footer,
-        ),
-    )
+    HTML(
+        string=html,
+        base_url=str(TEMPLATES_DIR),
+    ).write_pdf(str(pdf_path))
 
     return str(pdf_path)

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5D67C"/>
+      <stop offset="45%" stop-color="#C9A227"/>
+      <stop offset="100%" stop-color="#8A6A11"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="100" cy="100" r="96" fill="url(#goldGrad)"/>
+  <circle cx="100" cy="100" r="96" fill="none" stroke="#6E5209" stroke-width="2"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="#FCEFC7" stroke-width="1.5"/>
+  <circle cx="100" cy="100" r="76" fill="none" stroke="#6E5209" stroke-width="1"/>
+
+  <!-- laurel wreath -->
+  <g fill="#3A2B05" opacity="0.9">
+    <g transform="translate(100,100)">
+      <g transform="rotate(-26) translate(-58,0)">
+        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
+      </g>
+      <g transform="rotate(-13) translate(-64,0)">
+        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
+      </g>
+      <g transform="rotate(0) translate(-68,0)">
+        <ellipse cx="0" cy="0" rx="8" ry="3.6"/>
+      </g>
+      <g transform="rotate(13) translate(-64,0)">
+        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
+      </g>
+      <g transform="rotate(26) translate(-58,0)">
+        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
+      </g>
+
+      <g transform="rotate(154) translate(-58,0)">
+        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
+      </g>
+      <g transform="rotate(167) translate(-64,0)">
+        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
+      </g>
+      <g transform="rotate(180) translate(-68,0)">
+        <ellipse cx="0" cy="0" rx="8" ry="3.6"/>
+      </g>
+      <g transform="rotate(193) translate(-64,0)">
+        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
+      </g>
+      <g transform="rotate(206) translate(-58,0)">
+        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- star emblem, center -->
+  <g transform="translate(100,100)" fill="#3A2B05">
+    <polygon points="0,-26 6.4,-8 25,-8 10,3.6 15.6,21 0,10 -15.6,21 -10,3.6 -25,-8 -6.4,-8"/>
+  </g>
+</svg>
