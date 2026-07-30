@@ -36,8 +36,16 @@ BRANDING_DIR = ASSETS_DIR / "branding"
 LOGO_PATH = BRANDING_DIR / "logo.png"
 SIGNATURE_PATH = BRANDING_DIR / "signature.png"
 
-SEAL_PATH = ASSETS_DIR / "background" / "gold-seal.svg"
 WATERMARK_PATH = ASSETS_DIR / "background" / "watermark-berlin.svg"
+
+# One static seal asset per rank tier - the rank word itself is
+# already computed by services/certificate.py's calculate_rank();
+# this is only a presentation asset lookup, not a scoring rule.
+SEAL_PATH_BY_RANK = {
+    "Gold": ASSETS_DIR / "background" / "gold-seal.svg",
+    "Silver": ASSETS_DIR / "background" / "silver-seal.svg",
+    "Bronze": ASSETS_DIR / "background" / "bronze-seal.svg",
+}
 
 ICON_BOOK = ASSETS_DIR / "icons" / "book.svg"
 ICON_TARGET = ASSETS_DIR / "icons" / "target.svg"
@@ -223,11 +231,14 @@ def generate_certificate(
     vocab_total = config["blocks"] * config["size"]
     vocab_learned = min(sum(status["scores"]), vocab_total)
 
+    rank_label = _rank_label(status["rank"])
+    seal_path = SEAL_PATH_BY_RANK.get(rank_label, SEAL_PATH_BY_RANK["Bronze"])
+
     html = _jinja_env.get_template(TEMPLATE_NAME).render(
         css_path=_file_uri(CSS_PATH),
         logo_path=_file_uri(LOGO_PATH),
         signature_path=_file_uri(SIGNATURE_PATH),
-        seal_path=_file_uri(SEAL_PATH),
+        seal_path=_file_uri(seal_path),
         watermark_path=_file_uri(WATERMARK_PATH),
         icon_book_svg=_inline_svg(ICON_BOOK),
         icon_target_svg=_inline_svg(ICON_TARGET),
@@ -240,7 +251,7 @@ def generate_certificate(
         vocab_learned=vocab_learned,
         vocab_total=vocab_total,
         accuracy_text=_accuracy_text(user_id),
-        rank=_rank_label(status["rank"]),
+        rank=rank_label,
         completion_date=today(),
         director_name="Zayniddinkhuja Makhmudov",
         certificate_id=certificate_id,

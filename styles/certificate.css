@@ -47,6 +47,27 @@
   --hairline:    #D9CE9E;
 }
 
+/* Rank identity - Gold/Silver/Bronze each get a distinct metallic
+   palette, applied to the Rank stat card + its seal. c1 = brightest
+   highlight, c2 = body tone, c3 = deep shadow/text tone. */
+.rank-gold {
+  --rank-c1: #FFF3CE;
+  --rank-c2: #C9A227;
+  --rank-c3: #6E5209;
+}
+
+.rank-silver {
+  --rank-c1: #F7F9FA;
+  --rank-c2: #9BA4AE;
+  --rank-c3: #3A4149;
+}
+
+.rank-bronze {
+  --rank-c1: #FCE2C0;
+  --rank-c2: #B5722E;
+  --rank-c3: #5E3717;
+}
+
 /* =========================================================
    PAGE
    ========================================================= */
@@ -124,10 +145,30 @@ html, body {
 
 .grid {
   position: relative;
-  z-index: 1;
+  /* No explicit z-index - stays in the same "auto" stacking tier as
+     .watermark/.border-frame/.cert-footer, ordered by DOM position.
+     .cert-footer comes after .grid in the document, so it still
+     paints on top if the two ever touch, without needing to fight
+     over pixel-perfect non-overlap. (Giving .grid z-index:1 here
+     previously pulled its whole subtree - including the opaque
+     stat cards - above .cert-footer regardless of DOM order, which
+     silently hid the signature image wherever a card overlapped it.) */
   height: 100%;
   display: grid;
-  grid-template-rows: auto auto 1fr auto auto;
+  /* Footer is positioned separately (see .cert-footer) - WeasyPrint's
+     grid implementation was not honoring padding/margin changes
+     around the last "auto" row reliably, so the footer is pinned
+     with absolute positioning instead for exact, predictable
+     clearance from the border. */
+  /* The stats row is a fixed track (not "auto") deliberately -
+     WeasyPrint's auto-track sizing for this last row proved
+     unreliable when combined with margin/padding changes (verified
+     empirically: identical margin/padding edits sometimes had no
+     effect, sometimes had inconsistent effect). A fixed length
+     sized generously above the actual card content, combined with
+     .stats-grid's own align-self:start below, gives deterministic
+     clearance above the separately-positioned .cert-footer. */
+  grid-template-rows: auto auto 1fr 68mm;
   grid-template-columns: 1fr;
   padding: 11mm 22mm 8mm;
 }
@@ -265,6 +306,7 @@ html, body {
 }
 
 .level-badge-ring {
+  position: relative;
   width: 26mm;
   height: 26mm;
   margin: 0 auto;
@@ -273,21 +315,40 @@ html, body {
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 32% 28%, var(--gold-light), var(--gold) 58%, var(--gold-dark) 100%);
+    radial-gradient(circle at 30% 24%, #FFFBEA 0%, var(--gold-light) 26%, var(--gold) 62%, var(--gold-dark) 100%);
   border: 0.9mm solid var(--gold-dark);
   box-shadow:
     0 0 0 1.2mm var(--paper),
     0 0 0 1.5mm var(--gold),
-    0 1mm 2mm rgba(11, 31, 58, 0.25);
+    0 1mm 2mm rgba(11, 31, 58, 0.3);
+  overflow: hidden;
+}
+
+/* Glossy highlight arc - a soft light streak across the upper
+   portion of the ring, for a more convincing metallic/enamel
+   sheen than a flat radial gradient alone gives. */
+.level-badge-ring::before {
+  content: "";
+  position: absolute;
+  top: 9%;
+  left: 16%;
+  width: 55%;
+  height: 34%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0));
+  border-radius: 50%;
+  filter: blur(0.5mm);
+  pointer-events: none;
 }
 
 .level-badge-text {
+  position: relative;
+  z-index: 1;
   font-family: "Cinzel", serif;
   font-weight: 700;
   font-size: 8.5mm;
   letter-spacing: 0.5px;
   color: var(--navy);
-  text-shadow: 0 0.3mm 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 0.3mm 0 rgba(255, 255, 255, 0.45);
 }
 
 /* =========================================================
@@ -299,6 +360,7 @@ html, body {
   grid-template-columns: repeat(4, 1fr);
   gap: 6mm;
   margin: 3mm 8mm 0;
+  align-self: start;
 }
 
 .stat-card {
@@ -313,20 +375,45 @@ html, body {
 }
 
 .stat-icon-circle {
-  width: 11mm;
-  height: 11mm;
+  width: 12.5mm;
+  height: 12.5mm;
   border-radius: 50%;
-  background: var(--navy);
+  background: radial-gradient(circle at 32% 28%, var(--navy-soft), var(--navy) 72%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2mm;
-  color: var(--gold-light);
+  margin-bottom: 2.4mm;
+  color: #FBEAC0;
+  box-shadow:
+    0 0 0 0.5mm var(--paper),
+    0 0 0 0.85mm var(--gold),
+    0 0.6mm 1.4mm rgba(11, 31, 58, 0.35);
 }
 
 .stat-icon-circle svg {
-  width: 5mm;
-  height: 5mm;
+  width: 6.2mm;
+  height: 6.2mm;
+}
+
+.stat-icon-circle svg * {
+  stroke-width: 2.3px;
+}
+
+/* Rank stat card - icon ring and label recolor per Gold/Silver/
+   Bronze (set via .rank-gold/.rank-silver/.rank-bronze on the
+   certificate root), matching the seal below. Other three stat
+   cards (Vocabulary/Accuracy/Completion) are unaffected. */
+.rank-icon {
+  background: radial-gradient(circle at 32% 28%, var(--rank-c1), var(--rank-c2) 60%, var(--rank-c3) 100%);
+  box-shadow:
+    0 0 0 0.5mm var(--paper),
+    0 0 0 0.85mm var(--rank-c2),
+    0 0.6mm 1.4mm rgba(11, 31, 58, 0.35);
+  color: var(--navy);
+}
+
+.rank-value {
+  color: var(--rank-c3);
 }
 
 .stat-label {
@@ -351,13 +438,25 @@ html, body {
    FOOTER
    ========================================================= */
 
+/* Pinned a fixed, guaranteed distance above the border (border
+   inset is 8mm - 12mm here leaves a real ~4mm clearance), instead
+   of living in the grid's row flow. Kept modest rather than more
+   generous because the page's vertical budget is tight once the
+   stats row (see .stats-grid/grid-template-rows) also needs
+   guaranteed clearance above this footer. */
 .cert-footer {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: end;
+  position: absolute;
+  left: 22mm;
+  right: 22mm;
+  bottom: 12mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
   gap: 8mm;
-  margin-top: 3mm;
 }
+
+.footer-col.footer-left,
+.footer-col.footer-right { flex: 1 1 0; }
 
 .footer-col { display: flex; flex-direction: column; }
 
@@ -371,7 +470,7 @@ html, body {
    cropped or stretched, centered. */
 .signature-area {
   width: 50mm;
-  height: 16mm;
+  height: 13mm;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -394,10 +493,10 @@ html, body {
 }
 
 .signature-caption {
-  margin-top: 1.5mm;
+  margin-top: 1mm;
   font-family: "Inter", sans-serif;
   font-size: 2.6mm;
-  line-height: 1.6;
+  line-height: 1.35;
   letter-spacing: 0.5px;
   color: var(--navy-soft);
 }

@@ -6,7 +6,8 @@
 <link rel="stylesheet" href="{{ css_path }}">
 </head>
 <body>
-  <div class="certificate">
+  {% set rank_class = "rank-gold" if rank == "Gold" else ("rank-silver" if rank == "Silver" else "rank-bronze") %}
+  <div class="certificate {{ rank_class }}">
 
     <div class="watermark" style="background-image: url('{{ watermark_path }}');"></div>
     <div class="border-frame"></div>
@@ -59,10 +60,10 @@
           <div class="stat-label">Accuracy</div>
           <div class="stat-value">{{ accuracy_text }}</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon-circle">{{ icon_award_svg | safe }}</div>
+        <div class="stat-card rank-card">
+          <div class="stat-icon-circle rank-icon">{{ icon_award_svg | safe }}</div>
           <div class="stat-label">Rank</div>
-          <div class="stat-value">{{ rank }}</div>
+          <div class="stat-value rank-value">{{ rank }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon-circle">{{ icon_calendar_svg | safe }}</div>
@@ -71,30 +72,36 @@
         </div>
       </section>
 
-      <footer class="cert-footer">
-        <div class="footer-col footer-left">
-          <div class="signature-area">
-            <img class="signature-img" src="{{ signature_path }}" alt="Signature">
-          </div>
-          <div class="signature-line"></div>
-          <div class="signature-caption">
-            {{ director_name }}<br>
-            Founder &amp; Director<br>
-            VIZU Academy
-          </div>
-        </div>
-
-        <div class="footer-col footer-center">
-          <img class="seal" src="{{ seal_path }}" alt="">
-        </div>
-
-        <div class="footer-col footer-right">
-          <div class="cert-id-label">Certificate ID</div>
-          <div class="cert-id-value">{{ certificate_id }}</div>
-        </div>
-      </footer>
-
     </div>
+
+    <!-- Direct sibling of .grid (not a grid child) - WeasyPrint does
+         not correctly resolve the containing block for an
+         absolutely positioned DIRECT child of a CSS Grid container
+         (verified empirically: the `bottom` offset was silently
+         ignored in that position), so the footer lives outside the
+         grid, positioned relative to .certificate itself instead. -->
+    <footer class="cert-footer">
+      <div class="footer-col footer-left">
+        <div class="signature-area">
+          <img class="signature-img" src="{{ signature_path }}" alt="Signature">
+        </div>
+        <div class="signature-line"></div>
+        <div class="signature-caption">
+          {{ director_name }}<br>
+          Founder &amp; Director<br>
+          VIZU Academy
+        </div>
+      </div>
+
+      <div class="footer-col footer-center">
+        <img class="seal" src="{{ seal_path }}" alt="">
+      </div>
+
+      <div class="footer-col footer-right">
+        <div class="cert-id-label">Certificate ID</div>
+        <div class="cert-id-value">{{ certificate_id }}</div>
+      </div>
+    </footer>
   </div>
 </body>
 </html>
