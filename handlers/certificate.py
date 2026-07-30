@@ -3,6 +3,7 @@ from aiogram import (
     Router,
 )
 from aiogram.types import (
+    FSInputFile,
     Message,
 )
 
@@ -10,13 +11,17 @@ from keyboards.certificate import (
     certificate_menu,
 )
 from handlers.wordgame import (
-    level_menu,
+    build_level_menu,
 )
 
 from services.certificate import (
     build_all_statuses,
     certificate_ready,
 )
+from services.certificate_generator import (
+    generate_certificate,
+)
+from services.logger import logger
 
 router = Router()
 
@@ -39,11 +44,11 @@ IN_PROGRESS_TEXT = (
 )
 
 CERTIFICATE_BUTTONS = {
-    "📄 A1 Sertifikat": "A1",
-    "📄 A2 Sertifikat": "A2",
-    "📄 B1 Sertifikat": "B1",
-    "📄 B2 Sertifikat": "B2",
-    "📄 C1 Sertifikat": "C1",
+    "🏅 A1 W-Zertifikat": "A1",
+    "🏅 A2 W-Zertifikat": "A2",
+    "🏅 B1 W-Zertifikat": "B1",
+    "🏅 B2 W-Zertifikat": "B2",
+    "🏅 C1 W-Zertifikat": "C1",
 }
 # =========================================================
 # BUILD MESSAGE
@@ -153,20 +158,34 @@ async def download_certificate(
         )
     )
 
-    # =====================================================
-    # Keyingi bosqich
-    #
-    # from services.pdf import generate_certificate
-    #
-    # pdf_path = generate_certificate(
-    #     user_id=message.from_user.id,
-    #     level=level,
-    # )
-    #
-    # await message.answer_document(
-    #     FSInputFile(pdf_path)
-    # )
-    # =====================================================
+    try:
+        pdf_path = generate_certificate(
+            user_id=message.from_user.id,
+            level=level,
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Certificate generation failed "
+            f"(user={message.from_user.id}, level={level}): {e}"
+        )
+
+        await message.answer(
+            "❌ Sertifikatni tayyorlashda xatolik yuz berdi. "
+            "Birozdan so'ng qayta urinib ko'ring."
+        )
+
+        return
+
+    await message.answer_document(
+        FSInputFile(pdf_path),
+        caption=(
+            f"🏅 <b>{level} W-Zertifikat</b>\n\n"
+            "Tabriklaymiz! 🎉"
+        ),
+        parse_mode="HTML",
+    )
 
 
 # =========================================================
@@ -182,7 +201,7 @@ async def back_to_levels(
 
     await message.answer(
         "🎯 Darajani tanlang.",
-        reply_markup=await level_menu(
+        reply_markup=await build_level_menu(
             message.from_user.id,
         ),
     )

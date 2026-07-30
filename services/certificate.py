@@ -9,8 +9,21 @@ from database.certificates import (
 )
 
 # =========================================================
+# PASS THRESHOLD
+# =========================================================
+# A block counts as completed at 60/100 (matches the Word
+# Game's own block_completed() gate in database/wordgame.py
+# and the help text shown to users - "kamida 60% natija").
+
+PASS_THRESHOLD = 60
+
+# =========================================================
 # GRADE SYSTEM
 # =========================================================
+# Only Gold/Silver/Bronze certificate templates exist
+# (certificates/{level}-level/*.png) - every level that is
+# "ready" (all blocks >= PASS_THRESHOLD) has an average of at
+# least 60%, so Bronze is always a valid fallback tier.
 
 def calculate_rank(
     percent: float,
@@ -22,10 +35,7 @@ def calculate_rank(
     if percent >= 80:
         return "🥈 Silver"
 
-    if percent >= 70:
-        return "🥉 Bronze"
-
-    return "🎖 Participant"
+    return "🥉 Bronze"
 
 
 # =========================================================
@@ -62,12 +72,11 @@ def calculate_average(
 
 def level_completed(
     scores: list[int],
-    block_size: int,
 ) -> bool:
 
     for score in scores:
 
-        if score < block_size:
+        if score < PASS_THRESHOLD:
             return False
 
     return True
@@ -106,7 +115,7 @@ def build_level_status(
     completed_blocks = sum(
         1
         for score in scores
-        if score >= block_size
+        if score >= PASS_THRESHOLD
     )
 
     average = calculate_average(
@@ -116,7 +125,6 @@ def build_level_status(
 
     ready = level_completed(
         scores,
-        block_size,
     )
 
     started = level_started(

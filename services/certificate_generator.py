@@ -29,6 +29,7 @@ from database.certificates import (
 
 from services.certificate import (
     build_level_status,
+    calculate_rank,
 )
 # =========================================================
 # ROOT PATHS
@@ -40,12 +41,8 @@ CERTIFICATES_DIR = (
     BASE_DIR / "certificates"
 )
 
-ASSETS_DIR = (
-    CERTIFICATES_DIR / "assets"
-)
-
 FONTS_DIR = (
-    ASSETS_DIR / "fonts"
+    BASE_DIR / "fonts"
 )
 
 GENERATED_DIR = (
@@ -54,57 +51,36 @@ GENERATED_DIR = (
 # =========================================================
 # LEVEL PATHS
 # =========================================================
+# Real asset folders on disk: certificates/a1-level/, etc.
 
 LEVEL_PATHS = {
 
-    "A1": ASSETS_DIR / "a1",
+    "A1": CERTIFICATES_DIR / "a1-level",
 
-    "A2": ASSETS_DIR / "a2",
+    "A2": CERTIFICATES_DIR / "a2-level",
 
-    "B1": ASSETS_DIR / "b1",
+    "B1": CERTIFICATES_DIR / "b1-level",
 
-    "B2": ASSETS_DIR / "b2",
+    "B2": CERTIFICATES_DIR / "b2-level",
 
-    "C1": ASSETS_DIR / "c1",
+    "C1": CERTIFICATES_DIR / "c1-level",
 
 }
 # =========================================================
-# GRADE FILES
+# GRADE FILE SLUGS
 # =========================================================
+# Real filenames on disk are level-prefixed, e.g.
+# certificates/a1-level/a1-gold-header.png. Only Gold/Silver/
+# Bronze artwork exists (no "Participant" tier - calculate_rank
+# in services/certificate.py never returns anything else).
 
-GRADE_FILES = {
+GRADE_SLUGS = {
 
-    "🥇 Gold": {
+    "🥇 Gold": "gold",
 
-        "header": "gold-header.png",
+    "🥈 Silver": "silver",
 
-        "footer": "gold-footer.png",
-
-    },
-
-    "🥈 Silver": {
-
-        "header": "silver-header.png",
-
-        "footer": "silver-footer.png",
-
-    },
-
-    "🥉 Bronze": {
-
-        "header": "bronze-header.png",
-
-        "footer": "bronze-footer.png",
-
-    },
-
-    "✅ Pass": {
-
-        "header": "pass-header.png",
-
-        "footer": "pass-footer.png",
-
-    },
+    "🥉 Bronze": "bronze",
 
 }
 # =========================================================
@@ -140,10 +116,13 @@ RIGHT_MARGIN = 20 * mm
 # =========================================================
 # FONT NAMES
 # =========================================================
+# Real font files on disk are under fonts/: GreatVibes-Regular
+# (a script/signature-style face, used for the title and name),
+# Montserrat-Regular/Bold for body text.
 
-TITLE_FONT = "Cinzel-Bold"
+TITLE_FONT = "GreatVibes-Regular"
 
-NAME_FONT = "Cinzel-Bold"
+NAME_FONT = "GreatVibes-Regular"
 
 TEXT_FONT = "Montserrat-Regular"
 
@@ -165,8 +144,8 @@ def register_fonts():
 
     fonts = {
 
-        "Cinzel-Bold":
-            "Cinzel-Bold.ttf",
+        "GreatVibes-Regular":
+            "GreatVibes-Regular.ttf",
 
         "Montserrat-Regular":
             "Montserrat-Regular.ttf",
@@ -217,6 +196,7 @@ def get_certificate_user(
 def get_certificate_data(
     user_id: int,
     level: str,
+    admin_override: bool = False,
 ):
 
     status = build_level_status(
@@ -224,10 +204,18 @@ def get_certificate_data(
         level,
     )
 
-    if not status["ready"]:
+    if not status["ready"] and not admin_override:
         raise ValueError(
             "Sertifikat hali tayyor emas."
         )
+
+    if not status["ready"]:
+        # Admin test/preview mode - grade a placeholder
+        # certificate from whatever progress exists so the
+        # PDF layout can be reviewed without completing a
+        # level for real.
+        status = dict(status)
+        status["rank"] = calculate_rank(status["average"])
 
     return status
 
@@ -392,16 +380,18 @@ def get_template_files(
 
     level_dir = LEVEL_PATHS[level]
 
-    grade_files = GRADE_FILES[grade]
+    slug = GRADE_SLUGS[grade]
+
+    level_slug = level.lower()
 
     header = (
         level_dir /
-        grade_files["header"]
+        f"{level_slug}-{slug}-header.png"
     )
 
     footer = (
         level_dir /
-        grade_files["footer"]
+        f"{level_slug}-{slug}-footer.png"
     )
 
     if not header.exists():
@@ -444,6 +434,16 @@ def build_file_name(
         f"{certificate_id}.pdf"
 
     )
+
+
+def get_certificate_file_path(certificate_id: str) -> Path:
+    """
+    Path to an already-generated certificate's PDF (admin
+    browsing - looks up by certificate_id directly, no
+    readiness check, no regeneration).
+    """
+
+    return build_file_name(certificate_id)
 # =========================================================
 # FORMAT NAME
 # =========================================================
@@ -502,11 +502,11 @@ def build_story(
 
     story = []
 
-    # Header rasmi uchun joy
+    # Header rasmi uchun joy (header 70mm baland - draw_background)
     story.append(
         Spacer(
             1,
-            110 * mm,
+            78 * mm,
         )
     )
 
@@ -718,7 +718,17 @@ def draw_background(
 def generate_certificate(
     user_id: int,
     level: str,
+    admin_override: bool = False,
 ):
+    """
+    Returns the path to the user's PDF certificate for `level`.
+
+    Idempotent: the same user+level always maps to the same
+    certificate_id (get_certificate_id reuses an existing DB
+    row instead of creating a duplicate), and if that
+    certificate's PDF file already exists on disk it is
+    returned as-is instead of being rebuilt.
+    """
 
     user = get_certificate_user(
         user_id,
@@ -727,6 +737,7 @@ def generate_certificate(
     status = get_certificate_data(
         user_id,
         level,
+        admin_override=admin_override,
     )
 
     certificate_id = get_certificate_id(
@@ -736,17 +747,20 @@ def generate_certificate(
         grade=status["rank"],
     )
 
-    register_fonts()
-
     ensure_directories()
+
+    pdf_path = build_file_name(
+        certificate_id,
+    )
+
+    if pdf_path.exists():
+        return str(pdf_path)
+
+    register_fonts()
 
     header, footer = get_template_files(
         level,
         status["rank"],
-    )
-
-    pdf_path = build_file_name(
-        certificate_id,
     )
 
     document = create_document(

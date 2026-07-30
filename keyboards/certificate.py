@@ -25,7 +25,7 @@ certificate_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="🎮 So'z O'yini"),
-            KeyboardButton(text="⬅️ Orqaga"),
+            KeyboardButton(text="⬅️ Darajalar"),
         ],
     ],
     resize_keyboard=True,

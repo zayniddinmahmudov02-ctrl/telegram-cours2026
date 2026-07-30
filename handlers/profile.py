@@ -1,9 +1,12 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, FSInputFile, Message
 
 from database import db_execute
 from keyboards import main_menu, profile_keyboard
+from keyboards.inline.certificate import certificates_keyboard
+from services.certificate_generator import generate_certificate
+from services.logger import logger
 from states.profile import ProfileState
 
 router = Router()
@@ -136,13 +139,14 @@ async def my_certificates(message: Message):
             level,
             certificate_type,
             score,
-            issue_date
+            rank,
+            created_at
         FROM certificates
         WHERE user_id=%s
-        ORDER BY issue_date DESC
+        ORDER BY created_at DESC
         """,
         (message.from_user.id,),
-        fetch=True,
+        fetchall=True,
     )
 
     if not certificates:
@@ -165,15 +169,55 @@ Sizda hozircha sertifikat mavjud emas.
 
         text += (
             f"🎓 <b>{certificate['level']}</b>\n"
-            f"🥇 Daraja: {certificate['certificate_type']}\n"
+            "📄 Turi: W-Zertifikat\n"
+            f"🥇 Daraja: {certificate['rank']}\n"
             f"📊 Ball: {certificate['score']}%\n"
-            f"📅 Sana: {certificate['issue_date'].strftime('%d.%m.%Y')}\n\n"
+            f"📅 Sana: {certificate['created_at'].strftime('%d.%m.%Y')}\n"
+            "✅ Holat: Berilgan\n\n"
         )
 
     await message.answer(
         text,
         parse_mode="HTML",
+        reply_markup=certificates_keyboard(certificates),
     )
+
+
+# =========================================================
+# VIEW CERTIFICATE PDF
+# =========================================================
+
+@router.callback_query(F.data.startswith("profile_cert:"))
+async def view_certificate_pdf(callback: CallbackQuery):
+
+    level = callback.data.split(":")[1]
+
+    try:
+        pdf_path = generate_certificate(
+            user_id=callback.from_user.id,
+            level=level,
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Certificate PDF retrieval failed "
+            f"(user={callback.from_user.id}, level={level}): {e}"
+        )
+
+        await callback.answer(
+            "❌ Sertifikat topilmadi.",
+            show_alert=True,
+        )
+        return
+
+    await callback.message.answer_document(
+        FSInputFile(pdf_path),
+        caption=f"🏅 <b>{level} W-Zertifikat</b>",
+        parse_mode="HTML",
+    )
+
+    await callback.answer()
 
 
 # =========================================================

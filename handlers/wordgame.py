@@ -2,6 +2,7 @@ import re
 
 from aiogram import F, Router
 from aiogram.types import (
+    FSInputFile,
     Message,
     ReplyKeyboardMarkup,
     KeyboardButton,
@@ -11,6 +12,9 @@ from config import LEVEL_CONFIG, LEVEL_ORDER
 from database import db_execute
 from keyboards import main_menu
 from handlers.quiz_retry import check_retry
+from services.certificate import PASS_THRESHOLD, build_all_statuses
+from services.certificate_generator import generate_certificate
+from services.logger import logger
 
 router = Router()
 
@@ -244,7 +248,7 @@ def level_completed(
             block,
         )
 
-        if score < config["size"]:
+        if score < PASS_THRESHOLD:
             return False
 
     return True
@@ -439,14 +443,58 @@ async def back_to_levels(message: Message):
 # CERTIFICATE MENU
 # =========================================================
 
+def build_certificate_status_text(
+    user_id: int,
+) -> str:
+
+    text = (
+        "🏅 <b>W-Zertifikat</b>\n\n"
+        "Qaysi daraja sertifikatini olishni xohlaysiz?\n\n"
+    )
+
+    for status in build_all_statuses(user_id):
+
+        text += (
+            "━━━━━━━━━━━━━━\n"
+            f"🎯 <b>{status['level']}</b>\n"
+        )
+
+        if status["ready"]:
+
+            text += (
+                f"✅ Tayyor - {status['average']}% "
+                f"({status['rank']})\n\n"
+            )
+
+        elif status["started"]:
+
+            total_blocks = (
+                status["completed_blocks"]
+                + status["remaining_blocks"]
+            )
+
+            text += (
+                "📚 Jarayonda - "
+                f"{status['completed_blocks']}/"
+                f"{total_blocks} blok\n\n"
+            )
+
+        else:
+
+            text += "❌ Boshlanmagan\n\n"
+
+    return text
+
+
 @router.message(F.text == "🏅 W-Zertifikat")
 async def certificate_menu(
     message: Message,
 ):
 
     await message.answer(
-        "🏅 <b>W-Zertifikat</b>\n\n"
-        "Qaysi daraja sertifikatini olishni xohlaysiz?",
+        build_certificate_status_text(
+            message.from_user.id,
+        ),
         parse_mode="HTML",
         reply_markup=build_certificate_menu(),
     )
@@ -472,7 +520,8 @@ async def certificate_selected(
 
         await message.answer(
             f"❌ {level} darajasi hali yakunlanmagan.\n\n"
-            "Barcha bloklarni 100% tugatganingizdan so'ng "
+            f"Barcha bloklarni kamida {PASS_THRESHOLD}% "
+            "natija bilan tugatganingizdan so'ng "
             "W-Zertifikat ochiladi."
         )
 
@@ -480,7 +529,36 @@ async def certificate_selected(
 
     await message.answer(
         f"🏅 {level} W-Zertifikat tayyor.\n\n"
-        "Keyingi bosqichda sertifikat oynasi ochiladi."
+        "⏳ PDF tayyorlanmoqda..."
+    )
+
+    try:
+        pdf_path = generate_certificate(
+            user_id=message.from_user.id,
+            level=level,
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Certificate generation failed "
+            f"(user={message.from_user.id}, level={level}): {e}"
+        )
+
+        await message.answer(
+            "❌ Sertifikatni tayyorlashda xatolik yuz berdi. "
+            "Birozdan so'ng qayta urinib ko'ring."
+        )
+
+        return
+
+    await message.answer_document(
+        FSInputFile(pdf_path),
+        caption=(
+            f"🏅 <b>{level} W-Zertifikat</b>\n\n"
+            "Tabriklaymiz! 🎉"
+        ),
+        parse_mode="HTML",
     )
 
 # =========================================================

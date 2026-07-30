@@ -26,6 +26,9 @@ admin_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="📋 Loglar"),
         ],
         [
+            KeyboardButton(text="🏅 Certificates"),
+        ],
+        [
             KeyboardButton(text="⬅️ Admin Chiqish"),
         ],
     ],

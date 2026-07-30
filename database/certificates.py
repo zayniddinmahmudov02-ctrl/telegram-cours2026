@@ -249,6 +249,33 @@ def wordgame_certificates_count() -> int:
     return row["count"]
 
 
+def get_recent_certificates(limit: int = 20):
+    """
+    Most recently issued certificates, across all users, for
+    the admin panel's "browse generated certificates" view.
+    """
+
+    return db_execute(
+        """
+        SELECT
+            c.certificate_id,
+            c.user_id,
+            c.level,
+            c.rank,
+            c.score,
+            c.created_at,
+            u.full_name
+        FROM certificates c
+        INNER JOIN users u
+            ON u.user_id = c.user_id
+        ORDER BY c.created_at DESC
+        LIMIT %s
+        """,
+        (limit,),
+        fetchall=True,
+    )
+
+
 def level_certificates(
     level: str,
 ) -> int:
