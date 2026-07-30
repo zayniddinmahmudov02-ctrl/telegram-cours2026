@@ -1,13 +1,10 @@
-import base64
-import io
 from datetime import datetime
 from pathlib import Path
 
-import qrcode
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
 
-from config import WEBSITE_URL, LEVEL_CONFIG
+from config import LEVEL_CONFIG
 
 from database.users import get_user
 from database.certificates import (
@@ -34,7 +31,11 @@ STYLES_DIR = BASE_DIR / "styles"
 CERTIFICATES_DIR = BASE_DIR / "certificates"
 GENERATED_DIR = CERTIFICATES_DIR / "generated"
 
-LOGO_PATH = ASSETS_DIR / "logo" / "vizu-logo.png"
+BRANDING_DIR = ASSETS_DIR / "branding"
+
+LOGO_PATH = BRANDING_DIR / "logo.png"
+SIGNATURE_PATH = BRANDING_DIR / "signature.png"
+
 SEAL_PATH = ASSETS_DIR / "background" / "gold-seal.svg"
 WATERMARK_PATH = ASSETS_DIR / "background" / "watermark-berlin.svg"
 
@@ -90,22 +91,15 @@ def _accuracy_text(user_id: int) -> str:
     return f"{accuracy}%" if accuracy is not None else "—"
 
 
-def _generate_qr_data_uri(data: str) -> str:
-    qr = qrcode.QRCode(border=1)
-    qr.add_data(data)
-    qr.make(fit=True)
+def _inline_svg(path: Path) -> str:
+    """
+    Raw SVG markup for direct embedding (rather than <img src>),
+    so its `stroke="currentColor"` picks up the CSS `color` of
+    its wrapper (e.g. gold on a navy circle) - an externally
+    referenced image can't inherit page CSS this way.
+    """
 
-    image = qr.make_image(
-        fill_color="#0B1F3A",
-        back_color="#FFFEFC",
-    )
-
-    buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
-
-    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
-
-    return f"data:image/png;base64,{encoded}"
+    return path.read_text(encoding="utf-8")
 
 
 # =========================================================
@@ -229,19 +223,17 @@ def generate_certificate(
     vocab_total = config["blocks"] * config["size"]
     vocab_learned = min(sum(status["scores"]), vocab_total)
 
-    issue_date = today()
-    verify_url = f"{WEBSITE_URL}/verify/{certificate_id}"
-
     html = _jinja_env.get_template(TEMPLATE_NAME).render(
         css_path=_file_uri(CSS_PATH),
         logo_path=_file_uri(LOGO_PATH),
+        signature_path=_file_uri(SIGNATURE_PATH),
         seal_path=_file_uri(SEAL_PATH),
         watermark_path=_file_uri(WATERMARK_PATH),
-        icon_book=_file_uri(ICON_BOOK),
-        icon_target=_file_uri(ICON_TARGET),
-        icon_award=_file_uri(ICON_AWARD),
-        icon_calendar=_file_uri(ICON_CALENDAR),
-        is_test=admin_override and not status["ready"],
+        icon_book_svg=_inline_svg(ICON_BOOK),
+        icon_target_svg=_inline_svg(ICON_TARGET),
+        icon_award_svg=_inline_svg(ICON_AWARD),
+        icon_calendar_svg=_inline_svg(ICON_CALENDAR),
+        is_test=admin_override,
         full_name=(user["full_name"] or "").strip().upper(),
         name_size_class=_name_size_class(user["full_name"] or ""),
         level=level,
@@ -249,11 +241,9 @@ def generate_certificate(
         vocab_total=vocab_total,
         accuracy_text=_accuracy_text(user_id),
         rank=_rank_label(status["rank"]),
-        issue_date=issue_date,
+        completion_date=today(),
         director_name="Zayniddinkhuja Makhmudov",
         certificate_id=certificate_id,
-        verify_url=verify_url,
-        qr_path=_generate_qr_data_uri(verify_url),
     )
 
     HTML(

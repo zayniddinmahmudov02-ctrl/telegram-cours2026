@@ -19,7 +19,9 @@
 
       <header class="cert-header">
         <div class="brand">
-          <img class="brand-logo" src="{{ logo_path }}" alt="VIZU Academy">
+          <div class="brand-logo-box">
+            <img class="brand-logo" src="{{ logo_path }}" alt="VIZU Academy">
+          </div>
           <div class="brand-text">
             <div class="brand-name">VIZU ACADEMY</div>
             <div class="brand-tagline">Visuales Institut f&uuml;r<br>Zukunft und Unterricht</div>
@@ -39,37 +41,47 @@
           For successfully completing the requirements of the<br>
           <strong>German Language Program</strong>
         </p>
-        <div class="level-badge">{{ level }}</div>
+        <div class="level-badge">
+          <div class="level-badge-ring">
+            <span class="level-badge-text">{{ level }}</span>
+          </div>
+        </div>
       </main>
 
       <section class="stats-grid">
         <div class="stat-card">
-          <img class="stat-icon" src="{{ icon_book }}" alt="">
+          <div class="stat-icon-circle">{{ icon_book_svg | safe }}</div>
           <div class="stat-label">Vocabulary Learned</div>
           <div class="stat-value">{{ vocab_learned }} / {{ vocab_total }} W&ouml;rter</div>
         </div>
         <div class="stat-card">
-          <img class="stat-icon" src="{{ icon_target }}" alt="">
+          <div class="stat-icon-circle">{{ icon_target_svg | safe }}</div>
           <div class="stat-label">Accuracy</div>
           <div class="stat-value">{{ accuracy_text }}</div>
         </div>
         <div class="stat-card">
-          <img class="stat-icon" src="{{ icon_award }}" alt="">
+          <div class="stat-icon-circle">{{ icon_award_svg | safe }}</div>
           <div class="stat-label">Rank</div>
           <div class="stat-value">{{ rank }}</div>
         </div>
         <div class="stat-card">
-          <img class="stat-icon" src="{{ icon_calendar }}" alt="">
+          <div class="stat-icon-circle">{{ icon_calendar_svg | safe }}</div>
           <div class="stat-label">Completion</div>
-          <div class="stat-value">{{ issue_date }}</div>
+          <div class="stat-value">{{ completion_date }}</div>
         </div>
       </section>
 
       <footer class="cert-footer">
         <div class="footer-col footer-left">
-          <div class="signature">{{ director_name }}</div>
+          <div class="signature-area">
+            <img class="signature-img" src="{{ signature_path }}" alt="Signature">
+          </div>
           <div class="signature-line"></div>
-          <div class="signature-caption">Director, VIZU Academy</div>
+          <div class="signature-caption">
+            {{ director_name }}<br>
+            Founder &amp; Director<br>
+            VIZU Academy
+          </div>
         </div>
 
         <div class="footer-col footer-center">
@@ -77,10 +89,8 @@
         </div>
 
         <div class="footer-col footer-right">
-          <div class="meta-line">Certificate ID: <strong>{{ certificate_id }}</strong></div>
-          <div class="meta-line">Issued: {{ issue_date }}</div>
-          <div class="meta-line verify-url">{{ verify_url }}</div>
-          <img class="qr" src="{{ qr_path }}" alt="QR">
+          <div class="cert-id-label">Certificate ID</div>
+          <div class="cert-id-value">{{ certificate_id }}</div>
         </div>
       </footer>
 

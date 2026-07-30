@@ -1,56 +1,67 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <defs>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F5D67C"/>
-      <stop offset="45%" stop-color="#C9A227"/>
-      <stop offset="100%" stop-color="#8A6A11"/>
+    <radialGradient id="sealBody" cx="35%" cy="30%" r="75%">
+      <stop offset="0%"  stop-color="#FFF3CE"/>
+      <stop offset="35%" stop-color="#F2CD6B"/>
+      <stop offset="62%" stop-color="#C9A227"/>
+      <stop offset="85%" stop-color="#9A7714"/>
+      <stop offset="100%" stop-color="#6E5209"/>
+    </radialGradient>
+    <radialGradient id="sealRim" cx="35%" cy="30%" r="75%">
+      <stop offset="0%"  stop-color="#FDECB0"/>
+      <stop offset="100%" stop-color="#5C4408"/>
+    </radialGradient>
+    <linearGradient id="emblemShine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#4A3606"/>
+      <stop offset="45%" stop-color="#2B1F03"/>
+      <stop offset="100%" stop-color="#1A1200"/>
     </linearGradient>
   </defs>
 
-  <circle cx="100" cy="100" r="96" fill="url(#goldGrad)"/>
-  <circle cx="100" cy="100" r="96" fill="none" stroke="#6E5209" stroke-width="2"/>
-  <circle cx="100" cy="100" r="84" fill="none" stroke="#FCEFC7" stroke-width="1.5"/>
-  <circle cx="100" cy="100" r="76" fill="none" stroke="#6E5209" stroke-width="1"/>
+  <!-- outer bevel rim (dark, gives depth/thickness) -->
+  <circle cx="100" cy="100" r="98" fill="url(#sealRim)"/>
+  <!-- raised face -->
+  <circle cx="100" cy="100" r="90" fill="url(#sealBody)"/>
+  <!-- inner recessed groove -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#5C4408" stroke-width="1.4" opacity="0.6"/>
+  <circle cx="100" cy="100" r="80" fill="none" stroke="#FDECB0" stroke-width="1.2" opacity="0.75"/>
+  <circle cx="100" cy="100" r="72" fill="none" stroke="#6E5209" stroke-width="1"/>
 
-  <!-- laurel wreath -->
-  <g fill="#3A2B05" opacity="0.9">
-    <g transform="translate(100,100)">
-      <g transform="rotate(-26) translate(-58,0)">
-        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
-      </g>
-      <g transform="rotate(-13) translate(-64,0)">
-        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
-      </g>
-      <g transform="rotate(0) translate(-68,0)">
-        <ellipse cx="0" cy="0" rx="8" ry="3.6"/>
-      </g>
-      <g transform="rotate(13) translate(-64,0)">
-        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
-      </g>
-      <g transform="rotate(26) translate(-58,0)">
-        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
-      </g>
+  <!-- fine radial engine-turned texture lines, very subtle -->
+  <g stroke="#8A6A11" stroke-width="0.35" opacity="0.35">
+    <circle cx="100" cy="100" r="84"/>
+    <circle cx="100" cy="100" r="76"/>
+  </g>
 
-      <g transform="rotate(154) translate(-58,0)">
-        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
-      </g>
-      <g transform="rotate(167) translate(-64,0)">
-        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
-      </g>
-      <g transform="rotate(180) translate(-68,0)">
-        <ellipse cx="0" cy="0" rx="8" ry="3.6"/>
-      </g>
-      <g transform="rotate(193) translate(-64,0)">
-        <ellipse cx="0" cy="0" rx="7.5" ry="3.4"/>
-      </g>
-      <g transform="rotate(206) translate(-58,0)">
-        <ellipse cx="0" cy="0" rx="7" ry="3.2"/>
-      </g>
+  <!-- laurel wreath, embossed (dark base + light highlight edge) -->
+  <g transform="translate(100,100)">
+    <g fill="url(#emblemShine)">
+      <g transform="rotate(-26) translate(-58,0)"><ellipse rx="7" ry="3.2"/></g>
+      <g transform="rotate(-13) translate(-64,0)"><ellipse rx="7.5" ry="3.4"/></g>
+      <g transform="rotate(0) translate(-68,0)"><ellipse rx="8" ry="3.6"/></g>
+      <g transform="rotate(13) translate(-64,0)"><ellipse rx="7.5" ry="3.4"/></g>
+      <g transform="rotate(26) translate(-58,0)"><ellipse rx="7" ry="3.2"/></g>
+
+      <g transform="rotate(154) translate(-58,0)"><ellipse rx="7" ry="3.2"/></g>
+      <g transform="rotate(167) translate(-64,0)"><ellipse rx="7.5" ry="3.4"/></g>
+      <g transform="rotate(180) translate(-68,0)"><ellipse rx="8" ry="3.6"/></g>
+      <g transform="rotate(193) translate(-64,0)"><ellipse rx="7.5" ry="3.4"/></g>
+      <g transform="rotate(206) translate(-58,0)"><ellipse rx="7" ry="3.2"/></g>
+    </g>
+    <!-- thin highlight along the upper-left edge of each leaf cluster -->
+    <g fill="none" stroke="#FDECB0" stroke-width="0.6" opacity="0.55">
+      <g transform="rotate(-13) translate(-64,0)"><ellipse rx="7.5" ry="3.4"/></g>
+      <g transform="rotate(0) translate(-68,0)"><ellipse rx="8" ry="3.6"/></g>
+      <g transform="rotate(167) translate(-64,0)"><ellipse rx="7.5" ry="3.4"/></g>
+      <g transform="rotate(180) translate(-68,0)"><ellipse rx="8" ry="3.6"/></g>
     </g>
   </g>
 
-  <!-- star emblem, center -->
-  <g transform="translate(100,100)" fill="#3A2B05">
-    <polygon points="0,-26 6.4,-8 25,-8 10,3.6 15.6,21 0,10 -15.6,21 -10,3.6 -25,-8 -6.4,-8"/>
+  <!-- star emblem, center - embossed with dark base + light bevel -->
+  <g transform="translate(100,100)">
+    <polygon points="0,-26 6.4,-8 25,-8 10,3.6 15.6,21 0,10 -15.6,21 -10,3.6 -25,-8 -6.4,-8"
+             fill="url(#emblemShine)"/>
+    <polygon points="0,-26 6.4,-8 25,-8 10,3.6 15.6,21 0,10 -15.6,21 -10,3.6 -25,-8 -6.4,-8"
+             fill="none" stroke="#FDECB0" stroke-width="0.7" opacity="0.6"/>
   </g>
 </svg>

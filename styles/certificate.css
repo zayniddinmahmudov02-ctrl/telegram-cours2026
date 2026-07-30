@@ -129,7 +129,7 @@ html, body {
   display: grid;
   grid-template-rows: auto auto 1fr auto auto;
   grid-template-columns: 1fr;
-  padding: 16mm 22mm 12mm;
+  padding: 11mm 22mm 8mm;
 }
 
 /* =========================================================
@@ -147,9 +147,25 @@ html, body {
   gap: 5mm;
 }
 
+/* Reserved logo area - the source PNG carries generous
+   transparent margin around the mark itself, so the box is
+   sized generously too. object-fit: contain guarantees the
+   full image (never cropped) scales to fit without stretching,
+   preserving its native aspect ratio, centered in the box. */
+.brand-logo-box {
+  width: 50mm;
+  height: 34mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .brand-logo {
-  height: 20mm;
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .brand-name {
@@ -174,7 +190,7 @@ html, body {
 
 .cert-title-block {
   text-align: center;
-  margin-top: 6mm;
+  margin-top: 2mm;
 }
 
 .cert-title {
@@ -245,11 +261,33 @@ html, body {
 }
 
 .level-badge {
-  margin-top: 2mm;
+  margin-top: 1mm;
+}
+
+.level-badge-ring {
+  width: 26mm;
+  height: 26mm;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 32% 28%, var(--gold-light), var(--gold) 58%, var(--gold-dark) 100%);
+  border: 0.9mm solid var(--gold-dark);
+  box-shadow:
+    0 0 0 1.2mm var(--paper),
+    0 0 0 1.5mm var(--gold),
+    0 1mm 2mm rgba(11, 31, 58, 0.25);
+}
+
+.level-badge-text {
   font-family: "Cinzel", serif;
   font-weight: 700;
-  font-size: 15mm;
-  color: var(--gold-dark);
+  font-size: 8.5mm;
+  letter-spacing: 0.5px;
+  color: var(--navy);
+  text-shadow: 0 0.3mm 0 rgba(255, 255, 255, 0.35);
 }
 
 /* =========================================================
@@ -260,35 +298,52 @@ html, body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6mm;
-  margin: 4mm 8mm 0;
+  margin: 3mm 8mm 0;
 }
 
 .stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 4mm 2mm;
-  border-top: 0.3mm solid var(--hairline);
-  border-bottom: 0.3mm solid var(--hairline);
+  padding: 3.5mm 3mm;
+  border: 0.25mm solid var(--hairline);
+  border-radius: 2mm;
+  background: var(--paper);
 }
 
-.stat-icon {
-  width: 7mm;
-  height: 7mm;
+.stat-icon-circle {
+  width: 11mm;
+  height: 11mm;
+  border-radius: 50%;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 2mm;
+  color: var(--gold-light);
+}
+
+.stat-icon-circle svg {
+  width: 5mm;
+  height: 5mm;
 }
 
 .stat-label {
   font-family: "Inter", sans-serif;
-  font-size: 2.8mm;
-  letter-spacing: 1px;
+  font-size: 2.6mm;
+  font-weight: 500;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--navy-soft);
 }
 
 .stat-value {
-  margin-top: 1mm;
+  margin-top: 2mm;
   font-family: "Cinzel", serif;
   font-weight: 600;
-  font-size: 4.6mm;
+  font-size: 4.1mm;
+  white-space: nowrap;
   color: var(--navy);
 }
 
@@ -301,19 +356,34 @@ html, body {
   grid-template-columns: 1fr auto 1fr;
   align-items: end;
   gap: 8mm;
-  margin-top: 6mm;
+  margin-top: 3mm;
 }
 
 .footer-col { display: flex; flex-direction: column; }
 
-.footer-left { align-items: flex-start; }
+.footer-left { align-items: center; text-align: center; }
 .footer-center { align-items: center; }
 .footer-right { align-items: flex-end; text-align: right; }
 
-.signature {
-  font-family: "Great Vibes", cursive;
-  font-size: 9mm;
-  color: var(--navy);
+/* Reserved signature area - same object-fit: contain approach
+   as the logo: the full signature.png (including its
+   transparent margin) always scales to fit here, never
+   cropped or stretched, centered. */
+.signature-area {
+  width: 50mm;
+  height: 16mm;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .signature-line {
@@ -327,28 +397,29 @@ html, body {
   margin-top: 1.5mm;
   font-family: "Inter", sans-serif;
   font-size: 2.6mm;
+  line-height: 1.6;
   letter-spacing: 0.5px;
   color: var(--navy-soft);
 }
 
 .seal {
-  width: 20mm;
-  height: 20mm;
+  width: 17mm;
+  height: 17mm;
+  filter: drop-shadow(0 0.4mm 0.7mm rgba(11, 31, 58, 0.35));
 }
 
-.meta-line {
+.cert-id-label {
   font-family: "Inter", sans-serif;
-  font-size: 2.7mm;
+  font-size: 2.6mm;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   color: var(--navy-soft);
-  line-height: 1.5;
 }
 
-.verify-url {
-  color: var(--gold-dark);
-}
-
-.qr {
-  width: 16mm;
-  height: 16mm;
-  margin-top: 2mm;
+.cert-id-value {
+  margin-top: 1mm;
+  font-family: "Cinzel", serif;
+  font-weight: 600;
+  font-size: 3.6mm;
+  color: var(--navy);
 }
