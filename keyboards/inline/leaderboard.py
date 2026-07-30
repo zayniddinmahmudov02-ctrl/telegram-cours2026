@@ -34,7 +34,7 @@ def leaderboard_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
-                    text="👑 Champions",
+                    text="🏆 Champions",
                     callback_data="lb_champions",
                 ),
             ],

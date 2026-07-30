@@ -14,7 +14,7 @@ def champions_back_keyboard() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text="⬅️ Yillar",
-                    callback_data="lb_champions",
+                    callback_data="champions_monthly",
                 ),
             ],
             [

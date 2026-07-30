@@ -25,6 +25,8 @@ def init_database():
 
     create_user_scores_table()
 
+    create_xp_events_table()
+
     create_weekly_champions_table()
 
     create_monthly_champions_table()
@@ -299,6 +301,47 @@ def create_user_scores_table():
             updated_at TIMESTAMP DEFAULT NOW()
 
         );
+        """
+    )
+
+
+# =========================================================
+# XP EVENTS
+# =========================================================
+# Per-event XP ledger. Lets daily/weekly/monthly rankings be
+# computed with timestamp filtering (WHERE created_at >= ...)
+# instead of periodically resetting a running counter.
+
+def create_xp_events_table():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS xp_events(
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+            xp INTEGER NOT NULL,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_xp_events_user
+        ON xp_events(user_id)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_xp_events_created
+        ON xp_events(created_at)
         """
     )
 

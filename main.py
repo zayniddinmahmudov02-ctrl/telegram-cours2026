@@ -16,7 +16,9 @@ from handlers.artikel import load_artikel
 from services.loader import load_all
 from services.runtime import (
     cleanup_quiz_memory,
-    daily_reset_scheduler,
+    daily_champion_scheduler,
+    weekly_champion_scheduler,
+    monthly_champion_scheduler,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -52,7 +54,15 @@ async def main():
     )
 
     asyncio.create_task(
-        daily_reset_scheduler()
+        daily_champion_scheduler()
+    )
+
+    asyncio.create_task(
+        weekly_champion_scheduler()
+    )
+
+    asyncio.create_task(
+        monthly_champion_scheduler()
     )
 
     await bot.delete_webhook(

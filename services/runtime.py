@@ -10,7 +10,11 @@ from config import (
     quiz_running,
 )
 
-from services.ranking import reset_daily_scores
+from loader import bot
+from services.ranking import (
+    process_weekly_champion,
+    process_monthly_champion,
+)
 from services.logger import logger
 
 
@@ -57,10 +61,14 @@ async def cleanup_quiz_memory():
 
 
 # =========================================================
-# DAILY RESET
+# DAILY CHAMPION
 # =========================================================
+# Daily ranking never needs a reset - it is always computed
+# from xp_events filtered to "today". This scheduler just logs
+# the day's rollover (and, optionally, the previous day's top
+# player) once every midnight.
 
-async def daily_reset_scheduler():
+async def daily_champion_scheduler():
 
     while True:
 
@@ -81,10 +89,97 @@ async def daily_reset_scheduler():
             (target - now).total_seconds()
         )
 
-        reset_daily_scores()
+        logger.info(
+            "New daily ranking started automatically "
+            "(no data reset - date-filtered) ✅"
+        )
+
+
+# =========================================================
+# WEEKLY CHAMPION
+# =========================================================
+
+async def weekly_champion_scheduler():
+
+    while True:
+
+        now = datetime.now()
+
+        days_until_monday = (7 - now.weekday()) % 7
+
+        target = (
+            now + timedelta(days=days_until_monday)
+        ).replace(
+            hour=0,
+            minute=0,
+            second=5,
+            microsecond=0,
+        )
+
+        if target <= now:
+            target += timedelta(days=7)
+
+        await asyncio.sleep(
+            (target - now).total_seconds()
+        )
+
+        try:
+            await process_weekly_champion(bot, target)
+
+        except Exception as e:
+            logger.error(
+                f"Weekly champion processing failed: {e}"
+            )
 
         logger.info(
-            "Daily scores reset ✅"
+            "New weekly ranking started automatically ✅"
+        )
+
+
+# =========================================================
+# MONTHLY CHAMPION
+# =========================================================
+
+async def monthly_champion_scheduler():
+
+    while True:
+
+        now = datetime.now()
+
+        if now.month == 12:
+            target = now.replace(
+                year=now.year + 1,
+                month=1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=5,
+                microsecond=0,
+            )
+        else:
+            target = now.replace(
+                month=now.month + 1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=5,
+                microsecond=0,
+            )
+
+        await asyncio.sleep(
+            (target - now).total_seconds()
+        )
+
+        try:
+            await process_monthly_champion(bot, target)
+
+        except Exception as e:
+            logger.error(
+                f"Monthly champion processing failed: {e}"
+            )
+
+        logger.info(
+            "New monthly ranking started automatically ✅"
         )
 # =========================================================
 # RUNTIME VARIABLES

@@ -32,7 +32,13 @@ def create_user_score(user_id: int):
 
 def add_score(user_id: int, points: int):
     """
-    Add points to all active leaderboards.
+    Record an XP gain.
+
+    global_score is a running, never-reset lifetime total
+    (Overall Ranking). xp_events is a timestamped ledger of
+    every XP-earning event, used to compute Daily/Weekly/
+    Monthly rankings by filtering on created_at instead of
+    periodically resetting a counter.
     """
 
     create_user_score(user_id)
@@ -41,9 +47,6 @@ def add_score(user_id: int, points: int):
         """
         UPDATE user_scores
         SET
-            daily_score = daily_score + %s,
-            weekly_score = weekly_score + %s,
-            monthly_score = monthly_score + %s,
             global_score = global_score + %s,
 
             correct_answers = correct_answers + 1,
@@ -54,10 +57,26 @@ def add_score(user_id: int, points: int):
         """,
         (
             points,
-            points,
-            points,
-            points,
             user_id,
+        ),
+    )
+
+    db_execute(
+        """
+        INSERT INTO xp_events
+        (
+            user_id,
+            xp
+        )
+        VALUES
+        (
+            %s,
+            %s
+        )
+        """,
+        (
+            user_id,
+            points,
         ),
     )
 
@@ -100,38 +119,62 @@ def get_user_score(user_id: int):
 # =========================================================
 # TOP RANKINGS
 # =========================================================
+# Daily/Weekly/Monthly are computed by filtering the xp_events
+# ledger on created_at - nothing is ever reset. date_trunc()
+# truncates to the start of the period in Postgres server time
+# ('week' truncates to Monday 00:00, matching Mon-Sun weeks).
+# Global/Overall reuses user_scores.global_score, a running
+# lifetime total that is never reset either.
+
+PERIOD_TRUNC = {
+    "daily": "day",
+    "weekly": "week",
+    "monthly": "month",
+}
+
 
 def get_top(period: str, limit: int = 100):
 
-    columns = {
-        "daily": "daily_score",
-        "weekly": "weekly_score",
-        "monthly": "monthly_score",
-        "global": "global_score",
-    }
+    if period == "global":
+        return db_execute(
+            """
+            SELECT
+                u.user_id,
+                u.full_name,
+                s.global_score
+            FROM user_scores s
+            INNER JOIN users u
+                ON u.user_id = s.user_id
+            WHERE
+                u.is_blocked = FALSE
+            ORDER BY s.global_score DESC
+            LIMIT %s
+            """,
+            (limit,),
+            fetchall=True,
+        )
 
-    column = columns.get(period)
+    trunc = PERIOD_TRUNC.get(period)
 
-    if not column:
+    if not trunc:
         return []
+
+    score_field = f"{period}_score"
 
     return db_execute(
         f"""
         SELECT
             u.user_id,
             u.full_name,
-            s.daily_score,
-            s.weekly_score,
-            s.monthly_score,
-            s.global_score,
-            s.correct_answers,
-            s.wrong_answers
-        FROM user_scores s
+            COALESCE(SUM(e.xp), 0) AS {score_field}
+        FROM xp_events e
         INNER JOIN users u
-            ON u.user_id = s.user_id
-WHERE
-    u.is_blocked = FALSE
-        ORDER BY s.{column} DESC
+            ON u.user_id = e.user_id
+        WHERE
+            e.created_at >= date_trunc('{trunc}', NOW())
+            AND u.is_blocked = FALSE
+        GROUP BY u.user_id, u.full_name
+        ORDER BY {score_field} DESC
         LIMIT %s
         """,
         (limit,),
@@ -155,22 +198,72 @@ def get_global_top(limit: int = 100):
     return get_top("global", limit)
 
 
+def get_overall_top(limit: int = 100):
+    """
+    Overall Ranking: lifetime XP (never resets) plus average
+    accuracy across every completed Word Game block, taken
+    directly from quiz_progress.best_score (real per-block
+    scores, not an estimate).
+    """
+
+    return db_execute(
+        """
+        SELECT
+            u.user_id,
+            u.full_name,
+            s.global_score AS total_xp,
+            COALESCE(
+                (
+                    SELECT AVG(qp.best_score)
+                    FROM quiz_progress qp
+                    WHERE qp.user_id = u.user_id
+                ),
+                0
+            ) AS avg_accuracy
+        FROM user_scores s
+        INNER JOIN users u
+            ON u.user_id = s.user_id
+        WHERE
+            u.is_blocked = FALSE
+        ORDER BY s.global_score DESC
+        LIMIT %s
+        """,
+        (limit,),
+        fetchall=True,
+    )
+
+
 # =========================================================
 # USER RANK
 # =========================================================
 
 def get_user_rank(user_id: int, period: str):
 
-    columns = {
-        "daily": "daily_score",
-        "weekly": "weekly_score",
-        "monthly": "monthly_score",
-        "global": "global_score",
-    }
+    if period == "global":
 
-    column = columns.get(period)
+        row = db_execute(
+            """
+            SELECT rank
+            FROM
+            (
+                SELECT
+                    user_id,
+                    RANK() OVER(
+                        ORDER BY global_score DESC
+                    ) AS rank
+                FROM user_scores
+            ) ranks
+            WHERE user_id = %s
+            """,
+            (user_id,),
+            fetchone=True,
+        )
 
-    if not column:
+        return row["rank"] if row else None
+
+    trunc = PERIOD_TRUNC.get(period)
+
+    if not trunc:
         return None
 
     row = db_execute(
@@ -181,9 +274,11 @@ def get_user_rank(user_id: int, period: str):
             SELECT
                 user_id,
                 RANK() OVER(
-                    ORDER BY {column} DESC
+                    ORDER BY SUM(xp) DESC
                 ) AS rank
-            FROM user_scores
+            FROM xp_events
+            WHERE created_at >= date_trunc('{trunc}', NOW())
+            GROUP BY user_id
         ) ranks
         WHERE user_id = %s
         """,
@@ -192,6 +287,37 @@ def get_user_rank(user_id: int, period: str):
     )
 
     return row["rank"] if row else None
+
+
+# =========================================================
+# PERIOD CHAMPION (for schedulers)
+# =========================================================
+
+def get_period_champion(start, end):
+    """
+    Highest XP earner strictly within [start, end) - used to
+    determine the winner of a week/month that just ended.
+    """
+
+    return db_execute(
+        """
+        SELECT
+            u.user_id,
+            u.full_name,
+            COALESCE(SUM(e.xp), 0) AS score
+        FROM xp_events e
+        INNER JOIN users u
+            ON u.user_id = e.user_id
+        WHERE
+            e.created_at >= %s
+            AND e.created_at < %s
+        GROUP BY u.user_id, u.full_name
+        ORDER BY score DESC
+        LIMIT 1
+        """,
+        (start, end),
+        fetchone=True,
+    )
 # =========================================================
 # CHAMPIONS
 # =========================================================
@@ -292,6 +418,26 @@ def get_weekly_champions(year: int):
     )
 
 
+def get_recent_weekly_champions(limit: int = 20):
+    """
+    Most recent weekly champions, newest first. Weekly
+    history spans many more entries than monthly, so it is
+    browsed as a flat recent list instead of a year picker.
+    """
+
+    return db_execute(
+        """
+        SELECT
+            *
+        FROM weekly_champions
+        ORDER BY year DESC, week DESC
+        LIMIT %s
+        """,
+        (limit,),
+        fetchall=True,
+    )
+
+
 # =========================================================
 # HALL OF FAME
 # =========================================================
@@ -342,43 +488,6 @@ def get_hall_of_fame(year: int):
         (year,),
         fetchall=True,
     )
-# =========================================================
-# RESET
-# =========================================================
-
-def reset_daily():
-    db_execute(
-        """
-        UPDATE user_scores
-        SET
-            daily_score = 0,
-            updated_at = NOW()
-        """
-    )
-
-
-def reset_weekly():
-    db_execute(
-        """
-        UPDATE user_scores
-        SET
-            weekly_score = 0,
-            updated_at = NOW()
-        """
-    )
-
-
-def reset_monthly():
-    db_execute(
-        """
-        UPDATE user_scores
-        SET
-            monthly_score = 0,
-            updated_at = NOW()
-        """
-    )
-
-
 # =========================================================
 # STATISTICS
 # =========================================================
@@ -453,28 +562,24 @@ def get_user_statistics(user_id: int):
 
 
 def get_accuracy(user_id: int):
+    """
+    Average accuracy (%) across every completed Word Game
+    block, taken directly from quiz_progress.best_score
+    (each block is scored out of 100, so best_score already
+    is a percentage) - real statistics, not an estimate.
+    """
 
     row = db_execute(
         """
-        SELECT
-            correct_answers,
-            wrong_answers
-        FROM user_scores
+        SELECT AVG(best_score) AS avg_score
+        FROM quiz_progress
         WHERE user_id = %s
         """,
         (user_id,),
         fetchone=True,
     )
 
-    if not row:
+    if not row or row["avg_score"] is None:
         return 0
 
-    correct = row["correct_answers"]
-    wrong = row["wrong_answers"]
-
-    total = correct + wrong
-
-    if total == 0:
-        return 0
-
-    return round((correct / total) * 100, 1)
+    return round(float(row["avg_score"]), 1)

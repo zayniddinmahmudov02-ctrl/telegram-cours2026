@@ -4,6 +4,36 @@ from aiogram.types import (
 )
 
 # =========================================================
+# CHAMPIONS HOME (MONTHLY / WEEKLY)
+# =========================================================
+
+def champions_home_keyboard() -> InlineKeyboardMarkup:
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📅 Monthly Champions",
+                    callback_data="champions_monthly",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📅 Weekly Champions",
+                    callback_data="champions_weekly",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Reytinglar",
+                    callback_data="lb_back",
+                ),
+            ],
+        ]
+    )
+
+
+# =========================================================
 # CHAMPIONS YEARS KEYBOARD
 # =========================================================
 
@@ -31,8 +61,26 @@ def champions_years_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
-                    text="⬅️ Reytinglar",
-                    callback_data="lb_back",
+                    text="⬅️ Champions",
+                    callback_data="lb_champions",
+                ),
+            ],
+        ]
+    )
+
+
+# =========================================================
+# WEEKLY CHAMPIONS BACK KEYBOARD
+# =========================================================
+
+def weekly_champions_back_keyboard() -> InlineKeyboardMarkup:
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Champions",
+                    callback_data="lb_champions",
                 ),
             ],
         ]

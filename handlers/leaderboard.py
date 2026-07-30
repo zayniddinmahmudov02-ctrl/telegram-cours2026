@@ -7,12 +7,18 @@ from database.leaderboard import (
     get_weekly_top,
     get_monthly_top,
     get_global_top,
+    get_overall_top,
     get_monthly_champions,
+    get_recent_weekly_champions,
     get_user_rank,
 )
 
 from keyboards.inline.leaderboard import leaderboard_keyboard
-from keyboards.inline.champions import champions_years_keyboard
+from keyboards.inline.champions import (
+    champions_home_keyboard,
+    champions_years_keyboard,
+    weekly_champions_back_keyboard,
+)
 from keyboards.inline.back import champions_back_keyboard
 
 router = Router()
@@ -165,17 +171,52 @@ async def monthly_top(callback: CallbackQuery):
 
 
 # =========================================================
-# GLOBAL
+# OVERALL (never resets - lifetime XP + real accuracy)
 # =========================================================
+
+def build_overall_text(
+    top: list,
+    user_id: int,
+) -> str:
+
+    text = "🌍 <b>Overall Reyting</b>\n\n"
+
+    if not top:
+        return (
+            text
+            + "📭 Hozircha reyting mavjud emas.\n\n"
+            + "🎮 Birinchi bo'lib Word Game o'ynang!"
+        )
+
+    medals = ["🥇", "🥈", "🥉"]
+
+    for index, row in enumerate(top, start=1):
+
+        place = medals[index - 1] if index <= 3 else f"{index}."
+
+        text += (
+            f"{place} <b>{row['full_name']}</b>\n"
+            f"⭐ Total XP: {row['total_xp']:,}\n"
+            f"🎯 O'rtacha aniqlik: {row['avg_accuracy']}%\n\n"
+        )
+
+    rank = get_user_rank(user_id, "global")
+
+    text += "━━━━━━━━━━━━━━\n\n"
+
+    if rank:
+        text += f"👤 <b>Sizning o'rningiz:</b> #{rank}"
+    else:
+        text += "👤 Siz hali reytingda emassiz."
+
+    return text
+
 
 @router.callback_query(F.data == "lb_global")
 async def global_top(callback: CallbackQuery):
 
-    text = build_leaderboard_text(
-        title="🌍 <b>Global Reyting</b>",
-        score_field="global_score",
-        period="global",
-        top=get_global_top(),
+    text = build_overall_text(
+        top=get_overall_top(),
         user_id=callback.from_user.id,
     )
 
@@ -193,7 +234,23 @@ async def global_top(callback: CallbackQuery):
 async def champions(callback: CallbackQuery):
 
     await callback.message.edit_text(
-        "👑 <b>VIZU Champions</b>\n\n"
+        "🏆 <b>VIZU Champions</b>\n\n"
+        "Tarixni ko'rish uchun turini tanlang.",
+        reply_markup=champions_home_keyboard(),
+    )
+
+    await callback.answer()
+
+
+# =========================================================
+# MONTHLY CHAMPIONS - YEAR PICKER
+# =========================================================
+
+@router.callback_query(F.data == "champions_monthly")
+async def champions_monthly(callback: CallbackQuery):
+
+    await callback.message.edit_text(
+        "📅 <b>Monthly Champions</b>\n\n"
         "Ko'rmoqchi bo'lgan yilni tanlang.",
         reply_markup=champions_years_keyboard(),
     )
@@ -202,7 +259,58 @@ async def champions(callback: CallbackQuery):
 
 
 # =========================================================
-# CHAMPIONS YEAR
+# WEEKLY CHAMPIONS
+# =========================================================
+
+MONTHS = {
+    1: "Yanvar",
+    2: "Fevral",
+    3: "Mart",
+    4: "Aprel",
+    5: "May",
+    6: "Iyun",
+    7: "Iyul",
+    8: "Avgust",
+    9: "Sentabr",
+    10: "Oktabr",
+    11: "Noyabr",
+    12: "Dekabr",
+}
+
+
+@router.callback_query(F.data == "champions_weekly")
+async def champions_weekly(callback: CallbackQuery):
+
+    champions_list = get_recent_weekly_champions()
+
+    text = "📅 <b>Weekly Champions</b>\n\n"
+
+    if not champions_list:
+
+        text += "📭 Hozircha Champion mavjud emas."
+
+    else:
+
+        for champion in champions_list:
+
+            text += (
+                f"🏆 <b>{champion['year']} - "
+                f"{champion['week']}-hafta</b>\n"
+                f"👤 {champion['full_name']}\n"
+                f"⭐ {champion['score']} XP\n\n"
+            )
+
+    await callback.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=weekly_champions_back_keyboard(),
+    )
+
+    await callback.answer()
+
+
+# =========================================================
+# MONTHLY CHAMPIONS - YEAR
 # =========================================================
 
 @router.callback_query(F.data.startswith("champions_year_"))
@@ -212,22 +320,7 @@ async def champions_year(callback: CallbackQuery):
 
     champions = get_monthly_champions(year)
 
-    months = {
-        1: "Yanvar",
-        2: "Fevral",
-        3: "Mart",
-        4: "Aprel",
-        5: "May",
-        6: "Iyun",
-        7: "Iyul",
-        8: "Avgust",
-        9: "Sentabr",
-        10: "Oktabr",
-        11: "Noyabr",
-        12: "Dekabr",
-    }
-
-    text = f"👑 <b>{year} Champions</b>\n\n"
+    text = f"📅 <b>{year} Monthly Champions</b>\n\n"
 
     if not champions:
 
@@ -237,10 +330,15 @@ async def champions_year(callback: CallbackQuery):
 
         for champion in champions:
 
+            month_name = MONTHS.get(
+                champion["month"],
+                champion["month"],
+            )
+
             text += (
-                f"🥇 <b>{months.get(champion['month'], champion['month'])}</b>\n"
+                f"🏆 <b>{month_name} {year}</b>\n"
                 f"👤 {champion['full_name']}\n"
-                f"⭐ {champion['score']} ball\n\n"
+                f"⭐ {champion['score']:,} XP\n\n"
             )
 
     await callback.message.edit_text(
