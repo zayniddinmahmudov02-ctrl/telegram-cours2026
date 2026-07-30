@@ -18,6 +18,7 @@ from handlers import (
     private_message,
     info,
     leaderboard,
+    media,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +42,7 @@ routers = [
     private_message,
     info,
     leaderboard,
+    media,
 ]
 
 for router in routers:

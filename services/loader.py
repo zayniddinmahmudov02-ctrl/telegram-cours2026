@@ -25,10 +25,12 @@ DATA_DIR = BASE_DIR
 
 
 # =========================================================
-# FILME STORAGE
+# MEDIA STORAGE
 # =========================================================
 
 FILME = []
+BUCHER = []
+MUSIK = []
 
 
 # =========================================================
@@ -192,12 +194,109 @@ def load_filme():
 
 
 # =========================================================
+# LOAD BUCHER
+# =========================================================
+
+def load_bucher():
+
+    BUCHER.clear()
+
+    try:
+
+        with open(
+            "Bucher.csv",
+            encoding="utf-8"
+        ) as f:
+
+            reader = csv.DictReader(f)
+
+            for row in reader:
+
+                BUCHER.append(
+                    {
+                        "level":
+                            row["level"].strip(),
+
+                        "category":
+                            row["category"].strip(),
+
+                        "title":
+                            row["title"].strip(),
+
+                        "message_id":
+                            int(
+                                row["message_id"]
+                            )
+                    }
+                )
+
+        logger.info(
+            f"BUCHER LOADED: {len(BUCHER)}"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"BUCHER LOAD ERROR: {e}"
+        )
+
+
+# =========================================================
+# LOAD MUSIK
+# =========================================================
+
+def load_musik():
+
+    MUSIK.clear()
+
+    try:
+
+        with open(
+            "Musik.csv",
+            encoding="utf-8"
+        ) as f:
+
+            reader = csv.DictReader(f)
+
+            for row in reader:
+
+                MUSIK.append(
+                    {
+                        "track_number":
+                            row["track_number"].strip(),
+
+                        "title":
+                            row["title"].strip(),
+
+                        "message_id":
+                            int(
+                                row["message_id"]
+                            )
+                    }
+                )
+
+        logger.info(
+            f"MUSIK LOADED: {len(MUSIK)}"
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"MUSIK LOAD ERROR: {e}"
+        )
+
+
+# =========================================================
 # LOAD EVERYTHING
 # =========================================================
 
 def load_all():
 
     load_filme()
+
+    load_bucher()
+
+    load_musik()
 
     load_all_quizzes()
 

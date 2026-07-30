@@ -1,31 +1,471 @@
+# =========================================================
+# IMPORTS
+# =========================================================
+
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+
+from config import (
+    BOOK_CHANNEL_ID,
+    FILM_CHANNEL_ID,
+    MUSIC_CHANNEL_ID,
+)
+
+from services.media import (
+    get_book_levels,
+    get_book_categories,
+    get_books,
+    get_book_by_message_id,
+    search_books,
+    get_movie_levels,
+    get_movie_categories,
+    get_movies,
+    get_movie_by_message_id,
+    search_movies,
+    get_music,
+    get_music_by_message_id,
+    search_music,
+)
+
+from keyboards.media import (
+    media_root_keyboard,
+    levels_keyboard,
+    categories_keyboard,
+    book_list_keyboard,
+    movie_list_keyboard,
+    music_list_keyboard,
+    search_results_keyboard,
+    search_prompt_keyboard,
+)
+
+from states.media import MediaSearchState
 
 router = Router()
 
-MAINTENANCE_TEXT = (
-    "🛠 <b>Ta'minot ishlari</b>\n\n"
-    "Media bo'limi hozirda yangilanmoqda.\n\n"
-    "🎬 Kitoblar, filmlar, musiqa va boshqa media materiallari "
-    "tez orada yana foydalanish uchun ochiladi.\n\n"
-    "⏳ Iltimos, biroz kuting.\n\n"
-    "🙏 Tushunganingiz uchun rahmat!\n"
-    "<b>VIZU Academy</b>"
-)
+MEDIA_ROOT_TEXT = "🎬 <b>Media</b>\n\nBo'limni tanlang."
 
 
-@router.message(F.text == "🎬 Media")
-async def media_menu(message: Message):
+# =========================================================
+# ROOT
+# =========================================================
+
+@router.message(F.text == "🎬 Medien")
+async def media_menu(message: Message, state: FSMContext):
+    await state.clear()
+
     await message.answer(
-        MAINTENANCE_TEXT,
+        MEDIA_ROOT_TEXT,
         parse_mode="HTML",
+        reply_markup=media_root_keyboard(),
     )
 
 
-@router.callback_query(F.data == "media")
-async def media_callback(callback: CallbackQuery):
+@router.callback_query(F.data == "media:root")
+async def media_root(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+
     await callback.message.edit_text(
-        MAINTENANCE_TEXT,
+        MEDIA_ROOT_TEXT,
         parse_mode="HTML",
+        reply_markup=media_root_keyboard(),
     )
-    await callback.answer("Bo'lim vaqtincha yopilgan.")
+    await callback.answer()
+
+
+@router.callback_query(F.data == "media:noop")
+async def media_noop(callback: CallbackQuery):
+    await callback.answer()
+
+
+# =========================================================
+# OPEN HELPER
+# =========================================================
+
+async def _open_item(
+    callback: CallbackQuery,
+    item: dict | None,
+    channel_id: int,
+    not_found_text: str,
+):
+    if not item:
+        await callback.answer(not_found_text, show_alert=True)
+        return
+
+    try:
+        await callback.bot.copy_message(
+            chat_id=callback.from_user.id,
+            from_chat_id=channel_id,
+            message_id=item["message_id"],
+        )
+        await callback.answer()
+
+    except Exception:
+        await callback.answer(
+            "❌ Post topilmadi yoki o'chirilgan.",
+            show_alert=True,
+        )
+
+
+# =========================================================
+# BOOKS
+# =========================================================
+
+@router.callback_query(F.data == "media:books")
+async def books_home(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+
+    levels = get_book_levels()
+
+    await callback.message.edit_text(
+        "📚 <b>Bücher</b>\n\nDarajani tanlang yoki qidiring.",
+        parse_mode="HTML",
+        reply_markup=levels_keyboard("books", levels),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:books:level:"))
+async def books_level(callback: CallbackQuery):
+    level = callback.data.split(":")[3]
+
+    categories = get_book_categories(level)
+
+    await callback.message.edit_text(
+        f"📚 <b>{level}</b>\n\nKategoriyani tanlang.",
+        parse_mode="HTML",
+        reply_markup=categories_keyboard("books", level, categories),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:books:cat:"))
+async def books_category(callback: CallbackQuery):
+    parts = callback.data.split(":")
+    level, category, page = parts[3], parts[4], int(parts[5])
+
+    books = get_books(level, category)
+
+    await callback.message.edit_text(
+        f"📚 {level} → {category.capitalize()}\n\nKitobni tanlang.",
+        reply_markup=book_list_keyboard(books, page, level, category),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:books:open:"))
+async def books_open(callback: CallbackQuery):
+    message_id = int(callback.data.split(":")[3])
+
+    item = get_book_by_message_id(message_id)
+
+    await _open_item(
+        callback,
+        item,
+        BOOK_CHANNEL_ID,
+        "❌ Kitob topilmadi.",
+    )
+
+
+@router.callback_query(F.data == "media:books:search")
+async def books_search_prompt(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(MediaSearchState.waiting_book_query)
+
+    await callback.message.edit_text(
+        "🔎 Kitob nomini kiriting:",
+        reply_markup=search_prompt_keyboard("books"),
+    )
+    await callback.answer()
+
+
+@router.message(MediaSearchState.waiting_book_query, F.text)
+async def books_search_run(message: Message, state: FSMContext):
+    query = message.text.strip()
+
+    if not query:
+        await message.answer("🔎 Kitob nomini kiriting:")
+        return
+
+    await state.update_data(query=query)
+
+    results = search_books(query)
+
+    if not results:
+        await message.answer(
+            "❌ Hech narsa topilmadi. Qayta urinib ko'ring.",
+            reply_markup=search_prompt_keyboard("books"),
+        )
+        return
+
+    await message.answer(
+        f"🔎 <b>{len(results)} ta natija topildi:</b>",
+        parse_mode="HTML",
+        reply_markup=search_results_keyboard("books", results, 0),
+    )
+
+
+@router.callback_query(F.data.startswith("media:books:searchpage:"))
+async def books_search_page(callback: CallbackQuery, state: FSMContext):
+    page = int(callback.data.split(":")[3])
+
+    data = await state.get_data()
+    query = data.get("query")
+
+    if not query:
+        await callback.answer(
+            "Qidiruv muddati tugadi, qayta qidiring.",
+            show_alert=True,
+        )
+        return
+
+    results = search_books(query)
+
+    await callback.message.edit_text(
+        f"🔎 <b>{len(results)} ta natija topildi:</b>",
+        parse_mode="HTML",
+        reply_markup=search_results_keyboard("books", results, page),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "media:books:cancel_search")
+async def books_cancel_search(callback: CallbackQuery, state: FSMContext):
+    await books_home(callback, state)
+
+
+# =========================================================
+# MOVIES
+# =========================================================
+
+@router.callback_query(F.data == "media:movies")
+async def movies_home(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+
+    levels = get_movie_levels()
+
+    await callback.message.edit_text(
+        "🎬 <b>Filme</b>\n\nDarajani tanlang yoki qidiring.",
+        parse_mode="HTML",
+        reply_markup=levels_keyboard("movies", levels),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:movies:level:"))
+async def movies_level(callback: CallbackQuery):
+    level = callback.data.split(":")[3]
+
+    categories = get_movie_categories(level)
+
+    await callback.message.edit_text(
+        f"🎬 <b>{level}</b>\n\nKategoriyani tanlang.",
+        parse_mode="HTML",
+        reply_markup=categories_keyboard("movies", level, categories),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:movies:cat:"))
+async def movies_category(callback: CallbackQuery):
+    parts = callback.data.split(":")
+    level, category, page = parts[3], parts[4], int(parts[5])
+
+    movies = get_movies(level, category)
+
+    await callback.message.edit_text(
+        f"🎬 {level} → {category.capitalize()}\n\nFilmni tanlang.",
+        reply_markup=movie_list_keyboard(movies, page, level, category),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:movies:open:"))
+async def movies_open(callback: CallbackQuery):
+    message_id = int(callback.data.split(":")[3])
+
+    item = get_movie_by_message_id(message_id)
+
+    await _open_item(
+        callback,
+        item,
+        FILM_CHANNEL_ID,
+        "❌ Film topilmadi.",
+    )
+
+
+@router.callback_query(F.data == "media:movies:search")
+async def movies_search_prompt(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(MediaSearchState.waiting_movie_query)
+
+    await callback.message.edit_text(
+        "🔎 Film nomini kiriting:",
+        reply_markup=search_prompt_keyboard("movies"),
+    )
+    await callback.answer()
+
+
+@router.message(MediaSearchState.waiting_movie_query, F.text)
+async def movies_search_run(message: Message, state: FSMContext):
+    query = message.text.strip()
+
+    if not query:
+        await message.answer("🔎 Film nomini kiriting:")
+        return
+
+    await state.update_data(query=query)
+
+    results = search_movies(query)
+
+    if not results:
+        await message.answer(
+            "❌ Hech narsa topilmadi. Qayta urinib ko'ring.",
+            reply_markup=search_prompt_keyboard("movies"),
+        )
+        return
+
+    await message.answer(
+        f"🔎 <b>{len(results)} ta natija topildi:</b>",
+        parse_mode="HTML",
+        reply_markup=search_results_keyboard("movies", results, 0),
+    )
+
+
+@router.callback_query(F.data.startswith("media:movies:searchpage:"))
+async def movies_search_page(callback: CallbackQuery, state: FSMContext):
+    page = int(callback.data.split(":")[3])
+
+    data = await state.get_data()
+    query = data.get("query")
+
+    if not query:
+        await callback.answer(
+            "Qidiruv muddati tugadi, qayta qidiring.",
+            show_alert=True,
+        )
+        return
+
+    results = search_movies(query)
+
+    await callback.message.edit_text(
+        f"🔎 <b>{len(results)} ta natija topildi:</b>",
+        parse_mode="HTML",
+        reply_markup=search_results_keyboard("movies", results, page),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "media:movies:cancel_search")
+async def movies_cancel_search(callback: CallbackQuery, state: FSMContext):
+    await movies_home(callback, state)
+
+
+# =========================================================
+# MUSIC
+# =========================================================
+
+@router.callback_query(F.data == "media:music")
+async def music_home(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+
+    songs = get_music()
+
+    await callback.message.edit_text(
+        "🎵 <b>Musik</b>\n\nQo'shiqni tanlang yoki qidiring.",
+        parse_mode="HTML",
+        reply_markup=music_list_keyboard(songs, 0),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:music:page:"))
+async def music_page(callback: CallbackQuery):
+    page = int(callback.data.split(":")[3])
+
+    songs = get_music()
+
+    await callback.message.edit_text(
+        "🎵 <b>Musik</b>\n\nQo'shiqni tanlang yoki qidiring.",
+        parse_mode="HTML",
+        reply_markup=music_list_keyboard(songs, page),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("media:music:open:"))
+async def music_open(callback: CallbackQuery):
+    message_id = int(callback.data.split(":")[3])
+
+    item = get_music_by_message_id(message_id)
+
+    await _open_item(
+        callback,
+        item,
+        MUSIC_CHANNEL_ID,
+        "❌ Qo'shiq topilmadi.",
+    )
+
+
+@router.callback_query(F.data == "media:music:search")
+async def music_search_prompt(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(MediaSearchState.waiting_music_query)
+
+    await callback.message.edit_text(
+        "🔎 Qo'shiq nomini kiriting:",
+        reply_markup=search_prompt_keyboard("music"),
+    )
+    await callback.answer()
+
+
+@router.message(MediaSearchState.waiting_music_query, F.text)
+async def music_search_run(message: Message, state: FSMContext):
+    query = message.text.strip()
+
+    if not query:
+        await message.answer("🔎 Qo'shiq nomini kiriting:")
+        return
+
+    await state.update_data(query=query)
+
+    results = search_music(query)
+
+    if not results:
+        await message.answer(
+            "❌ Hech narsa topilmadi. Qayta urinib ko'ring.",
+            reply_markup=search_prompt_keyboard("music"),
+        )
+        return
+
+    await message.answer(
+        f"🔎 <b>{len(results)} ta natija topildi:</b>",
+        parse_mode="HTML",
+        reply_markup=search_results_keyboard("music", results, 0),
+    )
+
+
+@router.callback_query(F.data.startswith("media:music:searchpage:"))
+async def music_search_page(callback: CallbackQuery, state: FSMContext):
+    page = int(callback.data.split(":")[3])
+
+    data = await state.get_data()
+    query = data.get("query")
+
+    if not query:
+        await callback.answer(
+            "Qidiruv muddati tugadi, qayta qidiring.",
+            show_alert=True,
+        )
+        return
+
+    results = search_music(query)
+
+    await callback.message.edit_text(
+        f"🔎 <b>{len(results)} ta natija topildi:</b>",
+        parse_mode="HTML",
+        reply_markup=search_results_keyboard("music", results, page),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "media:music:cancel_search")
+async def music_cancel_search(callback: CallbackQuery, state: FSMContext):
+    await music_home(callback, state)
