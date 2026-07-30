@@ -232,6 +232,23 @@ def certificates_count() -> int:
     return row["count"]
 
 
+def wordgame_certificates_count() -> int:
+    """So'z O'yini orqali berilgan sertifikatlar soni."""
+
+    row = db_execute(
+        """
+        SELECT COUNT(*) AS count
+
+        FROM certificates
+
+        WHERE certificate_type='W'
+        """,
+        fetchone=True,
+    )
+
+    return row["count"]
+
+
 def level_certificates(
     level: str,
 ) -> int:

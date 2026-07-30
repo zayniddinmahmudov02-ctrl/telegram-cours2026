@@ -590,6 +590,24 @@ def get_payment_statistics():
         "today_income": row["today_income"],
         "monthly_income": row["monthly_income"],
     }
+
+
+def get_distinct_buyers_count():
+    """
+    Kamida bitta tasdiqlangan to'lovi bor
+    noyob foydalanuvchilar soni.
+    """
+
+    row = db_execute(
+        """
+        SELECT COUNT(DISTINCT user_id) AS count
+        FROM payments
+        WHERE status='approved'
+        """,
+        fetchone=True,
+    )
+
+    return row["count"]
 # =========================================================
 # APPROVED PAYMENTS
 # =========================================================

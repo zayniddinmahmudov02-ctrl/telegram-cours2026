@@ -3,16 +3,18 @@ from typing import Any, Callable, Dict
 from aiogram import Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram import BaseMiddleware
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import CHANNEL_USERNAME
+from config import CHANNEL_USERNAME, CHANNEL_ID
 from services.auth import is_admin
+from keyboards.subscription import subscription_keyboard
 
 
 async def check_subscription(bot: Bot, user_id: int) -> bool:
+    chat_id = CHANNEL_ID or CHANNEL_USERNAME
+
     try:
         member = await bot.get_chat_member(
-            CHANNEL_USERNAME,
+            chat_id,
             user_id
         )
 
@@ -59,22 +61,7 @@ class SubscriptionMiddleware(BaseMiddleware):
 
         if not subscribed:
 
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="📢 Kanalga A'zo Bo'lish",
-                            url="https://t.me/vizu_deutsch"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="✅ Tekshirish",
-                            callback_data="check_sub"
-                        )
-                    ]
-                ]
-            )
+            keyboard = subscription_keyboard()
 
             text = (
                 "❌ Botdan foydalanish uchun "

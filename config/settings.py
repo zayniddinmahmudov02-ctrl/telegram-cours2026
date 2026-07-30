@@ -38,6 +38,13 @@ ADMIN_CHANNEL_ID = int(
 
 CHANNEL_USERNAME = "@vizu_deutsch"
 
+# Numeric chat id of the mandatory subscription channel.
+# get_chat_member() works with the username above too, but the
+# numeric id is more reliable (usernames can change).
+CHANNEL_ID = int(
+    os.getenv("CHANNEL_ID", "0")
+)
+
 # =========================================================
 # DIRECTORIES
 # =========================================================

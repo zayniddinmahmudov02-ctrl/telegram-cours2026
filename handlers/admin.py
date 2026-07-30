@@ -21,7 +21,10 @@ from database.payments import (
     get_approved_payments,
     get_recent_payments,
     get_payment_statistics,
+    get_distinct_buyers_count,
 )
+
+from database.certificates import wordgame_certificates_count
 
 router = Router()
 
@@ -64,40 +67,19 @@ async def statistics(message: Message):
         return
 
     total_users = get_total_users()
-    approved_users = get_approved_users()
-    blocked_users = get_blocked_users()
-
-    payment = get_payment_statistics()
+    total_buyers = get_distinct_buyers_count()
+    course_sales = get_payment_statistics()["approved"]
+    wordgame_certificates = wordgame_certificates_count()
 
     text = f"""
 📊 <b>VIZU Academy Statistikasi</b>
 
 ━━━━━━━━━━━━━━━━━━
 
-👥 <b>Foydalanuvchilar</b>
-
-• Jami: {total_users}
-• Tasdiqlangan: {approved_users}
-• Bloklangan: {blocked_users}
-
-━━━━━━━━━━━━━━━━━━
-
-💳 <b>To'lovlar</b>
-
-• Jami: {payment['total_payments']}
-• Tasdiqlangan: {payment['approved']}
-• Kutilmoqda: {payment['pending']}
-• Rad etilgan: {payment['rejected']}
-• Bekor qilingan: {payment['cancelled']}
-• Refund: {payment['refunded']}
-
-━━━━━━━━━━━━━━━━━━
-
-💰 <b>Daromad</b>
-
-• Bugun: {payment['today_income']:,} so'm
-• Oy: {payment['monthly_income']:,} so'm
-• Umumiy: {payment['total_income']:,} so'm
+👥 Jami foydalanuvchilar: <b>{total_users}</b>
+💳 Jami kurs xaridorlari: <b>{total_buyers}</b>
+🛒 Kurs sotuvlari: <b>{course_sales}</b>
+🏆 So'z O'yini sertifikatlari: <b>{wordgame_certificates}</b>
 """
 
     await message.answer(
