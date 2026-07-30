@@ -194,62 +194,6 @@ LEVEL_CONFIG = {
     },
 }
 # =========================================================
-# HOMEWORK & TEACHER CHANNELS
-# =========================================================
-
-import os
-
-
-# Online Homework Channel
-HOMEWORK_ONLINE_CHANNEL_ID = int(
-    os.getenv("HOMEWORK_ONLINE_CHANNEL_ID", "0")
-)
-
-# Video Homework Channel
-HOMEWORK_VIDEO_CHANNEL_ID = int(
-    os.getenv("HOMEWORK_VIDEO_CHANNEL_ID", "0")
-)
-
-# Speaking Homework Channel
-HOMEWORK_SPEAKING_CHANNEL_ID = int(
-    os.getenv("HOMEWORK_SPEAKING_CHANNEL_ID", "0")
-)
-
-# Teacher Chat Channel
-TEACHER_CHAT_CHANNEL_ID = int(
-    os.getenv("TEACHER_CHAT_CHANNEL_ID", "0")
-)
-
-
-# =========================================================
-# HOMEWORK SETTINGS
-# =========================================================
-
-HOMEWORK_UPLOAD_DIR = os.getenv(
-    "HOMEWORK_UPLOAD_DIR",
-    "uploads/homework",
-)
-
-HOMEWORK_MAX_FILES = int(
-    os.getenv("HOMEWORK_MAX_FILES", "10")
-)
-
-HOMEWORK_MAX_FILE_SIZE = int(
-    os.getenv(
-        "HOMEWORK_MAX_FILE_SIZE",
-        str(20 * 1024 * 1024),  # 20 MB
-    )
-)
-
-HOMEWORK_ALLOWED_TYPES = (
-    "text",
-    "photo",
-    "document",
-    "audio",
-    "voice",
-    "video",
-)
-# =========================================================
 # LEVEL ORDER
 # =========================================================
 

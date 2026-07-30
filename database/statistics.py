@@ -81,33 +81,6 @@ def total_income():
 
 
 # =========================================================
-# HOMEWORK
-# =========================================================
-
-def homework_count():
-    row = db_execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM homework
-        """,
-        fetchone=True,
-    )
-    return row["count"]
-
-
-def pending_homework_count():
-    row = db_execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM homework
-        WHERE status='pending'
-        """,
-        fetchone=True,
-    )
-    return row["count"]
-
-
-# =========================================================
 # CERTIFICATES
 # =========================================================
 
@@ -247,9 +220,6 @@ def get_dashboard():
         "buyers": buyers_count(),
         "pending_payments": pending_payments_count(),
         "income": total_income(),
-
-        "homeworks": homework_count(),
-        "pending_homeworks": pending_homework_count(),
 
         "certificates": certificates_count(),
 

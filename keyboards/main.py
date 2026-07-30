@@ -8,7 +8,6 @@ main_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="🎥 Video Kurslar"),
-            KeyboardButton(text="📝 Homework"),
         ],
         [
             KeyboardButton(text="🎬 Medien"),

@@ -1,10 +1,5 @@
 from .connection import db_execute
 
-from . import homework as _homework_db
-from . import homework_files as _homework_files_db
-from . import teacher_chat as _teacher_chat_db
-from . import teacher_message_files as _teacher_message_files_db
-
 # =========================================================
 # DATABASE INITIALIZATION
 # =========================================================
@@ -19,8 +14,6 @@ def init_database():
     create_certificates_table()
 
     create_payments_table()
-
-    create_homework_table()
 
     create_films_table()
 
@@ -37,15 +30,6 @@ def init_database():
     create_monthly_champions_table()
 
     create_hall_of_fame_table()
-
-    # Homework submissions / teacher chat (previously never created)
-    _homework_db.create_tables()
-
-    _homework_files_db.create_tables()
-
-    _teacher_chat_db.create_tables()
-
-    _teacher_message_files_db.create_tables()
 
     # Safe migrations for columns added after the initial deploy
     migrate_schema()
@@ -183,42 +167,6 @@ def create_payments_table():
             rejected_at TIMESTAMP,
 
             is_deleted BOOLEAN DEFAULT FALSE,
-
-            created_at TIMESTAMP DEFAULT NOW()
-
-        );
-        """
-    )
-
-
-# =========================================================
-# HOMEWORK
-# =========================================================
-
-def create_homework_table():
-    db_execute(
-        """
-        CREATE TABLE IF NOT EXISTS homework(
-
-            id SERIAL PRIMARY KEY,
-
-            user_id BIGINT NOT NULL,
-
-            level VARCHAR(5),
-
-            lesson INTEGER,
-
-            homework_type TEXT,
-
-            file_id TEXT,
-
-            status VARCHAR(20) DEFAULT 'pending',
-
-            score INTEGER,
-
-            teacher_comment TEXT,
-
-            checked_at TIMESTAMP,
 
             created_at TIMESTAMP DEFAULT NOW()
 

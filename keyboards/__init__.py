@@ -1,7 +1,5 @@
 from .main import *
 
-from .homework import *
-
 from .video import *
 
 from .media import *
