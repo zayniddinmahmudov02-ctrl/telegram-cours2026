@@ -25,6 +25,12 @@ def champions_home_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
+                    text="📅 Daily Champions",
+                    callback_data="champions_daily",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
                     text="⬅️ Reytinglar",
                     callback_data="lb_back",
                 ),

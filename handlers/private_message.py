@@ -7,14 +7,16 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 from services.auth import is_admin
+from database.users import get_user
+from keyboards.admin import admin_menu
 from states.private_message import PrivateMessageState
 
 router = Router()
 # =========================================================
-# PRIVATE MESSAGE
+# START (from the Users submenu)
 # =========================================================
 
-@router.message(F.text == "📨 Shaxsiy Xabar")
+@router.message(F.text == "✉️ Xabar Yuborish")
 async def private_message_start(
     message: Message,
     state: FSMContext,
@@ -42,15 +44,23 @@ async def private_message_user(
     state: FSMContext,
 ):
 
-    if not message.text.isdigit():
+    if not is_admin(message.from_user.id):
+        return
 
-        await message.answer(
-            "❌ ID faqat raqamdan iborat bo'lishi kerak."
-        )
+    text = (message.text or "").strip()
+
+    if not text.isdigit():
+        await message.answer("❌ User not found.")
+        return
+
+    user_id = int(text)
+
+    if not get_user(user_id):
+        await message.answer("❌ User not found.")
         return
 
     await state.update_data(
-        user_id=int(message.text)
+        user_id=user_id
     )
 
     await state.set_state(
@@ -58,7 +68,8 @@ async def private_message_user(
     )
 
     await message.answer(
-        "✍️ Yubormoqchi bo'lgan xabarni yuboring."
+        "✍️ Yubormoqchi bo'lgan xabarni yuboring.\n\n"
+        "Matn, rasm, video yoki hujjat yuborishingiz mumkin."
     )
 # =========================================================
 # SEND PRIVATE MESSAGE
@@ -72,6 +83,9 @@ async def send_private_message(
     state: FSMContext,
 ):
 
+    if not is_admin(message.from_user.id):
+        return
+
     data = await state.get_data()
 
     try:
@@ -81,13 +95,15 @@ async def send_private_message(
         )
 
         await message.answer(
-            "✅ Xabar yuborildi."
+            "✅ Message sent successfully.",
+            reply_markup=admin_menu,
         )
 
-    except Exception:
+    except Exception as e:
 
         await message.answer(
-            "❌ Xabar yuborib bo'lmadi."
+            f"❌ {e}",
+            reply_markup=admin_menu,
         )
 
     await state.clear()

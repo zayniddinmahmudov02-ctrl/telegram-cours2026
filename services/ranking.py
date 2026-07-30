@@ -4,6 +4,10 @@ from aiogram import Bot
 
 from database.leaderboard import (
     get_period_champion,
+    daily_champion_exists,
+    weekly_champion_exists,
+    monthly_champion_exists,
+    save_daily_champion,
     save_weekly_champion,
     save_monthly_champion,
 )
@@ -44,6 +48,51 @@ async def broadcast_to_all(bot: Bot, text: str):
 
 
 # =========================================================
+# DAILY CHAMPION
+# =========================================================
+
+async def process_daily_champion(day_end: datetime):
+    """
+    Determine the champion of the day that just ended
+    ([day_end - 1 day, day_end)) and save it permanently.
+
+    No broadcast - a daily announcement to every user would be
+    a much higher-frequency notification than weekly/monthly,
+    which isn't asked for. History is still kept forever, same
+    as weekly/monthly.
+
+    Idempotent: does nothing if that date's champion has
+    already been recorded (also enforced by a unique index on
+    daily_champions.champion_date).
+    """
+
+    day_start = day_end - timedelta(days=1)
+    champion_date = day_start.date()
+
+    if daily_champion_exists(champion_date):
+        return None
+
+    champion = get_period_champion(day_start, day_end)
+
+    if not champion or not champion["score"]:
+        logger.info("Daily champion: no activity today.")
+        return None
+
+    save_daily_champion(
+        champion_date=champion_date,
+        user_id=champion["user_id"],
+        score=champion["score"],
+    )
+
+    logger.info(
+        f"Daily champion ({champion_date}): "
+        f"{champion['full_name']} ({champion['score']} XP) ✅"
+    )
+
+    return champion
+
+
+# =========================================================
 # WEEKLY CHAMPION
 # =========================================================
 
@@ -54,19 +103,27 @@ async def process_weekly_champion(bot: Bot, week_end: datetime):
     broadcast it to every user. Does not touch xp_events or
     user_scores - the new week's ranking starts "fresh" simply
     because it is computed from that point forward in time.
+
+    Idempotent: does nothing if that week's champion has
+    already been recorded (also enforced by a unique index on
+    weekly_champions(year, week)) - safe to call again from a
+    restart catch-up check without double-broadcasting.
     """
 
     week_start = week_end.replace(
         hour=0, minute=0, second=0, microsecond=0,
     ) - timedelta(days=7)
 
+    iso_year, iso_week, _ = week_start.isocalendar()
+
+    if weekly_champion_exists(iso_year, iso_week):
+        return None
+
     champion = get_period_champion(week_start, week_end)
 
     if not champion or not champion["score"]:
         logger.info("Weekly champion: no activity this week.")
         return None
-
-    iso_year, iso_week, _ = week_start.isocalendar()
 
     save_weekly_champion(
         year=iso_year,
@@ -103,6 +160,10 @@ async def process_monthly_champion(bot: Bot, month_end: datetime):
     """
     Determine the champion of the calendar month that just
     ended, save it permanently and broadcast it to every user.
+
+    Idempotent: does nothing if that month's champion has
+    already been recorded (also enforced by a unique index on
+    monthly_champions(year, month)).
     """
 
     this_month_start = month_end.replace(
@@ -111,6 +172,9 @@ async def process_monthly_champion(bot: Bot, month_end: datetime):
 
     last_day_of_prev_month = this_month_start - timedelta(days=1)
     month_start = last_day_of_prev_month.replace(day=1)
+
+    if monthly_champion_exists(month_start.year, month_start.month):
+        return None
 
     champion = get_period_champion(month_start, month_end)
 

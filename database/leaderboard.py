@@ -59,6 +59,13 @@ def add_score(user_id: int, points: int):
     every XP-earning event, used to compute Daily/Weekly/
     Monthly rankings by filtering on created_at instead of
     periodically resetting a counter.
+
+    Both writes happen in a single db_execute() call (one
+    connection, one transaction, one commit) so they can never
+    partially apply - a crash between them would otherwise
+    leave global_score incremented with no matching xp_events
+    row, permanently under-counting Daily/Weekly/Monthly
+    relative to Overall for that XP grant.
     """
 
     create_user_score(user_id)
@@ -73,16 +80,8 @@ def add_score(user_id: int, points: int):
 
             updated_at = NOW()
 
-        WHERE user_id = %s
-        """,
-        (
-            points,
-            user_id,
-        ),
-    )
+        WHERE user_id = %s;
 
-    db_execute(
-        """
         INSERT INTO xp_events
         (
             user_id,
@@ -92,9 +91,11 @@ def add_score(user_id: int, points: int):
         (
             %s,
             %s
-        )
+        );
         """,
         (
+            points,
+            user_id,
             user_id,
             points,
         ),
@@ -169,6 +170,7 @@ def get_top(period: str, limit: int = 100):
                 ON u.user_id = s.user_id
             WHERE
                 u.is_blocked = FALSE
+                AND s.global_score > 0
             ORDER BY s.global_score DESC
             LIMIT %s
             """,
@@ -197,6 +199,7 @@ def get_top(period: str, limit: int = 100):
             e.created_at >= {period_start}
             AND u.is_blocked = FALSE
         GROUP BY u.user_id, u.full_name
+        HAVING SUM(e.xp) > 0
         ORDER BY {score_field} DESC
         LIMIT %s
         """,
@@ -249,6 +252,7 @@ def get_overall_top(limit: int = 100):
             ON u.user_id = s.user_id
         WHERE
             u.is_blocked = FALSE
+            AND s.global_score > 0
         ORDER BY s.global_score DESC
         LIMIT %s
         """,
@@ -271,11 +275,16 @@ def get_user_rank(user_id: int, period: str):
             FROM
             (
                 SELECT
-                    user_id,
+                    s.user_id,
                     RANK() OVER(
-                        ORDER BY global_score DESC
+                        ORDER BY s.global_score DESC
                     ) AS rank
-                FROM user_scores
+                FROM user_scores s
+                INNER JOIN users u
+                    ON u.user_id = s.user_id
+                WHERE
+                    s.global_score > 0
+                    AND u.is_blocked = FALSE
             ) ranks
             WHERE user_id = %s
             """,
@@ -292,19 +301,28 @@ def get_user_rank(user_id: int, period: str):
 
     period_start = _period_start_sql(trunc)
 
+    # Must match get_top()'s is_blocked filter exactly, otherwise a
+    # blocked user's XP would occupy a rank slot here while being
+    # invisible in the actual displayed top list, making a real
+    # user's shown rank number not match their real position.
     row = db_execute(
         f"""
         SELECT rank
         FROM
         (
             SELECT
-                user_id,
+                e.user_id,
                 RANK() OVER(
-                    ORDER BY SUM(xp) DESC
+                    ORDER BY SUM(e.xp) DESC
                 ) AS rank
-            FROM xp_events
-            WHERE created_at >= {period_start}
-            GROUP BY user_id
+            FROM xp_events e
+            INNER JOIN users u
+                ON u.user_id = e.user_id
+            WHERE
+                e.created_at >= {period_start}
+                AND u.is_blocked = FALSE
+            GROUP BY e.user_id
+            HAVING SUM(e.xp) > 0
         ) ranks
         WHERE user_id = %s
         """,
@@ -322,7 +340,13 @@ def get_user_rank(user_id: int, period: str):
 def get_period_champion(start, end):
     """
     Highest XP earner strictly within [start, end) - used to
-    determine the winner of a week/month that just ended.
+    determine the winner of a day/week/month that just ended.
+
+    Excludes blocked users, consistent with get_top()/
+    get_all_users(): a blocked user never receives the champion
+    broadcast and never appears on any leaderboard, so they must
+    not be selectable as champion or permanently recorded in
+    champion history either.
     """
 
     return db_execute(
@@ -337,6 +361,7 @@ def get_period_champion(start, end):
         WHERE
             e.created_at >= %s
             AND e.created_at < %s
+            AND u.is_blocked = FALSE
         GROUP BY u.user_id, u.full_name
         ORDER BY score DESC
         LIMIT 1
@@ -347,6 +372,82 @@ def get_period_champion(start, end):
 # =========================================================
 # CHAMPIONS
 # =========================================================
+# Every save_*_champion function is idempotent (ON CONFLICT DO
+# NOTHING against the unique index on the period columns), so
+# calling it twice for the same period - e.g. once from a
+# catch-up check and once from the regularly scheduled run -
+# can never create a duplicate history row. The exists checks
+# let callers skip the work entirely when it isn't needed.
+
+def daily_champion_exists(champion_date) -> bool:
+    row = db_execute(
+        """
+        SELECT id
+        FROM daily_champions
+        WHERE champion_date = %s
+        """,
+        (champion_date,),
+        fetchone=True,
+    )
+    return row is not None
+
+
+def weekly_champion_exists(year: int, week: int) -> bool:
+    row = db_execute(
+        """
+        SELECT id
+        FROM weekly_champions
+        WHERE year = %s AND week = %s
+        """,
+        (year, week),
+        fetchone=True,
+    )
+    return row is not None
+
+
+def monthly_champion_exists(year: int, month: int) -> bool:
+    row = db_execute(
+        """
+        SELECT id
+        FROM monthly_champions
+        WHERE year = %s AND month = %s
+        """,
+        (year, month),
+        fetchone=True,
+    )
+    return row is not None
+
+
+def save_daily_champion(
+    champion_date,
+    user_id: int,
+    score: int,
+):
+    db_execute(
+        """
+        INSERT INTO daily_champions
+        (
+            champion_date,
+            user_id,
+            full_name,
+            score
+        )
+        SELECT
+            %s,
+            u.user_id,
+            u.full_name,
+            %s
+        FROM users u
+        WHERE u.user_id = %s
+        ON CONFLICT (champion_date) DO NOTHING
+        """,
+        (
+            champion_date,
+            score,
+            user_id,
+        ),
+    )
+
 
 def save_weekly_champion(
     year: int,
@@ -372,6 +473,7 @@ def save_weekly_champion(
             %s
         FROM users u
         WHERE u.user_id = %s
+        ON CONFLICT (year, week) DO NOTHING
         """,
         (
             year,
@@ -406,6 +508,7 @@ def save_monthly_champion(
             %s
         FROM users u
         WHERE u.user_id = %s
+        ON CONFLICT (year, month) DO NOTHING
         """,
         (
             year,
@@ -413,6 +516,24 @@ def save_monthly_champion(
             score,
             user_id,
         ),
+    )
+
+
+def get_recent_daily_champions(limit: int = 20):
+    """
+    Most recent daily champions, newest first.
+    """
+
+    return db_execute(
+        """
+        SELECT
+            *
+        FROM daily_champions
+        ORDER BY champion_date DESC
+        LIMIT %s
+        """,
+        (limit,),
+        fetchall=True,
     )
 
 

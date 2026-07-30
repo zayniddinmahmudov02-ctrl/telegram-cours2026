@@ -27,6 +27,8 @@ def init_database():
 
     create_xp_events_table()
 
+    create_daily_champions_table()
+
     create_weekly_champions_table()
 
     create_monthly_champions_table()
@@ -356,6 +358,40 @@ def create_xp_events_table():
 
 
 # =========================================================
+# DAILY CHAMPIONS
+# =========================================================
+
+def create_daily_champions_table():
+    db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS daily_champions(
+
+            id SERIAL PRIMARY KEY,
+
+            champion_date DATE NOT NULL,
+
+            user_id BIGINT NOT NULL,
+
+            full_name TEXT,
+
+            score INTEGER DEFAULT 0,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+
+    db_execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        idx_daily_champions_date
+        ON daily_champions(champion_date)
+        """
+    )
+
+
+# =========================================================
 # WEEKLY CHAMPIONS
 # =========================================================
 
@@ -379,6 +415,14 @@ def create_weekly_champions_table():
             created_at TIMESTAMP DEFAULT NOW()
 
         );
+        """
+    )
+
+    db_execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        idx_weekly_champions_period
+        ON weekly_champions(year, week)
         """
     )
 # =========================================================
@@ -405,6 +449,14 @@ def create_monthly_champions_table():
             created_at TIMESTAMP DEFAULT NOW()
 
         );
+        """
+    )
+
+    db_execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        idx_monthly_champions_period
+        ON monthly_champions(year, month)
         """
     )
 

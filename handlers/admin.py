@@ -8,19 +8,14 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from config import LEVEL_ORDER
 from services.auth import is_admin
 
-from keyboards.admin import admin_menu
+from keyboards.admin import admin_menu, users_menu
 from keyboards.main import main_menu_for
 from keyboards.inline.certificate import (
     admin_certificates_keyboard,
     admin_certificates_browse_keyboard,
 )
 
-from database.users import (
-    get_total_users,
-    get_approved_users,
-    get_blocked_users,
-    get_latest_users,
-)
+from database.users import get_total_users
 
 from database.payments import (
     get_approved_payments,
@@ -106,14 +101,6 @@ async def statistics(message: Message):
 # USERS
 # =========================================================
 
-from database.users import (
-    get_total_users,
-    get_approved_users,
-    get_blocked_users,
-    get_latest_users,
-)
-
-
 @router.message(F.text == "👥 Foydalanuvchilar")
 async def users(message: Message):
 
@@ -121,57 +108,24 @@ async def users(message: Message):
         return
 
     total = get_total_users()
-    approved = get_approved_users()
-    blocked = get_blocked_users()
-
-    latest_users = get_latest_users(limit=10)
-
-    text = f"""
-👥 <b>Foydalanuvchilar</b>
-
-━━━━━━━━━━━━━━━━━━
-
-📊 <b>Umumiy</b>
-
-• Jami: {total}
-• Tasdiqlangan: {approved}
-• Bloklangan: {blocked}
-
-━━━━━━━━━━━━━━━━━━
-
-🆕 <b>Oxirgi 10 foydalanuvchi</b>
-
-"""
-
-    if latest_users:
-
-        for user in latest_users:
-
-            username = (
-                f"@{user['username']}"
-                if user.get("username")
-                else "—"
-            )
-
-            full_name = (
-                user["full_name"]
-                if user.get("full_name")
-                else "-"
-            )
-
-            text += (
-                f"👤 {full_name}\n"
-                f"🆔 <code>{user['user_id']}</code>\n"
-                f"👨‍💻 {username}\n\n"
-            )
-
-    else:
-
-        text += "Ma'lumot topilmadi."
 
     await message.answer(
-        text,
+        f"👥 <b>Foydalanuvchilar</b>\n\nJami: <b>{total}</b>",
         parse_mode="HTML",
+        reply_markup=users_menu,
+    )
+
+
+@router.message(F.text == "⬅️ Admin Panel")
+async def back_to_admin_panel(message: Message):
+
+    if not is_admin(message.from_user.id):
+        return
+
+    await message.answer(
+        "👨‍💼 <b>VIZU Academy Admin Panel</b>",
+        parse_mode="HTML",
+        reply_markup=admin_menu,
     )
 # =========================================================
 # BUYERS

@@ -10,6 +10,7 @@ from database.leaderboard import (
     get_overall_top,
     get_monthly_champions,
     get_recent_weekly_champions,
+    get_recent_daily_champions,
     get_user_rank,
 )
 
@@ -67,11 +68,7 @@ def build_leaderboard_text(
     text = f"{title}\n\n"
 
     if not top:
-        return (
-            text
-            + "📭 Hozircha reyting mavjud emas.\n\n"
-            + "🎮 Birinchi bo'lib Word Game o'ynang!"
-        )
+        return text + "No ranking data available."
 
     medals = ["🥇", "🥈", "🥉"]
 
@@ -182,11 +179,7 @@ def build_overall_text(
     text = "🌍 <b>Overall Reyting</b>\n\n"
 
     if not top:
-        return (
-            text
-            + "📭 Hozircha reyting mavjud emas.\n\n"
-            + "🎮 Birinchi bo'lib Word Game o'ynang!"
-        )
+        return text + "No ranking data available."
 
     medals = ["🥇", "🥈", "🥉"]
 
@@ -304,6 +297,40 @@ async def champions_weekly(callback: CallbackQuery):
             text += (
                 f"🏆 <b>{champion['year']} - "
                 f"{champion['week']}-hafta</b>\n"
+                f"👤 {champion['full_name']}\n"
+                f"⭐ {champion['score']} XP\n\n"
+            )
+
+    await callback.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=weekly_champions_back_keyboard(),
+    )
+
+    await callback.answer()
+
+
+# =========================================================
+# DAILY CHAMPIONS
+# =========================================================
+
+@router.callback_query(F.data == "champions_daily")
+async def champions_daily(callback: CallbackQuery):
+
+    champions_list = get_recent_daily_champions()
+
+    text = "📅 <b>Daily Champions</b>\n\n"
+
+    if not champions_list:
+
+        text += "📭 Hozircha Champion mavjud emas."
+
+    else:
+
+        for champion in champions_list:
+
+            text += (
+                f"🏆 <b>{champion['champion_date'].strftime('%d.%m.%Y')}</b>\n"
                 f"👤 {champion['full_name']}\n"
                 f"⭐ {champion['score']} XP\n\n"
             )

@@ -14,12 +14,78 @@ from config import (
 
 from loader import bot
 from services.ranking import (
+    process_daily_champion,
     process_weekly_champion,
     process_monthly_champion,
 )
 from services.logger import logger
 
 TZ = ZoneInfo(APP_TIMEZONE)
+
+
+# =========================================================
+# BOUNDARY HELPERS
+# =========================================================
+# Each _next_*_boundary() returns the next upcoming reset
+# instant strictly in the future relative to `now` - used both
+# to know how long to sleep, and (via the *_start companions
+# below) to know which period just ended, for restart catch-up.
+
+def _next_daily_boundary(now: datetime) -> datetime:
+    target = now.replace(hour=0, minute=0, second=5, microsecond=0)
+
+    if now >= target:
+        target += timedelta(days=1)
+
+    return target
+
+
+def _next_weekly_boundary(now: datetime) -> datetime:
+    days_until_monday = (7 - now.weekday()) % 7
+
+    target = (
+        now + timedelta(days=days_until_monday)
+    ).replace(hour=0, minute=0, second=5, microsecond=0)
+
+    if target <= now:
+        target += timedelta(days=7)
+
+    return target
+
+
+def _next_monthly_boundary(now: datetime) -> datetime:
+    # Start with THIS month's boundary, not next month's - if
+    # `now` is still before it (e.g. it's the 1st at 00:00:02),
+    # that is the correct target. Only advance to next month if
+    # this month's boundary has already passed. The previous
+    # version always jumped straight to next month, which meant
+    # a scheduler that happened to (re)start in the first few
+    # seconds of a new month would skip that month's own reset
+    # entirely and wait a full month too long.
+    target = now.replace(
+        day=1, hour=0, minute=0, second=5, microsecond=0,
+    )
+
+    if target <= now:
+
+        if target.month == 12:
+            target = target.replace(year=target.year + 1, month=1)
+        else:
+            target = target.replace(month=target.month + 1)
+
+    return target
+
+
+def _current_day_start(now: datetime) -> datetime:
+    return now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def _current_week_start(now: datetime) -> datetime:
+    return _current_day_start(now) - timedelta(days=now.weekday())
+
+
+def _current_month_start(now: datetime) -> datetime:
+    return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
 # =========================================================
@@ -68,30 +134,39 @@ async def cleanup_quiz_memory():
 # DAILY CHAMPION
 # =========================================================
 # Daily ranking never needs a reset - it is always computed
-# from xp_events filtered to "today". This scheduler just logs
-# the day's rollover (and, optionally, the previous day's top
-# player) once every midnight.
+# from xp_events filtered to "today". This scheduler determines
+# and permanently stores yesterday's champion (no broadcast -
+# see process_daily_champion) once every midnight.
 
 async def daily_champion_scheduler():
+
+    now = datetime.now(TZ)
+
+    # Catch-up: if the bot was offline when today's midnight
+    # passed, yesterday's champion would otherwise never be
+    # recorded. process_daily_champion() is idempotent, so this
+    # is safe even if nothing was actually missed.
+    try:
+        await process_daily_champion(_current_day_start(now))
+    except Exception as e:
+        logger.error(f"Daily champion catch-up failed: {e}")
 
     while True:
 
         now = datetime.now(TZ)
-
-        target = now.replace(
-            hour=0,
-            minute=0,
-            second=5,
-            microsecond=0
-        )
-
-        if now >= target:
-
-            target += timedelta(days=1)
+        target = _next_daily_boundary(now)
 
         await asyncio.sleep(
             (target - now).total_seconds()
         )
+
+        try:
+            await process_daily_champion(target)
+
+        except Exception as e:
+            logger.error(
+                f"Daily champion processing failed: {e}"
+            )
 
         logger.info(
             "New daily ranking started automatically "
@@ -105,23 +180,19 @@ async def daily_champion_scheduler():
 
 async def weekly_champion_scheduler():
 
+    now = datetime.now(TZ)
+
+    # Catch-up for a week that fully ended while the bot was
+    # offline (e.g. down over a weekend and restarted Tuesday).
+    try:
+        await process_weekly_champion(bot, _current_week_start(now))
+    except Exception as e:
+        logger.error(f"Weekly champion catch-up failed: {e}")
+
     while True:
 
         now = datetime.now(TZ)
-
-        days_until_monday = (7 - now.weekday()) % 7
-
-        target = (
-            now + timedelta(days=days_until_monday)
-        ).replace(
-            hour=0,
-            minute=0,
-            second=5,
-            microsecond=0,
-        )
-
-        if target <= now:
-            target += timedelta(days=7)
+        target = _next_weekly_boundary(now)
 
         await asyncio.sleep(
             (target - now).total_seconds()
@@ -146,29 +217,19 @@ async def weekly_champion_scheduler():
 
 async def monthly_champion_scheduler():
 
+    now = datetime.now(TZ)
+
+    # Catch-up for a month that fully ended while the bot was
+    # offline.
+    try:
+        await process_monthly_champion(bot, _current_month_start(now))
+    except Exception as e:
+        logger.error(f"Monthly champion catch-up failed: {e}")
+
     while True:
 
         now = datetime.now(TZ)
-
-        if now.month == 12:
-            target = now.replace(
-                year=now.year + 1,
-                month=1,
-                day=1,
-                hour=0,
-                minute=0,
-                second=5,
-                microsecond=0,
-            )
-        else:
-            target = now.replace(
-                month=now.month + 1,
-                day=1,
-                hour=0,
-                minute=0,
-                second=5,
-                microsecond=0,
-            )
+        target = _next_monthly_boundary(now)
 
         await asyncio.sleep(
             (target - now).total_seconds()

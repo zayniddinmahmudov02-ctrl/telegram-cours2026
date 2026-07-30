@@ -19,17 +19,27 @@ admin_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="📢 Reklama Yuborish"),
-            KeyboardButton(text="📨 Shaxsiy Xabar"),
-        ],
-        [
-            KeyboardButton(text="⚙️ Sozlamalar"),
-            KeyboardButton(text="📋 Loglar"),
-        ],
-        [
             KeyboardButton(text="🏅 Certificates"),
         ],
         [
             KeyboardButton(text="⬅️ Admin Chiqish"),
+        ],
+    ],
+    resize_keyboard=True,
+    selective=True,
+)
+
+# =========================================================
+# USERS SUBMENU
+# =========================================================
+
+users_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="✉️ Xabar Yuborish"),
+        ],
+        [
+            KeyboardButton(text="⬅️ Admin Panel"),
         ],
     ],
     resize_keyboard=True,
