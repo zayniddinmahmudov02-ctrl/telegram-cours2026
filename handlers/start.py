@@ -3,7 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from database import db_execute
-from keyboards import main_menu
+from keyboards import main_menu_for
 
 router = Router()
 
@@ -28,5 +28,5 @@ async def start_handler(message: Message):
     await message.answer(
         f"Assalomu alaykum, {user.full_name}! 🇩🇪\n\n"
         "VIZU Academy botiga xush kelibsiz.",
-        reply_markup=main_menu,
+        reply_markup=main_menu_for(user.id),
     )

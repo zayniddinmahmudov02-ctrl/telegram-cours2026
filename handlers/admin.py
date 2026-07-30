@@ -8,7 +8,7 @@ from aiogram.types import Message
 from services.auth import is_admin
 
 from keyboards.admin import admin_menu
-from keyboards.main import main_menu
+from keyboards.main import main_menu_for
 
 from database.users import (
     get_total_users,
@@ -29,7 +29,7 @@ router = Router()
 # ADMIN PANEL
 # =========================================================
 
-@router.message(F.text == "/admin")
+@router.message(F.text.in_({"/admin", "👨‍💼 Admin Panel"}))
 async def admin_panel(message: Message):
     if not is_admin(message.from_user.id):
         return
@@ -51,7 +51,7 @@ async def admin_exit(message: Message):
 
     await message.answer(
         "🏠 Asosiy menyuga qaytildi.",
-        reply_markup=main_menu,
+        reply_markup=main_menu_for(message.from_user.id),
     )
 # =========================================================
 # STATISTICS

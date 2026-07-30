@@ -1,5 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
+from config import ADMIN_IDS
+
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
@@ -20,3 +22,22 @@ main_menu = ReplyKeyboardMarkup(
     resize_keyboard=True,
     input_field_placeholder="Bo'limni tanlang...",
 )
+
+
+# =========================================================
+# MAIN MENU (ADMIN-AWARE)
+# =========================================================
+
+def main_menu_for(user_id: int) -> ReplyKeyboardMarkup:
+    """Same main_menu, with an Admin Panel row for ADMIN_IDS only."""
+
+    if user_id not in ADMIN_IDS:
+        return main_menu
+
+    return ReplyKeyboardMarkup(
+        keyboard=main_menu.keyboard + [
+            [KeyboardButton(text="👨‍💼 Admin Panel")],
+        ],
+        resize_keyboard=True,
+        input_field_placeholder="Bo'limni tanlang...",
+    )
