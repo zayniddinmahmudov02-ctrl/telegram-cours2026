@@ -16,6 +16,11 @@ BOT_NAME = "vizu_academy_bot"
 TOKEN = os.getenv("TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Timezone used for Daily/Weekly/Monthly ranking boundaries,
+# so "today"/"this week"/"this month" match the real local
+# day regardless of the database server's own timezone setting.
+APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Tashkent")
+
 # =========================================================
 # ADMINS
 # =========================================================

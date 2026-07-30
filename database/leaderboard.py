@@ -1,4 +1,24 @@
+from config import APP_TIMEZONE
+
 from .connection import db_execute
+
+
+def _period_start_sql(trunc: str) -> str:
+    """
+    SQL expression for the start of the current day/week/month
+    in APP_TIMEZONE, as an absolute instant (timestamptz) that
+    can be compared directly against xp_events.created_at
+    (also timestamptz) - correct regardless of whatever
+    timezone the database server itself is configured with.
+
+    Postgres truncates 'week' to Monday 00:00, matching the
+    Mon-Sun week definition.
+    """
+
+    return (
+        f"date_trunc('{trunc}', NOW() AT TIME ZONE '{APP_TIMEZONE}') "
+        f"AT TIME ZONE '{APP_TIMEZONE}'"
+    )
 
 # =========================================================
 # CREATE
@@ -120,8 +140,10 @@ def get_user_score(user_id: int):
 # TOP RANKINGS
 # =========================================================
 # Daily/Weekly/Monthly are computed by filtering the xp_events
-# ledger on created_at - nothing is ever reset. date_trunc()
-# truncates to the start of the period in Postgres server time
+# ledger on created_at - nothing is ever reset. Boundaries are
+# computed in APP_TIMEZONE (see _period_start_sql above), so
+# "today"/"this week"/"this month" match the real local day
+# regardless of the database server's own timezone setting
 # ('week' truncates to Monday 00:00, matching Mon-Sun weeks).
 # Global/Overall reuses user_scores.global_score, a running
 # lifetime total that is never reset either.
@@ -160,6 +182,7 @@ def get_top(period: str, limit: int = 100):
         return []
 
     score_field = f"{period}_score"
+    period_start = _period_start_sql(trunc)
 
     return db_execute(
         f"""
@@ -171,7 +194,7 @@ def get_top(period: str, limit: int = 100):
         INNER JOIN users u
             ON u.user_id = e.user_id
         WHERE
-            e.created_at >= date_trunc('{trunc}', NOW())
+            e.created_at >= {period_start}
             AND u.is_blocked = FALSE
         GROUP BY u.user_id, u.full_name
         ORDER BY {score_field} DESC
@@ -203,7 +226,11 @@ def get_overall_top(limit: int = 100):
     Overall Ranking: lifetime XP (never resets) plus average
     accuracy across every completed Word Game block, taken
     directly from quiz_progress.best_score (real per-block
-    scores, not an estimate).
+    scores, not an estimate - never XP).
+
+    avg_accuracy is NULL (not 0) when the user has never
+    completed a block, and rounded to at most one decimal
+    place, e.g. 91.8 rather than 91.833333333333333.
     """
 
     return db_execute(
@@ -212,13 +239,10 @@ def get_overall_top(limit: int = 100):
             u.user_id,
             u.full_name,
             s.global_score AS total_xp,
-            COALESCE(
-                (
-                    SELECT AVG(qp.best_score)
-                    FROM quiz_progress qp
-                    WHERE qp.user_id = u.user_id
-                ),
-                0
+            (
+                SELECT ROUND(AVG(qp.best_score)::numeric, 1)
+                FROM quiz_progress qp
+                WHERE qp.user_id = u.user_id
             ) AS avg_accuracy
         FROM user_scores s
         INNER JOIN users u
@@ -266,6 +290,8 @@ def get_user_rank(user_id: int, period: str):
     if not trunc:
         return None
 
+    period_start = _period_start_sql(trunc)
+
     row = db_execute(
         f"""
         SELECT rank
@@ -277,7 +303,7 @@ def get_user_rank(user_id: int, period: str):
                     ORDER BY SUM(xp) DESC
                 ) AS rank
             FROM xp_events
-            WHERE created_at >= date_trunc('{trunc}', NOW())
+            WHERE created_at >= {period_start}
             GROUP BY user_id
         ) ranks
         WHERE user_id = %s
@@ -566,7 +592,11 @@ def get_accuracy(user_id: int):
     Average accuracy (%) across every completed Word Game
     block, taken directly from quiz_progress.best_score
     (each block is scored out of 100, so best_score already
-    is a percentage) - real statistics, not an estimate.
+    is a percentage) - real statistics, never XP, never an
+    estimate.
+
+    Returns None (display as "-", never "0%") if the user has
+    not completed a single block yet.
     """
 
     row = db_execute(
@@ -580,6 +610,61 @@ def get_accuracy(user_id: int):
     )
 
     if not row or row["avg_score"] is None:
-        return 0
+        return None
 
     return round(float(row["avg_score"]), 1)
+
+
+# =========================================================
+# USER XP SUMMARY (PROFILE)
+# =========================================================
+
+def get_user_xp_summary(user_id: int) -> dict:
+    """
+    Today/this-week/this-month XP (from xp_events, timezone-
+    aware, never cached/reset) plus lifetime XP (global_score)
+    and accuracy (quiz_progress) for a single user - everything
+    Profile needs, computed independently of each other.
+    """
+
+    period_row = db_execute(
+        f"""
+        SELECT
+            COALESCE(SUM(xp) FILTER (
+                WHERE created_at >= {_period_start_sql("day")}
+            ), 0) AS today_xp,
+
+            COALESCE(SUM(xp) FILTER (
+                WHERE created_at >= {_period_start_sql("week")}
+            ), 0) AS weekly_xp,
+
+            COALESCE(SUM(xp) FILTER (
+                WHERE created_at >= {_period_start_sql("month")}
+            ), 0) AS monthly_xp
+
+        FROM xp_events
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True,
+    )
+
+    overall_row = db_execute(
+        """
+        SELECT global_score
+        FROM user_scores
+        WHERE user_id = %s
+        """,
+        (user_id,),
+        fetchone=True,
+    )
+
+    return {
+        "today_xp": period_row["today_xp"] if period_row else 0,
+        "weekly_xp": period_row["weekly_xp"] if period_row else 0,
+        "monthly_xp": period_row["monthly_xp"] if period_row else 0,
+        "overall_xp": (
+            overall_row["global_score"] if overall_row else 0
+        ),
+        "accuracy": get_accuracy(user_id),
+    }

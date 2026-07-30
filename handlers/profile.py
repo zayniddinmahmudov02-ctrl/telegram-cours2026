@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, FSInputFile, Message
 
 from database import db_execute
+from database.leaderboard import get_user_xp_summary
 from keyboards import main_menu, profile_keyboard
 from keyboards.inline.certificate import certificates_keyboard
 from services.certificate_generator import generate_certificate
@@ -24,8 +25,6 @@ async def my_profile(message: Message):
         SELECT
             full_name,
             phone,
-            total_score,
-            daily_score,
             unlocked_level
         FROM users
         WHERE user_id=%s
@@ -42,9 +41,15 @@ async def my_profile(message: Message):
 
     full_name = user["full_name"] or "-"
     phone = user["phone"] or "-"
-    total_xp = user["total_score"] or 0
-    daily_xp = user["daily_score"] or 0
     level = user["unlocked_level"] or "A1"
+
+    xp = get_user_xp_summary(message.from_user.id)
+
+    accuracy_text = (
+        f"{xp['accuracy']}%"
+        if xp["accuracy"] is not None
+        else "—"
+    )
 
     await message.answer(
         f"""
@@ -55,9 +60,13 @@ async def my_profile(message: Message):
 
 ━━━━━━━━━━━━━━
 
-🏆 <b>Umumiy XP:</b> {total_xp}
-🔥 <b>Bugungi XP:</b> {daily_xp}
-🎯 <b>Daraja:</b> {level}
+⭐ <b>Bugungi XP:</b> {xp['today_xp']}
+⭐ <b>Haftalik XP:</b> {xp['weekly_xp']}
+⭐ <b>Oylik XP:</b> {xp['monthly_xp']}
+⭐ <b>Umumiy XP:</b> {xp['overall_xp']}
+
+🎯 <b>O'rtacha aniqlik:</b> {accuracy_text}
+🎓 <b>Daraja:</b> {level}
 
 ━━━━━━━━━━━━━━
 

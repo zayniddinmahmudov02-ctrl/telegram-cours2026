@@ -194,10 +194,18 @@ def build_overall_text(
 
         place = medals[index - 1] if index <= 3 else f"{index}."
 
+        accuracy = row["avg_accuracy"]
+
+        accuracy_text = (
+            f"{float(accuracy)}%"
+            if accuracy is not None
+            else "—"
+        )
+
         text += (
             f"{place} <b>{row['full_name']}</b>\n"
-            f"⭐ Total XP: {row['total_xp']:,}\n"
-            f"🎯 O'rtacha aniqlik: {row['avg_accuracy']}%\n\n"
+            f"⭐ {row['total_xp']:,} XP\n"
+            f"🎯 {accuracy_text}\n\n"
         )
 
     rank = get_user_rank(user_id, "global")

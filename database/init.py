@@ -311,6 +311,15 @@ def create_user_scores_table():
 # Per-event XP ledger. Lets daily/weekly/monthly rankings be
 # computed with timestamp filtering (WHERE created_at >= ...)
 # instead of periodically resetting a running counter.
+#
+# created_at is TIMESTAMPTZ (not plain TIMESTAMP) on purpose:
+# it stores an unambiguous absolute instant, so day/week/month
+# boundary queries can convert it to a specific timezone
+# (see get_top() in database/leaderboard.py) and get correct
+# results regardless of the database server's own configured
+# timezone. A plain TIMESTAMP column has no such guarantee -
+# its stored value silently depends on whatever session
+# timezone was active at INSERT time.
 
 def create_xp_events_table():
     db_execute(
@@ -323,7 +332,7 @@ def create_xp_events_table():
 
             xp INTEGER NOT NULL,
 
-            created_at TIMESTAMP DEFAULT NOW()
+            created_at TIMESTAMPTZ DEFAULT NOW()
 
         );
         """
@@ -525,5 +534,36 @@ def migrate_schema():
         CREATE INDEX IF NOT EXISTS
         idx_user_scores_global
         ON user_scores(global_score DESC)
+        """
+    )
+
+    # ---------------------------------------------------
+    # XP_EVENTS - upgrade created_at to TIMESTAMPTZ
+    # ---------------------------------------------------
+    # Safe/idempotent: only fires once, the first time this
+    # runs against a database created before created_at was
+    # made timezone-aware. Existing values are assumed to have
+    # been written as UTC wall-clock (Postgres/NOW() default),
+    # which is the same assumption a fresh TIMESTAMPTZ column
+    # makes going forward - no XP values are changed, only the
+    # column's timezone-awareness.
+
+    db_execute(
+        """
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'xp_events'
+                AND column_name = 'created_at'
+                AND data_type = 'timestamp without time zone'
+            ) THEN
+                ALTER TABLE xp_events
+                ALTER COLUMN created_at
+                TYPE TIMESTAMPTZ
+                USING created_at AT TIME ZONE 'UTC';
+            END IF;
+        END $$;
         """
     )

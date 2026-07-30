@@ -1,8 +1,10 @@
 import asyncio
 import os
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from config import (
+    APP_TIMEZONE,
     GENERATED_DIR,
     active_questions,
     answered_users,
@@ -16,6 +18,8 @@ from services.ranking import (
     process_monthly_champion,
 )
 from services.logger import logger
+
+TZ = ZoneInfo(APP_TIMEZONE)
 
 
 # =========================================================
@@ -72,7 +76,7 @@ async def daily_champion_scheduler():
 
     while True:
 
-        now = datetime.now()
+        now = datetime.now(TZ)
 
         target = now.replace(
             hour=0,
@@ -103,7 +107,7 @@ async def weekly_champion_scheduler():
 
     while True:
 
-        now = datetime.now()
+        now = datetime.now(TZ)
 
         days_until_monday = (7 - now.weekday()) % 7
 
@@ -144,7 +148,7 @@ async def monthly_champion_scheduler():
 
     while True:
 
-        now = datetime.now()
+        now = datetime.now(TZ)
 
         if now.month == 12:
             target = now.replace(
