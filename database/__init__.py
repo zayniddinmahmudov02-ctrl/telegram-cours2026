@@ -17,5 +17,6 @@ from .payments import *
 from .certificates import *
 from .media import *
 from .statistics import *
+from .favorites import *
 
 __all__ = [name for name in globals() if not name.startswith("_")]

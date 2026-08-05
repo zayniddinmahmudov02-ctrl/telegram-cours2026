@@ -61,6 +61,10 @@ CERTIFICATE_DIR = "certificates"
 # Filme.csv's `photo` column - see services.media.resolve_movie_photo.
 MOVIE_POSTERS_DIR = os.path.join("assets", "medien", "film", "photos")
 
+# Single shared cover image used for every song in the Musik
+# gallery - see services.media.resolve_music_cover.
+MUSIC_COVER_PATH = os.path.join("assets", "medien", "musik", "cover_photo.png")
+
 # =========================================================
 # SYSTEM
 # =========================================================

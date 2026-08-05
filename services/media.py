@@ -4,7 +4,7 @@
 
 import os
 
-from config import MOVIE_POSTERS_DIR
+from config import MOVIE_POSTERS_DIR, MUSIC_COVER_PATH
 
 from services.loader import BUCHER, FILME, MUSIK
 
@@ -161,3 +161,28 @@ def search_music(query: str) -> list[dict]:
         (item for item in MUSIK if _matches(item["title"], query)),
         key=_by_title,
     )
+
+
+def resolve_music_cover() -> str | None:
+    if os.path.isfile(MUSIC_COVER_PATH):
+        return MUSIC_COVER_PATH
+
+    return None
+
+
+def get_favorite_song_list(message_ids: list[int]) -> list[dict]:
+    """
+    Maps favorited message_ids (from the DB, newest first) back to
+    their song dict in MUSIK, silently skipping any id that no
+    longer exists in Musik.csv (e.g. the row was later removed).
+    """
+
+    songs = []
+
+    for message_id in message_ids:
+        item = get_music_by_message_id(message_id)
+
+        if item:
+            songs.append(item)
+
+    return songs

@@ -275,25 +275,178 @@ def movie_empty_keyboard() -> InlineKeyboardMarkup:
     )
 
 
-def music_list_keyboard(
-    items: list[dict],
-    page: int,
-) -> InlineKeyboardMarkup:
+# =========================================================
+# MUSIC (home menu + one-song-at-a-time gallery, with a shared
+# cover image and personal favorites)
+# =========================================================
 
-    return _items_page_keyboard(
-        items,
-        page,
-        open_prefix="media:music:open:",
-        page_prefix="media:music:page",
-        back_callback="media:root",
-        extra_rows=[
+def music_home_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=SEARCH_LABELS["music"],
+                    text="⭐ Favorites",
+                    callback_data="media:music:favs:0",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🎼 Songs",
+                    callback_data="media:music:songs:0",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔍 Search",
                     callback_data="media:music:search",
                 )
-            ]
-        ],
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Back",
+                    callback_data="media:root",
+                )
+            ],
+        ]
+    )
+
+
+def music_empty_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🔍 Search",
+                    callback_data="media:music:search",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Back",
+                    callback_data="media:music",
+                )
+            ],
+        ]
+    )
+
+
+def music_gallery_keyboard(
+    index: int,
+    total: int,
+    message_id: int,
+    is_favorite: bool,
+) -> InlineKeyboardMarkup:
+
+    if total > 1:
+        prev_callback = f"media:music:songs:{(index - 1) % total}"
+        next_callback = f"media:music:songs:{(index + 1) % total}"
+    else:
+        # Nothing to page through - Prev/Next are no-ops rather
+        # than re-rendering the same song.
+        prev_callback = "media:noop"
+        next_callback = "media:noop"
+
+    fav_text = (
+        "💔 Remove from Favorites"
+        if is_favorite
+        else "❤️ Add to Favorites"
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Previous",
+                    callback_data=prev_callback,
+                ),
+                InlineKeyboardButton(
+                    text="▶️ Play Song",
+                    callback_data=f"media:music:open:{message_id}",
+                ),
+                InlineKeyboardButton(
+                    text=fav_text,
+                    callback_data=f"media:music:fav:{index}",
+                ),
+                InlineKeyboardButton(
+                    text="➡️ Next",
+                    callback_data=next_callback,
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔍 Search",
+                    callback_data="media:music:search",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Back",
+                    callback_data="media:music",
+                )
+            ],
+        ]
+    )
+
+
+def music_favorites_empty_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🎼 Songs",
+                    callback_data="media:music:songs:0",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Back",
+                    callback_data="media:music",
+                )
+            ],
+        ]
+    )
+
+
+def music_favorites_gallery_keyboard(
+    index: int,
+    total: int,
+    message_id: int,
+) -> InlineKeyboardMarkup:
+
+    if total > 1:
+        prev_callback = f"media:music:favs:{(index - 1) % total}"
+        next_callback = f"media:music:favs:{(index + 1) % total}"
+    else:
+        prev_callback = "media:noop"
+        next_callback = "media:noop"
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Previous",
+                    callback_data=prev_callback,
+                ),
+                InlineKeyboardButton(
+                    text="▶️ Play Song",
+                    callback_data=f"media:music:open:{message_id}",
+                ),
+                InlineKeyboardButton(
+                    text="💔 Remove from Favorites",
+                    callback_data=f"media:music:favremove:{index}",
+                ),
+                InlineKeyboardButton(
+                    text="➡️ Next",
+                    callback_data=next_callback,
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Back",
+                    callback_data="media:music",
+                )
+            ],
+        ]
     )
 
 

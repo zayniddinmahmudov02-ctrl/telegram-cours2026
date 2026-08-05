@@ -23,6 +23,8 @@ async def init_database():
 
     await create_videos_table()
 
+    await create_favorite_music_table()
+
     await create_user_scores_table()
 
     await create_xp_events_table()
@@ -273,6 +275,41 @@ async def create_videos_table():
         );
         """
     )
+# =========================================================
+# MEDIA - FAVORITE MUSIC
+# =========================================================
+# Personal per-user favorites for the Musik gallery. message_id
+# is the same Musik.csv/MUSIC_CHANNEL_ID message id used to play
+# the song, not a foreign key to the (unused) music table above.
+
+async def create_favorite_music_table():
+    await db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS favorite_music(
+
+            id SERIAL PRIMARY KEY,
+
+            telegram_id BIGINT NOT NULL,
+
+            message_id INTEGER NOT NULL,
+
+            created_at TIMESTAMP DEFAULT NOW(),
+
+            UNIQUE(telegram_id, message_id)
+
+        );
+        """
+    )
+
+    await db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_favorite_music_telegram_id
+        ON favorite_music(telegram_id)
+        """
+    )
+
+
 # =========================================================
 # LEADERBOARD
 # =========================================================
