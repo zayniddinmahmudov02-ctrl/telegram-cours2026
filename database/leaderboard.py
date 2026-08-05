@@ -1,3 +1,5 @@
+import asyncio
+
 from config import APP_TIMEZONE
 
 from .connection import db_execute
@@ -24,12 +26,12 @@ def _period_start_sql(trunc: str) -> str:
 # CREATE
 # =========================================================
 
-def create_user_score(user_id: int):
+async def create_user_score(user_id: int):
     """
     Create score record for a new player.
     """
 
-    db_execute(
+    await db_execute(
         """
         INSERT INTO user_scores
         (
@@ -50,7 +52,7 @@ def create_user_score(user_id: int):
 # UPDATE SCORE
 # =========================================================
 
-def add_score(user_id: int, points: int):
+async def add_score(user_id: int, points: int):
     """
     Record an XP gain.
 
@@ -68,9 +70,9 @@ def add_score(user_id: int, points: int):
     relative to Overall for that XP grant.
     """
 
-    create_user_score(user_id)
+    await create_user_score(user_id)
 
-    db_execute(
+    await db_execute(
         """
         UPDATE user_scores
         SET
@@ -102,14 +104,14 @@ def add_score(user_id: int, points: int):
     )
 
 
-def add_wrong_answer(user_id: int):
+async def add_wrong_answer(user_id: int):
     """
     Increase wrong answer counter.
     """
 
-    create_user_score(user_id)
+    await create_user_score(user_id)
 
-    db_execute(
+    await db_execute(
         """
         UPDATE user_scores
         SET
@@ -124,8 +126,8 @@ def add_wrong_answer(user_id: int):
 # GETTERS
 # =========================================================
 
-def get_user_score(user_id: int):
-    return db_execute(
+async def get_user_score(user_id: int):
+    return await db_execute(
         """
         SELECT
             *
@@ -156,10 +158,10 @@ PERIOD_TRUNC = {
 }
 
 
-def get_top(period: str, limit: int = 100):
+async def get_top(period: str, limit: int = 100):
 
     if period == "global":
-        return db_execute(
+        return await db_execute(
             """
             SELECT
                 u.user_id,
@@ -186,7 +188,7 @@ def get_top(period: str, limit: int = 100):
     score_field = f"{period}_score"
     period_start = _period_start_sql(trunc)
 
-    return db_execute(
+    return await db_execute(
         f"""
         SELECT
             u.user_id,
@@ -208,23 +210,23 @@ def get_top(period: str, limit: int = 100):
     )
 
 
-def get_daily_top(limit: int = 100):
-    return get_top("daily", limit)
+async def get_daily_top(limit: int = 100):
+    return await get_top("daily", limit)
 
 
-def get_weekly_top(limit: int = 100):
-    return get_top("weekly", limit)
+async def get_weekly_top(limit: int = 100):
+    return await get_top("weekly", limit)
 
 
-def get_monthly_top(limit: int = 100):
-    return get_top("monthly", limit)
+async def get_monthly_top(limit: int = 100):
+    return await get_top("monthly", limit)
 
 
-def get_global_top(limit: int = 100):
-    return get_top("global", limit)
+async def get_global_top(limit: int = 100):
+    return await get_top("global", limit)
 
 
-def get_overall_top(limit: int = 100):
+async def get_overall_top(limit: int = 100):
     """
     Overall Ranking: lifetime XP (never resets) plus average
     accuracy across every completed Word Game block, taken
@@ -236,7 +238,7 @@ def get_overall_top(limit: int = 100):
     place, e.g. 91.8 rather than 91.833333333333333.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             u.user_id,
@@ -265,11 +267,11 @@ def get_overall_top(limit: int = 100):
 # USER RANK
 # =========================================================
 
-def get_user_rank(user_id: int, period: str):
+async def get_user_rank(user_id: int, period: str):
 
     if period == "global":
 
-        row = db_execute(
+        row = await db_execute(
             """
             SELECT rank
             FROM
@@ -305,7 +307,7 @@ def get_user_rank(user_id: int, period: str):
     # blocked user's XP would occupy a rank slot here while being
     # invisible in the actual displayed top list, making a real
     # user's shown rank number not match their real position.
-    row = db_execute(
+    row = await db_execute(
         f"""
         SELECT rank
         FROM
@@ -337,7 +339,7 @@ def get_user_rank(user_id: int, period: str):
 # PERIOD CHAMPION (for schedulers)
 # =========================================================
 
-def get_period_champion(start, end):
+async def get_period_champion(start, end):
     """
     Highest XP earner strictly within [start, end) - used to
     determine the winner of a day/week/month that just ended.
@@ -349,7 +351,7 @@ def get_period_champion(start, end):
     champion history either.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             u.user_id,
@@ -379,8 +381,8 @@ def get_period_champion(start, end):
 # can never create a duplicate history row. The exists checks
 # let callers skip the work entirely when it isn't needed.
 
-def daily_champion_exists(champion_date) -> bool:
-    row = db_execute(
+async def daily_champion_exists(champion_date) -> bool:
+    row = await db_execute(
         """
         SELECT id
         FROM daily_champions
@@ -392,8 +394,8 @@ def daily_champion_exists(champion_date) -> bool:
     return row is not None
 
 
-def weekly_champion_exists(year: int, week: int) -> bool:
-    row = db_execute(
+async def weekly_champion_exists(year: int, week: int) -> bool:
+    row = await db_execute(
         """
         SELECT id
         FROM weekly_champions
@@ -405,8 +407,8 @@ def weekly_champion_exists(year: int, week: int) -> bool:
     return row is not None
 
 
-def monthly_champion_exists(year: int, month: int) -> bool:
-    row = db_execute(
+async def monthly_champion_exists(year: int, month: int) -> bool:
+    row = await db_execute(
         """
         SELECT id
         FROM monthly_champions
@@ -418,12 +420,12 @@ def monthly_champion_exists(year: int, month: int) -> bool:
     return row is not None
 
 
-def save_daily_champion(
+async def save_daily_champion(
     champion_date,
     user_id: int,
     score: int,
 ):
-    db_execute(
+    await db_execute(
         """
         INSERT INTO daily_champions
         (
@@ -449,13 +451,13 @@ def save_daily_champion(
     )
 
 
-def save_weekly_champion(
+async def save_weekly_champion(
     year: int,
     week: int,
     user_id: int,
     score: int,
 ):
-    db_execute(
+    await db_execute(
         """
         INSERT INTO weekly_champions
         (
@@ -484,13 +486,13 @@ def save_weekly_champion(
     )
 
 
-def save_monthly_champion(
+async def save_monthly_champion(
     year: int,
     month: int,
     user_id: int,
     score: int,
 ):
-    db_execute(
+    await db_execute(
         """
         INSERT INTO monthly_champions
         (
@@ -519,12 +521,12 @@ def save_monthly_champion(
     )
 
 
-def get_recent_daily_champions(limit: int = 20):
+async def get_recent_daily_champions(limit: int = 20):
     """
     Most recent daily champions, newest first.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             *
@@ -537,8 +539,8 @@ def get_recent_daily_champions(limit: int = 20):
     )
 
 
-def get_monthly_champions(year: int):
-    return db_execute(
+async def get_monthly_champions(year: int):
+    return await db_execute(
         """
         SELECT
             *
@@ -551,8 +553,8 @@ def get_monthly_champions(year: int):
     )
 
 
-def get_weekly_champions(year: int):
-    return db_execute(
+async def get_weekly_champions(year: int):
+    return await db_execute(
         """
         SELECT
             *
@@ -565,14 +567,14 @@ def get_weekly_champions(year: int):
     )
 
 
-def get_recent_weekly_champions(limit: int = 20):
+async def get_recent_weekly_champions(limit: int = 20):
     """
     Most recent weekly champions, newest first. Weekly
     history spans many more entries than monthly, so it is
     browsed as a flat recent list instead of a year picker.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             *
@@ -589,12 +591,12 @@ def get_recent_weekly_champions(limit: int = 20):
 # HALL OF FAME
 # =========================================================
 
-def save_hall_of_fame(
+async def save_hall_of_fame(
     year: int,
     month: int,
     champion_id: int,
 ):
-    db_execute(
+    await db_execute(
         """
         INSERT INTO hall_of_fame
         (
@@ -617,8 +619,8 @@ def save_hall_of_fame(
     )
 
 
-def get_hall_of_fame(year: int):
-    return db_execute(
+async def get_hall_of_fame(year: int):
+    return await db_execute(
         """
         SELECT
             h.year,
@@ -639,8 +641,8 @@ def get_hall_of_fame(year: int):
 # STATISTICS
 # =========================================================
 
-def get_total_players():
-    row = db_execute(
+async def get_total_players():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS total
         FROM user_scores
@@ -651,7 +653,7 @@ def get_total_players():
     return row["total"] if row else 0
 
 
-def get_top_player(period: str):
+async def get_top_player(period: str):
 
     columns = {
         "daily": "daily_score",
@@ -665,7 +667,7 @@ def get_top_player(period: str):
     if not column:
         return None
 
-    return db_execute(
+    return await db_execute(
         f"""
         SELECT
             u.user_id,
@@ -688,8 +690,8 @@ def get_top_player(period: str):
     )
 
 
-def get_user_statistics(user_id: int):
-    return db_execute(
+async def get_user_statistics(user_id: int):
+    return await db_execute(
         """
         SELECT
             daily_score,
@@ -708,7 +710,7 @@ def get_user_statistics(user_id: int):
     )
 
 
-def get_accuracy(user_id: int):
+async def get_accuracy(user_id: int):
     """
     Average accuracy (%) across every completed Word Game
     block, taken directly from quiz_progress.best_score
@@ -720,7 +722,7 @@ def get_accuracy(user_id: int):
     not completed a single block yet.
     """
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT AVG(best_score) AS avg_score
         FROM quiz_progress
@@ -740,7 +742,7 @@ def get_accuracy(user_id: int):
 # USER XP SUMMARY (PROFILE)
 # =========================================================
 
-def get_user_xp_summary(user_id: int) -> dict:
+async def get_user_xp_summary(user_id: int) -> dict:
     """
     Today/this-week/this-month XP (from xp_events, timezone-
     aware, never cached/reset) plus lifetime XP (global_score)
@@ -748,36 +750,41 @@ def get_user_xp_summary(user_id: int) -> dict:
     Profile needs, computed independently of each other.
     """
 
-    period_row = db_execute(
-        f"""
-        SELECT
-            COALESCE(SUM(xp) FILTER (
-                WHERE created_at >= {_period_start_sql("day")}
-            ), 0) AS today_xp,
+    # Three independent reads (xp_events, user_scores,
+    # quiz_progress) - run concurrently instead of one round
+    # trip after another.
+    period_row, overall_row, accuracy = await asyncio.gather(
+        db_execute(
+            f"""
+            SELECT
+                COALESCE(SUM(xp) FILTER (
+                    WHERE created_at >= {_period_start_sql("day")}
+                ), 0) AS today_xp,
 
-            COALESCE(SUM(xp) FILTER (
-                WHERE created_at >= {_period_start_sql("week")}
-            ), 0) AS weekly_xp,
+                COALESCE(SUM(xp) FILTER (
+                    WHERE created_at >= {_period_start_sql("week")}
+                ), 0) AS weekly_xp,
 
-            COALESCE(SUM(xp) FILTER (
-                WHERE created_at >= {_period_start_sql("month")}
-            ), 0) AS monthly_xp
+                COALESCE(SUM(xp) FILTER (
+                    WHERE created_at >= {_period_start_sql("month")}
+                ), 0) AS monthly_xp
 
-        FROM xp_events
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True,
-    )
-
-    overall_row = db_execute(
-        """
-        SELECT global_score
-        FROM user_scores
-        WHERE user_id = %s
-        """,
-        (user_id,),
-        fetchone=True,
+            FROM xp_events
+            WHERE user_id = %s
+            """,
+            (user_id,),
+            fetchone=True,
+        ),
+        db_execute(
+            """
+            SELECT global_score
+            FROM user_scores
+            WHERE user_id = %s
+            """,
+            (user_id,),
+            fetchone=True,
+        ),
+        get_accuracy(user_id),
     )
 
     return {
@@ -787,5 +794,5 @@ def get_user_xp_summary(user_id: int) -> dict:
         "overall_xp": (
             overall_row["global_score"] if overall_row else 0
         ),
-        "accuracy": get_accuracy(user_id),
+        "accuracy": accuracy,
     }

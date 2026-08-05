@@ -56,7 +56,7 @@ async def leaderboard_menu(message: Message):
 # HELPER
 # =========================================================
 
-def build_leaderboard_text(
+async def build_leaderboard_text(
     *,
     title: str,
     score_field: str,
@@ -82,7 +82,7 @@ def build_leaderboard_text(
             f"⭐ {row[score_field]} ball\n\n"
         )
 
-    rank = get_user_rank(
+    rank = await get_user_rank(
         user_id,
         period,
     )
@@ -107,11 +107,11 @@ def build_leaderboard_text(
 @router.callback_query(F.data == "lb_daily")
 async def daily_top(callback: CallbackQuery):
 
-    text = build_leaderboard_text(
+    text = await build_leaderboard_text(
         title="📅 <b>Kunlik Reyting</b>",
         score_field="daily_score",
         period="daily",
-        top=get_daily_top(),
+        top=await get_daily_top(),
         user_id=callback.from_user.id,
     )
 
@@ -130,11 +130,11 @@ async def daily_top(callback: CallbackQuery):
 @router.callback_query(F.data == "lb_weekly")
 async def weekly_top(callback: CallbackQuery):
 
-    text = build_leaderboard_text(
+    text = await build_leaderboard_text(
         title="📆 <b>Haftalik Reyting</b>",
         score_field="weekly_score",
         period="weekly",
-        top=get_weekly_top(),
+        top=await get_weekly_top(),
         user_id=callback.from_user.id,
     )
 
@@ -151,11 +151,11 @@ async def weekly_top(callback: CallbackQuery):
 @router.callback_query(F.data == "lb_monthly")
 async def monthly_top(callback: CallbackQuery):
 
-    text = build_leaderboard_text(
+    text = await build_leaderboard_text(
         title="🗓 <b>Oylik Reyting</b>",
         score_field="monthly_score",
         period="monthly",
-        top=get_monthly_top(),
+        top=await get_monthly_top(),
         user_id=callback.from_user.id,
     )
 
@@ -171,7 +171,7 @@ async def monthly_top(callback: CallbackQuery):
 # OVERALL (never resets - lifetime XP + real accuracy)
 # =========================================================
 
-def build_overall_text(
+async def build_overall_text(
     top: list,
     user_id: int,
 ) -> str:
@@ -201,7 +201,7 @@ def build_overall_text(
             f"🎯 {accuracy_text}\n\n"
         )
 
-    rank = get_user_rank(user_id, "global")
+    rank = await get_user_rank(user_id, "global")
 
     text += "━━━━━━━━━━━━━━\n\n"
 
@@ -216,8 +216,8 @@ def build_overall_text(
 @router.callback_query(F.data == "lb_global")
 async def global_top(callback: CallbackQuery):
 
-    text = build_overall_text(
-        top=get_overall_top(),
+    text = await build_overall_text(
+        top=await get_overall_top(),
         user_id=callback.from_user.id,
     )
 
@@ -282,7 +282,7 @@ MONTHS = {
 @router.callback_query(F.data == "champions_weekly")
 async def champions_weekly(callback: CallbackQuery):
 
-    champions_list = get_recent_weekly_champions()
+    champions_list = await get_recent_weekly_champions()
 
     text = "📅 <b>Weekly Champions</b>\n\n"
 
@@ -317,7 +317,7 @@ async def champions_weekly(callback: CallbackQuery):
 @router.callback_query(F.data == "champions_daily")
 async def champions_daily(callback: CallbackQuery):
 
-    champions_list = get_recent_daily_champions()
+    champions_list = await get_recent_daily_champions()
 
     text = "📅 <b>Daily Champions</b>\n\n"
 
@@ -353,7 +353,7 @@ async def champions_year(callback: CallbackQuery):
 
     year = int(callback.data.split("_")[-1])
 
-    champions = get_monthly_champions(year)
+    champions = await get_monthly_champions(year)
 
     text = f"📅 <b>{year} Monthly Champions</b>\n\n"
 

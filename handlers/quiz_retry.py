@@ -15,7 +15,7 @@ async def check_retry(
 ):
     user_id = message.from_user.id
 
-    result = db_execute(
+    result = await db_execute(
         """
         SELECT best_score
         FROM quiz_progress

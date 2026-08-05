@@ -4,8 +4,8 @@ from .connection import db_execute
 # PROGRESS
 # =========================================================
 
-def get_progress(user_id, level, block):
-    return db_execute(
+async def get_progress(user_id, level, block):
+    return await db_execute(
         """
         SELECT *
         FROM quiz_progress
@@ -18,8 +18,8 @@ def get_progress(user_id, level, block):
     )
 
 
-def get_best_score(user_id, level, block):
-    row = db_execute(
+async def get_best_score(user_id, level, block):
+    row = await db_execute(
         """
         SELECT best_score
         FROM quiz_progress
@@ -38,8 +38,8 @@ def get_best_score(user_id, level, block):
 # SAVE
 # =========================================================
 
-def save_progress(user_id, level, block, score):
-    db_execute(
+async def save_progress(user_id, level, block, score):
+    await db_execute(
         """
         INSERT INTO quiz_progress
         (
@@ -83,8 +83,8 @@ def save_progress(user_id, level, block, score):
 # LEVEL SCORE
 # =========================================================
 
-def get_level_score(user_id, level):
-    row = db_execute(
+async def get_level_score(user_id, level):
+    row = await db_execute(
         """
         SELECT
         COALESCE(SUM(best_score),0) AS total
@@ -99,8 +99,8 @@ def get_level_score(user_id, level):
     return row["total"] if row else 0
 
 
-def get_level_blocks(user_id, level):
-    return db_execute(
+async def get_level_blocks(user_id, level):
+    return await db_execute(
         """
         SELECT
         block_number,
@@ -119,24 +119,24 @@ def get_level_blocks(user_id, level):
 # CHECKS
 # =========================================================
 
-def block_completed(user_id, level, block):
-    score = get_best_score(user_id, level, block)
+async def block_completed(user_id, level, block):
+    score = await get_best_score(user_id, level, block)
     return score >= 60
 
 
-def previous_block_completed(user_id, level, block):
+async def previous_block_completed(user_id, level, block):
     if block == 1:
         return True
 
-    score = get_best_score(user_id, level, block - 1)
+    score = await get_best_score(user_id, level, block - 1)
 
     return score >= 60
 
 
-def level_completed(user_id, level, blocks):
+async def level_completed(user_id, level, blocks):
     for block in range(1, blocks + 1):
 
-        if get_best_score(user_id, level, block) < 60:
+        if await get_best_score(user_id, level, block) < 60:
             return False
 
     return True
@@ -158,8 +158,8 @@ def calculate_xp(old_score, new_score):
 # LEVEL UNLOCK
 # =========================================================
 
-def unlock_level(user_id, level):
-    db_execute(
+async def unlock_level(user_id, level):
+    await db_execute(
         """
         UPDATE users
         SET unlocked_level=%s
@@ -176,8 +176,8 @@ def unlock_level(user_id, level):
 # STATS
 # =========================================================
 
-def total_questions(level):
-    row = db_execute(
+async def total_questions(level):
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM quiz_progress
@@ -190,9 +190,9 @@ def total_questions(level):
     return row["count"]
 
 
-def user_progress_percent(user_id, level, total_blocks):
+async def user_progress_percent(user_id, level, total_blocks):
 
-    score = get_level_score(user_id, level)
+    score = await get_level_score(user_id, level)
 
     max_score = total_blocks * 100
 
@@ -206,9 +206,9 @@ def user_progress_percent(user_id, level, total_blocks):
 # RESET
 # =========================================================
 
-def clear_progress(user_id):
+async def clear_progress(user_id):
 
-    db_execute(
+    await db_execute(
         """
         DELETE
         FROM quiz_progress
@@ -218,9 +218,9 @@ def clear_progress(user_id):
     )
 
 
-def clear_level_progress(user_id, level):
+async def clear_level_progress(user_id, level):
 
-    db_execute(
+    await db_execute(
         """
         DELETE
         FROM quiz_progress

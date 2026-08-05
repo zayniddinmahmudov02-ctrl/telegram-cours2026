@@ -1,6 +1,8 @@
 import logging
+import re
 
-logging.warning("RECEIPT HANDLER ISHLADI")
+logger = logging.getLogger(__name__)
+
 from aiogram import Router, F
 from aiogram.types import (
     CallbackQuery,
@@ -23,7 +25,6 @@ from config.settings import (
 )
 from aiogram.types import ReplyKeyboardRemove
 from states.payment import PaymentState
-from config.settings import ADMIN_CHANNEL_ID
 from keyboards.payment import (
     admin_payment_keyboard,
 )
@@ -252,8 +253,6 @@ Qabul qilinadi:
 # FULL NAME
 # =========================================================
 
-import re
-
 @router.message(
     PaymentState.waiting_full_name,
 )
@@ -314,12 +313,6 @@ async def payment_full_name(
 # =========================================================
 # PHONE
 # =========================================================
-
-import re
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 @router.message(PaymentState.waiting_phone)
 async def payment_phone(
@@ -394,7 +387,7 @@ async def payment_phone(
         # CREATE PAYMENT
         # -------------------------------------------------
 
-        payment_id = create_payment(
+        payment_id = await create_payment(
             user_id=message.from_user.id,
             full_name=data["full_name"],
             phone=phone,
@@ -464,7 +457,7 @@ async def payment_phone(
         # SAVE CHANNEL MESSAGE
         # -------------------------------------------------
 
-        save_channel_message(
+        await save_channel_message(
             payment_id=payment_id,
             channel_id=ADMIN_CHANNEL_ID,
             message_id=sent.message_id,
@@ -508,7 +501,7 @@ async def approve_payment_callback(
 ):
     payment_id = int(callback.data.split(":")[1])
 
-    payment = get_payment(payment_id)
+    payment = await get_payment(payment_id)
 
     if payment is None:
         await callback.answer(
@@ -521,7 +514,7 @@ async def approve_payment_callback(
     # DATABASE
     # -------------------------------------------------
 
-    approve_payment_db(
+    await approve_payment_db(
         payment_id,
         callback.from_user.id,
     )
@@ -622,7 +615,7 @@ async def reject_payment_callback(
 ):
     payment_id = int(callback.data.split(":")[1])
 
-    payment = get_payment(payment_id)
+    payment = await get_payment(payment_id)
 
     if payment is None:
         await callback.answer(
@@ -632,7 +625,7 @@ async def reject_payment_callback(
         return
 
     # Database
-    reject_payment_db(
+    await reject_payment_db(
         payment_id,
         callback.from_user.id,
     )

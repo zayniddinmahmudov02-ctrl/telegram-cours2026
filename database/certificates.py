@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 
 from config import (
@@ -12,7 +13,7 @@ from .connection import db_execute
 # CREATE
 # =========================================================
 
-def create_certificate(
+async def create_certificate(
     user_id: int,
     certificate_type: str,
     level: str,
@@ -26,7 +27,7 @@ def create_certificate(
         + uuid.uuid4().hex[:12].upper()
     )
 
-    db_execute(
+    await db_execute(
         """
         INSERT INTO certificates
         (
@@ -81,11 +82,11 @@ def create_certificate(
 # GET
 # =========================================================
 
-def get_certificate(
+async def get_certificate(
     certificate_id: str,
 ):
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM certificates
@@ -96,11 +97,11 @@ def get_certificate(
     )
 
 
-def get_user_certificates(
+async def get_user_certificates(
     user_id: int,
 ):
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM certificates
@@ -114,13 +115,13 @@ def get_user_certificates(
     )
 
 
-def get_level_certificate(
+async def get_level_certificate(
     user_id: int,
     certificate_type: str,
     level: str,
 ):
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
 
@@ -148,13 +149,13 @@ def get_level_certificate(
 # EXISTS
 # =========================================================
 
-def certificate_exists(
+async def certificate_exists(
     user_id: int,
     certificate_type: str,
     level: str,
 ) -> bool:
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT certificate_id
 
@@ -182,11 +183,11 @@ def certificate_exists(
 # DELETE
 # =========================================================
 
-def delete_certificate(
+async def delete_certificate(
     certificate_id: str,
 ):
 
-    db_execute(
+    await db_execute(
         """
         DELETE
 
@@ -202,12 +203,12 @@ def delete_certificate(
 # VERIFY
 # =========================================================
 
-def verify_certificate(
+async def verify_certificate(
     certificate_id: str,
 ) -> bool:
 
     return (
-        get_certificate(
+        await get_certificate(
             certificate_id
         )
         is not None
@@ -218,9 +219,9 @@ def verify_certificate(
 # STATISTICS
 # =========================================================
 
-def certificates_count() -> int:
+async def certificates_count() -> int:
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
 
@@ -232,10 +233,10 @@ def certificates_count() -> int:
     return row["count"]
 
 
-def wordgame_certificates_count() -> int:
+async def wordgame_certificates_count() -> int:
     """So'z O'yini orqali berilgan sertifikatlar soni."""
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
 
@@ -249,13 +250,13 @@ def wordgame_certificates_count() -> int:
     return row["count"]
 
 
-def get_recent_certificates(limit: int = 20):
+async def get_recent_certificates(limit: int = 20):
     """
     Most recently issued certificates, across all users, for
     the admin panel's "browse generated certificates" view.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             c.certificate_id,
@@ -276,11 +277,11 @@ def get_recent_certificates(limit: int = 20):
     )
 
 
-def level_certificates(
+async def level_certificates(
     level: str,
 ) -> int:
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
 
@@ -299,13 +300,13 @@ def level_certificates(
 # QUIZ PROGRESS
 # =========================================================
 
-def get_block_score(
+async def get_block_score(
     user_id: int,
     level: str,
     block: int,
 ):
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             best_score
@@ -330,43 +331,57 @@ def get_block_score(
     )
 
 
-def get_level_progress(
+async def get_level_progress(
     user_id: int,
     level: str,
 ) -> list[int]:
+    """
+    Best score per block, 0 for blocks never attempted.
+
+    Fetches the whole level's quiz_progress rows in a single
+    query (instead of one SELECT per block - up to 15 round
+    trips for B2) and fills in the gaps in memory.
+    """
 
     config = LEVEL_CONFIG[level]
 
-    scores = []
+    rows = await db_execute(
+        """
+        SELECT
+            block_number,
+            best_score
+        FROM quiz_progress
+        WHERE user_id=%s
+        AND level=%s
+        """,
+        (user_id, level),
+        fetchall=True,
+    )
 
-    for block in range(
-        1,
-        config["blocks"] + 1,
-    ):
+    scores_by_block = {
+        row["block_number"]: row["best_score"]
+        for row in rows
+    }
 
-        row = get_block_score(
-            user_id,
-            level,
-            block,
-        )
-
-        scores.append(
-            row["best_score"]
-            if row
-            else 0
-        )
-
-    return scores
+    return [
+        scores_by_block.get(block, 0)
+        for block in range(1, config["blocks"] + 1)
+    ]
 
 
-def get_all_progress(
+async def get_all_progress(
     user_id: int,
 ) -> dict:
+    """
+    Progress for every level. The 5 levels are independent
+    reads, fetched concurrently rather than one after another.
+    """
 
-    return {
-        level: get_level_progress(
-            user_id,
-            level,
+    results = await asyncio.gather(
+        *(
+            get_level_progress(user_id, level)
+            for level in LEVEL_ORDER
         )
-        for level in LEVEL_ORDER
-    }
+    )
+
+    return dict(zip(LEVEL_ORDER, results))

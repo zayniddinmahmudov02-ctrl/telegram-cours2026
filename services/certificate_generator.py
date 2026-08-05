@@ -1,8 +1,8 @@
+import asyncio
 from datetime import datetime
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
 
 from config import LEVEL_CONFIG
 
@@ -94,8 +94,8 @@ def _rank_label(rank: str) -> str:
     return rank.split(" ")[-1] if rank else "Bronze"
 
 
-def _accuracy_text(user_id: int) -> str:
-    accuracy = get_accuracy(user_id)
+async def _accuracy_text(user_id: int) -> str:
+    accuracy = await get_accuracy(user_id)
     return f"{accuracy}%" if accuracy is not None else "—"
 
 
@@ -114,8 +114,8 @@ def _inline_svg(path: Path) -> str:
 # USER / CERTIFICATE DATA
 # =========================================================
 
-def get_certificate_user(user_id: int):
-    user = get_user(user_id)
+async def get_certificate_user(user_id: int):
+    user = await get_user(user_id)
 
     if not user:
         raise ValueError("User topilmadi.")
@@ -123,12 +123,12 @@ def get_certificate_user(user_id: int):
     return user
 
 
-def get_certificate_data(
+async def get_certificate_data(
     user_id: int,
     level: str,
     admin_override: bool = False,
 ):
-    status = build_level_status(user_id, level)
+    status = await build_level_status(user_id, level)
 
     if not status["ready"] and not admin_override:
         raise ValueError("Sertifikat hali tayyor emas.")
@@ -143,18 +143,18 @@ def get_certificate_data(
     return status
 
 
-def get_certificate_id(
+async def get_certificate_id(
     user_id: int,
     level: str,
     average: int,
     grade: str,
 ):
-    certificate = get_level_certificate(user_id, "W", level)
+    certificate = await get_level_certificate(user_id, "W", level)
 
     if certificate:
         return certificate["certificate_id"]
 
-    return create_certificate(
+    return await create_certificate(
         user_id=user_id,
         certificate_type="W",
         level=level,
@@ -190,7 +190,7 @@ def get_certificate_file_path(certificate_id: str) -> Path:
 # GENERATE CERTIFICATE
 # =========================================================
 
-def generate_certificate(
+async def generate_certificate(
     user_id: int,
     level: str,
     admin_override: bool = False,
@@ -205,15 +205,15 @@ def generate_certificate(
     returned as-is instead of being rebuilt.
     """
 
-    user = get_certificate_user(user_id)
+    user = await get_certificate_user(user_id)
 
-    status = get_certificate_data(
+    status = await get_certificate_data(
         user_id,
         level,
         admin_override=admin_override,
     )
 
-    certificate_id = get_certificate_id(
+    certificate_id = await get_certificate_id(
         user_id=user_id,
         level=level,
         average=status["average"],
@@ -234,6 +234,15 @@ def generate_certificate(
     rank_label = _rank_label(status["rank"])
     seal_path = SEAL_PATH_BY_RANK.get(rank_label, SEAL_PATH_BY_RANK["Bronze"])
 
+    accuracy_text = await _accuracy_text(user_id)
+
+    # weasyprint pulls in native cairo/pango/gdk-pixbuf libraries -
+    # heavy to import (hundreds of ms, several MB of RAM) and only
+    # ever needed here, so it's loaded lazily on first certificate
+    # request instead of on every bot startup. Python caches the
+    # import, so this cost is paid at most once per process.
+    from weasyprint import HTML
+
     html = _jinja_env.get_template(TEMPLATE_NAME).render(
         css_path=_file_uri(CSS_PATH),
         logo_path=_file_uri(LOGO_PATH),
@@ -250,16 +259,21 @@ def generate_certificate(
         level=level,
         vocab_learned=vocab_learned,
         vocab_total=vocab_total,
-        accuracy_text=_accuracy_text(user_id),
+        accuracy_text=accuracy_text,
         rank=rank_label,
         completion_date=today(),
         director_name="Zayniddinkhuja Makhmudov",
         certificate_id=certificate_id,
     )
 
-    HTML(
-        string=html,
-        base_url=str(TEMPLATES_DIR),
-    ).write_pdf(str(pdf_path))
+    # PDF rendering (weasyprint) is CPU/IO-heavy and synchronous -
+    # offload it to a worker thread so it never blocks the event
+    # loop (and other users' updates) while a certificate renders.
+    await asyncio.to_thread(
+        lambda: HTML(
+            string=html,
+            base_url=str(TEMPLATES_DIR),
+        ).write_pdf(str(pdf_path))
+    )
 
     return str(pdf_path)

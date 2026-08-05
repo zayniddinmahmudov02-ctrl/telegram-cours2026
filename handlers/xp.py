@@ -8,7 +8,7 @@ router = Router()
 
 @router.message(F.text == "🔥 XP Reytingi")
 async def xp_rating(message: Message):
-    rows = db_execute(
+    rows = await db_execute(
         """
         SELECT
             full_name,

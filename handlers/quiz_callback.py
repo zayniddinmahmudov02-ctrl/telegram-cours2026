@@ -81,7 +81,7 @@ async def quiz_answer(callback: CallbackQuery):
         session["score"] += 1
         await callback.answer("✅ To'g'ri!")
     else:
-        add_wrong_answer(user_id)
+        await add_wrong_answer(user_id)
         await callback.answer(
             f"❌ Noto'g'ri!\n\n"
             f"✅ {correct}",

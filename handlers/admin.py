@@ -2,6 +2,8 @@
 # IMPORTS
 # =========================================================
 
+import asyncio
+
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, FSInputFile, Message
 
@@ -88,10 +90,39 @@ async def statistics(message: Message):
     if not is_admin(message.from_user.id):
         return
 
-    total_users = get_total_users()
-    total_buyers = get_distinct_buyers_count()
-    course_sales = get_payment_statistics()["approved"]
-    wordgame_certificates = wordgame_certificates_count()
+    # All independent reads - fetched concurrently instead of
+    # 12 sequential round trips.
+    (
+        total_users,
+        total_buyers,
+        payment_stats,
+        wordgame_certificates,
+        today_new,
+        yesterday_new,
+        weekly_new,
+        monthly_new,
+        today_active,
+        weekly_active,
+        premium,
+        blocked,
+        deleted,
+    ) = await asyncio.gather(
+        get_total_users(),
+        get_distinct_buyers_count(),
+        get_payment_statistics(),
+        wordgame_certificates_count(),
+        today_users_count(),
+        yesterday_users_count(),
+        weekly_users_count(),
+        monthly_users_count(),
+        today_active_users_count(),
+        weekly_active_users_count(),
+        premium_count(),
+        blocked_count(),
+        deleted_count(),
+    )
+
+    course_sales = payment_stats["approved"]
 
     text = f"""
 📊 <b>VIZU Academy Statistikasi</b>
@@ -106,21 +137,21 @@ async def statistics(message: Message):
 ━━━━━━━━━━━━━━━━━━
 📈 <b>Ro'yxatdan o'tish</b>
 
-🆕 Bugun: <b>{today_users_count()}</b>
-📅 Kecha: <b>{yesterday_users_count()}</b>
-🗓 Shu hafta: <b>{weekly_users_count()}</b>
-📆 Shu oy: <b>{monthly_users_count()}</b>
+🆕 Bugun: <b>{today_new}</b>
+📅 Kecha: <b>{yesterday_new}</b>
+🗓 Shu hafta: <b>{weekly_new}</b>
+📆 Shu oy: <b>{monthly_new}</b>
 
 ━━━━━━━━━━━━━━━━━━
 🟢 <b>Faollik</b>
 
-🟢 Bugun faol: <b>{today_active_users_count()}</b>
-🟢 Shu hafta faol: <b>{weekly_active_users_count()}</b>
+🟢 Bugun faol: <b>{today_active}</b>
+🟢 Shu hafta faol: <b>{weekly_active}</b>
 
 ━━━━━━━━━━━━━━━━━━
-⭐ Premium: <b>{premium_count()}</b>
-🚫 Bloklangan: <b>{blocked_count()}</b>
-🗑 O'chirilgan: <b>{deleted_count()}</b>
+⭐ Premium: <b>{premium}</b>
+🚫 Bloklangan: <b>{blocked}</b>
+🗑 O'chirilgan: <b>{deleted}</b>
 """
 
     await message.answer(
@@ -137,7 +168,7 @@ async def users(message: Message):
     if not is_admin(message.from_user.id):
         return
 
-    total = get_total_users()
+    total = await get_total_users()
 
     await message.answer(
         f"👥 <b>Foydalanuvchilar</b>\n\nJami: <b>{total}</b>",
@@ -167,7 +198,7 @@ async def buyers(message: Message):
     if not is_admin(message.from_user.id):
         return
 
-    buyers = get_approved_payments()
+    buyers = await get_approved_payments()
 
     if not buyers:
         await message.answer(
@@ -221,7 +252,7 @@ async def payments(message: Message):
     if not is_admin(message.from_user.id):
         return
 
-    payments = get_recent_payments(limit=30)
+    payments = await get_recent_payments(limit=30)
 
     if not payments:
         await message.answer(
@@ -274,17 +305,20 @@ async def certificates_menu(message: Message):
     if not is_admin(message.from_user.id):
         return
 
-    total = wordgame_certificates_count()
+    total, per_level = await asyncio.gather(
+        wordgame_certificates_count(),
+        asyncio.gather(
+            *(level_certificates(level) for level in LEVEL_ORDER)
+        ),
+    )
 
     text = (
         "🏅 <b>Certificates</b>\n\n"
         f"• Jami: <b>{total}</b>\n"
     )
 
-    for level in LEVEL_ORDER:
-        text += (
-            f"• {level}: <b>{level_certificates(level)}</b>\n"
-        )
+    for level, count in zip(LEVEL_ORDER, per_level):
+        text += f"• {level}: <b>{count}</b>\n"
 
     text += (
         "\n🧪 Test rejimi - istalgan darajani tanlab, "
@@ -305,17 +339,20 @@ async def certificates_home_callback(callback: CallbackQuery):
         await callback.answer()
         return
 
-    total = wordgame_certificates_count()
+    total, per_level = await asyncio.gather(
+        wordgame_certificates_count(),
+        asyncio.gather(
+            *(level_certificates(level) for level in LEVEL_ORDER)
+        ),
+    )
 
     text = (
         "🏅 <b>Certificates</b>\n\n"
         f"• Jami: <b>{total}</b>\n"
     )
 
-    for level in LEVEL_ORDER:
-        text += (
-            f"• {level}: <b>{level_certificates(level)}</b>\n"
-        )
+    for level, count in zip(LEVEL_ORDER, per_level):
+        text += f"• {level}: <b>{count}</b>\n"
 
     await callback.message.edit_text(
         text,
@@ -340,7 +377,7 @@ async def certificates_generate_test(callback: CallbackQuery):
     )
 
     try:
-        pdf_path = generate_certificate(
+        pdf_path = await generate_certificate(
             user_id=callback.from_user.id,
             level=level,
             admin_override=True,
@@ -375,7 +412,7 @@ async def certificates_browse(callback: CallbackQuery):
         await callback.answer()
         return
 
-    certificates = get_recent_certificates(limit=20)
+    certificates = await get_recent_certificates(limit=20)
 
     if not certificates:
 
@@ -406,7 +443,7 @@ async def certificates_open(callback: CallbackQuery):
 
     certificate_id = callback.data.split(":", 2)[2]
 
-    certificate = get_certificate(certificate_id)
+    certificate = await get_certificate(certificate_id)
 
     if not certificate:
         await callback.answer(

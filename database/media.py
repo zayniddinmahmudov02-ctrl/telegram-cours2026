@@ -5,8 +5,8 @@ from .connection import db_execute
 # FILMS
 # =========================================================
 
-def get_films():
-    return db_execute(
+async def get_films():
+    return await db_execute(
         """
         SELECT *
         FROM films
@@ -16,8 +16,8 @@ def get_films():
     )
 
 
-def get_film(film_id: int):
-    return db_execute(
+async def get_film(film_id: int):
+    return await db_execute(
         """
         SELECT *
         FROM films
@@ -32,8 +32,8 @@ def get_film(film_id: int):
 # BOOKS
 # =========================================================
 
-def get_books():
-    return db_execute(
+async def get_books():
+    return await db_execute(
         """
         SELECT *
         FROM books
@@ -43,8 +43,8 @@ def get_books():
     )
 
 
-def get_book(book_id: int):
-    return db_execute(
+async def get_book(book_id: int):
+    return await db_execute(
         """
         SELECT *
         FROM books
@@ -59,8 +59,8 @@ def get_book(book_id: int):
 # MUSIC
 # =========================================================
 
-def get_music():
-    return db_execute(
+async def get_music():
+    return await db_execute(
         """
         SELECT *
         FROM music
@@ -70,8 +70,8 @@ def get_music():
     )
 
 
-def get_music_item(music_id: int):
-    return db_execute(
+async def get_music_item(music_id: int):
+    return await db_execute(
         """
         SELECT *
         FROM music
@@ -86,8 +86,8 @@ def get_music_item(music_id: int):
 # VIDEOS
 # =========================================================
 
-def get_videos():
-    return db_execute(
+async def get_videos():
+    return await db_execute(
         """
         SELECT *
         FROM videos
@@ -97,8 +97,8 @@ def get_videos():
     )
 
 
-def get_video(video_id: int):
-    return db_execute(
+async def get_video(video_id: int):
+    return await db_execute(
         """
         SELECT *
         FROM videos
@@ -113,8 +113,8 @@ def get_video(video_id: int):
 # SEARCH
 # =========================================================
 
-def search_books(keyword: str):
-    return db_execute(
+async def search_books(keyword: str):
+    return await db_execute(
         """
         SELECT *
         FROM books
@@ -126,8 +126,8 @@ def search_books(keyword: str):
     )
 
 
-def search_films(keyword: str):
-    return db_execute(
+async def search_films(keyword: str):
+    return await db_execute(
         """
         SELECT *
         FROM films
@@ -139,8 +139,8 @@ def search_films(keyword: str):
     )
 
 
-def search_music(keyword: str):
-    return db_execute(
+async def search_music(keyword: str):
+    return await db_execute(
         """
         SELECT *
         FROM music
@@ -152,8 +152,8 @@ def search_music(keyword: str):
     )
 
 
-def search_videos(keyword: str):
-    return db_execute(
+async def search_videos(keyword: str):
+    return await db_execute(
         """
         SELECT *
         FROM videos

@@ -1,3 +1,5 @@
+import asyncio
+
 from .connection import db_execute
 
 
@@ -5,8 +7,8 @@ from .connection import db_execute
 # USERS
 # =========================================================
 
-def users_count():
-    row = db_execute(
+async def users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -16,8 +18,8 @@ def users_count():
     return row["count"]
 
 
-def approved_users_count():
-    row = db_execute(
+async def approved_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -28,8 +30,8 @@ def approved_users_count():
     return row["count"]
 
 
-def pending_users_count():
-    row = db_execute(
+async def pending_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -44,8 +46,8 @@ def pending_users_count():
 # PAYMENTS
 # =========================================================
 
-def buyers_count():
-    row = db_execute(
+async def buyers_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM payments
@@ -56,8 +58,8 @@ def buyers_count():
     return row["count"]
 
 
-def pending_payments_count():
-    row = db_execute(
+async def pending_payments_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM payments
@@ -68,8 +70,8 @@ def pending_payments_count():
     return row["count"]
 
 
-def total_income():
-    row = db_execute(
+async def total_income():
+    row = await db_execute(
         """
         SELECT COALESCE(SUM(amount),0) AS total
         FROM payments
@@ -84,8 +86,8 @@ def total_income():
 # CERTIFICATES
 # =========================================================
 
-def certificates_count():
-    row = db_execute(
+async def certificates_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM certificates
@@ -99,8 +101,8 @@ def certificates_count():
 # MEDIA
 # =========================================================
 
-def films_count():
-    row = db_execute(
+async def films_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM films
@@ -110,8 +112,8 @@ def films_count():
     return row["count"]
 
 
-def books_count():
-    row = db_execute(
+async def books_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM books
@@ -121,8 +123,8 @@ def books_count():
     return row["count"]
 
 
-def music_count():
-    row = db_execute(
+async def music_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM music
@@ -132,8 +134,8 @@ def music_count():
     return row["count"]
 
 
-def videos_count():
-    row = db_execute(
+async def videos_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM videos
@@ -147,8 +149,8 @@ def videos_count():
 # RANKING
 # =========================================================
 
-def top_total_users(limit=100):
-    return db_execute(
+async def top_total_users(limit=100):
+    return await db_execute(
         """
         SELECT
             full_name,
@@ -163,8 +165,8 @@ def top_total_users(limit=100):
     )
 
 
-def top_daily_users(limit=100):
-    return db_execute(
+async def top_daily_users(limit=100):
+    return await db_execute(
         """
         SELECT
             full_name,
@@ -183,8 +185,8 @@ def top_daily_users(limit=100):
 # REGISTRATION
 # =========================================================
 
-def today_registered():
-    row = db_execute(
+async def today_registered():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -195,8 +197,8 @@ def today_registered():
     return row["count"]
 
 
-def this_month_registered():
-    row = db_execute(
+async def this_month_registered():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -211,23 +213,55 @@ def this_month_registered():
 # DASHBOARD
 # =========================================================
 
-def get_dashboard():
+async def get_dashboard():
+    # 12 independent COUNT/SUM queries - fetched concurrently
+    # instead of 12 sequential round trips.
+    (
+        users,
+        approved,
+        pending_users_,
+        buyers,
+        pending_payments_,
+        income,
+        certificates,
+        films,
+        books,
+        music,
+        videos,
+        today,
+        month,
+    ) = await asyncio.gather(
+        users_count(),
+        approved_users_count(),
+        pending_users_count(),
+        buyers_count(),
+        pending_payments_count(),
+        total_income(),
+        certificates_count(),
+        films_count(),
+        books_count(),
+        music_count(),
+        videos_count(),
+        today_registered(),
+        this_month_registered(),
+    )
+
     return {
-        "users": users_count(),
-        "approved": approved_users_count(),
-        "pending_users": pending_users_count(),
+        "users": users,
+        "approved": approved,
+        "pending_users": pending_users_,
 
-        "buyers": buyers_count(),
-        "pending_payments": pending_payments_count(),
-        "income": total_income(),
+        "buyers": buyers,
+        "pending_payments": pending_payments_,
+        "income": income,
 
-        "certificates": certificates_count(),
+        "certificates": certificates,
 
-        "films": films_count(),
-        "books": books_count(),
-        "music": music_count(),
-        "videos": videos_count(),
+        "films": films,
+        "books": books,
+        "music": music,
+        "videos": videos,
 
-        "today": today_registered(),
-        "month": this_month_registered(),
+        "today": today,
+        "month": month,
     }

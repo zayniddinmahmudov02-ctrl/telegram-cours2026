@@ -46,7 +46,7 @@ async def run_broadcast(
     message_id: int,
     progress_callback: Optional[ProgressCallback] = None,
 ):
-    users = get_all_users()
+    users = await get_all_users()
     total = len(users)
 
     stats = {
@@ -82,15 +82,15 @@ async def run_broadcast(
 
             except TelegramForbiddenError as e:
                 if "deactivated" in str(e).lower():
-                    mark_user_deleted(user_id)
+                    await mark_user_deleted(user_id)
                     stats["deleted"] += 1
                 else:
-                    block_user(user_id)
+                    await block_user(user_id)
                     stats["blocked"] += 1
                 break
 
             except TelegramNotFound:
-                mark_user_deleted(user_id)
+                await mark_user_deleted(user_id)
                 stats["deleted"] += 1
                 break
 

@@ -29,7 +29,7 @@ from services.logger import logger
 # CHECK LEVEL UNLOCK
 # =========================================================
 
-def check_level_unlock(user_id: int, current_level: str):
+async def check_level_unlock(user_id: int, current_level: str):
 
     if current_level == "C1":
         return None
@@ -39,7 +39,7 @@ def check_level_unlock(user_id: int, current_level: str):
     if not config:
         return None
 
-    result = db_execute(
+    result = await db_execute(
         """
         SELECT COALESCE(SUM(best_score),0) AS total_score
         FROM quiz_progress
@@ -65,7 +65,7 @@ def check_level_unlock(user_id: int, current_level: str):
     except (ValueError, IndexError):
         return None
 
-    db_execute(
+    await db_execute(
         """
         UPDATE users
         SET unlocked_level=%s
@@ -113,7 +113,7 @@ async def start_quiz_block(
 
     # USER LEVEL
 
-    user_data = db_execute(
+    user_data = await db_execute(
         """
         SELECT unlocked_level
         FROM users
@@ -161,7 +161,7 @@ async def start_quiz_block(
 
         prev_block = block - 1
 
-        res = db_execute(
+        res = await db_execute(
             """
             SELECT best_score
             FROM quiz_progress
@@ -377,7 +377,7 @@ async def finish_quiz(
     # OLD RESULT
     # =====================================================
 
-    old_result = db_execute(
+    old_result = await db_execute(
         """
         SELECT best_score
         FROM quiz_progress
@@ -408,7 +408,7 @@ async def finish_quiz(
     # SAVE QUIZ RESULT
     # =====================================================
 
-    db_execute(
+    await db_execute(
         """
         INSERT INTO quiz_progress
         (
@@ -450,7 +450,7 @@ async def finish_quiz(
 
     if xp_gain > 0:
 
-        add_score(
+        await add_score(
             user_id=user_id,
             points=xp_gain,
         )
@@ -459,7 +459,7 @@ async def finish_quiz(
         # LEVEL UNLOCK
         # =====================================================
 
-        new_level = check_level_unlock(
+        new_level = await check_level_unlock(
             user_id,
             level
         )

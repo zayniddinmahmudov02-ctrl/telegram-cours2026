@@ -26,7 +26,7 @@ async def broadcast_to_all(bot: Bot, text: str):
     broadcast feature (handlers/broadcast.py).
     """
 
-    users = get_all_users()
+    users = await get_all_users()
 
     sent = 0
     failed = 0
@@ -69,16 +69,16 @@ async def process_daily_champion(day_end: datetime):
     day_start = day_end - timedelta(days=1)
     champion_date = day_start.date()
 
-    if daily_champion_exists(champion_date):
+    if await daily_champion_exists(champion_date):
         return None
 
-    champion = get_period_champion(day_start, day_end)
+    champion = await get_period_champion(day_start, day_end)
 
     if not champion or not champion["score"]:
         logger.info("Daily champion: no activity today.")
         return None
 
-    save_daily_champion(
+    await save_daily_champion(
         champion_date=champion_date,
         user_id=champion["user_id"],
         score=champion["score"],
@@ -116,16 +116,16 @@ async def process_weekly_champion(bot: Bot, week_end: datetime):
 
     iso_year, iso_week, _ = week_start.isocalendar()
 
-    if weekly_champion_exists(iso_year, iso_week):
+    if await weekly_champion_exists(iso_year, iso_week):
         return None
 
-    champion = get_period_champion(week_start, week_end)
+    champion = await get_period_champion(week_start, week_end)
 
     if not champion or not champion["score"]:
         logger.info("Weekly champion: no activity this week.")
         return None
 
-    save_weekly_champion(
+    await save_weekly_champion(
         year=iso_year,
         week=iso_week,
         user_id=champion["user_id"],
@@ -173,16 +173,16 @@ async def process_monthly_champion(bot: Bot, month_end: datetime):
     last_day_of_prev_month = this_month_start - timedelta(days=1)
     month_start = last_day_of_prev_month.replace(day=1)
 
-    if monthly_champion_exists(month_start.year, month_start.month):
+    if await monthly_champion_exists(month_start.year, month_start.month):
         return None
 
-    champion = get_period_champion(month_start, month_end)
+    champion = await get_period_champion(month_start, month_end)
 
     if not champion or not champion["score"]:
         logger.info("Monthly champion: no activity this month.")
         return None
 
-    save_monthly_champion(
+    await save_monthly_champion(
         year=month_start.year,
         month=month_start.month,
         user_id=champion["user_id"],

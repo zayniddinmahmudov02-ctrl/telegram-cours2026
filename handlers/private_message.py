@@ -55,7 +55,7 @@ async def private_message_user(
 
     user_id = int(text)
 
-    if not get_user(user_id):
+    if not await get_user(user_id):
         await message.answer("❌ User not found.")
         return
 

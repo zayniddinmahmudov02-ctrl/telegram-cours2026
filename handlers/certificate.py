@@ -112,7 +112,7 @@ async def certificate_handler(
     message: Message,
 ):
 
-    statuses = build_all_statuses(
+    statuses = await build_all_statuses(
         message.from_user.id,
     )
 
@@ -140,7 +140,7 @@ async def download_certificate(
         message.text
     ]
 
-    if not certificate_ready(
+    if not await certificate_ready(
         message.from_user.id,
         level,
     ):
@@ -159,7 +159,7 @@ async def download_certificate(
     )
 
     try:
-        pdf_path = generate_certificate(
+        pdf_path = await generate_certificate(
             user_id=message.from_user.id,
             level=level,
         )

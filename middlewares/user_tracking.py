@@ -69,7 +69,7 @@ class UserTrackingMiddleware(BaseMiddleware):
         user = extract_telegram_user(event)
 
         if user is not None and not user.is_bot:
-            upsert_user(
+            await upsert_user(
                 user_id=user.id,
                 full_name=user.full_name,
                 first_name=user.first_name,

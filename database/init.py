@@ -4,45 +4,45 @@ from .connection import db_execute
 # DATABASE INITIALIZATION
 # =========================================================
 
-def init_database():
+async def init_database():
     """Create all database tables."""
 
-    create_users_table()
+    await create_users_table()
 
-    create_quiz_progress_table()
+    await create_quiz_progress_table()
 
-    create_certificates_table()
+    await create_certificates_table()
 
-    create_payments_table()
+    await create_payments_table()
 
-    create_films_table()
+    await create_films_table()
 
-    create_books_table()
+    await create_books_table()
 
-    create_music_table()
+    await create_music_table()
 
-    create_videos_table()
+    await create_videos_table()
 
-    create_user_scores_table()
+    await create_user_scores_table()
 
-    create_xp_events_table()
+    await create_xp_events_table()
 
-    create_daily_champions_table()
+    await create_daily_champions_table()
 
-    create_weekly_champions_table()
+    await create_weekly_champions_table()
 
-    create_monthly_champions_table()
+    await create_monthly_champions_table()
 
-    create_hall_of_fame_table()
+    await create_hall_of_fame_table()
 
     # Safe migrations for columns added after the initial deploy
-    migrate_schema()
+    await migrate_schema()
 # =========================================================
 # USERS
 # =========================================================
 
-def create_users_table():
-    db_execute(
+async def create_users_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS users(
 
@@ -75,8 +75,8 @@ def create_users_table():
 # WORD GAME
 # =========================================================
 
-def create_quiz_progress_table():
-    db_execute(
+async def create_quiz_progress_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS quiz_progress(
 
@@ -99,8 +99,8 @@ def create_quiz_progress_table():
 # CERTIFICATES
 # =========================================================
 
-def create_certificates_table():
-    db_execute(
+async def create_certificates_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS certificates(
 
@@ -133,8 +133,8 @@ def create_certificates_table():
 # PAYMENTS
 # =========================================================
 
-def create_payments_table():
-    db_execute(
+async def create_payments_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS payments(
 
@@ -183,8 +183,8 @@ def create_payments_table():
 # MEDIA - FILMS
 # =========================================================
 
-def create_films_table():
-    db_execute(
+async def create_films_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS films(
 
@@ -207,8 +207,8 @@ def create_films_table():
 # MEDIA - BOOKS
 # =========================================================
 
-def create_books_table():
-    db_execute(
+async def create_books_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS books(
 
@@ -231,8 +231,8 @@ def create_books_table():
 # MEDIA - MUSIC
 # =========================================================
 
-def create_music_table():
-    db_execute(
+async def create_music_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS music(
 
@@ -255,8 +255,8 @@ def create_music_table():
 # MEDIA - VIDEOS
 # =========================================================
 
-def create_videos_table():
-    db_execute(
+async def create_videos_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS videos(
 
@@ -277,8 +277,8 @@ def create_videos_table():
 # LEADERBOARD
 # =========================================================
 
-def create_user_scores_table():
-    db_execute(
+async def create_user_scores_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS user_scores(
 
@@ -323,8 +323,8 @@ def create_user_scores_table():
 # its stored value silently depends on whatever session
 # timezone was active at INSERT time.
 
-def create_xp_events_table():
-    db_execute(
+async def create_xp_events_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS xp_events(
 
@@ -340,7 +340,7 @@ def create_xp_events_table():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_xp_events_user
@@ -348,7 +348,7 @@ def create_xp_events_table():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_xp_events_created
@@ -361,8 +361,8 @@ def create_xp_events_table():
 # DAILY CHAMPIONS
 # =========================================================
 
-def create_daily_champions_table():
-    db_execute(
+async def create_daily_champions_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS daily_champions(
 
@@ -382,7 +382,7 @@ def create_daily_champions_table():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS
         idx_daily_champions_date
@@ -395,8 +395,8 @@ def create_daily_champions_table():
 # WEEKLY CHAMPIONS
 # =========================================================
 
-def create_weekly_champions_table():
-    db_execute(
+async def create_weekly_champions_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS weekly_champions(
 
@@ -418,7 +418,7 @@ def create_weekly_champions_table():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS
         idx_weekly_champions_period
@@ -429,8 +429,8 @@ def create_weekly_champions_table():
 # MONTHLY CHAMPIONS
 # =========================================================
 
-def create_monthly_champions_table():
-    db_execute(
+async def create_monthly_champions_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS monthly_champions(
 
@@ -452,7 +452,7 @@ def create_monthly_champions_table():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS
         idx_monthly_champions_period
@@ -465,8 +465,8 @@ def create_monthly_champions_table():
 # HALL OF FAME
 # =========================================================
 
-def create_hall_of_fame_table():
-    db_execute(
+async def create_hall_of_fame_table():
+    await db_execute(
         """
         CREATE TABLE IF NOT EXISTS hall_of_fame(
 
@@ -493,13 +493,13 @@ def create_hall_of_fame_table():
 # ADD COLUMN IF NOT EXISTS brings existing databases up to date
 # without touching any existing rows.
 
-def migrate_schema():
+async def migrate_schema():
 
     # ---------------------------------------------------
     # USERS
     # ---------------------------------------------------
 
-    db_execute(
+    await db_execute(
         """
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE
@@ -516,7 +516,7 @@ def migrate_schema():
         "last_seen TIMESTAMPTZ",
         "updated_at TIMESTAMPTZ DEFAULT NOW()",
     ):
-        db_execute(
+        await db_execute(
             f"""
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS {column_sql}
@@ -539,7 +539,7 @@ def migrate_schema():
         "rejected_at TIMESTAMP",
         "is_deleted BOOLEAN DEFAULT FALSE",
     ):
-        db_execute(
+        await db_execute(
             f"""
             ALTER TABLE payments
             ADD COLUMN IF NOT EXISTS {column_sql}
@@ -550,7 +550,7 @@ def migrate_schema():
     # INDEXES
     # ---------------------------------------------------
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_users_is_blocked
@@ -558,7 +558,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_users_is_deleted
@@ -566,7 +566,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_users_last_seen
@@ -574,7 +574,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_users_created_at
@@ -582,7 +582,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_payments_user_id
@@ -590,7 +590,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_payments_status
@@ -598,7 +598,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_user_scores_daily
@@ -606,7 +606,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_user_scores_weekly
@@ -614,7 +614,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_user_scores_monthly
@@ -622,7 +622,7 @@ def migrate_schema():
         """
     )
 
-    db_execute(
+    await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
         idx_user_scores_global
@@ -641,7 +641,7 @@ def migrate_schema():
     # makes going forward - no XP values are changed, only the
     # column's timezone-awareness.
 
-    db_execute(
+    await db_execute(
         """
         DO $$
         BEGIN

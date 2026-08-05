@@ -20,7 +20,7 @@ router = Router()
 @router.message(F.text == "👤 Mening Profilim")
 async def my_profile(message: Message):
 
-    user = db_execute(
+    user = await db_execute(
         """
         SELECT
             full_name,
@@ -43,7 +43,7 @@ async def my_profile(message: Message):
     phone = user["phone"] or "-"
     level = user["unlocked_level"] or "A1"
 
-    xp = get_user_xp_summary(message.from_user.id)
+    xp = await get_user_xp_summary(message.from_user.id)
 
     accuracy_text = (
         f"{xp['accuracy']}%"
@@ -115,7 +115,7 @@ async def save_full_name(message: Message, state: FSMContext):
         )
         return
 
-    db_execute(
+    await db_execute(
         """
         UPDATE users
         SET full_name=%s
@@ -142,7 +142,7 @@ async def save_full_name(message: Message, state: FSMContext):
 @router.message(F.text == "🏆 Mening Sertifikatlarim")
 async def my_certificates(message: Message):
 
-    certificates = db_execute(
+    certificates = await db_execute(
         """
         SELECT
             level,
@@ -202,7 +202,7 @@ async def view_certificate_pdf(callback: CallbackQuery):
     level = callback.data.split(":")[1]
 
     try:
-        pdf_path = generate_certificate(
+        pdf_path = await generate_certificate(
             user_id=callback.from_user.id,
             level=level,
         )

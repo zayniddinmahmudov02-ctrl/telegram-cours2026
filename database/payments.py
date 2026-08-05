@@ -4,7 +4,7 @@ from .connection import db_execute
 # CREATE PAYMENT
 # =========================================================
 
-def create_payment(
+async def create_payment(
     user_id: int,
     full_name: str,
     phone: str,
@@ -14,7 +14,7 @@ def create_payment(
     receipt_file_id: str,
     file_type: str,
 ):
-    row = db_execute(
+    row = await db_execute(
         """
         INSERT INTO payments
         (
@@ -64,12 +64,12 @@ def create_payment(
 # SAVE CHANNEL MESSAGE
 # =========================================================
 
-def save_channel_message(
+async def save_channel_message(
     payment_id: int,
     channel_id: int,
     message_id: int,
 ):
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -87,12 +87,12 @@ def save_channel_message(
 # GET
 # =========================================================
 
-def get_payment(payment_id: int):
+async def get_payment(payment_id: int):
     """
     Bitta paymentni ID bo'yicha olish.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -103,12 +103,12 @@ def get_payment(payment_id: int):
     )
 
 
-def get_user_payments(user_id: int):
+async def get_user_payments(user_id: int):
     """
     Foydalanuvchining barcha to'lovlari.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -120,12 +120,12 @@ def get_user_payments(user_id: int):
     )
 
 
-def get_latest_payment(user_id: int):
+async def get_latest_payment(user_id: int):
     """
     Foydalanuvchining oxirgi paymenti.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -138,12 +138,12 @@ def get_latest_payment(user_id: int):
     )
 
 
-def get_pending_payments():
+async def get_pending_payments():
     """
     Tasdiqlanmagan paymentlar.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -154,28 +154,12 @@ def get_pending_payments():
     )
 
 
-def get_approved_payments():
-    """
-    Tasdiqlangan paymentlar.
-    """
-
-    return db_execute(
-        """
-        SELECT *
-        FROM payments
-        WHERE status='approved'
-        ORDER BY approved_at DESC NULLS LAST
-        """,
-        fetchall=True,
-    )
-
-
-def get_rejected_payments():
+async def get_rejected_payments():
     """
     Rad etilgan paymentlar.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -184,18 +168,22 @@ def get_rejected_payments():
         """,
         fetchall=True,
     )
+# NOTE: get_approved_payments() is defined once below (near
+# APPROVED PAYMENTS), which is the version actually in effect -
+# an earlier duplicate definition here (dead code, unreachable
+# since Python keeps only the last def) was removed.
 # =========================================================
 # SEARCH
 # =========================================================
 
-def search_payments(keyword: str):
+async def search_payments(keyword: str):
     """
     Ism, username yoki Telegram ID bo'yicha qidiruv.
     """
 
     keyword = keyword.strip()
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -214,12 +202,12 @@ def search_payments(keyword: str):
     )
 
 
-def search_by_phone(phone: str):
+async def search_by_phone(phone: str):
     """
     Telefon raqami bo'yicha qidiruv.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -231,12 +219,12 @@ def search_by_phone(phone: str):
     )
 
 
-def get_customer_history(user_id: int):
+async def get_customer_history(user_id: int):
     """
     Foydalanuvchining barcha xaridlari.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             course,
@@ -252,12 +240,12 @@ def get_customer_history(user_id: int):
     )
 
 
-def get_course_buyers(course: str):
+async def get_course_buyers(course: str):
     """
     Ma'lum kursni sotib olgan foydalanuvchilar.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -273,12 +261,12 @@ def get_course_buyers(course: str):
 # STATUS
 # =========================================================
 
-def approve_payment(payment_id: int, admin_id: int):
+async def approve_payment(payment_id: int, admin_id: int):
     """
     Paymentni tasdiqlash.
     """
 
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -294,12 +282,12 @@ def approve_payment(payment_id: int, admin_id: int):
     )
 
 
-def reject_payment(payment_id: int, admin_id: int):
+async def reject_payment(payment_id: int, admin_id: int):
     """
     Paymentni rad etish.
     """
 
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -315,12 +303,12 @@ def reject_payment(payment_id: int, admin_id: int):
     )
 
 
-def cancel_payment(payment_id: int):
+async def cancel_payment(payment_id: int):
     """
     Paymentni bekor qilish.
     """
 
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -331,12 +319,12 @@ def cancel_payment(payment_id: int):
     )
 
 
-def refund_payment(payment_id: int):
+async def refund_payment(payment_id: int):
     """
     Paymentni qaytarilgan deb belgilash.
     """
 
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -347,7 +335,7 @@ def refund_payment(payment_id: int):
     )
 
 
-def update_receipt(
+async def update_receipt(
     payment_id: int,
     receipt_file_id: str,
     file_type: str,
@@ -356,7 +344,7 @@ def update_receipt(
     Chekni yangilash.
     """
 
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -374,12 +362,12 @@ def update_receipt(
 # EXISTS
 # =========================================================
 
-def payment_exists(payment_id: int):
+async def payment_exists(payment_id: int):
     """
     Payment mavjudligini tekshirish.
     """
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT id
         FROM payments
@@ -392,12 +380,12 @@ def payment_exists(payment_id: int):
     return row is not None
 
 
-def user_has_course(user_id: int, course: str):
+async def user_has_course(user_id: int, course: str):
     """
     Foydalanuvchi kursni sotib olganmi?
     """
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT id
         FROM payments
@@ -417,12 +405,12 @@ def user_has_course(user_id: int, course: str):
     return row is not None
 
 
-def has_pending_payment(user_id: int):
+async def has_pending_payment(user_id: int):
     """
     Foydalanuvchida tasdiqlanmagan payment bormi?
     """
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT id
         FROM payments
@@ -438,12 +426,12 @@ def has_pending_payment(user_id: int):
     return row is not None
 
 
-def has_rejected_payment(user_id: int):
+async def has_rejected_payment(user_id: int):
     """
     Foydalanuvchida rad etilgan payment bormi?
     """
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT id
         FROM payments
@@ -461,12 +449,12 @@ def has_rejected_payment(user_id: int):
 # DELETE
 # =========================================================
 
-def delete_payment(payment_id: int):
+async def delete_payment(payment_id: int):
     """
     Paymentni soft delete qilish.
     """
 
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -477,12 +465,12 @@ def delete_payment(payment_id: int):
     )
 
 
-def restore_payment(payment_id: int):
+async def restore_payment(payment_id: int):
     """
     O'chirilgan paymentni tiklash.
     """
 
-    db_execute(
+    await db_execute(
         """
         UPDATE payments
         SET
@@ -493,12 +481,12 @@ def restore_payment(payment_id: int):
     )
 
 
-def get_deleted_payments():
+async def get_deleted_payments():
     """
     O'chirilgan paymentlar.
     """
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT *
         FROM payments
@@ -511,12 +499,12 @@ def get_deleted_payments():
 # STATISTICS
 # =========================================================
 
-def get_payment_statistics():
+async def get_payment_statistics():
     """
     Payment statistikasi.
     """
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT
             COUNT(*) FILTER (
@@ -592,13 +580,13 @@ def get_payment_statistics():
     }
 
 
-def get_distinct_buyers_count():
+async def get_distinct_buyers_count():
     """
     Kamida bitta tasdiqlangan to'lovi bor
     noyob foydalanuvchilar soni.
     """
 
-    row = db_execute(
+    row = await db_execute(
         """
         SELECT COUNT(DISTINCT user_id) AS count
         FROM payments
@@ -612,9 +600,9 @@ def get_distinct_buyers_count():
 # APPROVED PAYMENTS
 # =========================================================
 
-def get_approved_payments():
+async def get_approved_payments():
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             id,
@@ -636,9 +624,9 @@ def get_approved_payments():
 # RECENT PAYMENTS
 # =========================================================
 
-def get_recent_payments(limit=30):
+async def get_recent_payments(limit=30):
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             id,

@@ -10,7 +10,7 @@ from .connection import db_execute
 # updated_at - business fields (approved, is_blocked,
 # unlocked_level, scores, ...) are never overwritten here.
 
-def upsert_user(
+async def upsert_user(
     user_id: int,
     full_name: str,
     first_name: str = None,
@@ -19,7 +19,7 @@ def upsert_user(
     language_code: str = None,
     is_premium: bool = False,
 ):
-    db_execute(
+    await db_execute(
         """
         INSERT INTO users
         (
@@ -67,8 +67,8 @@ def upsert_user(
 # GET
 # =========================================================
 
-def get_user(user_id: int):
-    return db_execute(
+async def get_user(user_id: int):
+    return await db_execute(
         """
         SELECT *
         FROM users
@@ -79,8 +79,8 @@ def get_user(user_id: int):
     )
 
 
-def get_full_name(user_id: int):
-    row = db_execute(
+async def get_full_name(user_id: int):
+    row = await db_execute(
         """
         SELECT full_name
         FROM users
@@ -93,8 +93,8 @@ def get_full_name(user_id: int):
     return row["full_name"] if row else None
 
 
-def get_phone(user_id: int):
-    row = db_execute(
+async def get_phone(user_id: int):
+    row = await db_execute(
         """
         SELECT phone
         FROM users
@@ -107,8 +107,8 @@ def get_phone(user_id: int):
     return row["phone"] if row else None
 
 
-def is_approved(user_id: int):
-    row = db_execute(
+async def is_approved(user_id: int):
+    row = await db_execute(
         """
         SELECT approved
         FROM users
@@ -121,8 +121,8 @@ def is_approved(user_id: int):
     return bool(row["approved"]) if row else False
 
 
-def get_unlocked_level(user_id: int):
-    row = db_execute(
+async def get_unlocked_level(user_id: int):
+    row = await db_execute(
         """
         SELECT unlocked_level
         FROM users
@@ -137,8 +137,8 @@ def get_unlocked_level(user_id: int):
 # UPDATE
 # =========================================================
 
-def update_full_name(user_id: int, full_name: str):
-    db_execute(
+async def update_full_name(user_id: int, full_name: str):
+    await db_execute(
         """
         UPDATE users
         SET full_name=%s
@@ -148,8 +148,8 @@ def update_full_name(user_id: int, full_name: str):
     )
 
 
-def update_phone(user_id: int, phone: str):
-    db_execute(
+async def update_phone(user_id: int, phone: str):
+    await db_execute(
         """
         UPDATE users
         SET phone=%s
@@ -159,8 +159,8 @@ def update_phone(user_id: int, phone: str):
     )
 
 
-def approve_user(user_id: int):
-    db_execute(
+async def approve_user(user_id: int):
+    await db_execute(
         """
         UPDATE users
         SET approved=TRUE
@@ -170,8 +170,8 @@ def approve_user(user_id: int):
     )
 
 
-def reject_user(user_id: int):
-    db_execute(
+async def reject_user(user_id: int):
+    await db_execute(
         """
         UPDATE users
         SET approved=FALSE
@@ -181,8 +181,8 @@ def reject_user(user_id: int):
     )
 
 
-def update_unlocked_level(user_id: int, level: str):
-    db_execute(
+async def update_unlocked_level(user_id: int, level: str):
+    await db_execute(
         """
         UPDATE users
         SET unlocked_level=%s
@@ -192,8 +192,8 @@ def update_unlocked_level(user_id: int, level: str):
     )
 
 
-def block_user(user_id: int):
-    db_execute(
+async def block_user(user_id: int):
+    await db_execute(
         """
         UPDATE users
         SET is_blocked=TRUE
@@ -203,8 +203,8 @@ def block_user(user_id: int):
     )
 
 
-def unblock_user(user_id: int):
-    db_execute(
+async def unblock_user(user_id: int):
+    await db_execute(
         """
         UPDATE users
         SET is_blocked=FALSE
@@ -214,8 +214,8 @@ def unblock_user(user_id: int):
     )
 
 
-def mark_user_deleted(user_id: int):
-    db_execute(
+async def mark_user_deleted(user_id: int):
+    await db_execute(
         """
         UPDATE users
         SET is_deleted=TRUE
@@ -227,8 +227,8 @@ def mark_user_deleted(user_id: int):
 # STATISTICS
 # =========================================================
 
-def users_count():
-    row = db_execute(
+async def users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -239,8 +239,8 @@ def users_count():
     return row["count"]
 
 
-def approved_count():
-    row = db_execute(
+async def approved_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -252,8 +252,8 @@ def approved_count():
     return row["count"]
 
 
-def blocked_count():
-    row = db_execute(
+async def blocked_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -265,8 +265,8 @@ def blocked_count():
     return row["count"]
 
 
-def deleted_count():
-    row = db_execute(
+async def deleted_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -278,8 +278,8 @@ def deleted_count():
     return row["count"]
 
 
-def premium_count():
-    row = db_execute(
+async def premium_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -291,8 +291,8 @@ def premium_count():
     return row["count"]
 
 
-def today_users_count():
-    row = db_execute(
+async def today_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -304,8 +304,8 @@ def today_users_count():
     return row["count"]
 
 
-def yesterday_users_count():
-    row = db_execute(
+async def yesterday_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -318,8 +318,8 @@ def yesterday_users_count():
     return row["count"]
 
 
-def weekly_users_count():
-    row = db_execute(
+async def weekly_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -331,8 +331,8 @@ def weekly_users_count():
     return row["count"]
 
 
-def monthly_users_count():
-    row = db_execute(
+async def monthly_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -344,8 +344,8 @@ def monthly_users_count():
     return row["count"]
 
 
-def today_active_users_count():
-    row = db_execute(
+async def today_active_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -357,8 +357,8 @@ def today_active_users_count():
     return row["count"]
 
 
-def weekly_active_users_count():
-    row = db_execute(
+async def weekly_active_users_count():
+    row = await db_execute(
         """
         SELECT COUNT(*) AS count
         FROM users
@@ -370,8 +370,8 @@ def weekly_active_users_count():
     return row["count"]
 
 
-def pending_users():
-    return db_execute(
+async def pending_users():
+    return await db_execute(
         """
         SELECT
             user_id,
@@ -389,20 +389,20 @@ def pending_users():
 # ADMIN HELPERS
 # =========================================================
 
-def get_total_users():
-    return users_count()
+async def get_total_users():
+    return await users_count()
 
 
-def get_approved_users():
-    return approved_count()
+async def get_approved_users():
+    return await approved_count()
 
 
-def get_blocked_users():
-    return blocked_count()
+async def get_blocked_users():
+    return await blocked_count()
 
 
-def get_latest_users(limit: int = 10):
-    return db_execute(
+async def get_latest_users(limit: int = 10):
+    return await db_execute(
         """
         SELECT
             user_id,
@@ -422,8 +422,8 @@ def get_latest_users(limit: int = 10):
 # ALL USERS
 # =========================================================
 
-def get_all_users():
-    return db_execute(
+async def get_all_users():
+    return await db_execute(
         """
         SELECT
             user_id,

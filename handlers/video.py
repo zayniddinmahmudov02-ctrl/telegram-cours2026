@@ -79,7 +79,7 @@ async def send_course_info(
         return
 
     try:
-        db_execute(
+        await db_execute(
             "UPDATE users SET course=%s WHERE user_id=%s",
             (
                 course,

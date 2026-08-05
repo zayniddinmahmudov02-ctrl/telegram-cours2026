@@ -35,9 +35,9 @@ BLOCK_PATTERN = re.compile(
 # DATABASE HELPERS
 # =========================================================
 
-def get_user(user_id: int):
+async def get_user(user_id: int):
 
-    return db_execute(
+    return await db_execute(
         """
         SELECT
             full_name,
@@ -50,27 +50,31 @@ def get_user(user_id: int):
     )
 
 
-def get_progress(
+async def get_progress_map(
     user_id: int,
     level: str,
-    block: int,
-):
+) -> dict:
+    """
+    best_score per block for a whole level, in a single query -
+    used to build/check block status without one SELECT per
+    block (previously up to 2 queries x 15 blocks for B2).
+    """
 
-    return db_execute(
+    rows = await db_execute(
         """
-        SELECT best_score
+        SELECT block_number, best_score
         FROM quiz_progress
         WHERE user_id=%s
         AND level=%s
-        AND block_number=%s
         """,
-        (
-            user_id,
-            level,
-            block,
-        ),
-        fetchone=True,
+        (user_id, level),
+        fetchall=True,
     )
+
+    return {
+        row["block_number"]: row["best_score"]
+        for row in rows
+    }
 
 # =========================================================
 # LEVEL MENU
@@ -127,53 +131,32 @@ async def build_level_menu(
 # BLOCK HELPERS
 # =========================================================
 
-def previous_block_completed(
-    user_id: int,
-    level: str,
+def previous_block_completed_map(
+    progress_map: dict,
     block: int,
 ) -> bool:
 
     if block == 1:
         return True
 
-    progress = get_progress(
-        user_id,
-        level,
-        block - 1,
-    )
-
-    return bool(
-        progress and (progress["best_score"] or 0) >= 60
-    )
+    return (progress_map.get(block - 1) or 0) >= 60
 
 
-def get_best_score(
-    user_id: int,
-    level: str,
+def get_best_score_map(
+    progress_map: dict,
     block: int,
 ) -> int:
 
-    progress = get_progress(
-        user_id,
-        level,
-        block,
-    )
-
-    if not progress:
-        return 0
-
-    return progress["best_score"] or 0
+    return progress_map.get(block) or 0
 
 
-def can_open_block(
-    user_id: int,
-    level: str,
+def can_open_block_map(
+    progress_map: dict,
     block: int,
 ) -> bool:
 
-    return previous_block_completed(
-        user_id,
-        level,
+    return previous_block_completed_map(
+        progress_map,
         block,
     )
 
@@ -182,17 +165,16 @@ def can_open_block(
 # BLOCK STATUS
 # =========================================================
 
-def get_block_title(
-    user_id: int,
+def get_block_title_map(
+    progress_map: dict,
     level: str,
     block: int,
 ) -> str:
 
     block_size = LEVEL_CONFIG[level]["size"]
 
-    score = get_best_score(
-        user_id,
-        level,
+    score = get_best_score_map(
+        progress_map,
         block,
     )
 
@@ -212,9 +194,8 @@ def get_block_title(
             f"✅ {level}-{block}-Blok ({percent}%)"
         )
 
-    if can_open_block(
-        user_id,
-        level,
+    if can_open_block_map(
+        progress_map,
         block,
     ):
 
@@ -230,25 +211,21 @@ def get_block_title(
 # LEVEL COMPLETE
 # =========================================================
 
-def level_completed(
+async def level_completed(
     user_id: int,
     level: str,
 ) -> bool:
 
     config = LEVEL_CONFIG[level]
 
+    progress_map = await get_progress_map(user_id, level)
+
     for block in range(
         1,
         config["blocks"] + 1,
     ):
 
-        score = get_best_score(
-            user_id,
-            level,
-            block,
-        )
-
-        if score < PASS_THRESHOLD:
+        if get_best_score_map(progress_map, block) < PASS_THRESHOLD:
             return False
 
     return True
@@ -257,7 +234,7 @@ def level_completed(
 # BLOCK KEYBOARD
 # =========================================================
 
-def build_block_keyboard(
+async def build_block_keyboard(
     level: str,
     user_id: int,
 ) -> ReplyKeyboardMarkup:
@@ -277,6 +254,11 @@ def build_block_keyboard(
             resize_keyboard=True,
         )
 
+    # One query for the whole level instead of one (or two) per
+    # block - up to 15 blocks (B2) previously meant up to 30
+    # round trips just to render this keyboard.
+    progress_map = await get_progress_map(user_id, level)
+
     rows = []
 
     current = []
@@ -288,8 +270,8 @@ def build_block_keyboard(
 
         current.append(
             KeyboardButton(
-                text=get_block_title(
-                    user_id,
+                text=get_block_title_map(
+                    progress_map,
                     level,
                     block,
                 )
@@ -379,7 +361,7 @@ WORD_GAME_TEXT = (
 @router.message(F.text.in_(["🎮 So'z Oyini", "🎮 So'z O'yini"]))
 async def word_game_handler(message: Message):
 
-    if not get_user(message.from_user.id):
+    if not await get_user(message.from_user.id):
 
         await message.answer(
             "❌ Avval ro'yxatdan o'ting."
@@ -411,7 +393,7 @@ async def level_selected(message: Message):
         f"📚 <b>{level}</b>\n\n"
         "Bloklardan birini tanlang.",
         parse_mode="HTML",
-        reply_markup=build_block_keyboard(
+        reply_markup=await build_block_keyboard(
             level,
             message.from_user.id,
         ),
@@ -443,7 +425,7 @@ async def back_to_levels(message: Message):
 # CERTIFICATE MENU
 # =========================================================
 
-def build_certificate_status_text(
+async def build_certificate_status_text(
     user_id: int,
 ) -> str:
 
@@ -452,7 +434,7 @@ def build_certificate_status_text(
         "Qaysi daraja sertifikatini olishni xohlaysiz?\n\n"
     )
 
-    for status in build_all_statuses(user_id):
+    for status in await build_all_statuses(user_id):
 
         text += (
             "━━━━━━━━━━━━━━\n"
@@ -492,7 +474,7 @@ async def certificate_menu(
 ):
 
     await message.answer(
-        build_certificate_status_text(
+        await build_certificate_status_text(
             message.from_user.id,
         ),
         parse_mode="HTML",
@@ -513,7 +495,7 @@ async def certificate_selected(
         message.text
     ]
 
-    if not level_completed(
+    if not await level_completed(
         message.from_user.id,
         level,
     ):
@@ -533,7 +515,7 @@ async def certificate_selected(
     )
 
     try:
-        pdf_path = generate_certificate(
+        pdf_path = await generate_certificate(
             user_id=message.from_user.id,
             level=level,
         )
@@ -583,9 +565,13 @@ async def open_block(message: Message):
     level = match.group(1)
     block = int(match.group(2))
 
-    if not can_open_block(
+    progress_map = await get_progress_map(
         message.from_user.id,
         level,
+    )
+
+    if not can_open_block_map(
+        progress_map,
         block,
     ):
 

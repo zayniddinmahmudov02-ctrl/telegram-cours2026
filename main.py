@@ -43,7 +43,7 @@ def run_web():
 
 async def main():
 
-    init_database()
+    await init_database()
 
     load_artikel()
 

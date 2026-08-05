@@ -1,3 +1,5 @@
+import asyncio
+
 from config import (
     LEVEL_CONFIG,
     LEVEL_ORDER,
@@ -98,14 +100,14 @@ def level_started(
 # LEVEL STATUS
 # =========================================================
 
-def build_level_status(
+async def build_level_status(
     user_id: int,
     level: str,
 ) -> dict:
 
     config = LEVEL_CONFIG[level]
 
-    scores = get_level_progress(
+    scores = await get_level_progress(
         user_id,
         level,
     )
@@ -154,48 +156,48 @@ def build_level_status(
 # ALL LEVELS
 # =========================================================
 
-def build_all_statuses(
+async def build_all_statuses(
     user_id: int,
 ) -> list[dict]:
 
-    statuses = []
-
-    for level in LEVEL_ORDER:
-
-        statuses.append(
-            build_level_status(
-                user_id,
-                level,
+    # Every level's status is an independent read - fetch all
+    # of them concurrently instead of one after another.
+    return list(
+        await asyncio.gather(
+            *(
+                build_level_status(user_id, level)
+                for level in LEVEL_ORDER
             )
         )
-
-    return statuses
+    )
 
 
 # =========================================================
 # CERTIFICATE READY
 # =========================================================
 
-def certificate_ready(
+async def certificate_ready(
     user_id: int,
     level: str,
 ) -> bool:
 
-    return build_level_status(
+    status = await build_level_status(
         user_id,
         level,
-    )["ready"]
+    )
+
+    return status["ready"]
 
 
 # =========================================================
 # STATISTICS
 # =========================================================
 
-def certificate_statistics(
+async def certificate_statistics(
     user_id: int,
 ) -> dict:
 
-    statuses = build_all_statuses(
+    statuses = await build_all_statuses(
         user_id,
     )
 
