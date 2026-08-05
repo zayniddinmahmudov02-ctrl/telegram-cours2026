@@ -2,6 +2,10 @@
 # IMPORTS
 # =========================================================
 
+import os
+
+from config import MOVIE_POSTERS_DIR
+
 from services.loader import BUCHER, FILME, MUSIK
 
 # Root-level movie categories shown in the Medien menu. The
@@ -15,6 +19,13 @@ MOVIE_CATEGORIES = {
     "film": "🎥 Film",
     "zeichentrick": "🎬 Zeichentrickfilm",
 }
+
+# Filme.csv's `photo` column holds only the file name, no
+# extension (e.g. "photo3") - the actual file is looked up on
+# disk by trying these extensions in order. This is what makes
+# requirement 11 work: drop photo11.jpg into MOVIE_POSTERS_DIR
+# and it's picked up on the next lookup, no code change needed.
+MOVIE_PHOTO_EXTENSIONS = (".webp", ".png", ".jpg", ".jpeg")
 
 
 # =========================================================
@@ -115,6 +126,19 @@ def search_movies(query: str) -> list[dict]:
         ),
         key=_by_title,
     )
+
+
+def resolve_movie_photo(photo_name: str | None) -> str | None:
+    if not photo_name:
+        return None
+
+    for ext in MOVIE_PHOTO_EXTENSIONS:
+        path = os.path.join(MOVIE_POSTERS_DIR, f"{photo_name}{ext}")
+
+        if os.path.isfile(path):
+            return path
+
+    return None
 
 
 # =========================================================

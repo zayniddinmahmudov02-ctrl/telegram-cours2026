@@ -3,14 +3,22 @@
 # =========================================================
 
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import (
+    CallbackQuery,
+    FSInputFile,
+    InputMediaPhoto,
+    Message,
+)
 
 from config import (
     BOOK_CHANNEL_ID,
     FILM_CHANNEL_ID,
     MUSIC_CHANNEL_ID,
 )
+
+from services.logger import logger
 
 from services.media import (
     get_book_levels,
@@ -21,6 +29,7 @@ from services.media import (
     MOVIE_CATEGORIES,
     get_movies,
     get_movie_by_message_id,
+    resolve_movie_photo,
     search_movies,
     get_music,
     get_music_by_message_id,
@@ -32,7 +41,8 @@ from keyboards.media import (
     levels_keyboard,
     categories_keyboard,
     book_list_keyboard,
-    movie_list_keyboard,
+    movie_gallery_keyboard,
+    movie_empty_keyboard,
     music_list_keyboard,
     search_results_keyboard,
     search_prompt_keyboard,
@@ -43,6 +53,60 @@ from states.media import MediaSearchState
 router = Router()
 
 MEDIA_ROOT_TEXT = "🎬 <b>Media</b>\n\nBo'limni tanlang."
+
+
+# =========================================================
+# SAFE RENDER (text <-> photo aware edit)
+# =========================================================
+# The movie gallery can land on a photo message (poster found)
+# or a text message (no poster / empty category), and users can
+# jump between those and any other text screen (root menu,
+# search prompt) via the same "⬅️ Orqaga"/nav buttons. Telegram's
+# edit_message_text/edit_message_media each only work on their
+# own message type, so this always tries the edit that matches
+# what's being shown now and falls back to delete+resend if the
+# current message turns out to be the other type.
+
+async def _render(
+    callback: CallbackQuery,
+    keyboard,
+    text: str,
+    photo_path: str | None = None,
+    parse_mode: str | None = None,
+):
+    try:
+        if photo_path:
+            await callback.message.edit_media(
+                media=InputMediaPhoto(
+                    media=FSInputFile(photo_path),
+                    caption=text,
+                ),
+                reply_markup=keyboard,
+            )
+        else:
+            await callback.message.edit_text(
+                text,
+                parse_mode=parse_mode,
+                reply_markup=keyboard,
+            )
+
+    except TelegramBadRequest:
+        await callback.message.delete()
+
+        if photo_path:
+            await callback.message.answer_photo(
+                FSInputFile(photo_path),
+                caption=text,
+                reply_markup=keyboard,
+            )
+        else:
+            await callback.message.answer(
+                text,
+                parse_mode=parse_mode,
+                reply_markup=keyboard,
+            )
+
+    await callback.answer()
 
 
 # =========================================================
@@ -64,12 +128,12 @@ async def media_menu(message: Message, state: FSMContext):
 async def media_root(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
-    await callback.message.edit_text(
+    await _render(
+        callback,
+        media_root_keyboard(),
         MEDIA_ROOT_TEXT,
         parse_mode="HTML",
-        reply_markup=media_root_keyboard(),
     )
-    await callback.answer()
 
 
 @router.callback_query(F.data == "media:noop")
@@ -235,25 +299,53 @@ async def books_cancel_search(callback: CallbackQuery, state: FSMContext):
 # =========================================================
 # MOVIES
 # =========================================================
-# No level/category picker here anymore - the Medien root menu
+# No level/category picker or list here - the Medien root menu
 # links directly to one of the two fixed categories (Film /
-# Zeichentrickfilm), and which titles show up under each is
-# resolved dynamically from Filme.csv (see services.media).
+# Zeichentrickfilm), and this shows one movie at a time (with
+# its poster, if one resolves) with Previous/Next/Watch. Which
+# titles exist and their order is resolved dynamically from
+# Filme.csv on every call (see services.media) - nothing here is
+# hardcoded, so new CSV rows / uploaded posters need no code
+# change to show up.
 
 @router.callback_query(F.data.startswith("media:movies:cat:"))
 async def movies_category(callback: CallbackQuery):
     parts = callback.data.split(":")
-    category, page = parts[3], int(parts[4])
+    category, index = parts[3], int(parts[4])
 
     label = MOVIE_CATEGORIES.get(category, category.capitalize())
     movies = get_movies(category)
 
-    await callback.message.edit_text(
-        f"{label}\n\nFilmni tanlang.",
-        parse_mode="HTML",
-        reply_markup=movie_list_keyboard(movies, page, category),
+    if not movies:
+        await _render(
+            callback,
+            movie_empty_keyboard(),
+            f"{label}\n\nHozircha film mavjud emas.",
+        )
+        return
+
+    index %= len(movies)
+    item = movies[index]
+
+    photo_path = resolve_movie_photo(item["photo"])
+
+    if item["photo"] and not photo_path:
+        logger.warning(
+            f"Movie poster not found: {item['photo']}.* "
+            f"(title={item['title']!r})"
+        )
+
+    await _render(
+        callback,
+        movie_gallery_keyboard(
+            category,
+            index,
+            len(movies),
+            item["message_id"],
+        ),
+        item["title"],
+        photo_path=photo_path,
     )
-    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("media:movies:open:"))
@@ -274,11 +366,11 @@ async def movies_open(callback: CallbackQuery):
 async def movies_search_prompt(callback: CallbackQuery, state: FSMContext):
     await state.set_state(MediaSearchState.waiting_movie_query)
 
-    await callback.message.edit_text(
+    await _render(
+        callback,
+        search_prompt_keyboard("movies"),
         "🔎 Film nomini kiriting:",
-        reply_markup=search_prompt_keyboard("movies"),
     )
-    await callback.answer()
 
 
 @router.message(MediaSearchState.waiting_movie_query, F.text)

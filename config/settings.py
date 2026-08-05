@@ -57,6 +57,10 @@ CHANNEL_ID = int(
 GENERATED_DIR = "generated"
 CERTIFICATE_DIR = "certificates"
 
+# Movie poster images, looked up by name (no extension) from
+# Filme.csv's `photo` column - see services.media.resolve_movie_photo.
+MOVIE_POSTERS_DIR = os.path.join("assets", "medien", "film", "photos")
+
 # =========================================================
 # SYSTEM
 # =========================================================

@@ -204,26 +204,74 @@ def book_list_keyboard(
     )
 
 
-def movie_list_keyboard(
-    items: list[dict],
-    page: int,
+# =========================================================
+# MOVIE GALLERY (one movie at a time, with a poster)
+# =========================================================
+
+def movie_gallery_keyboard(
     category: str,
+    index: int,
+    total: int,
+    message_id: int,
 ) -> InlineKeyboardMarkup:
 
-    return _items_page_keyboard(
-        items,
-        page,
-        open_prefix="media:movies:open:",
-        page_prefix=f"media:movies:cat:{category}",
-        back_callback="media:root",
-        extra_rows=[
+    if total > 1:
+        prev_callback = f"media:movies:cat:{category}:{(index - 1) % total}"
+        next_callback = f"media:movies:cat:{category}:{(index + 1) % total}"
+    else:
+        # Nothing to page through - Prev/Next are no-ops rather
+        # than re-rendering the same movie.
+        prev_callback = "media:noop"
+        next_callback = "media:noop"
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Previous",
+                    callback_data=prev_callback,
+                ),
+                InlineKeyboardButton(
+                    text="🎥 Watch Movie",
+                    callback_data=f"media:movies:open:{message_id}",
+                ),
+                InlineKeyboardButton(
+                    text="➡️ Next",
+                    callback_data=next_callback,
+                ),
+            ],
             [
                 InlineKeyboardButton(
                     text=SEARCH_LABELS["movies"],
                     callback_data="media:movies:search",
                 )
-            ]
-        ],
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Orqaga",
+                    callback_data="media:root",
+                )
+            ],
+        ]
+    )
+
+
+def movie_empty_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=SEARCH_LABELS["movies"],
+                    callback_data="media:movies:search",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Orqaga",
+                    callback_data="media:root",
+                )
+            ],
+        ]
     )
 
 

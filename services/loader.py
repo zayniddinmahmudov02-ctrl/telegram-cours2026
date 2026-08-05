@@ -172,6 +172,9 @@ def load_filme():
                         "title":
                             row["title"].strip(),
 
+                        "photo":
+                            row["photo"].strip(),
+
                         "message_id":
                             int(
                                 row["message_id"]

@@ -1,11 +1,12 @@
-category,title,message_id
-film,Im Westen nichts Neues,3
-film,Drei Schritte zu dir,5
-film,Interstellar,15
-film,Avatar,16
-Zeichentrick,Ferdinand,17
-film,Drei Idiots,18
-film,Lamborghini,19
-Zeichentrick,Elemental,20
-Zeichentrick,Inside Out,21
-film,Me before You,22
+category,title,photo,message_id
+film,Im Westen nichts Neues,photo1,3
+film,Drei Schritte zu dir,photo2,5
+film,Interstellar,photo3,15
+film,Avatar,photo4,16
+Zeichentrick,Ferdinand,photo5,17
+film,Drei Idiots,photo6,18
+film,Lamborghini,photo7,19
+Zeichentrick,Elemental,photo8,20
+Zeichentrick,Inside Out,photo9,21
+film,Me Before You,photo10,22
+film,Die Verurteilen,photo11,23
