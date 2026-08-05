@@ -379,7 +379,7 @@ def pending_users():
             approved
         FROM users
         WHERE approved=FALSE
-        ORDER BY id DESC
+        ORDER BY created_at DESC
         """,
         fetchall=True,
     )
@@ -410,7 +410,7 @@ def get_latest_users(limit: int = 10):
             approved,
             is_blocked
         FROM users
-        ORDER BY id DESC
+        ORDER BY created_at DESC
         LIMIT %s
         """,
         (limit,),
@@ -431,7 +431,7 @@ def get_all_users():
         FROM users
         WHERE is_blocked=FALSE
         AND is_deleted=FALSE
-        ORDER BY id
+        ORDER BY user_id
         """,
         fetchall=True,
     )
