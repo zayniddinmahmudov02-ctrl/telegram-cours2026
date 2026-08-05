@@ -4,7 +4,7 @@ Database layer exports.
 Barcha database funksiyalarini bitta joydan import qilish uchun.
 
 Misol:
-    from database import create_user, get_user, create_payment
+    from database import upsert_user, get_user, create_payment
 """
 
 from .connection import *

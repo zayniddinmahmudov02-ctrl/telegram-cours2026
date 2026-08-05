@@ -10,12 +10,9 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 
 from services.auth import is_admin
+from services.broadcast import format_elapsed, run_broadcast
 
 from states.broadcast import BroadcastState
-
-from database.users import (
-    get_all_users,
-)
 
 router = Router()
 # =========================================================
@@ -120,35 +117,36 @@ async def send_broadcast(
 
     data = await state.get_data()
 
-    users = get_all_users()
-
-    success = 0
-    failed = 0
-
-    for user in users:
-
-        try:
-
-            await message.bot.copy_message(
-                chat_id=user["user_id"],
-                from_chat_id=data["chat_id"],
-                message_id=data["message_id"],
-            )
-
-            success += 1
-
-        except Exception:
-
-            failed += 1
-
     await state.clear()
 
-    await message.answer(
+    status_message = await message.answer(
+        "⏳ Yuborilmoqda...\n\n0 / 0"
+    )
+
+    async def report_progress(sent: int, total: int):
+        try:
+            await status_message.edit_text(
+                f"⏳ Yuborilmoqda...\n\n{sent} / {total}"
+            )
+        except Exception:
+            pass
+
+    stats = await run_broadcast(
+        bot=message.bot,
+        from_chat_id=data["chat_id"],
+        message_id=data["message_id"],
+        progress_callback=report_progress,
+    )
+
+    await status_message.edit_text(
         f"""
-✅ Reklama yuborildi.
+✅ Reklama yakunlandi.
 
-👥 Yuborildi: {success}
-
-❌ Xatolik: {failed}
+👥 Jami: {stats['total']}
+✅ Yuborildi: {stats['success']}
+🚫 Bloklangan: {stats['blocked']}
+🗑 O'chirilgan: {stats['deleted']}
+❌ Xatolik: {stats['failed']}
+⏱ Vaqt: {format_elapsed(stats['elapsed_seconds'])}
 """
     )

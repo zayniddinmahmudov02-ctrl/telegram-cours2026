@@ -15,7 +15,18 @@ from keyboards.inline.certificate import (
     admin_certificates_browse_keyboard,
 )
 
-from database.users import get_total_users
+from database.users import (
+    get_total_users,
+    blocked_count,
+    deleted_count,
+    premium_count,
+    today_users_count,
+    yesterday_users_count,
+    weekly_users_count,
+    monthly_users_count,
+    today_active_users_count,
+    weekly_active_users_count,
+)
 
 from database.payments import (
     get_approved_payments,
@@ -91,6 +102,25 @@ async def statistics(message: Message):
 💳 Jami kurs xaridorlari: <b>{total_buyers}</b>
 🛒 Kurs sotuvlari: <b>{course_sales}</b>
 🏆 So'z O'yini sertifikatlari: <b>{wordgame_certificates}</b>
+
+━━━━━━━━━━━━━━━━━━
+📈 <b>Ro'yxatdan o'tish</b>
+
+🆕 Bugun: <b>{today_users_count()}</b>
+📅 Kecha: <b>{yesterday_users_count()}</b>
+🗓 Shu hafta: <b>{weekly_users_count()}</b>
+📆 Shu oy: <b>{monthly_users_count()}</b>
+
+━━━━━━━━━━━━━━━━━━
+🟢 <b>Faollik</b>
+
+🟢 Bugun faol: <b>{today_active_users_count()}</b>
+🟢 Shu hafta faol: <b>{weekly_active_users_count()}</b>
+
+━━━━━━━━━━━━━━━━━━
+⭐ Premium: <b>{premium_count()}</b>
+🚫 Bloklangan: <b>{blocked_count()}</b>
+🗑 O'chirilgan: <b>{deleted_count()}</b>
 """
 
     await message.answer(

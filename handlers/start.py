@@ -2,7 +2,6 @@ from aiogram import Bot, F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message, User
 
-from database import db_execute
 from keyboards import main_menu_for
 from keyboards.subscription import subscription_keyboard
 from middlewares.subscription import check_subscription
@@ -10,23 +9,9 @@ from middlewares.subscription import check_subscription
 router = Router()
 
 
-def register_user(user: User):
-    db_execute(
-        """
-        INSERT INTO users (user_id, full_name)
-        VALUES (%s, %s)
-        ON CONFLICT (user_id)
-        DO NOTHING
-        """,
-        (
-            user.id,
-            user.full_name,
-        ),
-    )
-
-
 async def send_welcome(message: Message, user: User):
-    register_user(user)
+    # User registration/upsert happens globally in
+    # middlewares.user_tracking before this handler ever runs.
 
     await message.answer(
         f"Assalomu alaykum, {user.full_name}! 🇩🇪\n\n"

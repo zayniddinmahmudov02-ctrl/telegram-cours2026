@@ -506,6 +506,23 @@ def migrate_schema():
         """
     )
 
+    for column_sql in (
+        "first_name TEXT",
+        "last_name TEXT",
+        "username TEXT",
+        "language_code VARCHAR(10)",
+        "is_premium BOOLEAN DEFAULT FALSE",
+        "is_deleted BOOLEAN DEFAULT FALSE",
+        "last_seen TIMESTAMPTZ",
+        "updated_at TIMESTAMPTZ DEFAULT NOW()",
+    ):
+        db_execute(
+            f"""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS {column_sql}
+            """
+        )
+
     # ---------------------------------------------------
     # PAYMENTS
     # ---------------------------------------------------
@@ -538,6 +555,30 @@ def migrate_schema():
         CREATE INDEX IF NOT EXISTS
         idx_users_is_blocked
         ON users(is_blocked)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_users_is_deleted
+        ON users(is_deleted)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_users_last_seen
+        ON users(last_seen)
+        """
+    )
+
+    db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_users_created_at
+        ON users(created_at)
         """
     )
 
