@@ -4,10 +4,17 @@
 
 from services.loader import BUCHER, FILME, MUSIK
 
-# Category values that mark a Filme.csv row as a series
-# episode rather than a standalone movie. Serial navigation
-# has been removed - these rows are simply excluded.
-SERIAL_CATEGORIES = {"serie", "serial", "series"}
+# Root-level movie categories shown in the Medien menu. The
+# dict key is matched (case-insensitively) against Filme.csv's
+# `category` column; the value is the button/header label.
+# Which titles land under each is entirely data-driven - adding
+# a Filme.csv row with category=film or category=Zeichentrick
+# never requires a code change. Any other/unknown category value
+# (e.g. old "serie" rows) is simply excluded from both.
+MOVIE_CATEGORIES = {
+    "film": "🎥 Film",
+    "zeichentrick": "🎬 Zeichentrickfilm",
+}
 
 
 # =========================================================
@@ -22,8 +29,9 @@ def _matches(title: str, query: str) -> bool:
     return _casefold(query) in _casefold(title)
 
 
-def _is_serial(item: dict) -> bool:
-    return item["category"].strip().casefold() in SERIAL_CATEGORIES
+def _movie_category_key(item: dict) -> str | None:
+    key = item["category"].strip().casefold()
+    return key if key in MOVIE_CATEGORIES else None
 
 
 def _by_title(item: dict) -> str:
@@ -75,27 +83,13 @@ def search_books(query: str) -> list[dict]:
 # MOVIES
 # =========================================================
 
-def get_movie_levels() -> list[str]:
-    return sorted({
-        item["level"] for item in FILME if not _is_serial(item)
-    })
+def get_movies(category: str) -> list[dict]:
+    key = category.strip().casefold()
 
-
-def get_movie_categories(level: str) -> list[str]:
-    return sorted({
-        item["category"]
-        for item in FILME
-        if item["level"] == level and not _is_serial(item)
-    })
-
-
-def get_movies(level: str, category: str) -> list[dict]:
     return sorted(
         (
             item for item in FILME
-            if item["level"] == level
-            and item["category"] == category
-            and not _is_serial(item)
+            if _movie_category_key(item) == key
         ),
         key=_by_title,
     )
@@ -105,7 +99,8 @@ def get_movie_by_message_id(message_id: int) -> dict | None:
     return next(
         (
             item for item in FILME
-            if item["message_id"] == message_id and not _is_serial(item)
+            if item["message_id"] == message_id
+            and _movie_category_key(item) is not None
         ),
         None,
     )
@@ -115,7 +110,8 @@ def search_movies(query: str) -> list[dict]:
     return sorted(
         (
             item for item in FILME
-            if not _is_serial(item) and _matches(item["title"], query)
+            if _movie_category_key(item) is not None
+            and _matches(item["title"], query)
         ),
         key=_by_title,
     )

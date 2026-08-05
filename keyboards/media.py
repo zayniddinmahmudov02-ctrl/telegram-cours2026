@@ -27,8 +27,14 @@ def media_root_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
-                    text="🎬 Filme",
-                    callback_data="media:movies",
+                    text="🎥 Film",
+                    callback_data="media:movies:cat:film:0",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🎬 Zeichentrickfilm",
+                    callback_data="media:movies:cat:zeichentrick:0",
                 )
             ],
             [
@@ -201,7 +207,6 @@ def book_list_keyboard(
 def movie_list_keyboard(
     items: list[dict],
     page: int,
-    level: str,
     category: str,
 ) -> InlineKeyboardMarkup:
 
@@ -209,8 +214,16 @@ def movie_list_keyboard(
         items,
         page,
         open_prefix="media:movies:open:",
-        page_prefix=f"media:movies:cat:{level}:{category}",
-        back_callback=f"media:movies:level:{level}",
+        page_prefix=f"media:movies:cat:{category}",
+        back_callback="media:root",
+        extra_rows=[
+            [
+                InlineKeyboardButton(
+                    text=SEARCH_LABELS["movies"],
+                    callback_data="media:movies:search",
+                )
+            ]
+        ],
     )
 
 

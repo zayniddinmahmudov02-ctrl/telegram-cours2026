@@ -18,8 +18,7 @@ from services.media import (
     get_books,
     get_book_by_message_id,
     search_books,
-    get_movie_levels,
-    get_movie_categories,
+    MOVIE_CATEGORIES,
     get_movies,
     get_movie_by_message_id,
     search_movies,
@@ -236,45 +235,23 @@ async def books_cancel_search(callback: CallbackQuery, state: FSMContext):
 # =========================================================
 # MOVIES
 # =========================================================
-
-@router.callback_query(F.data == "media:movies")
-async def movies_home(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
-
-    levels = get_movie_levels()
-
-    await callback.message.edit_text(
-        "🎬 <b>Filme</b>\n\nDarajani tanlang yoki qidiring.",
-        parse_mode="HTML",
-        reply_markup=levels_keyboard("movies", levels),
-    )
-    await callback.answer()
-
-
-@router.callback_query(F.data.startswith("media:movies:level:"))
-async def movies_level(callback: CallbackQuery):
-    level = callback.data.split(":")[3]
-
-    categories = get_movie_categories(level)
-
-    await callback.message.edit_text(
-        f"🎬 <b>{level}</b>\n\nKategoriyani tanlang.",
-        parse_mode="HTML",
-        reply_markup=categories_keyboard("movies", level, categories),
-    )
-    await callback.answer()
-
+# No level/category picker here anymore - the Medien root menu
+# links directly to one of the two fixed categories (Film /
+# Zeichentrickfilm), and which titles show up under each is
+# resolved dynamically from Filme.csv (see services.media).
 
 @router.callback_query(F.data.startswith("media:movies:cat:"))
 async def movies_category(callback: CallbackQuery):
     parts = callback.data.split(":")
-    level, category, page = parts[3], parts[4], int(parts[5])
+    category, page = parts[3], int(parts[4])
 
-    movies = get_movies(level, category)
+    label = MOVIE_CATEGORIES.get(category, category.capitalize())
+    movies = get_movies(category)
 
     await callback.message.edit_text(
-        f"🎬 {level} → {category.capitalize()}\n\nFilmni tanlang.",
-        reply_markup=movie_list_keyboard(movies, page, level, category),
+        f"{label}\n\nFilmni tanlang.",
+        parse_mode="HTML",
+        reply_markup=movie_list_keyboard(movies, page, category),
     )
     await callback.answer()
 
@@ -356,7 +333,7 @@ async def movies_search_page(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "media:movies:cancel_search")
 async def movies_cancel_search(callback: CallbackQuery, state: FSMContext):
-    await movies_home(callback, state)
+    await media_root(callback, state)
 
 
 # =========================================================

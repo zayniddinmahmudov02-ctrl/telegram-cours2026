@@ -166,9 +166,6 @@ def load_filme():
 
                 FILME.append(
                     {
-                        "level":
-                            row["level"].strip(),
-
                         "category":
                             row["category"].strip(),
 
