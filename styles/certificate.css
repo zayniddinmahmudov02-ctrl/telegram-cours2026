@@ -122,23 +122,6 @@ html, body {
   pointer-events: none;
 }
 
-.test-banner {
-  position: absolute;
-  top: 14mm;
-  right: -18mm;
-  width: 90mm;
-  transform: rotate(35deg);
-  background: var(--navy);
-  color: var(--gold-light);
-  font-family: "Inter", sans-serif;
-  font-weight: 700;
-  font-size: 5mm;
-  letter-spacing: 2px;
-  text-align: center;
-  padding: 2mm 0;
-  z-index: 5;
-}
-
 /* =========================================================
    GRID
    ========================================================= */

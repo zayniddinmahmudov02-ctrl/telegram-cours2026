@@ -3,8 +3,6 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 
-from config import LEVEL_ORDER
-
 # =========================================================
 # MY CERTIFICATES (PROFILE)
 # =========================================================
@@ -32,26 +30,16 @@ def certificates_keyboard(
 
 def admin_certificates_keyboard() -> InlineKeyboardMarkup:
 
-    rows = [
-        [
-            InlineKeyboardButton(
-                text=f"🧪 {level} (test)",
-                callback_data=f"admin_cert:generate:{level}",
-            )
-        ]
-        for level in LEVEL_ORDER
-    ]
-
-    rows.append(
-        [
-            InlineKeyboardButton(
-                text="📂 Sertifikatlarni ko'rish",
-                callback_data="admin_cert:browse",
-            )
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📂 Sertifikatlarni ko'rish",
+                    callback_data="admin_cert:browse",
+                )
+            ]
         ]
     )
-
-    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 # =========================================================

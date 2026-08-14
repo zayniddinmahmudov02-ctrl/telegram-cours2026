@@ -44,10 +44,7 @@ from database.certificates import (
     get_certificate,
 )
 
-from services.certificate_generator import (
-    generate_certificate,
-    get_certificate_file_path,
-)
+from services.certificate_generator import get_certificate_file_path
 from services.logger import logger
 
 router = Router()
@@ -320,11 +317,6 @@ async def certificates_menu(message: Message):
     for level, count in zip(LEVEL_ORDER, per_level):
         text += f"• {level}: <b>{count}</b>\n"
 
-    text += (
-        "\n🧪 Test rejimi - istalgan darajani tanlab, "
-        "progress 0% bo'lsa ham namuna sertifikat oling."
-    )
-
     await message.answer(
         text,
         parse_mode="HTML",
@@ -361,48 +353,6 @@ async def certificates_home_callback(callback: CallbackQuery):
     )
 
     await callback.answer()
-
-
-@router.callback_query(F.data.startswith("admin_cert:generate:"))
-async def certificates_generate_test(callback: CallbackQuery):
-
-    if not is_admin(callback.from_user.id):
-        await callback.answer()
-        return
-
-    level = callback.data.split(":")[2]
-
-    await callback.answer(
-        "⏳ Test sertifikat tayyorlanmoqda..."
-    )
-
-    try:
-        pdf_path = await generate_certificate(
-            user_id=callback.from_user.id,
-            level=level,
-            admin_override=True,
-        )
-
-    except Exception as e:
-
-        logger.error(
-            f"Admin test certificate generation failed "
-            f"(admin={callback.from_user.id}, level={level}): {e}"
-        )
-
-        await callback.message.answer(
-            "❌ Sertifikatni tayyorlashda xatolik yuz berdi."
-        )
-        return
-
-    await callback.message.answer_document(
-        FSInputFile(pdf_path),
-        caption=(
-            f"🧪 <b>{level} W-Zertifikat (TEST)</b>\n\n"
-            "Faqat admin uchun namuna - progress talab qilinmadi."
-        ),
-        parse_mode="HTML",
-    )
 
 
 @router.callback_query(F.data == "admin_cert:browse")

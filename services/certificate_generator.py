@@ -13,10 +13,7 @@ from database.certificates import (
 )
 from database.leaderboard import get_accuracy
 
-from services.certificate import (
-    build_level_status,
-    calculate_rank,
-)
+from services.certificate import build_level_status
 
 # =========================================================
 # ROOT PATHS
@@ -126,19 +123,11 @@ async def get_certificate_user(user_id: int):
 async def get_certificate_data(
     user_id: int,
     level: str,
-    admin_override: bool = False,
 ):
     status = await build_level_status(user_id, level)
 
-    if not status["ready"] and not admin_override:
-        raise ValueError("Sertifikat hali tayyor emas.")
-
     if not status["ready"]:
-        # Admin test/preview mode - grade a placeholder certificate
-        # from whatever progress exists, so the layout can be
-        # reviewed without completing a level for real.
-        status = dict(status)
-        status["rank"] = calculate_rank(status["average"])
+        raise ValueError("Sertifikat hali tayyor emas.")
 
     return status
 
@@ -193,7 +182,6 @@ def get_certificate_file_path(certificate_id: str) -> Path:
 async def generate_certificate(
     user_id: int,
     level: str,
-    admin_override: bool = False,
 ):
     """
     Returns the path to the user's PDF certificate for `level`.
@@ -207,11 +195,7 @@ async def generate_certificate(
 
     user = await get_certificate_user(user_id)
 
-    status = await get_certificate_data(
-        user_id,
-        level,
-        admin_override=admin_override,
-    )
+    status = await get_certificate_data(user_id, level)
 
     certificate_id = await get_certificate_id(
         user_id=user_id,
@@ -253,7 +237,6 @@ async def generate_certificate(
         icon_target_svg=_inline_svg(ICON_TARGET),
         icon_award_svg=_inline_svg(ICON_AWARD),
         icon_calendar_svg=_inline_svg(ICON_CALENDAR),
-        is_test=admin_override,
         full_name=(user["full_name"] or "").strip().upper(),
         name_size_class=_name_size_class(user["full_name"] or ""),
         level=level,
