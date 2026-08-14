@@ -102,37 +102,32 @@ GROUP_LINKS = {
 COURSE_INFO = {
     "🇩🇪 A1": {
         "lessons": 14,
-        "old_price": "100.000 so'm",
-        "price": 50000,
-        "price_text": "50.000 so'm",
+        "price": 100000,
+        "price_text": "100.000 so'm",
     },
 
     "🇩🇪 A2": {
         "lessons": 14,
-        "old_price": "200.000 so'm",
-        "price": 100000,
-        "price_text": "100.000 so'm",
-    },
-
-    "🇩🇪 B1": {
-        "lessons": 20,
-        "old_price": "200.000 so'm",
-        "price": 100000,
-        "price_text": "100.000 so'm",
-    },
-
-    "🔥 A1-B1": {
-        "lessons": 48,
-        "old_price": "400.000 so'm",
         "price": 200000,
         "price_text": "200.000 so'm",
     },
 
-    "🔥 A1-C1": {
-        "lessons": 100,
-        "old_price": "800.000 so'm",
+    "🇩🇪 B1": {
+        "lessons": 20,
+        "price": 200000,
+        "price_text": "200.000 so'm",
+    },
+
+    "🔥 A1-B1": {
+        "lessons": 48,
         "price": 400000,
         "price_text": "400.000 so'm",
+    },
+
+    "🔥 A1-C1": {
+        "lessons": 100,
+        "price": 800000,
+        "price_text": "800.000 so'm",
     },
 }
 

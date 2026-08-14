@@ -90,11 +90,9 @@ async def send_course_info(
         logging.error(e)
 
     text = (
-        f"🎉 <b>Hozirda barcha kurslar katta CHEGIRMADA!</b>\n\n"
         f"📚 <b>{course}</b>\n\n"
         f"🎥 Darslar soni: {info['lessons']}\n\n"
-        f"❌ Eski narx: {info['old_price']}\n"
-        f"🔥 Chegirma narxi: {info['price']}\n\n"
+        f"💰 Narxi: {info['price_text']}\n\n"
         f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
     )
 
