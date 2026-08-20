@@ -127,13 +127,13 @@ async def add_submission_file(
         (
             submission_id, file_type, file_id,
             file_name, mime_type, file_size, text_content,
-            position
+            file_position
         )
         VALUES (
             %(submission_id)s, %(file_type)s, %(file_id)s,
             %(file_name)s, %(mime_type)s, %(file_size)s, %(text_content)s,
             COALESCE(
-                (SELECT MAX(position) + 1 FROM homework_submission_files
+                (SELECT MAX(file_position) + 1 FROM homework_submission_files
                  WHERE submission_id = %(submission_id)s),
                 0
             )
@@ -161,7 +161,7 @@ async def get_submission_files(submission_id: int):
         SELECT *
         FROM homework_submission_files
         WHERE submission_id=%s
-        ORDER BY position
+        ORDER BY file_position
         """,
         (submission_id,),
         fetchall=True,
@@ -270,17 +270,62 @@ async def count_user_submissions(
 # WRITE - LIFECYCLE
 # =========================================================
 
-async def mark_submitted(submission_id: int, channel_id: int, channel_message_id: int):
+async def claim_submission_for_confirm(submission_id: int) -> bool:
+    """
+    Atomically flips draft -> submitted BEFORE anything is sent to
+    the channel. This (not the status check in the handler) is what
+    actually prevents a double-tap on "Tasdiqlash" from producing
+    two channel posts: the handler's earlier read-then-act check has
+    several `await`s (Telegram API calls) between reading the status
+    and recording it, so two near-simultaneous taps could both pass
+    that check. Only the first UPDATE that finds status='draft' wins
+    (returns the row); a concurrent/duplicate call sees status
+    already changed and gets nothing back, so it must not send
+    anything.
+    """
+
+    row = await db_execute(
+        """
+        UPDATE homework_submissions
+        SET status='submitted', submitted_at=NOW()
+        WHERE id=%s
+        AND status='draft'
+        RETURNING id
+        """,
+        (submission_id,),
+        fetchone=True,
+    )
+
+    return row is not None
+
+
+async def revert_submission_to_draft(submission_id: int):
+    """
+    Undoes claim_submission_for_confirm() when the channel send that
+    was supposed to follow it fails, so the user can retry instead
+    of being stuck on a 'submitted' row with nothing actually posted.
+    """
+
     await db_execute(
         """
         UPDATE homework_submissions
-        SET
-            status='submitted',
-            channel_id=%s,
-            channel_message_id=%s,
-            submitted_at=NOW()
+        SET status='draft', submitted_at=NULL
         WHERE id=%s
-        AND status='draft'
+        """,
+        (submission_id,),
+    )
+
+
+async def set_submission_channel_message(
+    submission_id: int,
+    channel_id: int,
+    channel_message_id: int,
+):
+    await db_execute(
+        """
+        UPDATE homework_submissions
+        SET channel_id=%s, channel_message_id=%s
+        WHERE id=%s
         """,
         (channel_id, channel_message_id, submission_id),
     )

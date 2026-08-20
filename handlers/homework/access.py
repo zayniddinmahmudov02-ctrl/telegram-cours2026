@@ -80,6 +80,11 @@ async def homework_root_callback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+@router.callback_query(F.data == "hw:noop")
+async def homework_noop(callback: CallbackQuery):
+    await callback.answer()
+
+
 @router.callback_query(F.data == "hw:back_main")
 async def homework_back_main(callback: CallbackQuery, state: FSMContext):
     await state.clear()

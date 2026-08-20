@@ -496,7 +496,7 @@ async def create_homework_submission_files_table():
 
             text_content TEXT,
 
-            position INTEGER NOT NULL,
+            file_position INTEGER NOT NULL,
 
             created_at TIMESTAMP DEFAULT NOW()
 

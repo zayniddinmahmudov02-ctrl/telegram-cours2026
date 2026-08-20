@@ -88,14 +88,7 @@ async def homework_admin_categories(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith("hwa:cat:open:"))
-async def homework_admin_category_detail(callback: CallbackQuery):
-    if not is_admin(callback.from_user.id):
-        await callback.answer()
-        return
-
-    category_id = int(callback.data.split(":")[3])
-
+async def _render_category_detail(callback: CallbackQuery, category_id: int, answer_text: str | None = None):
     category = await get_homework_category(category_id)
 
     if not category:
@@ -121,7 +114,18 @@ async def homework_admin_category_detail(callback: CallbackQuery):
         parse_mode="HTML",
         reply_markup=homework_admin_category_detail_keyboard(category),
     )
-    await callback.answer()
+    await callback.answer(answer_text)
+
+
+@router.callback_query(F.data.startswith("hwa:cat:open:"))
+async def homework_admin_category_detail(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+
+    category_id = int(callback.data.split(":")[3])
+
+    await _render_category_detail(callback, category_id)
 
 
 @router.callback_query(F.data.startswith("hwa:cat:toggle:"))
@@ -139,9 +143,8 @@ async def homework_admin_category_toggle(callback: CallbackQuery):
         return
 
     await set_homework_category_active(category_id, not category["is_active"])
-    await callback.answer("✅ Holat yangilandi.")
 
-    await homework_admin_category_detail(callback)
+    await _render_category_detail(callback, category_id, answer_text="✅ Holat yangilandi.")
 
 
 @router.callback_query(F.data.startswith("hwa:cat:pwd:"))

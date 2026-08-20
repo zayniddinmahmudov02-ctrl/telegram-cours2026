@@ -9,12 +9,14 @@ from aiogram.types import CallbackQuery, Message
 from database.homework import get_homework_category, get_membership
 from database.homework_submissions import (
     add_submission_file,
+    claim_submission_for_confirm,
     count_submission_files,
     delete_draft_submission,
     get_or_create_draft_submission,
     get_submission,
     get_submission_files,
-    mark_submitted,
+    revert_submission_to_draft,
+    set_submission_channel_message,
 )
 from keyboards.homework import (
     homework_confirm_keyboard,
@@ -358,6 +360,14 @@ async def homework_confirm(callback: CallbackQuery, state: FSMContext):
         await callback.answer("❌ Kamida bitta fayl yoki matn yuklang.", show_alert=True)
         return
 
+    # Atomic claim - the real guard against a double-tap producing
+    # two channel posts (see claim_submission_for_confirm).
+    claimed = await claim_submission_for_confirm(submission_id)
+
+    if not claimed:
+        await callback.answer("⚠️ Bu vazifa allaqachon yuborilgan.", show_alert=True)
+        return
+
     category = await get_homework_category(submission["category_id"])
     channel_id = category["channel_id"]
 
@@ -402,13 +412,17 @@ async def homework_confirm(callback: CallbackQuery, state: FSMContext):
             f"Homework submission channel send failed "
             f"(submission={submission_id}, channel={channel_id}): {e}"
         )
+        # Undo the claim so the draft (and its files) survive and
+        # the user can retry, instead of being stuck 'submitted'
+        # with nothing actually posted to the channel.
+        await revert_submission_to_draft(submission_id)
         await callback.answer(
             "❌ Yuborishda xatolik yuz berdi. Qaytadan urinib ko'ring.",
             show_alert=True,
         )
         return
 
-    await mark_submitted(submission_id, channel_id, header_message.message_id)
+    await set_submission_channel_message(submission_id, channel_id, header_message.message_id)
     await state.clear()
 
     await callback.message.edit_text(
