@@ -18,7 +18,7 @@ info_menu = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text="👨‍🏫 Zayniddinkhuja Makhmudov",
-                callback_data="info_author",
+                url="https://zayniddinkhuja-makhmudov-cv.vercel.app",
             )
         ],
         [
@@ -31,6 +31,12 @@ info_menu = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text="💬 Admin bilan bog'lanish",
                 callback_data="info_admin",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🏆 Natijalar",
+                url="https://t.me/vizu_de_results",
             )
         ],
         [
