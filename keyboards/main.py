@@ -16,6 +16,9 @@ main_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="📚 Ma'lumotlar"),
         ],
         [
+            KeyboardButton(text="📚 Hausaufgaben"),
+        ],
+        [
             KeyboardButton(text="👤 Mening Profilim"),
         ],
     ],

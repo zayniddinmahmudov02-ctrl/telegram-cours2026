@@ -18,5 +18,8 @@ from .certificates import *
 from .media import *
 from .statistics import *
 from .favorites import *
+from .homework import *
+from .homework_submissions import *
+from .homework_evaluations import *
 
 __all__ = [name for name in globals() if not name.startswith("_")]

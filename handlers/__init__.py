@@ -12,6 +12,7 @@ from .private_message import router as private_message
 from .info import router as info
 from .leaderboard import router as leaderboard
 from .media import router as media
+from .homework import router as homework
 
 __all__ = [
     "start",
@@ -28,4 +29,5 @@ __all__ = [
     "info",
     "leaderboard",
     "media",
+    "homework",
 ]

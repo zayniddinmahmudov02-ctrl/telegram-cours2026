@@ -1,4 +1,5 @@
 from .connection import db_execute
+from .homework import seed_homework_categories
 
 # =========================================================
 # DATABASE INITIALIZATION
@@ -24,6 +25,18 @@ async def init_database():
     await create_videos_table()
 
     await create_favorite_music_table()
+
+    await create_homework_categories_table()
+
+    await create_homework_memberships_table()
+
+    await create_homework_submissions_table()
+
+    await create_homework_submission_files_table()
+
+    await create_homework_evaluations_table()
+
+    await seed_homework_categories()
 
     await create_user_scores_table()
 
@@ -306,6 +319,229 @@ async def create_favorite_music_table():
         CREATE INDEX IF NOT EXISTS
         idx_favorite_music_telegram_id
         ON favorite_music(telegram_id)
+        """
+    )
+
+
+# =========================================================
+# HAUSAUFGABEN - CATEGORIES
+# =========================================================
+# code is the stable key used by config.HOMEWORK_CATEGORIES to
+# seed/refresh these rows on startup (see database.homework.
+# seed_homework_categories). password_hash/salt are NULL until an
+# admin sets one via the Admin Panel - a category with no password
+# set simply can't be unlocked yet (see services.homework).
+
+async def create_homework_categories_table():
+    await db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS homework_categories(
+
+            id SERIAL PRIMARY KEY,
+
+            code VARCHAR(20) UNIQUE NOT NULL,
+
+            name TEXT NOT NULL,
+
+            channel_id BIGINT NOT NULL,
+
+            password_hash TEXT,
+
+            password_salt TEXT,
+
+            is_active BOOLEAN DEFAULT TRUE,
+
+            created_at TIMESTAMP DEFAULT NOW(),
+
+            updated_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+
+
+# =========================================================
+# HAUSAUFGABEN - MEMBERSHIPS (per-user, per-category profile
+# + access grant - a row existing means the user unlocked that
+# category and never needs the password again)
+# =========================================================
+
+async def create_homework_memberships_table():
+    await db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS homework_memberships(
+
+            id SERIAL PRIMARY KEY,
+
+            user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+            category_id INTEGER NOT NULL REFERENCES homework_categories(id) ON DELETE CASCADE,
+
+            first_name TEXT NOT NULL,
+
+            last_name TEXT NOT NULL,
+
+            level VARCHAR(5) NOT NULL,
+
+            lesson_number INTEGER NOT NULL,
+
+            created_at TIMESTAMP DEFAULT NOW(),
+
+            updated_at TIMESTAMP DEFAULT NOW(),
+
+            UNIQUE(user_id, category_id)
+
+        );
+        """
+    )
+
+    await db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_homework_memberships_user
+        ON homework_memberships(user_id)
+        """
+    )
+
+    await db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_homework_memberships_category
+        ON homework_memberships(category_id)
+        """
+    )
+
+
+# =========================================================
+# HAUSAUFGABEN - SUBMISSIONS
+# =========================================================
+# first_name/last_name/level/lesson_number here are an immutable
+# snapshot taken from the membership at submission time - if the
+# user later edits their profile, past submissions must keep
+# showing what was true when they were made.
+
+async def create_homework_submissions_table():
+    await db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS homework_submissions(
+
+            id SERIAL PRIMARY KEY,
+
+            submission_uid VARCHAR(20) UNIQUE NOT NULL,
+
+            user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+            category_id INTEGER NOT NULL REFERENCES homework_categories(id) ON DELETE CASCADE,
+
+            first_name TEXT NOT NULL,
+
+            last_name TEXT NOT NULL,
+
+            level VARCHAR(5) NOT NULL,
+
+            lesson_number INTEGER NOT NULL,
+
+            status VARCHAR(20) NOT NULL DEFAULT 'draft',
+
+            channel_id BIGINT,
+
+            channel_message_id BIGINT,
+
+            created_at TIMESTAMP DEFAULT NOW(),
+
+            submitted_at TIMESTAMP,
+
+            evaluated_at TIMESTAMP
+
+        );
+        """
+    )
+
+    for index_sql in (
+        "idx_homework_submissions_user ON homework_submissions(user_id)",
+        "idx_homework_submissions_category ON homework_submissions(category_id)",
+        "idx_homework_submissions_lesson ON homework_submissions(lesson_number)",
+        "idx_homework_submissions_status ON homework_submissions(status)",
+        "idx_homework_submissions_created ON homework_submissions(created_at)",
+    ):
+        await db_execute(f"CREATE INDEX IF NOT EXISTS {index_sql}")
+
+
+# =========================================================
+# HAUSAUFGABEN - SUBMISSION FILES
+# =========================================================
+# One row per uploaded file OR per text message in a submission,
+# ordered by `position` - this is what lets a submission mix
+# audio -> image -> pdf -> text and still be replayed to the
+# channel in the exact order the user sent it.
+
+async def create_homework_submission_files_table():
+    await db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS homework_submission_files(
+
+            id SERIAL PRIMARY KEY,
+
+            submission_id INTEGER NOT NULL REFERENCES homework_submissions(id) ON DELETE CASCADE,
+
+            file_type VARCHAR(20) NOT NULL,
+
+            file_id TEXT,
+
+            file_name TEXT,
+
+            mime_type TEXT,
+
+            file_size BIGINT,
+
+            text_content TEXT,
+
+            position INTEGER NOT NULL,
+
+            created_at TIMESTAMP DEFAULT NOW()
+
+        );
+        """
+    )
+
+    await db_execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_homework_submission_files_submission
+        ON homework_submission_files(submission_id)
+        """
+    )
+
+
+# =========================================================
+# HAUSAUFGABEN - EVALUATIONS
+# =========================================================
+# UNIQUE(submission_id) is what makes "one current score per
+# submission" structural rather than a convention to remember -
+# database.homework_evaluations always UPSERTs on this constraint,
+# so re-scoring updates the one row in place and SUM(score) across
+# this table can never double-count a submission.
+
+async def create_homework_evaluations_table():
+    await db_execute(
+        """
+        CREATE TABLE IF NOT EXISTS homework_evaluations(
+
+            id SERIAL PRIMARY KEY,
+
+            submission_id INTEGER UNIQUE NOT NULL REFERENCES homework_submissions(id) ON DELETE CASCADE,
+
+            score SMALLINT NOT NULL CHECK (score BETWEEN 1 AND 5),
+
+            result_status VARCHAR(20) NOT NULL,
+
+            evaluator_id BIGINT NOT NULL,
+
+            created_at TIMESTAMP DEFAULT NOW(),
+
+            updated_at TIMESTAMP DEFAULT NOW()
+
+        );
         """
     )
 

@@ -19,6 +19,7 @@ from handlers import (
     info,
     leaderboard,
     media,
+    homework,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +50,7 @@ routers = [
     info,
     leaderboard,
     media,
+    homework,
 ]
 
 for router in routers:

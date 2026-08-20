@@ -1,0 +1,159 @@
+import re
+
+from config import LEVEL_ORDER
+
+# =========================================================
+# FSM BAIL-OUT
+# =========================================================
+# Free-text FSM steps (password entry, profile fields) must not
+# swallow a user tapping a main-menu / admin-menu button while
+# mid-flow - same defensive pattern as handlers.payment's explicit
+# exit-text check. Any of these arriving during a Hausaufgaben
+# text step aborts the flow instead of being treated as input.
+
+MENU_EXIT_TEXTS = {
+    "/start",
+    "🏠 Bosh menyu",
+    "📚 Artikel Topish",
+    "🎮 So'z O'yini",
+    "🎥 Video Kurslar",
+    "🎬 Medien",
+    "📚 Ma'lumotlar",
+    "👤 Mening Profilim",
+    "📚 Hausaufgaben",
+    "👨‍💼 Admin Panel",
+    "⬅️ Admin Chiqish",
+}
+
+
+def is_menu_exit(text: str | None) -> bool:
+    return text in MENU_EXIT_TEXTS
+
+# =========================================================
+# SCORE -> STATUS MAPPING
+# =========================================================
+
+SCORE_LABELS = {
+    1: "Vazifa tushunilmagan",
+    2: "Qoniqarsiz, qayta bajaring",
+    3: "Qabul qilishga yetarli emas, qayta bajaring",
+    4: "Qabul qilindi, lekin yaxshilanish kerak",
+    5: "Juda yaxshi bajarilgan",
+}
+
+SCORE_RESULT_STATUS = {
+    1: "revision_required",
+    2: "revision_required",
+    3: "revision_required",
+    4: "accepted",
+    5: "excellent",
+}
+
+STATUS_LABELS = {
+    "draft": "✏️ Qoralama",
+    "submitted": "🟡 Ko'rib chiqilmoqda",
+    "revision_required": "🔴 Qayta ishlash kerak",
+    "accepted": "🟢 Qabul qilindi",
+    "excellent": "🌟 A'lo baholandi",
+}
+
+
+def score_to_result_status(score: int) -> str:
+    return SCORE_RESULT_STATUS[score]
+
+
+def score_label(score: int) -> str:
+    return SCORE_LABELS[score]
+
+
+def status_label(status: str) -> str:
+    return STATUS_LABELS.get(status, status)
+
+
+# =========================================================
+# FILE TYPE LABELS
+# =========================================================
+
+FILE_TYPE_LABELS = {
+    "audio": "🎤 Audio",
+    "voice": "🎤 Audio",
+    "photo": "🖼 Rasm",
+    "document": "📄 Fayl",
+    "pdf": "📄 PDF",
+    "text": "📝 Matn",
+}
+
+
+# =========================================================
+# VALIDATION
+# =========================================================
+
+_NAME_RE = re.compile(r"^[A-Za-zÀ-ÿʻ'`\-Ѐ-ӿ ]{2,40}$")
+
+
+def is_valid_name(value: str) -> bool:
+    return bool(_NAME_RE.fullmatch(value.strip()))
+
+
+def is_valid_level(value: str) -> bool:
+    return value.strip().upper() in LEVEL_ORDER
+
+
+def normalize_level(value: str) -> str:
+    return value.strip().upper()
+
+
+def parse_lesson_number(value: str) -> int | None:
+    value = value.strip()
+
+    if not value.isdigit():
+        return None
+
+    lesson = int(value)
+
+    if lesson < 1 or lesson > 300:
+        return None
+
+    return lesson
+
+
+# =========================================================
+# CHANNEL MESSAGE TEXT
+# =========================================================
+
+def build_submission_header(
+    submission_uid: str,
+    first_name: str,
+    last_name: str,
+    category_name: str,
+    level: str,
+    lesson_number: int,
+    user_id: int,
+    file_count: int,
+    created_at,
+) -> str:
+    return (
+        f"📥 <b>Yangi Hausaufgaben</b>\n\n"
+        f"👤 <b>{first_name} {last_name}</b>\n"
+        f"📚 <b>Kategoriya:</b> {category_name}\n"
+        f"📊 <b>Daraja:</b> {level}\n"
+        f"📖 <b>Dars:</b> {lesson_number}-dars\n"
+        f"🆔 <b>Submission:</b> <code>{submission_uid}</code>\n"
+        f"👤 <b>User ID:</b> <code>{user_id}</code>\n"
+        f"🕐 <b>Sana:</b> {created_at.strftime('%d.%m.%Y %H:%M')}\n"
+        f"📎 <b>Fayllar soni:</b> {file_count}"
+    )
+
+
+def build_result_message(
+    category_name: str,
+    lesson_number: int,
+    score: int,
+) -> str:
+    return (
+        f"🏆 Vazifangiz baholandi.\n\n"
+        f"📚 {category_name}\n"
+        f"📖 {lesson_number}-dars\n"
+        f"⭐ Ball: {score}/5\n\n"
+        f"{score_label(score)}"
+    )
