@@ -26,7 +26,7 @@ from keyboards.homework_admin import (
     homework_admin_users_keyboard,
 )
 from services.auth import is_admin
-from services.homework import is_menu_exit, score_label, status_label
+from services.homework import is_menu_exit, parse_lesson_number, score_label, status_label
 from states.homework import HomeworkAdminState
 from utils.security import hash_password
 
@@ -296,10 +296,70 @@ async def homework_admin_submission_detail(callback: CallbackQuery):
     await callback.answer()
 
 
+async def _render_submissions(target, state: FSMContext, category_id: int | None, page: int):
+    """
+    Shared renderer for the submissions browser, whether reached by
+    pagination/category (CallbackQuery) or right after saving a
+    lesson/user filter (Message). Filters are read from FSM *data*
+    (see states.homework.HomeworkAdminState) and passed straight
+    into the existing search_submissions/count_submissions repo
+    calls - no separate filtering logic.
+    """
+
+    data = await state.get_data()
+    lesson = data.get("hwa_lesson")
+    user_id_filter = data.get("hwa_user_id")
+
+    total = await count_submissions(
+        category_id=category_id,
+        lesson_number=lesson,
+        user_id=user_id_filter,
+    )
+
+    submissions = await search_submissions(
+        category_id=category_id,
+        lesson_number=lesson,
+        user_id=user_id_filter,
+        limit=SUBS_PAGE_SIZE,
+        offset=page * SUBS_PAGE_SIZE,
+    )
+
+    filter_parts = []
+    if lesson:
+        filter_parts.append(f"📖 {lesson}-dars")
+    if user_id_filter:
+        filter_parts.append(f"👤 <code>{user_id_filter}</code>")
+
+    filter_line = f"\n🔎 Filter: {', '.join(filter_parts)}" if filter_parts else ""
+
+    if not submissions:
+        text = (
+            "📋 <b>Vazifalar</b>\n\n"
+            "Hozircha mos vazifalar mavjud emas."
+            f"{filter_line}"
+        )
+        keyboard = homework_admin_submissions_keyboard([], category_id or 0, 0, False)
+    else:
+        has_next = (page + 1) * SUBS_PAGE_SIZE < total
+        text = (
+            f"📋 <b>Vazifalar</b> (jami: {total}){filter_line}\n\n"
+            "Batafsil ko'rish uchun tanlang:"
+        )
+        keyboard = homework_admin_submissions_keyboard(
+            submissions, category_id or 0, page, has_next
+        )
+
+    if isinstance(target, CallbackQuery):
+        await target.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
+        await target.answer()
+    else:
+        await target.answer(text, parse_mode="HTML", reply_markup=keyboard)
+
+
 @router.callback_query(
     F.data.startswith("hwa:subs:") & ~F.data.startswith("hwa:subs:open:")
 )
-async def homework_admin_submissions(callback: CallbackQuery):
+async def homework_admin_submissions(callback: CallbackQuery, state: FSMContext):
     if not is_admin(callback.from_user.id):
         await callback.answer()
         return
@@ -308,33 +368,91 @@ async def homework_admin_submissions(callback: CallbackQuery):
     category_id = int(parts[2]) or None
     page = int(parts[3])
 
-    total = await count_submissions(category_id=category_id)
+    await _render_submissions(callback, state, category_id, page)
 
-    submissions = await search_submissions(
-        category_id=category_id,
-        limit=SUBS_PAGE_SIZE,
-        offset=page * SUBS_PAGE_SIZE,
-    )
 
-    if not submissions:
-        await callback.message.edit_text(
-            "📋 <b>Vazifalar</b>\n\nHozircha yuborilgan vazifalar mavjud emas.",
-            parse_mode="HTML",
-            reply_markup=homework_admin_submissions_keyboard([], category_id or 0, 0, False),
-        )
+# =========================================================
+# SUBMISSIONS - FILTERS (lesson / user / clear)
+# =========================================================
+
+@router.callback_query(F.data == "hwa:subsfilter:lesson")
+async def homework_admin_subs_filter_lesson_prompt(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
         await callback.answer()
         return
 
-    has_next = (page + 1) * SUBS_PAGE_SIZE < total
+    await state.set_state(HomeworkAdminState.waiting_lesson_filter)
 
-    await callback.message.edit_text(
-        f"📋 <b>Vazifalar</b> (jami: {total})\n\nBatafsil ko'rish uchun tanlang:",
-        parse_mode="HTML",
-        reply_markup=homework_admin_submissions_keyboard(
-            submissions, category_id or 0, page, has_next
-        ),
-    )
+    await callback.message.edit_text("🔎 Dars raqamini kiriting:")
     await callback.answer()
+
+
+@router.message(HomeworkAdminState.waiting_lesson_filter, F.text)
+async def homework_admin_subs_filter_lesson_save(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+
+    if is_menu_exit(message.text):
+        await state.clear()
+        return
+
+    lesson = parse_lesson_number(message.text)
+
+    if lesson is None:
+        await message.answer("❌ Noto'g'ri dars raqami. Masalan: 10")
+        return
+
+    await state.update_data(hwa_lesson=lesson)
+    await state.set_state(None)
+
+    await _render_submissions(message, state, None, 0)
+
+
+@router.callback_query(F.data == "hwa:subsfilter:user")
+async def homework_admin_subs_filter_user_prompt(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+
+    await state.set_state(HomeworkAdminState.waiting_user_filter)
+
+    await callback.message.edit_text("👤 Foydalanuvchining Telegram ID sini kiriting:")
+    await callback.answer()
+
+
+@router.message(HomeworkAdminState.waiting_user_filter, F.text)
+async def homework_admin_subs_filter_user_save(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+
+    if is_menu_exit(message.text):
+        await state.clear()
+        return
+
+    text = message.text.strip()
+
+    if not text.isdigit():
+        await message.answer("❌ Noto'g'ri Telegram ID. Faqat raqam kiriting.")
+        return
+
+    await state.update_data(hwa_user_id=int(text))
+    await state.set_state(None)
+
+    await _render_submissions(message, state, None, 0)
+
+
+@router.callback_query(F.data == "hwa:subsfilter:clear")
+async def homework_admin_subs_filter_clear(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+
+    data = await state.get_data()
+    data.pop("hwa_lesson", None)
+    data.pop("hwa_user_id", None)
+    await state.set_data(data)
+
+    await _render_submissions(callback, state, None, 0)
 
 
 # =========================================================

@@ -23,3 +23,9 @@ class HomeworkSubmissionState(StatesGroup):
 class HomeworkAdminState(StatesGroup):
     # Admin setting/changing a category's password
     waiting_new_password = State()
+
+    # Admin Panel submissions browser filters (values are stashed
+    # in FSM *data*, not state - set_state(None) after saving so
+    # the data survives while the "waiting for text" state clears)
+    waiting_lesson_filter = State()
+    waiting_user_filter = State()

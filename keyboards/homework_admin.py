@@ -193,6 +193,28 @@ def homework_admin_submissions_keyboard(
     rows.append(
         [
             InlineKeyboardButton(
+                text="🔎 Filter by lesson",
+                callback_data="hwa:subsfilter:lesson",
+            ),
+            InlineKeyboardButton(
+                text="👤 Filter by user",
+                callback_data="hwa:subsfilter:user",
+            ),
+        ]
+    )
+
+    rows.append(
+        [
+            InlineKeyboardButton(
+                text="🔄 Clear filters",
+                callback_data="hwa:subsfilter:clear",
+            )
+        ]
+    )
+
+    rows.append(
+        [
+            InlineKeyboardButton(
                 text="⬅️ Orqaga",
                 callback_data="hwa:home",
             )
