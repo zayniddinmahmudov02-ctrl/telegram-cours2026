@@ -236,7 +236,7 @@ async def homework_admin_users(callback: CallbackQuery):
         text += (
             f"👤 {u['first_name']} {u['last_name']} "
             f"(<code>{u['user_id']}</code>)\n"
-            f"📚 {u['category_name']} | 📊 {u['level']} | 📖 {u['lesson_number']}-dars\n"
+            f"📚 {u['category_name']}\n"
             f"📤 Vazifalar: {u['submission_count']} | 🏆 Ball: {u['total_score']}\n"
             f"━━━━━━━━━━━━━━\n"
         )

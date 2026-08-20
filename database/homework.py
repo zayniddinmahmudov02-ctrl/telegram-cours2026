@@ -157,19 +157,15 @@ async def create_membership(
     category_id: int,
     first_name: str,
     last_name: str,
-    level: str,
-    lesson_number: int,
 ):
     await db_execute(
         """
         INSERT INTO homework_memberships
-        (user_id, category_id, first_name, last_name, level, lesson_number)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        (user_id, category_id, first_name, last_name)
+        VALUES (%s, %s, %s, %s)
         ON CONFLICT (user_id, category_id) DO UPDATE SET
             first_name=EXCLUDED.first_name,
             last_name=EXCLUDED.last_name,
-            level=EXCLUDED.level,
-            lesson_number=EXCLUDED.lesson_number,
             updated_at=NOW()
         """,
         (
@@ -177,8 +173,6 @@ async def create_membership(
             category_id,
             first_name,
             last_name,
-            level,
-            lesson_number,
         ),
     )
 
@@ -188,13 +182,12 @@ async def update_membership_profile(
     category_id: int,
     first_name: str,
     last_name: str,
-    level: str,
-    lesson_number: int,
 ):
     """
     Editing a profile only changes the membership row - past
     submissions keep the snapshot they were created with (see
-    homework_submissions.first_name/last_name/level/lesson_number).
+    homework_submissions.first_name/last_name/level/lesson_number,
+    which is where level/lesson actually live - see submission.py).
     """
 
     await db_execute(
@@ -203,8 +196,6 @@ async def update_membership_profile(
         SET
             first_name=%s,
             last_name=%s,
-            level=%s,
-            lesson_number=%s,
             updated_at=NOW()
         WHERE user_id=%s
         AND category_id=%s
@@ -212,8 +203,6 @@ async def update_membership_profile(
         (
             first_name,
             last_name,
-            level,
-            lesson_number,
             user_id,
             category_id,
         ),
@@ -251,8 +240,6 @@ async def get_homework_users(category_id: int | None = None, limit: int = 30, of
             m.user_id,
             m.first_name,
             m.last_name,
-            m.level,
-            m.lesson_number,
             c.id AS category_id,
             c.code,
             c.name AS category_name,
@@ -264,8 +251,7 @@ async def get_homework_users(category_id: int | None = None, limit: int = 30, of
             ON s.user_id = m.user_id AND s.category_id = m.category_id
         LEFT JOIN homework_evaluations e ON e.submission_id = s.id
         WHERE (%(category_id)s IS NULL OR m.category_id = %(category_id)s)
-        GROUP BY m.user_id, m.first_name, m.last_name, m.level,
-                 m.lesson_number, c.id, c.code, c.name
+        GROUP BY m.user_id, m.first_name, m.last_name, c.id, c.code, c.name
         ORDER BY m.created_at DESC
         LIMIT %(limit)s OFFSET %(offset)s
         """,

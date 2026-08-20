@@ -365,6 +365,11 @@ async def create_homework_categories_table():
 # + access grant - a row existing means the user unlocked that
 # category and never needs the password again)
 # =========================================================
+# level/lesson_number do NOT live here - a member can submit
+# homework across many different levels/lessons without ever
+# re-registering, so those are per-submission data (see
+# homework_submissions.level/lesson_number below), not part of
+# the permanent category profile.
 
 async def create_homework_memberships_table():
     await db_execute(
@@ -381,10 +386,6 @@ async def create_homework_memberships_table():
 
             last_name TEXT NOT NULL,
 
-            level VARCHAR(5) NOT NULL,
-
-            lesson_number INTEGER NOT NULL,
-
             created_at TIMESTAMP DEFAULT NOW(),
 
             updated_at TIMESTAMP DEFAULT NOW(),
@@ -393,6 +394,16 @@ async def create_homework_memberships_table():
 
         );
         """
+    )
+
+    # Safe/idempotent: drops these columns if this table was
+    # created by an earlier version that had them. No-op on a
+    # fresh install (CREATE TABLE above never adds them).
+    await db_execute(
+        "ALTER TABLE homework_memberships DROP COLUMN IF EXISTS level"
+    )
+    await db_execute(
+        "ALTER TABLE homework_memberships DROP COLUMN IF EXISTS lesson_number"
     )
 
     await db_execute(

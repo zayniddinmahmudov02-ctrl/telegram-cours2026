@@ -8,15 +8,19 @@ class HomeworkAccessState(StatesGroup):
 
 class HomeworkProfileState(StatesGroup):
     # First-time profile collection (and later editing - same
-    # states, FSM data carries a "mode": "create" | "edit" flag)
-    waiting_level = State()
-    waiting_lesson = State()
+    # states, FSM data carries a "mode": "create" | "edit" flag).
+    # Level/lesson are NOT part of the permanent category profile -
+    # see HomeworkSubmissionState below.
     waiting_first_name = State()
     waiting_last_name = State()
 
 
 class HomeworkSubmissionState(StatesGroup):
-    # Multi-file upload session for one draft submission
+    # Level/lesson belong to the individual submission, asked once
+    # per new submission (skipped when resuming an existing draft,
+    # which already has them) - then the multi-file upload session.
+    waiting_level = State()
+    waiting_lesson = State()
     uploading = State()
 
 

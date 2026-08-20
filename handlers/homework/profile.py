@@ -1,9 +1,13 @@
 # =========================================================
 # HAUSAUFGABEN - PROFILE (first-time collection + later edit)
 # =========================================================
-# Same 4-step FSM sequence for both "create" and "edit" - FSM data
-# carries a mode flag so the final step knows whether to INSERT a
-# new membership or UPDATE the existing one. Editing only touches
+# Same 2-step FSM sequence (first name, last name) for both
+# "create" and "edit" - FSM data carries a mode flag so the final
+# step knows whether to INSERT a new membership or UPDATE the
+# existing one. Level/lesson are NOT collected here - they belong
+# to the individual submission (see handlers.homework.submission),
+# since the same member can submit homework across many different
+# levels/lessons without ever re-registering. Editing only touches
 # homework_memberships; past submissions keep their own snapshot
 # (see database.homework_submissions) so history never changes
 # retroactively.
@@ -12,7 +16,6 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from config import LEVEL_ORDER
 from database.homework import (
     create_membership,
     get_homework_category,
@@ -24,12 +27,10 @@ from keyboards.homework import (
     homework_profile_keyboard,
 )
 from keyboards.main import main_menu_for
-from services.homework import is_menu_exit, is_valid_name, normalize_level, parse_lesson_number
+from services.homework import is_menu_exit, is_valid_name
 from states.homework import HomeworkProfileState
 
 router = Router()
-
-LEVEL_HINT = ", ".join(LEVEL_ORDER)
 
 
 # =========================================================
@@ -42,12 +43,10 @@ async def start_profile_collection(
     category_id: int,
     mode: str,
 ):
-    await state.set_state(HomeworkProfileState.waiting_level)
+    await state.set_state(HomeworkProfileState.waiting_first_name)
     await state.update_data(category_id=category_id, mode=mode)
 
-    await message.answer(
-        f"📊 Darajangizni kiriting ({LEVEL_HINT}):"
-    )
+    await message.answer("👤 Ismingizni kiriting:")
 
 
 @router.callback_query(F.data.startswith("hw:profile:edit:"))
@@ -60,12 +59,12 @@ async def homework_profile_edit_start(callback: CallbackQuery, state: FSMContext
         await callback.answer("❌ Avval kategoriyaga a'zo bo'ling.", show_alert=True)
         return
 
-    await state.set_state(HomeworkProfileState.waiting_level)
+    await state.set_state(HomeworkProfileState.waiting_first_name)
     await state.update_data(category_id=category_id, mode="edit")
 
     await callback.message.edit_text(
-        f"📊 Darajangizni kiriting ({LEVEL_HINT}):\n\n"
-        f"Joriy: <b>{membership['level']}</b>",
+        f"👤 Ismingizni kiriting:\n\n"
+        f"Joriy: <b>{membership['first_name']}</b>",
         parse_mode="HTML",
     )
     await callback.answer()
@@ -85,48 +84,6 @@ async def _bail_out(message: Message, state: FSMContext) -> bool:
         reply_markup=main_menu_for(message.from_user.id),
     )
     return True
-
-
-# =========================================================
-# LEVEL
-# =========================================================
-
-@router.message(HomeworkProfileState.waiting_level, F.text)
-async def homework_profile_level(message: Message, state: FSMContext):
-    if await _bail_out(message, state):
-        return
-
-    level = normalize_level(message.text)
-
-    if level not in LEVEL_ORDER:
-        await message.answer(f"❌ Noto'g'ri daraja. Masalan: {LEVEL_HINT}")
-        return
-
-    await state.update_data(level=level)
-    await state.set_state(HomeworkProfileState.waiting_lesson)
-
-    await message.answer("📖 Dars raqamini kiriting (masalan: 10):")
-
-
-# =========================================================
-# LESSON
-# =========================================================
-
-@router.message(HomeworkProfileState.waiting_lesson, F.text)
-async def homework_profile_lesson(message: Message, state: FSMContext):
-    if await _bail_out(message, state):
-        return
-
-    lesson = parse_lesson_number(message.text)
-
-    if lesson is None:
-        await message.answer("❌ Dars raqamini son ko'rinishida kiriting (masalan: 10).")
-        return
-
-    await state.update_data(lesson_number=lesson)
-    await state.set_state(HomeworkProfileState.waiting_first_name)
-
-    await message.answer("👤 Ismingizni kiriting:")
 
 
 # =========================================================
@@ -168,8 +125,6 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
     data = await state.get_data()
     category_id = data["category_id"]
     mode = data["mode"]
-    level = data["level"]
-    lesson_number = data["lesson_number"]
     first_name = data["first_name"]
 
     category = await get_homework_category(category_id)
@@ -185,8 +140,6 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
             category_id=category_id,
             first_name=first_name,
             last_name=last_name,
-            level=level,
-            lesson_number=lesson_number,
         )
     else:
         await update_membership_profile(
@@ -194,8 +147,6 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
             category_id=category_id,
             first_name=first_name,
             last_name=last_name,
-            level=level,
-            lesson_number=lesson_number,
         )
 
     await state.clear()
@@ -235,8 +186,6 @@ async def homework_profile_view(callback: CallbackQuery):
         "⚙️ <b>Profil</b>\n\n"
         f"👤 <b>Ism:</b> {membership['first_name']}\n"
         f"👤 <b>Familiya:</b> {membership['last_name']}\n"
-        f"📊 <b>Daraja:</b> {membership['level']}\n"
-        f"📖 <b>Dars:</b> {membership['lesson_number']}-dars\n"
         f"📚 <b>Kategoriya:</b> {category['name']}"
     )
 

@@ -6,12 +6,14 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from config import LEVEL_ORDER
 from database.homework import get_homework_category, get_membership
 from database.homework_submissions import (
     add_submission_file,
     claim_submission_for_confirm,
     count_submission_files,
     delete_draft_submission,
+    get_draft_submission,
     get_or_create_draft_submission,
     get_submission,
     get_submission_files,
@@ -23,11 +25,19 @@ from keyboards.homework import (
     homework_upload_keyboard,
 )
 from keyboards.homework_admin import homework_score_keyboard
-from services.homework import build_submission_header, is_menu_exit
+from keyboards.main import main_menu_for
+from services.homework import (
+    build_submission_header,
+    is_menu_exit,
+    normalize_level,
+    parse_lesson_number,
+)
 from services.logger import logger
 from states.homework import HomeworkSubmissionState
 
 router = Router()
+
+LEVEL_HINT = ", ".join(LEVEL_ORDER)
 
 UPLOAD_INTRO = (
     "📤 <b>Vazifa yuborish</b>\n\n"
@@ -65,6 +75,12 @@ async def _show_upload_prompt(target, submission_id: int, file_count: int, *, ed
 # =========================================================
 # START / RESUME
 # =========================================================
+# Level/lesson belong to the submission, not the membership, so a
+# brand-new submission asks for them first. An existing draft
+# already has them recorded (from when it was created) and is
+# resumed straight into uploading, skipping the prompt - this is
+# also what makes "📤 Vazifa yuborish" resilient across a bot
+# restart (FSM storage is in-memory, the draft row is not).
 
 @router.callback_query(F.data.startswith("hw:submit:"))
 async def homework_submit_start(callback: CallbackQuery, state: FSMContext):
@@ -76,21 +92,91 @@ async def homework_submit_start(callback: CallbackQuery, state: FSMContext):
         await callback.answer("❌ Avval kategoriyaga a'zo bo'ling.", show_alert=True)
         return
 
+    draft = await get_draft_submission(callback.from_user.id, category_id)
+
+    if draft:
+        await state.set_state(HomeworkSubmissionState.uploading)
+        await state.update_data(category_id=category_id, submission_id=draft["id"])
+
+        file_count = await count_submission_files(draft["id"])
+        await _show_upload_prompt(callback.message, draft["id"], file_count, edit=True)
+        await callback.answer()
+        return
+
+    await state.set_state(HomeworkSubmissionState.waiting_level)
+    await state.update_data(category_id=category_id)
+
+    await callback.message.edit_text(
+        f"📊 Darajangizni kiriting ({LEVEL_HINT}):"
+    )
+    await callback.answer()
+
+
+async def _bail_out(message: Message, state: FSMContext) -> bool:
+    if not is_menu_exit(message.text):
+        return False
+
+    await state.clear()
+    await message.answer(
+        "🏠 Bosh menyu",
+        reply_markup=main_menu_for(message.from_user.id),
+    )
+    return True
+
+
+@router.message(HomeworkSubmissionState.waiting_level, F.text)
+async def homework_submission_level(message: Message, state: FSMContext):
+    if await _bail_out(message, state):
+        return
+
+    level = normalize_level(message.text)
+
+    if level not in LEVEL_ORDER:
+        await message.answer(f"❌ Noto'g'ri daraja. Masalan: {LEVEL_HINT}")
+        return
+
+    await state.update_data(level=level)
+    await state.set_state(HomeworkSubmissionState.waiting_lesson)
+
+    await message.answer("📖 Dars raqamini kiriting (masalan: 10):")
+
+
+@router.message(HomeworkSubmissionState.waiting_lesson, F.text)
+async def homework_submission_lesson(message: Message, state: FSMContext):
+    if await _bail_out(message, state):
+        return
+
+    lesson = parse_lesson_number(message.text)
+
+    if lesson is None:
+        await message.answer("❌ Dars raqamini son ko'rinishida kiriting (masalan: 10).")
+        return
+
+    data = await state.get_data()
+    category_id = data["category_id"]
+    level = data["level"]
+
+    membership = await get_membership(message.from_user.id, category_id)
+
+    if not membership:
+        await state.clear()
+        await message.answer("❌ Xatolik yuz berdi. Qaytadan urinib ko'ring.")
+        return
+
     submission = await get_or_create_draft_submission(
-        user_id=callback.from_user.id,
+        user_id=message.from_user.id,
         category_id=category_id,
         first_name=membership["first_name"],
         last_name=membership["last_name"],
-        level=membership["level"],
-        lesson_number=membership["lesson_number"],
+        level=level,
+        lesson_number=lesson,
     )
 
     await state.set_state(HomeworkSubmissionState.uploading)
     await state.update_data(category_id=category_id, submission_id=submission["id"])
 
     file_count = await count_submission_files(submission["id"])
-    await _show_upload_prompt(callback.message, submission["id"], file_count, edit=True)
-    await callback.answer()
+    await _show_upload_prompt(message, submission["id"], file_count, edit=False)
 
 
 # =========================================================
