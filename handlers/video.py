@@ -92,7 +92,7 @@ async def send_course_info(
     text = (
         f"📚 <b>{course}</b>\n\n"
         f"🎥 Darslar soni: {info['lessons']}\n\n"
-        f"💰 Narxi: {info['price_text']}\n\n"
+        f"💰 Narxi: <s>{info['old_price_text']}</s> → <b>{info['price_text']}</b>\n\n"
         f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
     )
 
