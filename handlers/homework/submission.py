@@ -411,10 +411,19 @@ async def homework_cancel(callback: CallbackQuery, state: FSMContext):
     category = await get_homework_category(category_id)
 
     if category["code"] == "sprechen":
-        from handlers.homework.sprechen import render_sprechen_menu
+        from handlers.homework.sprechen import _require_sprechen_access, render_sprechen_menu
 
-        membership = await get_membership(callback.from_user.id, category_id)
-        await render_sprechen_menu(callback, category_id, callback.from_user.id, membership)
+        _, membership = await _require_sprechen_access(callback.from_user.id, category_id)
+
+        if membership:
+            await render_sprechen_menu(callback, category_id, callback.from_user.id, membership)
+        else:
+            # Access went stale (e.g. password rotated) while this
+            # draft was open - back out to the category list rather
+            # than a menu the user can no longer actually use.
+            await callback.message.edit_text(
+                "🔒 Kirish muddati tugagan. Qaytadan kiring.",
+            )
     else:
         from handlers.homework.access import render_category_menu
 

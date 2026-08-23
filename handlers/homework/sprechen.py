@@ -15,13 +15,18 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from config import SPRECHEN_GROUP_LINKS
-from database.homework import get_membership
+from database.homework import (
+    get_homework_category,
+    get_membership,
+    set_membership_access_password,
+)
 from database.homework_evaluations import get_sprechen_progress
 from database.homework_submissions import (
     count_submission_files,
     get_or_create_draft_submission_for_lesson,
 )
-from keyboards.homework import homework_upload_keyboard
+from keyboards.homework import homework_password_cancel_keyboard, homework_upload_keyboard
+from keyboards.main import main_menu_for
 from keyboards.sprechen import (
     sprechen_back_to_menu_keyboard,
     sprechen_gender_keyboard,
@@ -32,28 +37,49 @@ from services.homework import (
     GENDER_LABELS,
     LEVEL_GROUP_LABELS,
     SPRECHEN_LESSON_COUNT,
+    is_menu_exit,
+    is_sprechen_access_valid,
     is_valid_gender,
     is_valid_level_group,
     is_valid_sprechen_lesson,
 )
-from states.homework import HomeworkProfileState, HomeworkSubmissionState
+from states.homework import HomeworkAccessState, HomeworkProfileState, HomeworkSubmissionState
+from utils.security import verify_password
 
 router = Router()
 
 
 # =========================================================
-# REGISTRATION - START (called from access.py after password)
+# ACCESS FLOW: gender -> level -> password
 # =========================================================
+# A brand-new member goes through all three. A returning member
+# whose access has gone stale (password rotated since they last
+# verified it - see services.homework.is_sprechen_access_valid)
+# already has gender/level_group on file, so they skip straight to
+# the password step instead of being asked to pick a group again -
+# level_group is meant to be stable once chosen, not something a
+# lapsed password silently reopens for changing.
 
-async def start_sprechen_registration(message: Message, state: FSMContext, category_id: int):
+async def start_sprechen_access_flow(
+    target,
+    state: FSMContext,
+    category_id: int,
+    membership: dict | None,
+):
+    if membership and membership.get("gender") and membership.get("level_group"):
+        await _prompt_sprechen_password(target, state, category_id)
+        return
+
     await state.set_state(None)
     await state.update_data(category_id=category_id)
 
-    await message.answer(
-        "⚥ <b>Jinsingizni tanlang:</b>",
-        parse_mode="HTML",
-        reply_markup=sprechen_gender_keyboard(category_id),
-    )
+    text = "⚥ <b>Jinsingizni tanlang:</b>"
+    keyboard = sprechen_gender_keyboard(category_id)
+
+    if isinstance(target, CallbackQuery):
+        await target.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
+    else:
+        await target.answer(text, parse_mode="HTML", reply_markup=keyboard)
 
 
 @router.callback_query(F.data.startswith("hw:sp:gender:"))
@@ -85,24 +111,118 @@ async def sprechen_level_selected(callback: CallbackQuery, state: FSMContext):
         await callback.answer("❌ Noto'g'ri tanlov.", show_alert=True)
         return
 
-    # Hands off into the existing, unmodified first/last-name FSM
-    # steps (handlers.homework.profile) - gender/level_group ride
-    # along in FSM data and homework_profile_last_name's finalize
-    # step reads them back to branch into finish_sprechen_registration.
+    await state.update_data(category_id=category_id, gender=gender, level_group=level_group)
+    await _prompt_sprechen_password(callback, state, category_id)
+    await callback.answer()
+
+
+async def _prompt_sprechen_password(target, state: FSMContext, category_id: int):
+    category = await get_homework_category(category_id)
+
+    if not category or not category["password_hash"]:
+        text = (
+            "⚠️ Bu guruh uchun parol hali sozlanmagan. "
+            "Administrator bilan bog'laning."
+        )
+
+        if isinstance(target, CallbackQuery):
+            await target.answer(text, show_alert=True)
+        else:
+            await target.answer(text)
+        return
+
+    await state.set_state(HomeworkAccessState.waiting_sprechen_password)
+    await state.update_data(category_id=category_id)
+
+    text = "🔒 <b>Kirish uchun parolni kiriting:</b>"
+    keyboard = homework_password_cancel_keyboard()
+
+    if isinstance(target, CallbackQuery):
+        await target.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
+    else:
+        await target.answer(text, parse_mode="HTML", reply_markup=keyboard)
+
+
+@router.message(HomeworkAccessState.waiting_sprechen_password, F.text)
+async def sprechen_password_check(message: Message, state: FSMContext):
+    if is_menu_exit(message.text):
+        await state.clear()
+        await message.answer(
+            "🏠 Bosh menyu",
+            reply_markup=main_menu_for(message.from_user.id),
+        )
+        return
+
+    data = await state.get_data()
+    category_id = data.get("category_id")
+
+    category = await get_homework_category(category_id) if category_id else None
+
+    if not category:
+        await state.clear()
+        await message.answer("❌ Xatolik yuz berdi. Qaytadan urinib ko'ring.")
+        return
+
+    if not verify_password(
+        message.text.strip(),
+        category["password_hash"],
+        category["password_salt"],
+    ):
+        await message.answer(
+            "❌ Parol noto'g'ri. Qaytadan urinib ko'ring:",
+            reply_markup=homework_password_cancel_keyboard(),
+        )
+        return
+
+    membership = await get_membership(message.from_user.id, category_id)
+
+    if membership and membership.get("gender") and membership.get("level_group"):
+        # Returning member re-authenticating - gender/level_group
+        # stay exactly as they were, only the access snapshot moves.
+        await set_membership_access_password(
+            message.from_user.id, category_id, category["password_hash"]
+        )
+        await state.clear()
+
+        refreshed = await get_membership(message.from_user.id, category_id)
+
+        await message.answer("✅ Kirish tasdiqlandi.")
+        await render_sprechen_menu(message, category_id, message.from_user.id, refreshed)
+        return
+
+    # Brand-new registration - gender/level_group were stashed in
+    # FSM data by sprechen_level_selected above.
+    gender = data.get("gender")
+    level_group = data.get("level_group")
+
+    if not gender or not level_group:
+        await state.clear()
+        await message.answer("❌ Xatolik yuz berdi. Qaytadan boshlang.")
+        return
+
     await state.set_state(HomeworkProfileState.waiting_first_name)
     await state.update_data(
         category_id=category_id,
         mode="create",
         gender=gender,
         level_group=level_group,
+        sprechen_password_hash=category["password_hash"],
     )
 
-    await callback.message.edit_text("👤 Ismingizni kiriting:")
-    await callback.answer()
+    await message.answer("👤 Ismingizni kiriting:")
+
+
+@router.message(HomeworkAccessState.waiting_sprechen_password)
+async def sprechen_password_invalid_content(message: Message):
+    await message.answer(
+        "🔒 Parolni matn ko'rinishida kiriting.",
+        reply_markup=homework_password_cancel_keyboard(),
+    )
 
 
 # =========================================================
-# REGISTRATION - FINISH (called from profile.py's finalize step)
+# REGISTRATION - FINISH (called from profile.py's finalize step,
+# after first/last name - the existing, unmodified generic steps)
 # =========================================================
 
 async def finish_sprechen_registration(
@@ -113,7 +233,10 @@ async def finish_sprechen_registration(
     level_group: str,
     first_name: str,
     last_name: str,
+    password_hash: str,
 ):
+    await set_membership_access_password(message.from_user.id, category_id, password_hash)
+
     link = SPRECHEN_GROUP_LINKS.get((gender, level_group))
 
     text = f"✅ Tabriklaymiz! <b>{category_name}</b> bo'limiga muvaffaqiyatli qo'shildingiz."
@@ -131,6 +254,25 @@ async def finish_sprechen_registration(
     }
 
     await render_sprechen_menu(message, category_id, message.from_user.id, membership)
+
+
+# =========================================================
+# SERVER-SIDE ACCESS GUARD
+# =========================================================
+# Re-checked independently by every content handler below (menu,
+# lesson select, profile, total score) - not just at the category-
+# open entry point - so a deep-link/replayed callback straight to
+# e.g. hw:sp:lesson:<id>:<n> can never skip the password check just
+# because the corresponding button happened not to be shown.
+
+async def _require_sprechen_access(user_id: int, category_id: int):
+    category = await get_homework_category(category_id)
+    membership = await get_membership(user_id, category_id)
+
+    if is_sprechen_access_valid(membership, category):
+        return category, membership
+
+    return category, None
 
 
 # =========================================================
@@ -158,10 +300,10 @@ async def render_sprechen_menu(target, category_id: int, user_id: int, membershi
 async def sprechen_menu_callback(callback: CallbackQuery):
     category_id = int(callback.data.split(":")[3])
 
-    membership = await get_membership(callback.from_user.id, category_id)
+    _, membership = await _require_sprechen_access(callback.from_user.id, category_id)
 
-    if not membership or not membership.get("level_group"):
-        await callback.answer("❌ Avval ro'yxatdan o'ting.", show_alert=True)
+    if not membership:
+        await callback.answer("🔒 Kirish tasdiqlanmagan. Qaytadan kiring.", show_alert=True)
         return
 
     await render_sprechen_menu(callback, category_id, callback.from_user.id, membership)
@@ -203,10 +345,10 @@ async def sprechen_lesson_selected(callback: CallbackQuery, state: FSMContext):
         await callback.answer("❌ Noto'g'ri dars.", show_alert=True)
         return
 
-    membership = await get_membership(callback.from_user.id, category_id)
+    _, membership = await _require_sprechen_access(callback.from_user.id, category_id)
 
-    if not membership or not membership.get("gender") or not membership.get("level_group"):
-        await callback.answer("❌ Avval ro'yxatdan o'ting.", show_alert=True)
+    if not membership:
+        await callback.answer("🔒 Kirish tasdiqlanmagan. Qaytadan kiring.", show_alert=True)
         return
 
     submission = await get_or_create_draft_submission_for_lesson(
@@ -240,10 +382,10 @@ async def sprechen_lesson_selected(callback: CallbackQuery, state: FSMContext):
 async def sprechen_profile_view(callback: CallbackQuery):
     category_id = int(callback.data.split(":")[3])
 
-    membership = await get_membership(callback.from_user.id, category_id)
+    _, membership = await _require_sprechen_access(callback.from_user.id, category_id)
 
-    if not membership or not membership.get("level_group"):
-        await callback.answer("❌ Avval ro'yxatdan o'ting.", show_alert=True)
+    if not membership:
+        await callback.answer("🔒 Kirish tasdiqlanmagan. Qaytadan kiring.", show_alert=True)
         return
 
     text = (
@@ -270,10 +412,10 @@ async def sprechen_profile_view(callback: CallbackQuery):
 async def sprechen_total_score(callback: CallbackQuery):
     category_id = int(callback.data.split(":")[3])
 
-    membership = await get_membership(callback.from_user.id, category_id)
+    _, membership = await _require_sprechen_access(callback.from_user.id, category_id)
 
-    if not membership or not membership.get("level_group"):
-        await callback.answer("❌ Avval ro'yxatdan o'ting.", show_alert=True)
+    if not membership:
+        await callback.answer("🔒 Kirish tasdiqlanmagan. Qaytadan kiring.", show_alert=True)
         return
 
     progress = await get_sprechen_progress(callback.from_user.id, category_id)

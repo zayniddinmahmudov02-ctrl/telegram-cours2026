@@ -162,6 +162,35 @@ def is_valid_sprechen_lesson(lesson_number: int) -> bool:
 
 
 # =========================================================
+# SPRECHEN ACCESS VALIDITY
+# =========================================================
+# The single source of truth for "does this member currently have
+# access" - checked at every Sprechen entry point AND every content
+# handler (menu, lesson select, profile, total score), never just
+# once at the door. A membership row existing is NOT enough by
+# itself: gender/level_group must both be set, AND the password
+# snapshot stamped on the membership (see database.homework.
+# set_membership_access_password) must match the category's
+# CURRENT password_hash - if an admin changes the password,
+# every existing member's stamped hash stops matching and this
+# starts returning False for them, which is what forces
+# re-authentication instead of the old row silently staying valid
+# forever.
+
+def is_sprechen_access_valid(membership: dict | None, category: dict | None) -> bool:
+    if not membership or not category:
+        return False
+
+    if not membership.get("gender") or not membership.get("level_group"):
+        return False
+
+    stamped = membership.get("access_password_hash")
+    current = category.get("password_hash")
+
+    return bool(stamped and current and stamped == current)
+
+
+# =========================================================
 # CHANNEL MESSAGE TEXT
 # =========================================================
 

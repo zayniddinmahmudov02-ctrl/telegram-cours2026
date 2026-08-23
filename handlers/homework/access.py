@@ -23,7 +23,7 @@ from keyboards.homework import (
     homework_password_cancel_keyboard,
 )
 from keyboards.main import main_menu_for
-from services.homework import is_menu_exit
+from services.homework import is_menu_exit, is_sprechen_access_valid
 from states.homework import HomeworkAccessState
 from utils.security import verify_password
 
@@ -129,14 +129,29 @@ async def homework_open_category(callback: CallbackQuery, state: FSMContext):
 
     membership = await get_membership(callback.from_user.id, category_id)
 
-    if membership:
-        if category["code"] == "sprechen":
+    # Sprechen: a membership row existing is NOT enough - gender,
+    # level, and a password snapshot matching the category's
+    # CURRENT password must all hold (see services.homework.
+    # is_sprechen_access_valid). Anything else (no membership yet,
+    # or a stale/rotated password) goes through the dedicated
+    # gender -> level -> password flow instead of the generic one
+    # below, and NEVER through the generic password-first gate.
+    if category["code"] == "sprechen":
+        if membership and is_sprechen_access_valid(membership, category):
             from handlers.homework.sprechen import render_sprechen_menu
 
             await render_sprechen_menu(callback, category_id, callback.from_user.id, membership)
-        else:
-            await render_category_menu(callback, category_id, category["name"])
+            await callback.answer()
+            return
 
+        from handlers.homework.sprechen import start_sprechen_access_flow
+
+        await start_sprechen_access_flow(callback, state, category_id, membership)
+        await callback.answer()
+        return
+
+    if membership:
+        await render_category_menu(callback, category_id, category["name"])
         await callback.answer()
         return
 
@@ -196,18 +211,13 @@ async def homework_password_check(message: Message, state: FSMContext):
 
     # Correct password - hand off to first-time registration rather
     # than granting access here directly, since a membership row is
-    # only created once registration is complete. Sprechen collects
-    # gender + a level group first (see handlers.homework.sprechen);
-    # every other category goes straight to the generic name-only
-    # profile flow (handlers.homework.profile).
-    if category["code"] == "sprechen":
-        from handlers.homework.sprechen import start_sprechen_registration
+    # only created once registration is complete. Only Video/Online
+    # ever reach this state - Sprechen asks its password later, via
+    # its own HomeworkAccessState.waiting_sprechen_password (see
+    # handlers.homework.sprechen), never at category-open time.
+    from handlers.homework.profile import start_profile_collection
 
-        await start_sprechen_registration(message, state, category_id)
-    else:
-        from handlers.homework.profile import start_profile_collection
-
-        await start_profile_collection(message, state, category_id, mode="create")
+    await start_profile_collection(message, state, category_id, mode="create")
 
 
 @router.message(HomeworkAccessState.waiting_password)

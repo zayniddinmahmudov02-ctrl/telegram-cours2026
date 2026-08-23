@@ -128,6 +128,7 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
     first_name = data["first_name"]
     gender = data.get("gender")
     level_group = data.get("level_group")
+    sprechen_password_hash = data.get("sprechen_password_hash")
 
     category = await get_homework_category(category_id)
 
@@ -137,7 +138,11 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
         return
 
     is_sprechen_registration = (
-        mode == "create" and category["code"] == "sprechen" and gender and level_group
+        mode == "create"
+        and category["code"] == "sprechen"
+        and gender
+        and level_group
+        and sprechen_password_hash
     )
 
     if mode == "create":
@@ -165,6 +170,7 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
         await finish_sprechen_registration(
             message, category_id, category["name"],
             gender, level_group, first_name, last_name,
+            sprechen_password_hash,
         )
         return
 

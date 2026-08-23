@@ -416,6 +416,20 @@ async def create_homework_memberships_table():
         "ALTER TABLE homework_memberships ADD COLUMN IF NOT EXISTS level_group VARCHAR(5)"
     )
 
+    # Sprechen-only, nullable - a snapshot of homework_categories.
+    # password_hash taken at the moment this member last verified
+    # the password. Checked against the category's CURRENT
+    # password_hash (see services.homework.is_sprechen_access_valid)
+    # so a password rotated by an admin invalidates every existing
+    # member's access automatically, instead of a membership row
+    # being permanent proof of access forever. NULL (the default,
+    # including for every row that predates this column) is always
+    # treated as stale, which is exactly the desired behavior for
+    # rows that were never stamped with a real snapshot.
+    await db_execute(
+        "ALTER TABLE homework_memberships ADD COLUMN IF NOT EXISTS access_password_hash TEXT"
+    )
+
     await db_execute(
         """
         CREATE INDEX IF NOT EXISTS

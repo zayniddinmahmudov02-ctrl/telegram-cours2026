@@ -221,6 +221,37 @@ async def update_membership_profile(
     )
 
 
+async def set_membership_access_password(
+    user_id: int,
+    category_id: int,
+    password_hash: str,
+):
+    """
+    Stamps the membership with the category password_hash that was
+    just successfully verified (Sprechen only - see
+    services.homework.is_sprechen_access_valid). Called right after
+    a correct password check, both for a brand-new registration and
+    for a returning member re-authenticating after their previous
+    snapshot went stale.
+    """
+
+    await db_execute(
+        """
+        UPDATE homework_memberships
+        SET
+            access_password_hash=%s,
+            updated_at=NOW()
+        WHERE user_id=%s
+        AND category_id=%s
+        """,
+        (
+            password_hash,
+            user_id,
+            category_id,
+        ),
+    )
+
+
 # =========================================================
 # ADMIN - STATISTICS / BROWSING
 # =========================================================

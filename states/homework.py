@@ -2,8 +2,20 @@ from aiogram.fsm.state import State, StatesGroup
 
 
 class HomeworkAccessState(StatesGroup):
-    # Password entry to unlock a category
+    # Password entry to unlock a category (Video/Online: asked
+    # immediately on category open, before anything else)
     waiting_password = State()
+
+    # Sprechen's password step is intentionally a *different* state
+    # from the one above, even though both just wait for a text
+    # message - Sprechen asks it AFTER gender+level (or, for a
+    # returning member whose access has gone stale, on its own),
+    # never at category-open time, so it needs its own FSM data
+    # shape (category_id [+ gender/level_group for a brand-new
+    # registration]) and its own handler (see handlers.homework.
+    # sprechen). Keeping it separate avoids any ambiguity about
+    # which handler a given "waiting for password text" state means.
+    waiting_sprechen_password = State()
 
 
 class HomeworkProfileState(StatesGroup):
