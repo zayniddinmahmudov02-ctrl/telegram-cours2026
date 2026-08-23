@@ -11,22 +11,35 @@ from database.homework import (
     get_category_member_count,
     get_homework_categories,
     get_homework_category,
+    get_homework_category_by_code,
     get_homework_users,
     set_homework_category_active,
     set_homework_category_password,
 )
-from database.homework_evaluations import get_evaluation, get_homework_statistics
+from database.homework_evaluations import (
+    get_evaluation,
+    get_homework_statistics,
+    get_sprechen_statistics,
+)
 from database.homework_submissions import count_submissions, get_submission, search_submissions
 from keyboards.homework_admin import (
     homework_admin_categories_keyboard,
     homework_admin_category_detail_keyboard,
     homework_admin_home_keyboard,
+    homework_admin_sprechen_group_keyboard,
+    homework_admin_sprechen_keyboard,
     homework_admin_submission_detail_keyboard,
     homework_admin_submissions_keyboard,
     homework_admin_users_keyboard,
 )
 from services.auth import is_admin
-from services.homework import is_menu_exit, parse_lesson_number, score_label, status_label
+from services.homework import (
+    LEVEL_GROUP_LABELS,
+    is_menu_exit,
+    parse_lesson_number,
+    score_label,
+    status_label,
+)
 from states.homework import HomeworkAdminState
 from utils.security import hash_password
 
@@ -489,5 +502,106 @@ async def homework_admin_stats(callback: CallbackQuery):
         text,
         parse_mode="HTML",
         reply_markup=homework_admin_home_keyboard(),
+    )
+    await callback.answer()
+
+
+# =========================================================
+# SPRECHEN STATISTICS
+# =========================================================
+# Sprechen's `level` column holds the level_group code (see
+# handlers.homework.sprechen / get_sprechen_statistics), so "open a
+# group" reuses the existing generic search_submissions(level=...)
+# unchanged - no separate Sprechen submissions query needed.
+
+def _format_sprechen_group_stats(label: str, group: dict | None) -> str:
+    if not group:
+        return f"{label}\nMa'lumot yo'q.\n"
+
+    average = group["average_score"] if group["average_score"] is not None else "-"
+
+    return (
+        f"{label}\n"
+        f"👥 Ro'yxatdan o'tgan: {group['registered']}\n"
+        f"👨 Erkak: {group['male_count']} | 👩 Ayol: {group['female_count']}\n"
+        f"📤 Yuborilgan: {group['submitted_count']}\n"
+        f"✅ Bajarilgan darslar: {group['completed_count']}\n"
+        f"📊 O'rtacha ball: {average}\n"
+        f"⭐ Jami ball: {group['total_score']}\n"
+    )
+
+
+@router.callback_query(F.data == "hwa:sp:stats")
+async def homework_admin_sprechen_stats(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+
+    category = await get_homework_category_by_code("sprechen")
+
+    if not category:
+        await callback.answer("❌ Sprechen kategoriyasi topilmadi.", show_alert=True)
+        return
+
+    stats = await get_sprechen_statistics(category["id"])
+    overall = stats["overall"]
+
+    text = "🗣 <b>Sprechen Statistikasi</b>\n\n"
+
+    for code, label in LEVEL_GROUP_LABELS.items():
+        text += _format_sprechen_group_stats(label, stats["by_group"].get(code))
+        text += "━━━━━━━━━━━━━━\n"
+
+    overall_average = overall["average_score"] if overall["average_score"] is not None else "-"
+
+    text += (
+        f"\n📊 <b>Umumiy</b>\n"
+        f"👥 Jami ro'yxatdan o'tgan: {overall['registered']}\n"
+        f"👨 Erkak: {overall['male_count']} | 👩 Ayol: {overall['female_count']}\n"
+        f"📤 Jami yuborilgan: {overall['submitted_count']}\n"
+        f"✅ Jami bajarilgan darslar: {overall['completed_count']}\n"
+        f"📊 O'rtacha ball: {overall_average}\n"
+        f"⭐ Jami ball: {overall['total_score']}"
+    )
+
+    await callback.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=homework_admin_sprechen_keyboard(category["id"]),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("hwa:sp:group:"))
+async def homework_admin_sprechen_group(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+
+    parts = callback.data.split(":")
+    category_id = int(parts[3])
+    group_code = parts[4]
+
+    submissions = await search_submissions(
+        category_id=category_id, level=group_code, limit=15
+    )
+
+    label = LEVEL_GROUP_LABELS.get(group_code, group_code)
+    text = f"{label}\n\n📋 <b>Oxirgi vazifalar</b>\n\n"
+
+    if not submissions:
+        text += "Hozircha mavjud emas."
+    else:
+        for s in submissions:
+            score_part = f" — {s['score']}/5" if s["score"] is not None else ""
+            text += (
+                f"👤 {s['first_name']} {s['last_name']} | "
+                f"📖 {s['lesson_number']}-dars{score_part}\n"
+            )
+
+    await callback.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=homework_admin_sprechen_group_keyboard(),
     )
     await callback.answer()

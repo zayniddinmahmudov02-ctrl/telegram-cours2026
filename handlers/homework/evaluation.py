@@ -85,6 +85,8 @@ async def homework_evaluate(callback: CallbackQuery):
                 user_id=submission["user_id"],
                 file_count=file_count,
                 created_at=submission["created_at"],
+                level_label="Guruh" if category and category["code"] == "sprechen" else "Daraja",
+                gender=submission["gender"],
             )
             header_text += f"\n\n✅ Baholandi: {score}/5 - {score_label(score)}"
 

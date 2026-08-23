@@ -130,7 +130,13 @@ async def homework_open_category(callback: CallbackQuery, state: FSMContext):
     membership = await get_membership(callback.from_user.id, category_id)
 
     if membership:
-        await render_category_menu(callback, category_id, category["name"])
+        if category["code"] == "sprechen":
+            from handlers.homework.sprechen import render_sprechen_menu
+
+            await render_sprechen_menu(callback, category_id, callback.from_user.id, membership)
+        else:
+            await render_category_menu(callback, category_id, category["name"])
+
         await callback.answer()
         return
 
@@ -188,12 +194,20 @@ async def homework_password_check(message: Message, state: FSMContext):
         )
         return
 
-    # Correct password - hand off to the profile flow (first-time
-    # collection) rather than granting access here directly, since
-    # a membership row is only created once the profile is complete.
-    from handlers.homework.profile import start_profile_collection
+    # Correct password - hand off to first-time registration rather
+    # than granting access here directly, since a membership row is
+    # only created once registration is complete. Sprechen collects
+    # gender + a level group first (see handlers.homework.sprechen);
+    # every other category goes straight to the generic name-only
+    # profile flow (handlers.homework.profile).
+    if category["code"] == "sprechen":
+        from handlers.homework.sprechen import start_sprechen_registration
 
-    await start_profile_collection(message, state, category_id, mode="create")
+        await start_sprechen_registration(message, state, category_id)
+    else:
+        from handlers.homework.profile import start_profile_collection
+
+        await start_profile_collection(message, state, category_id, mode="create")
 
 
 @router.message(HomeworkAccessState.waiting_password)

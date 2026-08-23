@@ -126,6 +126,8 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
     category_id = data["category_id"]
     mode = data["mode"]
     first_name = data["first_name"]
+    gender = data.get("gender")
+    level_group = data.get("level_group")
 
     category = await get_homework_category(category_id)
 
@@ -134,12 +136,18 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
         await message.answer("❌ Kategoriya topilmadi.")
         return
 
+    is_sprechen_registration = (
+        mode == "create" and category["code"] == "sprechen" and gender and level_group
+    )
+
     if mode == "create":
         await create_membership(
             user_id=message.from_user.id,
             category_id=category_id,
             first_name=first_name,
             last_name=last_name,
+            gender=gender if is_sprechen_registration else None,
+            level_group=level_group if is_sprechen_registration else None,
         )
     else:
         await update_membership_profile(
@@ -150,6 +158,15 @@ async def homework_profile_last_name(message: Message, state: FSMContext):
         )
 
     await state.clear()
+
+    if is_sprechen_registration:
+        from handlers.homework.sprechen import finish_sprechen_registration
+
+        await finish_sprechen_registration(
+            message, category_id, category["name"],
+            gender, level_group, first_name, last_name,
+        )
+        return
 
     from handlers.homework.access import render_category_menu
 

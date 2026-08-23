@@ -157,15 +157,25 @@ async def create_membership(
     category_id: int,
     first_name: str,
     last_name: str,
+    gender: str | None = None,
+    level_group: str | None = None,
 ):
+    """
+    gender/level_group are Sprechen-only (permanent on the
+    membership there, unlike Video/Online where level is asked
+    per-submission) - both stay NULL for every other category.
+    """
+
     await db_execute(
         """
         INSERT INTO homework_memberships
-        (user_id, category_id, first_name, last_name)
-        VALUES (%s, %s, %s, %s)
+        (user_id, category_id, first_name, last_name, gender, level_group)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (user_id, category_id) DO UPDATE SET
             first_name=EXCLUDED.first_name,
             last_name=EXCLUDED.last_name,
+            gender=EXCLUDED.gender,
+            level_group=EXCLUDED.level_group,
             updated_at=NOW()
         """,
         (
@@ -173,6 +183,8 @@ async def create_membership(
             category_id,
             first_name,
             last_name,
+            gender,
+            level_group,
         ),
     )
 

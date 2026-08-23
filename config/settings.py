@@ -176,6 +176,18 @@ HOMEWORK_CATEGORIES = {
     },
 }
 
+# Sprechen-only: which Telegram group a member is sent, based on
+# (gender, level_group). Centralized here (not hardcoded in any
+# handler) so a link can be swapped in one place.
+SPRECHEN_GROUP_LINKS = {
+    ("female", "0-A1"): "https://t.me/+mHKO6lyHc984ODBi",
+    ("female", "A2-B1"): "https://t.me/+gWjWBgAO-TswYjZi",
+    ("female", "B2-C1"): "https://t.me/+Zgrtr-tuUeBiY2Yy",
+    ("male", "0-A1"): "https://t.me/+uvVs7XEgNlwxNDky",
+    ("male", "A2-B1"): "https://t.me/+Pva5vFAl7vxkNDVi",
+    ("male", "B2-C1"): "https://t.me/+odgz7lE9CxkxOWFi",
+}
+
 # =========================================================
 # SECURITY CHECK
 # =========================================================

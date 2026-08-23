@@ -103,6 +103,10 @@ async def homework_submit_start(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         return
 
+    # Only reachable for Video/Online - Sprechen's category menu is
+    # the dedicated 20-lesson grid (handlers.homework.sprechen),
+    # which never generates a "hw:submit:" button, so this always
+    # asks for a free-text level here.
     await state.set_state(HomeworkSubmissionState.waiting_level)
     await state.update_data(category_id=category_id)
 
@@ -406,9 +410,16 @@ async def homework_cancel(callback: CallbackQuery, state: FSMContext):
 
     category = await get_homework_category(category_id)
 
-    from handlers.homework.access import render_category_menu
+    if category["code"] == "sprechen":
+        from handlers.homework.sprechen import render_sprechen_menu
 
-    await render_category_menu(callback, category_id, category["name"])
+        membership = await get_membership(callback.from_user.id, category_id)
+        await render_sprechen_menu(callback, category_id, callback.from_user.id, membership)
+    else:
+        from handlers.homework.access import render_category_menu
+
+        await render_category_menu(callback, category_id, category["name"])
+
     await callback.answer("❌ Bekor qilindi.")
 
 
@@ -467,6 +478,8 @@ async def homework_confirm(callback: CallbackQuery, state: FSMContext):
         user_id=submission["user_id"],
         file_count=len(files),
         created_at=submission["created_at"],
+        level_label="Guruh" if category["code"] == "sprechen" else "Daraja",
+        gender=submission["gender"],
     )
 
     try:

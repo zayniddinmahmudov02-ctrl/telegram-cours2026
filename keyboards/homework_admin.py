@@ -3,6 +3,8 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 
+from services.homework import LEVEL_GROUP_LABELS
+
 # =========================================================
 # SCORING (attached to the channel post, and reused in the
 # Admin Panel's submission detail view for re-evaluation)
@@ -117,6 +119,53 @@ def homework_admin_home_keyboard() -> InlineKeyboardMarkup:
                     callback_data="hwa:stats",
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text="🗣 Sprechen statistikasi",
+                    callback_data="hwa:sp:stats",
+                )
+            ],
+        ]
+    )
+
+
+# =========================================================
+# ADMIN - SPRECHEN STATISTICS
+# =========================================================
+
+def homework_admin_sprechen_keyboard(category_id: int) -> InlineKeyboardMarkup:
+
+    rows = [
+        [
+            InlineKeyboardButton(
+                text=label,
+                callback_data=f"hwa:sp:group:{category_id}:{code}",
+            )
+        ]
+        for code, label in LEVEL_GROUP_LABELS.items()
+    ]
+
+    rows.append(
+        [
+            InlineKeyboardButton(
+                text="⬅️ Orqaga",
+                callback_data="hwa:home",
+            )
+        ]
+    )
+
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def homework_admin_sprechen_group_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Orqaga",
+                    callback_data="hwa:sp:stats",
+                )
+            ]
         ]
     )
 

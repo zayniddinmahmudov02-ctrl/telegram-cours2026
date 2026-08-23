@@ -118,6 +118,50 @@ def parse_lesson_number(value: str) -> int | None:
 
 
 # =========================================================
+# LEVEL GROUPS (Sprechen guruh only)
+# =========================================================
+# Sprechen collects a level *group* instead of a single level - the
+# stored/internal value (dict key, fits the existing
+# homework_submissions.level VARCHAR(5) column unchanged) vs. the
+# button/display label (dict value).
+
+LEVEL_GROUP_LABELS = {
+    "0-A1": "🟢 0–A1",
+    "A2-B1": "🟡 A2–B1",
+    "B2-C1": "🔵 B2–C1",
+}
+
+
+def is_valid_level_group(value: str) -> bool:
+    return value in LEVEL_GROUP_LABELS
+
+
+# =========================================================
+# GENDER (Sprechen guruh only)
+# =========================================================
+
+GENDER_LABELS = {
+    "male": "👨 Erkak",
+    "female": "👩 Ayol",
+}
+
+
+def is_valid_gender(value: str) -> bool:
+    return value in GENDER_LABELS
+
+
+# =========================================================
+# SPRECHEN LESSONS (fixed 1-20, button-selected - never typed)
+# =========================================================
+
+SPRECHEN_LESSON_COUNT = 20
+
+
+def is_valid_sprechen_lesson(lesson_number: int) -> bool:
+    return 1 <= lesson_number <= SPRECHEN_LESSON_COUNT
+
+
+# =========================================================
 # CHANNEL MESSAGE TEXT
 # =========================================================
 
@@ -131,12 +175,19 @@ def build_submission_header(
     user_id: int,
     file_count: int,
     created_at,
+    level_label: str = "Daraja",
+    gender: str | None = None,
 ) -> str:
+    gender_line = (
+        f"⚥ <b>Jins:</b> {GENDER_LABELS.get(gender, gender)}\n" if gender else ""
+    )
+
     return (
         f"📥 <b>Yangi Hausaufgaben</b>\n\n"
         f"👤 <b>{first_name} {last_name}</b>\n"
+        f"{gender_line}"
         f"📚 <b>Kategoriya:</b> {category_name}\n"
-        f"📊 <b>Daraja:</b> {level}\n"
+        f"📊 <b>{level_label}:</b> {level}\n"
         f"📖 <b>Dars:</b> {lesson_number}-dars\n"
         f"🆔 <b>Submission:</b> <code>{submission_uid}</code>\n"
         f"👤 <b>User ID:</b> <code>{user_id}</code>\n"

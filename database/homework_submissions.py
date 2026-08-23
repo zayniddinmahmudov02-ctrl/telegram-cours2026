@@ -43,6 +43,7 @@ async def create_draft_submission(
     last_name: str,
     level: str,
     lesson_number: int,
+    gender: str | None = None,
 ):
     row = await db_execute(
         """
@@ -50,9 +51,9 @@ async def create_draft_submission(
         (
             submission_uid, user_id, category_id,
             first_name, last_name, level, lesson_number,
-            status
+            gender, status
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, 'draft')
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'draft')
         RETURNING id, submission_uid;
         """,
         (
@@ -63,6 +64,7 @@ async def create_draft_submission(
             last_name,
             level,
             lesson_number,
+            gender,
         ),
         fetchone=True,
     )
@@ -85,6 +87,59 @@ async def get_or_create_draft_submission(
 
     row = await create_draft_submission(
         user_id, category_id, first_name, last_name, level, lesson_number
+    )
+
+    return await get_submission(row["id"])
+
+
+# =========================================================
+# DRAFT LIFECYCLE - PER LESSON (Sprechen guruh only)
+# =========================================================
+# Sprechen tracks 20 independently-selectable lessons, so unlike
+# get_draft_submission above (one active draft per user+category,
+# fine for Video/Online's sequential level->lesson->upload flow),
+# a Sprechen draft must be scoped by lesson_number too - otherwise
+# tapping lesson 7 while an unfinished lesson 5 draft exists would
+# silently resume/attach files to the wrong lesson.
+
+async def get_draft_submission_for_lesson(
+    user_id: int,
+    category_id: int,
+    lesson_number: int,
+):
+    return await db_execute(
+        """
+        SELECT *
+        FROM homework_submissions
+        WHERE user_id=%s
+        AND category_id=%s
+        AND lesson_number=%s
+        AND status='draft'
+        ORDER BY created_at DESC
+        LIMIT 1
+        """,
+        (user_id, category_id, lesson_number),
+        fetchone=True,
+    )
+
+
+async def get_or_create_draft_submission_for_lesson(
+    user_id: int,
+    category_id: int,
+    first_name: str,
+    last_name: str,
+    level: str,
+    lesson_number: int,
+    gender: str | None = None,
+):
+    draft = await get_draft_submission_for_lesson(user_id, category_id, lesson_number)
+
+    if draft:
+        return draft
+
+    row = await create_draft_submission(
+        user_id, category_id, first_name, last_name, level, lesson_number,
+        gender=gender,
     )
 
     return await get_submission(row["id"])

@@ -406,6 +406,16 @@ async def create_homework_memberships_table():
         "ALTER TABLE homework_memberships DROP COLUMN IF EXISTS lesson_number"
     )
 
+    # Sprechen-only, both nullable - Video/Online memberships never
+    # set these (permanent-profile gender/level-group is a Sprechen
+    # concept, see handlers.homework.sprechen).
+    await db_execute(
+        "ALTER TABLE homework_memberships ADD COLUMN IF NOT EXISTS gender VARCHAR(10)"
+    )
+    await db_execute(
+        "ALTER TABLE homework_memberships ADD COLUMN IF NOT EXISTS level_group VARCHAR(5)"
+    )
+
     await db_execute(
         """
         CREATE INDEX IF NOT EXISTS
@@ -476,6 +486,12 @@ async def create_homework_submissions_table():
         "idx_homework_submissions_created ON homework_submissions(created_at)",
     ):
         await db_execute(f"CREATE INDEX IF NOT EXISTS {index_sql}")
+
+    # Sprechen-only, nullable - an immutable per-submission snapshot
+    # of gender (Video/Online submissions never set this).
+    await db_execute(
+        "ALTER TABLE homework_submissions ADD COLUMN IF NOT EXISTS gender VARCHAR(10)"
+    )
 
 
 # =========================================================
