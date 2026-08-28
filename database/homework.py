@@ -88,14 +88,37 @@ async def set_homework_category_password(
     password_hash: str,
     password_salt: str,
 ):
+    """
+    Changing a category's password and invalidating every existing
+    member's stale access snapshot happen as ONE SQL statement (a
+    single db_execute call = one implicit Postgres transaction), so
+    a rotated password can never leave some members still holding a
+    snapshot that matches the OLD hash - there is no window where
+    the new password is saved but old access hasn't been revoked
+    yet. Clearing access_password_hash is a no-op for Video/Online
+    (their memberships never set it to begin with) and only matters
+    for Sprechen (see services.homework.is_sprechen_access_valid,
+    which treats the category's password_hash as the sole authority
+    and this snapshot as nothing more than "matched it last time").
+    """
+
     await db_execute(
         """
-        UPDATE homework_categories
+        WITH updated_category AS (
+            UPDATE homework_categories
+            SET
+                password_hash=%s,
+                password_salt=%s,
+                updated_at=NOW()
+            WHERE id=%s
+            RETURNING id
+        )
+        UPDATE homework_memberships
         SET
-            password_hash=%s,
-            password_salt=%s,
+            access_password_hash=NULL,
             updated_at=NOW()
-        WHERE id=%s
+        WHERE category_id IN (SELECT id FROM updated_category)
+        AND access_password_hash IS NOT NULL
         """,
         (password_hash, password_salt, category_id),
     )

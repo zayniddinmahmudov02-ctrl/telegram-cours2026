@@ -208,7 +208,9 @@ async def homework_admin_category_password_save(message: Message, state: FSMCont
     await state.clear()
 
     await message.answer(
-        f"✅ <b>{category['name']}</b> uchun parol yangilandi.",
+        f"✅ <b>{category['name']}</b>\n\n"
+        f"Parol muvaffaqiyatli o'zgartirildi. "
+        f"Eski parol barcha foydalanuvchilar uchun bekor qilindi.",
         parse_mode="HTML",
         reply_markup=homework_admin_home_keyboard(),
     )

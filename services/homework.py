@@ -166,22 +166,40 @@ def is_valid_sprechen_lesson(lesson_number: int) -> bool:
 # =========================================================
 # The single source of truth for "does this member currently have
 # access" - checked at every Sprechen entry point AND every content
-# handler (menu, lesson select, profile, total score), never just
-# once at the door. A membership row existing is NOT enough by
-# itself: gender/level_group must both be set, AND the password
-# snapshot stamped on the membership (see database.homework.
-# set_membership_access_password) must match the category's
-# CURRENT password_hash - if an admin changes the password,
-# every existing member's stamped hash stops matching and this
-# starts returning False for them, which is what forces
-# re-authentication instead of the old row silently staying valid
-# forever.
+# handler (menu, lesson select, profile, total score, deep-links),
+# never just once at the door. Every one of these must hold:
+#
+#   1. category exists and is active
+#   2. gender is a recognized value (not just "something present")
+#   3. level_group is a recognized value (same)
+#   4. the password snapshot stamped on the membership (see
+#      database.homework.set_membership_access_password) matches
+#      the category's CURRENT password_hash
+#
+# homework_categories.password_hash is the only authority for #4 -
+# the membership's stamped hash never overrides it, it can only
+# ever match or fail to match whatever the category's live value
+# currently is. Changing the category password (database.homework.
+# set_homework_category_password) also clears every membership's
+# stamped hash in the same atomic statement, so #4 fails for every
+# existing member immediately and unconditionally on rotation -
+# this comparison is a second, independent guard against the same
+# thing, not the only one.
 
 def is_sprechen_access_valid(membership: dict | None, category: dict | None) -> bool:
     if not membership or not category:
         return False
 
-    if not membership.get("gender") or not membership.get("level_group"):
+    if not category.get("is_active"):
+        return False
+
+    gender = membership.get("gender")
+    level_group = membership.get("level_group")
+
+    if not gender or not is_valid_gender(gender):
+        return False
+
+    if not level_group or not is_valid_level_group(level_group):
         return False
 
     stamped = membership.get("access_password_hash")
