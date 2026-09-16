@@ -107,29 +107,24 @@ async def send_course_info(
 # COURSES
 # =========================================================
 
-@router.message(F.text == "🇩🇪 A1")
+@router.message(F.text == "🇩🇪 A1 — 50% CHEGIRMA")
 async def course_a1(message: Message):
     await send_course_info(message, "🇩🇪 A1")
 
 
-@router.message(F.text == "🇩🇪 A2")
+@router.message(F.text == "🇩🇪 A2 — 50% CHEGIRMA")
 async def course_a2(message: Message):
     await send_course_info(message, "🇩🇪 A2")
 
 
-@router.message(F.text == "🇩🇪 B1")
+@router.message(F.text == "🇩🇪 B1 — 50% CHEGIRMA")
 async def course_b1(message: Message):
     await send_course_info(message, "🇩🇪 B1")
 
 
-@router.message(F.text == "🔥 A1-B1")
+@router.message(F.text == "🔥 A1-B1 — 50% CHEGIRMA")
 async def course_a1b1(message: Message):
     await send_course_info(message, "🔥 A1-B1")
-
-
-@router.message(F.text == "🔥 A1-C1")
-async def course_a1c1(message: Message):
-    await send_course_info(message, "🔥 A1-C1")
 
 
 # =========================================================
