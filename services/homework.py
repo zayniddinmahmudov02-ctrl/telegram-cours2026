@@ -14,7 +14,7 @@ from config import LEVEL_ORDER
 MENU_EXIT_TEXTS = {
     "/start",
     "🏠 Bosh menyu",
-    "📚 Artikel Topish",
+    "📚 Wortschatz",
     "🎮 So'z O'yini",
     "🎥 Video Kurslar",
     "🎬 Medien",

@@ -6,7 +6,7 @@ from middlewares import SubscriptionMiddleware, UserTrackingMiddleware
 
 from handlers import (
     start,
-    artikel,
+    wortschatz,
     profile,
     wordgame,
     quiz,
@@ -37,7 +37,7 @@ dp.callback_query.middleware(subscription)
 
 routers = [
     start,
-    artikel,
+    wortschatz,
     profile,
     wordgame,
     quiz,

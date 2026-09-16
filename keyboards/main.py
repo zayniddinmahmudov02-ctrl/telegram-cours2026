@@ -5,7 +5,7 @@ from config import ADMIN_IDS
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text="📚 Artikel Topish"),
+            KeyboardButton(text="📚 Wortschatz"),
             KeyboardButton(text="🎮 So'z O'yini"),
         ],
         [

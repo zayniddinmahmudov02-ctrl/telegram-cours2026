@@ -11,7 +11,6 @@ from aiogram.types import (
 
 from database import db_execute
 from keyboards import video_menu
-from services.runtime import artikel_users
 from config import COURSE_INFO
 
 router = Router()
@@ -24,8 +23,6 @@ logging.basicConfig(level=logging.INFO)
 
 @router.message(F.text == "🎥 Video Kurslar")
 async def video_courses(message: Message):
-    artikel_users.pop(message.from_user.id, None)
-
     await message.answer(
         "🎥 Kerakli kursni tanlang:",
         reply_markup=video_menu,

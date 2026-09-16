@@ -263,6 +263,3 @@ admin_sessions = {}
 
 # Daily Reset
 last_daily_reset = None
-# Artikel Search
-artikel_data = {}
-artikel_users = {}

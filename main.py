@@ -11,7 +11,7 @@ import bot as register_bot
 
 from database import init_database
 
-from handlers.artikel import load_artikel
+from handlers.wortschatz import load_wortschatz
 
 from services.loader import load_all
 from services.runtime import (
@@ -45,7 +45,7 @@ async def main():
 
     await init_database()
 
-    load_artikel()
+    load_wortschatz()
 
     load_all()
 
