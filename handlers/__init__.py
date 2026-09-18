@@ -1,5 +1,4 @@
 from .start import router as start
-from .wortschatz import router as wortschatz
 from .profile import router as profile
 from .wordgame import router as wordgame
 from .quiz_callback import router as quiz
@@ -16,7 +15,6 @@ from .homework import router as homework
 
 __all__ = [
     "start",
-    "wortschatz",
     "profile",
     "wordgame",
     "quiz",

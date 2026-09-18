@@ -11,8 +11,6 @@ import bot as register_bot
 
 from database import init_database
 
-from handlers.wortschatz import load_wortschatz
-
 from services.loader import load_all
 from services.runtime import (
     cleanup_quiz_memory,
@@ -44,8 +42,6 @@ def run_web():
 async def main():
 
     await init_database()
-
-    load_wortschatz()
 
     load_all()
 
