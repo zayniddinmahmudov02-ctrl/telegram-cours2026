@@ -6,8 +6,6 @@ main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text="🎮 So'z O'yini"),
-        ],
-        [
             KeyboardButton(text="🎥 Video Kurslar"),
         ],
         [
@@ -16,8 +14,6 @@ main_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="📚 Hausaufgaben"),
-        ],
-        [
             KeyboardButton(text="👤 Mening Profilim"),
         ],
     ],
