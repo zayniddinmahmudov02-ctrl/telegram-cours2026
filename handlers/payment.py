@@ -4,6 +4,7 @@ import re
 logger = logging.getLogger(__name__)
 
 from aiogram import Router, F
+from aiogram.exceptions import TelegramAPIError
 from aiogram.types import (
     CallbackQuery,
     Message,
@@ -16,6 +17,7 @@ from aiogram.types import (
     CopyTextButton,
 )
 from keyboards.main import main_menu
+from keyboards.video import video_menu
 from loader import bot
 from config.settings import (
     ADMIN_CHANNEL_ID,
@@ -27,6 +29,7 @@ from aiogram.types import ReplyKeyboardRemove
 from states.payment import PaymentState
 from keyboards.payment import (
     admin_payment_keyboard,
+    receipt_cancel_keyboard,
 )
 
 from database.payments import (
@@ -109,6 +112,33 @@ To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki bosh
 
     await callback.answer()
 # =========================================================
+# RECEIPT PROMPT CANCEL BUTTON
+# =========================================================
+
+async def _hide_cancel_button(chat_id: int, message_id: int | None):
+    # Cosmetic only: never let a failed edit break the payment flow.
+    if message_id is None:
+        return
+
+    try:
+        await bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=None,
+        )
+    except TelegramAPIError:
+        pass
+
+
+async def _hide_stored_cancel_button(chat_id: int, state: FSMContext):
+    data = await state.get_data()
+
+    await _hide_cancel_button(
+        chat_id,
+        data.get("receipt_prompt_id"),
+    )
+
+# =========================================================
 # RECEIPT STEP
 # =========================================================
 
@@ -130,6 +160,11 @@ async def payment_receipt(
         )
         return
 
+    await _hide_stored_cancel_button(
+        callback.message.chat.id,
+        state,
+    )
+
     await state.clear()
 
     await state.update_data(
@@ -141,7 +176,7 @@ async def payment_receipt(
         PaymentState.waiting_receipt
     )
 
-    await callback.message.answer(
+    prompt = await callback.message.answer(
         """
 📷 <b>To'lov chekini yuboring.</b>
 
@@ -152,6 +187,44 @@ Qabul qilinadi:
 • PDF
 """,
         parse_mode="HTML",
+        reply_markup=receipt_cancel_keyboard(),
+    )
+
+    await state.update_data(
+        receipt_prompt_id=prompt.message_id,
+    )
+
+    await callback.answer()
+# =========================================================
+# CANCEL RECEIPT
+# =========================================================
+
+@router.callback_query(
+    F.data == "payment_cancel"
+)
+async def payment_cancel(
+    callback: CallbackQuery,
+    state: FSMContext,
+):
+    await _hide_cancel_button(
+        callback.message.chat.id,
+        callback.message.message_id,
+    )
+
+    # Old button while no receipt is awaited (already sent, or the user
+    # is in another flow): hide it, but leave whatever state is active.
+    if await state.get_state() != PaymentState.waiting_receipt.state:
+        await callback.answer(
+            "ℹ️ Bu tugma endi faol emas."
+        )
+        return
+
+    await state.clear()
+
+    await callback.message.answer(
+        "❌ Chek yuborish bekor qilindi.\n\n"
+        "🎥 Kerakli kursni tanlang:",
+        reply_markup=video_menu,
     )
 
     await callback.answer()
@@ -167,6 +240,11 @@ async def receipt_photo(
     message: Message,
     state: FSMContext,
 ):
+    await _hide_stored_cancel_button(
+        message.chat.id,
+        state,
+    )
+
     await state.update_data(
         receipt_file_id=message.photo[-1].file_id,
         file_type="photo",
@@ -205,6 +283,11 @@ async def receipt_pdf(
             "❌ Faqat PDF formatidagi chek yuborishingiz mumkin."
         )
         return
+
+    await _hide_stored_cancel_button(
+        message.chat.id,
+        state,
+    )
 
     await state.update_data(
         receipt_file_id=message.document.file_id,

@@ -4,6 +4,23 @@ from aiogram.types import (
 )
 
 # =========================================================
+# RECEIPT PROMPT KEYBOARD
+# =========================================================
+
+def receipt_cancel_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="❌ Bekor qilish",
+                    callback_data="payment_cancel",
+                )
+            ]
+        ]
+    )
+
+
+# =========================================================
 # ADMIN PAYMENT KEYBOARD
 # =========================================================
 
