@@ -86,12 +86,22 @@ async def send_course_info(
     except Exception as e:
         logging.error(e)
 
-    text = (
-        f"📚 <b>{course}</b>\n\n"
-        f"🎥 Darslar soni: {info['lessons']}\n\n"
-        f"💰 Narxi: <s>{info['old_price_text']}</s> → <b>{info['price_text']}</b>\n\n"
-        f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
-    )
+    if course == "🔥 A1-C1":
+        text = (
+            f"🎉 <b>Hozirda barcha kurslar 50% CHEGIRMADA!</b>\n\n"
+            f"<b>{course} Video Darslari</b>\n\n"
+            f"❌ Eski narx: <s>{info['old_price_text']}</s>\n\n"
+            f"🔥 Chegirmadagi narx: <b>{info['price_text']}</b>\n\n"
+            f"🎥 Darslar soni: {info['lessons']}\n\n"
+            f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
+        )
+    else:
+        text = (
+            f"📚 <b>{course}</b>\n\n"
+            f"🎥 Darslar soni: {info['lessons']}\n\n"
+            f"💰 Narxi: <s>{info['old_price_text']}</s> → <b>{info['price_text']}</b>\n\n"
+            f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
+        )
 
     await message.answer(
         text,
@@ -122,6 +132,11 @@ async def course_b1(message: Message):
 @router.message(F.text == "🔥 A1-B1 — 50% CHEGIRMA")
 async def course_a1b1(message: Message):
     await send_course_info(message, "🔥 A1-B1")
+
+
+@router.message(F.text == "🔥 A1-C1")
+async def course_a1c1(message: Message):
+    await send_course_info(message, "🔥 A1-C1")
 
 
 # =========================================================
