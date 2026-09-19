@@ -7,7 +7,7 @@ video_menu = ReplyKeyboardMarkup(
         [KeyboardButton(text="🇩🇪 A2 — 50% CHEGIRMA")],
         [KeyboardButton(text="🇩🇪 B1 — 50% CHEGIRMA")],
         [KeyboardButton(text="🔥 A1-B1 — 50% CHEGIRMA")],
-        [KeyboardButton(text="🔥 A1-C1")],
+        [KeyboardButton(text="🔥 A1-C1 — 50% CHEGIRMA")],
         [KeyboardButton(text="⬅️ Orqaga")],
     ],
     resize_keyboard=True,
