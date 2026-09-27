@@ -18,7 +18,7 @@ main_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(
-                text="🌐 VIZU Academy",
+                text="🇩🇪 VIZU-De",
                 web_app=WebAppInfo(url="https://vizu-deutsch.com"),
             ),
         ],
