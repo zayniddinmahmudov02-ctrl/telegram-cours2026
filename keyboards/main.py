@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 
 from config import ADMIN_IDS
 
@@ -15,6 +15,12 @@ main_menu = ReplyKeyboardMarkup(
         [
             KeyboardButton(text="📚 Hausaufgaben"),
             KeyboardButton(text="👤 Mening Profilim"),
+        ],
+        [
+            KeyboardButton(
+                text="🌐 VIZU Academy",
+                web_app=WebAppInfo(url="https://vizu-deutsch.com"),
+            ),
         ],
     ],
     resize_keyboard=True,
