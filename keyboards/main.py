@@ -5,6 +5,12 @@ from config import ADMIN_IDS
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
+            KeyboardButton(
+                text="🇩🇪 VIZU-De",
+                web_app=WebAppInfo(url="https://vizu-deutsch.com"),
+            ),
+        ],
+        [
             KeyboardButton(text="🎮 So'z O'yini"),
             KeyboardButton(text="🎥 Video Kurslar"),
         ],
@@ -15,12 +21,6 @@ main_menu = ReplyKeyboardMarkup(
         [
             KeyboardButton(text="📚 Hausaufgaben"),
             KeyboardButton(text="👤 Mening Profilim"),
-        ],
-        [
-            KeyboardButton(
-                text="🇩🇪 VIZU-De",
-                web_app=WebAppInfo(url="https://vizu-deutsch.com"),
-            ),
         ],
     ],
     resize_keyboard=True,
