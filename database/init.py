@@ -1,5 +1,6 @@
 from .connection import db_execute
 from .homework import seed_homework_categories
+from .promotions import create_promotions_table
 
 # =========================================================
 # DATABASE INITIALIZATION
@@ -15,6 +16,8 @@ async def init_database():
     await create_certificates_table()
 
     await create_payments_table()
+
+    await create_promotions_table()
 
     await create_films_table()
 

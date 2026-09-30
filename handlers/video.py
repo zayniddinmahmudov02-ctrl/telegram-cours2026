@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 from aiogram import Router, F
 from aiogram.types import (
@@ -9,9 +10,9 @@ from aiogram.types import (
     CopyTextButton,
 )
 
-from database import db_execute
+from database import db_execute, get_or_create_promotion_deadline
 from keyboards import video_menu
-from config import COURSE_INFO
+from config import COURSE_INFO, COURSE_PROMOTIONS
 
 router = Router()
 
@@ -61,6 +62,36 @@ def payment_keyboard(course: str):
 
 
 # =========================================================
+# PROMO COUNTDOWN
+# =========================================================
+
+def _format_countdown(remaining) -> str:
+    total_seconds = max(0, int(remaining.total_seconds()))
+
+    days, rem = divmod(total_seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    return f"{days} kun {hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
+async def _promo_countdown_line(course: str) -> str:
+    promo = COURSE_PROMOTIONS[course]
+
+    deadline = await get_or_create_promotion_deadline(
+        course,
+        promo["promo_days"],
+    )
+
+    remaining = deadline - datetime.now(timezone.utc)
+
+    if remaining.total_seconds() <= 0:
+        return "⏳ Chegirma muddati tugadi."
+
+    return f"⏳ Chegirma tugashiga: {_format_countdown(remaining)}"
+
+
+# =========================================================
 # COURSE INFO
 # =========================================================
 
@@ -86,12 +117,26 @@ async def send_course_info(
     except Exception as e:
         logging.error(e)
 
-    text = (
-        f"📚 <b>{course}</b>\n\n"
-        f"🎥 Darslar soni: {info['lessons']}\n\n"
-        f"💰 Narxi: <s>{info['old_price_text']}</s> → <b>{info['price_text']}</b>\n\n"
-        f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
-    )
+    promo = COURSE_PROMOTIONS.get(course)
+
+    if promo:
+        countdown_line = await _promo_countdown_line(course)
+
+        text = (
+            f"📚 <b>{course}</b>\n\n"
+            f"🎥 Darslar soni: {info['lessons']}\n\n"
+            f"❌ Eski narx: {info['old_price_text']}\n"
+            f"🔥 {promo['discount_percent']}% chegirma: {info['price_text']}\n\n"
+            f"{countdown_line}\n\n"
+            f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
+        )
+    else:
+        text = (
+            f"📚 <b>{course}</b>\n\n"
+            f"🎥 Darslar soni: {info['lessons']}\n\n"
+            f"💰 Narxi: <s>{info['old_price_text']}</s> → <b>{info['price_text']}</b>\n\n"
+            f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
+        )
 
     await message.answer(
         text,
@@ -119,12 +164,12 @@ async def course_b1(message: Message):
     await send_course_info(message, "🇩🇪 B1")
 
 
-@router.message(F.text == "🔥 A1-B1 — 50% CHEGIRMA")
+@router.message(F.text == "🔥 A1-B1 — 70% CHEGIRMA")
 async def course_a1b1(message: Message):
     await send_course_info(message, "🔥 A1-B1")
 
 
-@router.message(F.text == "🔥 A1-C1 — 50% CHEGIRMA")
+@router.message(F.text == "🔥 A1-C1 — 70% CHEGIRMA")
 async def course_a1c1(message: Message):
     await send_course_info(message, "🔥 A1-C1")
 

@@ -123,16 +123,38 @@ COURSE_INFO = {
 
     "🔥 A1-B1": {
         "lessons": 48,
-        "old_price_text": "400.000 so'm",
-        "price": 199000,
-        "price_text": "199.000 so'm",
+        "old_price_text": "300.000 so'm",
+        "price": 100000,
+        "price_text": "100.000 so'm",
     },
 
     "🔥 A1-C1": {
         "lessons": 100,
-        "old_price_text": "800.000 so'm",
-        "price": 399000,
-        "price_text": "399.000 so'm",
+        "old_price_text": "600.000 so'm",
+        "price": 200000,
+        "price_text": "200.000 so'm",
+    },
+}
+
+# =========================================================
+# TIMED PROMOTIONS
+# =========================================================
+# Courses listed here show a countdown in their course-info screen
+# (handlers.video.send_course_info) counting down to a single shared
+# deadline, persisted in the `promotions` DB table (see
+# database.promotions) so it survives bot/server restarts and is
+# never restarted per-user. The deadline for a course is created once
+# - the first time anyone opens that course's info after this course
+# was added here - as NOW() + promo_days, then reused forever after.
+
+COURSE_PROMOTIONS = {
+    "🔥 A1-B1": {
+        "discount_percent": 70,
+        "promo_days": 3,
+    },
+    "🔥 A1-C1": {
+        "discount_percent": 70,
+        "promo_days": 3,
     },
 }
 
