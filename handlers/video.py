@@ -10,9 +10,9 @@ from aiogram.types import (
     CopyTextButton,
 )
 
-from database import db_execute, get_or_create_promotion_deadline
+from database import db_execute, get_or_create_global_promotion_deadline
 from keyboards import video_menu
-from config import COURSE_INFO, COURSE_PROMOTIONS
+from config import COURSE_INFO, COURSE_PROMOTIONS, PROMOTION_DAYS
 
 router = Router()
 
@@ -75,12 +75,9 @@ def _format_countdown(remaining) -> str:
     return f"{days} kun {hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
-async def _promo_countdown_line(course: str) -> str:
-    promo = COURSE_PROMOTIONS[course]
-
-    deadline = await get_or_create_promotion_deadline(
-        course,
-        promo["promo_days"],
+async def _promo_countdown_line() -> str:
+    deadline = await get_or_create_global_promotion_deadline(
+        PROMOTION_DAYS
     )
 
     remaining = deadline - datetime.now(timezone.utc)
@@ -120,7 +117,7 @@ async def send_course_info(
     promo = COURSE_PROMOTIONS.get(course)
 
     if promo:
-        countdown_line = await _promo_countdown_line(course)
+        countdown_line = await _promo_countdown_line()
 
         text = (
             f"📚 <b>{course}</b>\n\n"

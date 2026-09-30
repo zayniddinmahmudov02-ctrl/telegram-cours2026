@@ -140,21 +140,23 @@ COURSE_INFO = {
 # TIMED PROMOTIONS
 # =========================================================
 # Courses listed here show a countdown in their course-info screen
-# (handlers.video.send_course_info) counting down to a single shared
-# deadline, persisted in the `promotions` DB table (see
-# database.promotions) so it survives bot/server restarts and is
-# never restarted per-user. The deadline for a course is created once
-# - the first time anyone opens that course's info after this course
-# was added here - as NOW() + promo_days, then reused forever after.
+# (handlers.video.send_course_info) counting down to ONE global
+# deadline shared by every promoted course and every user, persisted
+# in the `promotions` DB table (see database.promotions) so it
+# survives bot/server restarts and is never restarted per-user or
+# per-course. The deadline is created exactly once - the first time
+# anyone opens ANY promoted course's info after deploy - as
+# NOW() + PROMOTION_DAYS, then reused forever after by every course
+# listed here and every user.
+
+PROMOTION_DAYS = 3
 
 COURSE_PROMOTIONS = {
     "🔥 A1-B1": {
         "discount_percent": 70,
-        "promo_days": 3,
     },
     "🔥 A1-C1": {
         "discount_percent": 70,
-        "promo_days": 3,
     },
 }
 

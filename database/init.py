@@ -1,6 +1,9 @@
 from .connection import db_execute
 from .homework import seed_homework_categories
-from .promotions import create_promotions_table
+from .promotions import (
+    create_promotions_table,
+    drop_legacy_course_promotion_rows,
+)
 
 # =========================================================
 # DATABASE INITIALIZATION
@@ -18,6 +21,8 @@ async def init_database():
     await create_payments_table()
 
     await create_promotions_table()
+
+    await drop_legacy_course_promotion_rows()
 
     await create_films_table()
 
