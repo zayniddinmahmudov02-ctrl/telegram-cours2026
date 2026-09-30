@@ -142,17 +142,9 @@ async def payment_info(callback: CallbackQuery):
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="📋 UzCard nusxalash",
+                    text="📋 Karta raqamini nusxalash",
                     copy_text=CopyTextButton(
-                        text="9860350144907192",
-                    ),
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📋 Visa Card nusxalash",
-                    copy_text=CopyTextButton(
-                        text="4448844427532174",
+                        text="5614682110214386",
                     ),
                 )
             ],
@@ -175,13 +167,9 @@ To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki bosh
 
 ━━━━━━━━━━━━━━━━━━━━
 
-💳 <b>UzCard</b>
+💳 <b>Karta raqami</b>
 
-<code>9860 3501 4490 7192</code>
-
-💳 <b>Visa Card</b>
-
-<code>4448 8444 2753 2174</code>
+<code>5614 6821 1021 4386</code>
 
 👤 <b>Karta egasi</b>
 
