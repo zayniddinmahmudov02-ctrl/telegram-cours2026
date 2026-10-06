@@ -58,7 +58,7 @@ async def start_payment(
                 InlineKeyboardButton(
                     text="📋 Karta raqamini nusxalash",
                     copy_text=CopyTextButton(
-                        text="5614682110214386",
+                        text="9860350144907192",
                     ),
                 )
             ],
