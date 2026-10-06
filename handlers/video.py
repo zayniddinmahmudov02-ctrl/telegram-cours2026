@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, timezone
 
 from aiogram import Router, F
 from aiogram.types import (
@@ -10,13 +9,14 @@ from aiogram.types import (
     CopyTextButton,
 )
 
-from database import db_execute, get_or_create_global_promotion_deadline
+from database import db_execute
 from keyboards import video_menu
-from config import COURSE_INFO, COURSE_PROMOTIONS, PROMOTION_DAYS
+from config import COURSE_INFO
 
 router = Router()
 
 logging.basicConfig(level=logging.INFO)
+
 
 # =========================================================
 # VIDEO COURSES
@@ -36,10 +36,37 @@ async def video_courses(message: Message):
 
 @router.message(F.text == "🎬 Bepul Namuna Darslar")
 async def sample_lesson(message: Message):
-
     await message.answer(
         "🎬 Bepul Namuna Dars:\n"
         "https://t.me/+yUxu7EOWyd82ODhi"
+    )
+
+
+# =========================================================
+# COMING SOON COURSES
+# =========================================================
+
+@router.message(F.text == "🇩🇪 B2 — TEZ ORADA")
+async def course_b2_coming_soon(message: Message):
+    await message.answer(
+        "🇩🇪 <b>B2 kursi tez orada sotuvga chiqariladi.</b>",
+        parse_mode="HTML",
+    )
+
+
+@router.message(F.text == "🇩🇪 C1 — TEZ ORADA")
+async def course_c1_coming_soon(message: Message):
+    await message.answer(
+        "🇩🇪 <b>C1 kursi tez orada sotuvga chiqariladi.</b>",
+        parse_mode="HTML",
+    )
+
+
+@router.message(F.text == "🔥 B2-C1 — TEZ ORADA")
+async def course_b2c1_coming_soon(message: Message):
+    await message.answer(
+        "🔥 <b>B2-C1 kursi tez orada sotuvga chiqariladi.</b>",
+        parse_mode="HTML",
     )
 
 
@@ -48,7 +75,6 @@ async def sample_lesson(message: Message):
 # =========================================================
 
 def payment_keyboard(course: str):
-
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -62,33 +88,6 @@ def payment_keyboard(course: str):
 
 
 # =========================================================
-# PROMO COUNTDOWN
-# =========================================================
-
-def _format_countdown(remaining) -> str:
-    total_seconds = max(0, int(remaining.total_seconds()))
-
-    days, rem = divmod(total_seconds, 86400)
-    hours, rem = divmod(rem, 3600)
-    minutes, seconds = divmod(rem, 60)
-
-    return f"{days} kun {hours:02d}:{minutes:02d}:{seconds:02d}"
-
-
-async def _promo_countdown_line() -> str:
-    deadline = await get_or_create_global_promotion_deadline(
-        PROMOTION_DAYS
-    )
-
-    remaining = deadline - datetime.now(timezone.utc)
-
-    if remaining.total_seconds() <= 0:
-        return "⏳ Chegirma muddati tugadi."
-
-    return f"⏳ Chegirma tugashiga: {_format_countdown(remaining)}"
-
-
-# =========================================================
 # COURSE INFO
 # =========================================================
 
@@ -96,7 +95,6 @@ async def send_course_info(
     message: Message,
     course: str,
 ):
-
     info = COURSE_INFO.get(course)
 
     if not info:
@@ -114,26 +112,13 @@ async def send_course_info(
     except Exception as e:
         logging.error(e)
 
-    promo = COURSE_PROMOTIONS.get(course)
-
-    if promo:
-        countdown_line = await _promo_countdown_line()
-
-        text = (
-            f"📚 <b>{course}</b>\n\n"
-            f"🎥 Darslar soni: {info['lessons']}\n\n"
-            f"❌ Eski narx: {info['old_price_text']}\n"
-            f"🔥 {promo['discount_percent']}% chegirma: {info['price_text']}\n\n"
-            f"{countdown_line}\n\n"
-            f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
-        )
-    else:
-        text = (
-            f"📚 <b>{course}</b>\n\n"
-            f"🎥 Darslar soni: {info['lessons']}\n\n"
-            f"💰 Narxi: <s>{info['old_price_text']}</s> → <b>{info['price_text']}</b>\n\n"
-            f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
-        )
+    text = (
+        f"📚 <b>{course}</b>\n\n"
+        f"🎥 Darslar soni: {info['lessons']}\n\n"
+        f"❌ Eski narx: <s>{info['old_price_text']}</s>\n"
+        f"🔥 50% chegirma: <b>{info['price_text']}</b>\n\n"
+        f"💳 Quyidagi tugma orqali to'lov ma'lumotlarini oching."
+    )
 
     await message.answer(
         text,
@@ -143,7 +128,7 @@ async def send_course_info(
 
 
 # =========================================================
-# COURSES
+# COURSES — AVAILABLE FOR SALE
 # =========================================================
 
 @router.message(F.text == "🇩🇪 A1 — 50% CHEGIRMA")
@@ -161,12 +146,12 @@ async def course_b1(message: Message):
     await send_course_info(message, "🇩🇪 B1")
 
 
-@router.message(F.text == "🔥 A1-B1 — 70% CHEGIRMA")
+@router.message(F.text == "🔥 A1-B1 — 50% CHEGIRMA")
 async def course_a1b1(message: Message):
     await send_course_info(message, "🔥 A1-B1")
 
 
-@router.message(F.text == "🔥 A1-C1 — 70% CHEGIRMA")
+@router.message(F.text == "🔥 A1-C1 — 50% CHEGIRMA")
 async def course_a1c1(message: Message):
     await send_course_info(message, "🔥 A1-C1")
 
@@ -186,7 +171,7 @@ async def payment_info(callback: CallbackQuery):
                 InlineKeyboardButton(
                     text="📋 Karta raqamini nusxalash",
                     copy_text=CopyTextButton(
-                        text="9860350144907132",
+                        text="9860350144907192",
                     ),
                 )
             ],
@@ -211,7 +196,7 @@ To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki bosh
 
 💳 <b>Karta raqami</b>
 
-<code>5614 6821 1021 4386</code>
+<code>9860 3501 4490 7192</code>
 
 👤 <b>Karta egasi</b>
 
