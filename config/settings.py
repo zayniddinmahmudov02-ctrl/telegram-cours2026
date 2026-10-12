@@ -136,9 +136,9 @@ COURSE_INFO = {
 
     "🔥 A1-B1": {
         "lessons": 48,
-        "old_price_text": "600.000 so'm",
-        "price": 300000,
-        "price_text": "300.000 so'm",
+        "old_price_text": "400.000 so'm",
+        "price": 200000,
+        "price_text": "200.000 so'm",
     },
 
     "🔥 B2-C1": {
@@ -150,9 +150,9 @@ COURSE_INFO = {
 
     "🔥 A1-C1": {
         "lessons": 100,
-        "old_price_text": "1.200.000 so'm",
-        "price": 600000,
-        "price_text": "600.000 so'm",
+        "old_price_text": "800.000 so'm",
+        "price": 400000,
+        "price_text": "400.000 so'm",
     },
 }
 # =========================================================
