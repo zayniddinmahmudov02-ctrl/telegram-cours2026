@@ -171,7 +171,7 @@ async def payment_info(callback: CallbackQuery):
                 InlineKeyboardButton(
                     text="📋 Karta raqamini nusxalash",
                     copy_text=CopyTextButton(
-                        text="9860350144907192",
+                        text="5614682110214386",
                     ),
                 )
             ],
@@ -196,7 +196,7 @@ To'lovni <b>Click</b>, <b>Payme</b>, <b>Uzum Bank</b>, <b>Anorbank</b> yoki bosh
 
 💳 <b>Karta raqami</b>
 
-<code>9860 3501 4490 7192</code>
+<code>5614 6821 1021 4386</code>
 
 👤 <b>Karta egasi</b>
 
