@@ -8,10 +8,9 @@ from .admin import router as admin
 from .payment import router as payment
 from .broadcast import router as broadcast
 from .private_message import router as private_message
-from .info import router as info
 from .leaderboard import router as leaderboard
 from .media import router as media
-from .homework import router as homework
+from .removed_sections import router as removed_sections
 
 __all__ = [
     "start",
@@ -24,8 +23,7 @@ __all__ = [
     "payment",
     "broadcast",
     "private_message",
-    "info",
     "leaderboard",
     "media",
-    "homework",
+    "removed_sections",
 ]

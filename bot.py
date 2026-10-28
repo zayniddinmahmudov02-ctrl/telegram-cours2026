@@ -15,10 +15,9 @@ from handlers import (
     payment,
     broadcast,
     private_message,
-    info,
     leaderboard,
     media,
-    homework,
+    removed_sections,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -45,10 +44,9 @@ routers = [
     payment,
     broadcast,
     private_message,
-    info,
     leaderboard,
     media,
-    homework,
+    removed_sections,
 ]
 
 for router in routers:

@@ -22,9 +22,6 @@ admin_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="🏅 Certificates"),
         ],
         [
-            KeyboardButton(text="📋 Hausaufgaben Admin"),
-        ],
-        [
             KeyboardButton(text="⬅️ Admin Chiqish"),
         ],
     ],

@@ -1,5 +1,4 @@
 from .connection import db_execute
-from .homework import seed_homework_categories
 from .promotions import (
     create_promotions_table,
     drop_legacy_course_promotion_rows,
@@ -43,8 +42,6 @@ async def init_database():
     await create_homework_submission_files_table()
 
     await create_homework_evaluations_table()
-
-    await seed_homework_categories()
 
     await create_user_scores_table()
 
@@ -334,11 +331,10 @@ async def create_favorite_music_table():
 # =========================================================
 # HAUSAUFGABEN - CATEGORIES
 # =========================================================
-# code is the stable key used by config.HOMEWORK_CATEGORIES to
-# seed/refresh these rows on startup (see database.homework.
-# seed_homework_categories). password_hash/salt are NULL until an
-# admin sets one via the Admin Panel - a category with no password
-# set simply can't be unlocked yet (see services.homework).
+# The Hausaufgaben section was removed from the bot. Its tables are
+# still created here (no-op once they exist) only so the schema and
+# the submissions history stay intact - nothing reads or writes
+# them anymore. Dropping them is a separate, deliberate migration.
 
 async def create_homework_categories_table():
     await db_execute(

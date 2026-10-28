@@ -12,13 +12,9 @@ main_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="🎮 So'z O'yini"),
-        ],
-        [
             KeyboardButton(text="🎬 Medien"),
-            KeyboardButton(text="📚 Ma'lumotlar"),
         ],
         [
-            KeyboardButton(text="📚 Hausaufgaben"),
             KeyboardButton(text="👤 Mening Profilim"),
         ],
     ],

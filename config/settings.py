@@ -103,50 +103,6 @@ BOOK_CHANNEL_ID = -1003796668138
 MUSIC_CHANNEL_ID = -1003763602068
 
 # =========================================================
-# HAUSAUFGABEN (HOMEWORK)
-# =========================================================
-# One private channel per category - every submission is posted
-# there for the admin to see and score. Centralized here (not
-# scattered across handlers) so re-pointing a category to a new
-# channel is a one-line change.
-
-HOMEWORK_SP_CHANNEL_ID = -1004325769295
-HOMEWORK_VIDEO_CHANNEL_ID = -1003908094525
-HOMEWORK_ONLINE_CHANNEL_ID = -1003901303027
-
-# code -> (display name, channel). `code` is also the DB row's
-# `homework_categories.code` and is seeded into the DB on startup
-# (see database.homework.seed_homework_categories) - this dict is
-# the single source of truth for what categories exist at all;
-# enable/disable and password are runtime DB state on top of it.
-HOMEWORK_CATEGORIES = {
-    "sprechen": {
-        "name": "🗣 Sprechen guruh",
-        "channel_id": HOMEWORK_SP_CHANNEL_ID,
-    },
-    "video": {
-        "name": "🎥 Video darslar",
-        "channel_id": HOMEWORK_VIDEO_CHANNEL_ID,
-    },
-    "online": {
-        "name": "👥 Online guruhlar",
-        "channel_id": HOMEWORK_ONLINE_CHANNEL_ID,
-    },
-}
-
-# Sprechen-only: which Telegram group a member is sent, based on
-# (gender, level_group). Centralized here (not hardcoded in any
-# handler) so a link can be swapped in one place.
-SPRECHEN_GROUP_LINKS = {
-    ("female", "0-A1"): "https://t.me/+mHKO6lyHc984ODBi",
-    ("female", "A2-B1"): "https://t.me/+gWjWBgAO-TswYjZi",
-    ("female", "B2-C1"): "https://t.me/+Zgrtr-tuUeBiY2Yy",
-    ("male", "0-A1"): "https://t.me/+uvVs7XEgNlwxNDky",
-    ("male", "A2-B1"): "https://t.me/+Pva5vFAl7vxkNDVi",
-    ("male", "B2-C1"): "https://t.me/+odgz7lE9CxkxOWFi",
-}
-
-# =========================================================
 # SECURITY CHECK
 # =========================================================
 

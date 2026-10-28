@@ -9,5 +9,3 @@ from .profile import *
 from .admin import *
 
 from .certificate import *
-
-from .info import *
