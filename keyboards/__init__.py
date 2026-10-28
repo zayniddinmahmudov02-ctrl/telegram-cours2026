@@ -2,8 +2,6 @@ from .main import *
 
 from .subscription import *
 
-from .video import *
-
 from .media import *
 
 from .profile import *

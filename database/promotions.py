@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta, timezone
-
 from .connection import db_execute
 
 # =========================================================
@@ -44,45 +42,3 @@ async def drop_legacy_course_promotion_rows():
         """,
         (list(_LEGACY_COURSE_KEYS),),
     )
-
-
-# =========================================================
-# GET OR CREATE GLOBAL DEADLINE
-# =========================================================
-# One deadline, shared by every promoted course and every user - set
-# exactly once (the first caller wins via ON CONFLICT DO NOTHING) so
-# every user, every course listed in config.COURSE_PROMOTIONS, and
-# every future bot/server restart keeps seeing the same countdown
-# target.
-
-_GLOBAL_PROMOTION_KEY = "GLOBAL_PROMOTION_DEADLINE"
-
-
-async def get_or_create_global_promotion_deadline(promo_days: int):
-    deadline = datetime.now(timezone.utc) + timedelta(days=promo_days)
-
-    row = await db_execute(
-        """
-        INSERT INTO promotions (course, deadline)
-        VALUES (%s, %s)
-        ON CONFLICT (course) DO NOTHING
-        RETURNING deadline;
-        """,
-        (_GLOBAL_PROMOTION_KEY, deadline),
-        fetchone=True,
-    )
-
-    if row:
-        return row["deadline"]
-
-    row = await db_execute(
-        """
-        SELECT deadline
-        FROM promotions
-        WHERE course=%s;
-        """,
-        (_GLOBAL_PROMOTION_KEY,),
-        fetchone=True,
-    )
-
-    return row["deadline"]

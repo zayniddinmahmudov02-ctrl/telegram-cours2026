@@ -12,7 +12,6 @@ main_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="🎮 So'z O'yini"),
-            KeyboardButton(text="🎥 Video Kurslar"),
         ],
         [
             KeyboardButton(text="🎬 Medien"),
